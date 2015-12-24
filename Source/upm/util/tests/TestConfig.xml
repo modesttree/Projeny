@@ -1,0 +1,36 @@
+<Config>
+    <Heading>
+        <listFoo>
+            <Item>var1</Item>
+            <Item>var2</Item>
+        </listFoo>
+        <intFoo>5</intFoo>
+        <stringFoo>bar</stringFoo>
+    </Heading>
+    <Paths>
+        <Item>
+            <Key>RootCheckoutDir</Key>
+            <Value>[PythonDir]/../..</Value>
+        </Item>
+        <Item>
+            <Key>SourceDir</Key>
+            <Value>[RootCheckoutDir]/Source</Value>
+        </Item>
+        <Item>
+            <Key>PackagesDir</Key>
+            <Value>[SourceDir]/Packages</Value>
+        </Item>
+        <Item>
+            <Key>ProjectsDir</Key>
+            <Value>[SourceDir]/Projects</Value>
+        </Item>
+        <Item>
+            <Key>LogPath</Key>
+            <Value>[PythonDir]/Log.txt</Value>
+        </Item>
+        <Item>
+            <Key>LogPreviousPath</Key>
+            <Value>[PythonDir]/Log.prev.txt</Value>
+        </Item>
+    </Paths>
+</Config>
