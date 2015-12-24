@@ -1,44 +1,18 @@
 
 import configparser
-import msvcrt
-import re
-import time
 import sys
 import os
-import shlex
-import subprocess
-from datetime import datetime
-import argparse
-import shutil
-from glob import glob
-import traceback
 import webbrowser
 
 from upm.util.Assert import *
 import upm.util.MiscUtil as MiscUtil
 import upm.util.PlatformUtil as PlatformUtil
 
-from upm.config.ConfigXml import ConfigXml
-from upm.util.VarManager import VarManager
-from upm.log.Logger import Logger
-from upm.util.SystemHelper import SystemHelper
-from upm.log.LogStreamFile import LogStreamFile
-from upm.log.LogStreamConsole import LogStreamConsole
-from upm.util.ProcessRunner import ProcessRunner
-from upm.util.JunctionHelper import JunctionHelper
-from upm.main.VisualStudioSolutionGenerator import VisualStudioSolutionGenerator
-from upm.main.VisualStudioHelper import VisualStudioHelper
-from upm.main.ProjectSchemaLoader import ProjectSchemaLoader
-from upm.util.ScriptRunner import ScriptRunner
-
 from upm.util.PlatformUtil import Platforms
-from upm.main.PackageManager import PackageManager
 
 import upm.ioc.Container as Container
 from upm.ioc.Inject import Inject
 import upm.ioc.IocAssertions as Assertions
-
-from upm.util.UnityHelper import UnityHelper
 
 class UpmRunner:
     _scriptRunner = Inject('ScriptRunner')
@@ -133,7 +107,7 @@ class UpmRunner:
             self._project = self._args.project
 
             if not self._project:
-                self._project = self._config.getString('Projeny', 'DefaultProject', None)
+                self._project = self._config.tryGetString(None, 'Projeny', 'DefaultProject')
 
             if self._project and not self._packageMgr.projectExists(self._project):
                 self._project = self._packageMgr.getProjectFromAlias(self._project)

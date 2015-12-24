@@ -164,25 +164,25 @@ class KillProcessThread:
             if e.errno not in (errno.EPERM, errno. ESRCH):
                 raise e
 
-if __name__ == '__main__':
-    import upm.ioc.Container as Container
+#if __name__ == '__main__':
+    #import upm.ioc.Container as Container
 
-    from upm.config.ConfigXml import ConfigXml
-    from upm.log.Logger import Logger
-    from upm.util.VarManager import VarManager
-    from datetime import datetime
+    #from upm.config.ConfigXml import ConfigXml
+    #from upm.log.Logger import Logger
+    #from upm.util.VarManager import VarManager
+    #from datetime import datetime
 
-    Container.bind('Config').toSingle(ConfigXml)
-    Container.bind('VarManager').toSingle(VarManager)
-    Container.bind('ProcessRunner').toSingle(ProcessRunner)
-    Container.bind('Logger').toSingle(Logger)
-    Container.bind('LogStream').toSingle(LogStreamStdout)
+    #Container.bind('Config').toSingle(ConfigXml)
+    #Container.bind('VarManager').toSingle(VarManager)
+    #Container.bind('ProcessRunner').toSingle(ProcessRunner)
+    #Container.bind('Logger').toSingle(Logger)
+    #Container.bind('LogStream').toSingle(LogStreamStdout)
 
-    startTime = datetime.now()
+    #startTime = datetime.now()
 
-    processRunner = Container.resolve('ProcessRunner')
-    processRunner.waitForProcessOrTimeout(['sleep','5'], 2)
+    #processRunner = Container.resolve('ProcessRunner')
+    #processRunner.waitForProcessOrTimeout(['sleep','5'], 2)
 
-    totalSeconds = (datetime.now()-startTime).total_seconds()
-    print("finished after {0}".format(totalSeconds))
+    #totalSeconds = (datetime.now()-startTime).total_seconds()
+    #print("finished after {0}".format(totalSeconds))
 

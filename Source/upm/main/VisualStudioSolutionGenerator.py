@@ -7,8 +7,6 @@ import re
 import os
 import sys
 
-from upm.config.ConfigIni import ConfigIni
-
 import upm.ioc.Container as Container
 from upm.ioc.Inject import Inject
 from upm.ioc.Inject import InjectMany
@@ -26,7 +24,7 @@ UpmDirectoryIgnorePattern = re.compile(r'.*Assets\\Plugins\\Projeny\\.*')
 
 class VisualStudioSolutionGenerator:
     """
-    Handler for creating custom visual studio solutions based on project.ini files
+    Handler for creating custom visual studio solutions based on project.yaml files
     """
     _log = Inject('Logger')
     _packageManager = Inject('PackageManager')
@@ -539,7 +537,7 @@ class VisualStudioSolutionGenerator:
         return minidom.parseString(ET.tostring(doc)).toprettyxml(indent="    ")
 
     def _shouldIgnoreCsProjFile(self, fullPath):
-        if self._config.getBool('Projeny', 'IncludeProjenyInGeneratedSolution', False):
+        if self._config.tryGetBool(False, 'Projeny', 'IncludeProjenyInGeneratedSolution'):
             return False
 
         return UpmDirectoryIgnorePattern.match(fullPath)

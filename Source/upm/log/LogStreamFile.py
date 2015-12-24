@@ -54,21 +54,21 @@ class LogStreamFile:
         self._outputFilePath = primaryPath
         return open(primaryPath, 'w', encoding='utf-8', errors='ignore')
 
-if __name__ == '__main__':
-    import upm.ioc.Container as Container
-    from upm.log.Logger import Logger
-    from upm.util.VarManager import VarManager
-    from upm.config.ConfigXml import ConfigXml
+#if __name__ == '__main__':
+    #import upm.ioc.Container as Container
+    #from upm.log.Logger import Logger
+    #from upm.util.VarManager import VarManager
+    #from upm.config.ConfigXml import ConfigXml
 
-    Container.bind('Config').toSingle(ConfigXml)
-    Container.bind('VarManager').toSingle(VarManager)
-    Container.bind('LogStream').toSingle(LogStreamFile)
-    Container.bind('Logger').toSingle(Logger)
+    #Container.bind('Config').toSingle(ConfigXml)
+    #Container.bind('VarManager').toSingle(VarManager)
+    #Container.bind('LogStream').toSingle(LogStreamFile)
+    #Container.bind('Logger').toSingle(Logger)
 
-    pathMgr = Container.resolve('VarManager')
-    pathMgr.add('LogPath', 'C:/Temp/log.txt')
+    #pathMgr = Container.resolve('VarManager')
+    #pathMgr.add('LogPath', 'C:/Temp/log.txt')
 
-    logger = Container.resolve('Logger')
+    #logger = Container.resolve('Logger')
 
-    logger.info('test info')
-    logger.error('test error')
+    #logger.info('test info')
+    #logger.error('test error')

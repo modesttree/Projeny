@@ -1,7 +1,6 @@
 
 import re
 import os
-from upm.config.ConfigIni import ConfigIni
 
 from upm.util.Assert import *
 from upm.util.PlatformUtil import Platforms
@@ -10,6 +9,7 @@ import upm.ioc.Container as Container
 from upm.ioc.Inject import Inject
 import upm.ioc.IocAssertions as Assertions
 import upm.util.JunctionUtil as JunctionUtil
+from upm.config.ConfigYaml import ConfigYaml
 
 RequiredDependencies = ["Projeny"]
 
@@ -18,18 +18,19 @@ class ProjectSchemaLoader:
     _log = Inject('Logger')
 
     def loadSchema(self, name, platform):
-        schemaPath = self._varMgr.expandPath('[UnityProjectsDir]/{0}/project.ini'.format(name))
-        schemaPathCustom = self._varMgr.expandPath('[UnityProjectsDir]/{0}/projectCustom.ini'.format(name))
-        schemaPathCustomGlobal = self._varMgr.expandPath('[UnityProjectsDir]/projectCustom.ini')
+        schemaPath = self._varMgr.expandPath('[UnityProjectsDir]/{0}/project.yaml'.format(name))
+        schemaPathUser = self._varMgr.expandPath('[UnityProjectsDir]/{0}/projectUser.yaml'.format(name))
+        schemaPathGlobal = self._varMgr.expandPath('[UnityProjectsDir]/project.yaml')
+        schemaPathUserGlobal = self._varMgr.expandPath('[UnityProjectsDir]/projectUser.yaml')
 
         self._log.debug('Loading schema at path "{0}"'.format(schemaPath))
-        config = ConfigIni([schemaPath, schemaPathCustom, schemaPathCustomGlobal])
+        config = ConfigYaml([schemaPath], [schemaPathUser, schemaPathGlobal, schemaPathUserGlobal])
 
-        pluginDependencies = config.getList('Config', 'packagesPlugins')
-        scriptsDependencies = config.getList('Config', 'packages')
-        customProjects = config.getList('Config', 'solutionProjects')
-        customFolders = config.getTuples('ProjectFolders')
-        prebuiltProjects = config.getList('Config', 'prebuilt')
+        pluginDependencies = config.tryGetList([], 'packagesPlugins')
+        scriptsDependencies = config.tryGetList([], 'packages')
+        customProjects = config.tryGetList([], 'solutionProjects')
+        customFolders = config.tryGetDictionary({}, 'ProjectFolders')
+        prebuiltProjects = config.tryGetList([], 'prebuilt')
 
         # Check for duplicates
         Util.ensureNoDuplicates(scriptsDependencies, 'scriptsDependencies')
@@ -52,12 +53,12 @@ class ProjectSchemaLoader:
         # by default, put any dependencies that are not declared explicitly into the plugins folder
         for packageName in allDependencies:
 
-            configPath = self._varMgr.expandPath('[UnityPackagesDir]/{0}/package.ini'.format(packageName))
+            configPath = self._varMgr.expandPath('[UnityPackagesDir]/{0}/package.yaml'.format(packageName))
 
             if os.path.exists(configPath):
-                packageConfig = ConfigIni([configPath])
+                packageConfig = ConfigYaml([configPath])
             else:
-                packageConfig = ConfigIni([])
+                packageConfig = ConfigYaml([])
 
             createCustomVsProject = self._checkCustomProjectMatch(packageName, customProjects)
 
@@ -68,12 +69,12 @@ class ProjectSchemaLoader:
             else:
                 assertThat(packageName in scriptsDependencies)
 
-            if packageConfig.getBool('Config', 'ForceAssetsDirectory', False):
+            if packageConfig.tryGetBool(False, 'ForceAssetsDirectory'):
                 isPluginsDir = False
 
-            explicitDependencies = packageConfig.getList('Config', 'Dependencies')
+            explicitDependencies = packageConfig.tryGetList([], 'Dependencies')
 
-            forcePluginsDir = packageConfig.getBool('Config', 'ForcePluginsDirectory', False)
+            forcePluginsDir = packageConfig.tryGetBool(False, 'ForcePluginsDirectory')
 
             assertThat(not packageName in packageMap)
             packageMap[packageName] = PackageInfo(isPluginsDir, packageName, packageConfig, createCustomVsProject, explicitDependencies, forcePluginsDir)
@@ -84,7 +85,7 @@ class ProjectSchemaLoader:
                     # Yes, python is ok with changing allDependencies even while iterating over it
                     allDependencies.append(dependName)
 
-            for dependName in packageConfig.getList('Config', 'Extras'):
+            for dependName in packageConfig.tryGetList([], 'Extras'):
                 if not dependName in allDependencies:
                     if isPluginsDir:
                         pluginDependencies.append(dependName)
@@ -105,7 +106,6 @@ class ProjectSchemaLoader:
         self._addPrebuiltProjectsFromPackages(packageMap, prebuiltProjects)
 
         self._log.info('Found {0} packages in total for given schema'.format(len(allDependencies)))
-        self._log.debug('Finished processing schema, found {0} dependencies in total'.format(', '.join(allDependencies)))
 
         # In Unity, the plugins folder can not have any dependencies on anything in the scripts folder
         # So if dependencies exist then just automatically move those packages to the scripts folder
@@ -174,7 +174,7 @@ class ProjectSchemaLoader:
 
     def _addPrebuiltProjectsFromPackages(self, packageMap, prebuiltProjects):
         for info in packageMap.values():
-            prebuiltPaths = info.config.getList('Config', 'Prebuilt')
+            prebuiltPaths = info.config.tryGetList([], 'Prebuilt')
 
             for path in prebuiltPaths:
                 if path not in prebuiltProjects:
@@ -191,7 +191,7 @@ class ProjectSchemaLoader:
             elif info.folderType == FolderTypes.WebGl:
                 platforms = [Platforms.WebGl]
             else:
-                platforms = info.config.getList('Config', 'Platforms')
+                platforms = info.config.tryGetList([], 'Platforms')
 
                 if len(platforms) == 0:
                     continue
@@ -291,7 +291,7 @@ class PackageInfo:
         self.config = config
         self.createCustomVsProject = createCustomVsProject
         self.allDependencies = None
-        self.folderType = self._getFolderTypeFromString(config.getString('Config', 'FolderType', ''))
+        self.folderType = self._getFolderTypeFromString(config.tryGetString('', 'FolderType'))
         self.forcePluginsDir = forcePluginsDir
 
     def _getFolderTypeFromString(self, value):

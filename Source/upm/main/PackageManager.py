@@ -4,7 +4,6 @@ import os
 import sys
 import argparse
 
-from upm.config.ConfigIni import ConfigIni
 from upm.util.VarManager import VarManager
 from upm.log.Logger import Logger
 from upm.util.SystemHelper import SystemHelper

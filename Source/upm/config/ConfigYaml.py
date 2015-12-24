@@ -14,28 +14,63 @@ import upm.ioc.IocAssertions as Assertions
 class ConfigYaml:
     ''' Build config info  (eg. path info, etc.) '''
 
-    def __init__(self, configPaths = None):
+    def __init__(self, configPaths = None, optionalPaths = None):
 
         if not configPaths:
             configPaths = []
 
-        if len(configPaths) == 0:
-            print('Warning: No config paths provided')
+        if not optionalPaths:
+            optionalPaths = []
 
         self.configs = []
+        self.configPaths = configPaths
 
-        for configPath in reversed(configPaths):
+        for path in optionalPaths:
+            if os.path.isfile(path):
+                self.configPaths.append(path)
+
+        for configPath in reversed(self.configPaths):
             self.configs.append(yaml.load(self.readAllTextFromFile(configPath)))
+
+    @property
+    def mainPath(self):
+        assertThat(len(self.configPaths) > 0)
+        return self.configPaths[0]
 
     def readAllTextFromFile(self, filePath):
         assertThat(os.path.isfile(filePath), "Could not find YAML config file at path '{0}'", filePath)
         with open(filePath, 'r', encoding='utf-8') as f:
             return f.read()
 
+    def getBool(self, fallback, *args):
+        return self._getPrimitive(bool, *args)
+
+    def tryGetBool(self, fallback, *args):
+        return self._tryGetPrimitive(fallback, bool, *args)
+
     def getString(self, *args):
-        result = self.get(*args)
-        assertThat(isinstance(result, str) or isinstance(result, datetime.date), "Unexpected type '{0}' for property '{1}'", result.__class__, self._propNameToString(args))
-        return str(result)
+        return self._getPrimitive(str, *args)
+
+    def tryGetString(self, fallback, *args):
+        return self._tryGetPrimitive(fallback, str, *args)
+
+    def getInt(self, *args):
+        return self._getPrimitive(int, *args)
+
+    def tryGetInt(self, fallback, *args):
+        return self._tryGetPrimitive(fallback, int, *args)
+
+    def _getPrimitive(self, propType, *args):
+        result = self._tryGetPrimitive(None, propType, *args)
+        assertThat(result, "Could not find match for YAML element {0}", self._propNameToString(args))
+        return result
+
+    def _tryGetPrimitive(self, fallback, propType, *args):
+        result = self.tryGet(*args)
+        if not result:
+            return fallback
+        assertIsType(result, propType, "Unexpected type for yaml property '{0}'", self._propNameToString(args))
+        return result
 
     def _propNameToString(self, args):
         return '.'.join(args)
@@ -70,7 +105,15 @@ class ConfigYaml:
                 currentDict = currentDict[name]
 
     def getList(self, *args):
-        result = self.get(*args)
+        result = self.tryGetList(None, *args)
+        assertThat(result, "Could not find match for YAML element {0}", self._propNameToString(args))
+        return result
+
+    def tryGetList(self, fallback, *args):
+        result = self.tryGet(*args)
+
+        if not result:
+            return fallback
 
         assertIsType(result, list, "Unexpected type for yaml property '{0}'", self._propNameToString(args))
 
@@ -83,7 +126,15 @@ class ConfigYaml:
         return result
 
     def getDictionary(self, *args):
-        result = self.get(*args)
+        result = self.tryGetDictionary(None, *args)
+        assertThat(result, "Could not find match for YAML element {0}", self._propNameToString(args))
+        return result
+
+    def tryGetDictionary(self, fallback, *args):
+        result = self.tryGet(*args)
+
+        if not result:
+            return fallback
 
         assertIsType(result, dict, "Unexpected type for yaml property '{0}'", self._propNameToString(args))
 

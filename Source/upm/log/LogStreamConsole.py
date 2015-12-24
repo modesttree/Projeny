@@ -65,10 +65,10 @@ class LogStreamConsole:
         self.debugPatterns = self._getPatterns('DebugPatterns')
         self.debugMaps = self._getPatternMaps('DebugPatternMaps')
 
-        self._useColors = self._config.getBool('LogStreamConsole', 'UseColors', False)
+        self._useColors = self._config.tryGetBool(False, 'Console', 'UseColors')
 
         self._fileStream = None
-        if self._config.getBool('LogStreamConsole', 'OutputToFilteredLog', False):
+        if self._config.tryGetBool(False, 'Console', 'OutputToFilteredLog'):
             self._fileStream = self._getFileStream()
 
         if self._useColors:
@@ -141,7 +141,7 @@ class LogStreamConsole:
         assertThat(False, 'Unrecognized log type "{0}"'.format(logType))
 
     def _getPatternMaps(self, settingName):
-        maps = self._config.tryGetKeyValueDictionary('LogStreamConsole', settingName, {})
+        maps = self._config.tryGetDictionary({}, 'Console', settingName)
 
         result = []
         for key, value in maps.items():
@@ -152,7 +152,7 @@ class LogStreamConsole:
         return result
 
     def _getPatterns(self, settingName):
-        patternStrings = self._config.tryGetList('LogStreamConsole', settingName, [])
+        patternStrings = self._config.tryGetList([], 'Console', settingName)
 
         result = []
         for pattern in patternStrings:
@@ -214,21 +214,3 @@ class LogStreamConsole:
 
         return None, message
 
-if __name__ == '__main__':
-
-    import upm.ioc.Container as Container
-    from upm.log.Logger import Logger
-    from upm.util.VarManager import VarManager
-    from upm.config.ConfigXml import ConfigXml
-
-    Container.bind('Config').toSingle(ConfigXml)
-    Container.bind('LogStream').toSingle(LogStreamConsole)
-    Container.bind('Logger').toSingle(Logger)
-
-    config = Container.resolve('Config')
-    config.addList('LogStreamConsole', 'errorPatterns', [r'^err.*'])
-
-    logger = Container.resolve('Logger')
-
-    logger.info('test info')
-    logger.debug('err test error')

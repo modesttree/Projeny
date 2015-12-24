@@ -4,7 +4,6 @@ import sys
 import os
 from datetime import datetime
 
-from upm.config.ConfigXml import ConfigXml
 from upm.util.VarManager import VarManager
 
 import upm.util.Util as Util

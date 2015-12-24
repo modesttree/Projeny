@@ -6,7 +6,6 @@ import upm.ioc.Container as Container
 from upm.ioc.Inject import Inject
 import upm.ioc.IocAssertions as Assertions
 
-from upm.config.ConfigXml import ConfigXml
 from upm.util.VarManager import VarManager
 from upm.log.Logger import Logger
 
@@ -17,7 +16,8 @@ class TestLogger(unittest.TestCase):
         Container.clear()
 
     def testOutputToConsole(self):
-        Container.bind('Config').toSingle(ConfigXml)
+        assertThat(False)
+        #Container.bind('Config').toSingle(ConfigXml)
 
         log = Logger(True)
 
@@ -36,7 +36,8 @@ class TestLogger(unittest.TestCase):
         log.finished("Done")
 
     def testOutputToFile(self):
-        Container.bind('Config').toSingle(ConfigXml)
+        assertThat(False)
+        #Container.bind('Config').toSingle(ConfigXml)
         Container.bind('VarManager').toSingle(VarManager, {
             'LogPath': ScriptDir + '/logtest.txt',
             'LogPathPrevious': ScriptDir + '/logtest.prev.txt',

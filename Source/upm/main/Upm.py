@@ -1,23 +1,13 @@
 
-import configparser
-import msvcrt
-import re
-import time
 import sys
 import os
 import fnmatch
-import shlex
-import subprocess
-from datetime import datetime
 import argparse
-import shutil
-import traceback
-import webbrowser
 
 import upm.util.MiscUtil as MiscUtil
 import upm.util.PlatformUtil as PlatformUtil
 
-from upm.config.ConfigXml import ConfigXml
+from upm.config.ConfigYaml import ConfigYaml
 from upm.util.VarManager import VarManager
 from upm.util.ZipHelper import ZipHelper
 from upm.log.Logger import Logger
@@ -37,7 +27,6 @@ from upm.main.PackageManager import PackageManager
 
 import upm.ioc.Container as Container
 from upm.ioc.Inject import Inject
-import upm.ioc.IocAssertions as Assertions
 
 from upm.util.UnityHelper import UnityHelper
 
@@ -76,10 +65,10 @@ def getConfigPaths(args):
     if args.configPath:
         return [args.configPath]
 
-    return [os.path.join(os.getcwd(), 'ProjenyConfig.xml')]
+    return [os.path.join(os.getcwd(), 'Upm.yaml')]
 
 def installBindings(args):
-    Container.bind('Config').toSingle(ConfigXml, getConfigPaths(args))
+    Container.bind('Config').toSingle(ConfigYaml, getConfigPaths(args))
     Container.bind('VarManager').toSingle(VarManager)
     Container.bind('SystemHelper').toSingle(SystemHelper)
     Container.bind('Logger').toSingle(Logger)

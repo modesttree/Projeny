@@ -1,7 +1,7 @@
 ---
 receipt:     &id002
     Oz-Ware Purchase Invoice
-date:        2012-08-06
+date:        "2012-08-06"
 foo1:     *id002
 foo2: Lorem
 customer:

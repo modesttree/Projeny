@@ -10,14 +10,14 @@ import upm.ioc.IocAssertions as Assertions
 from upm.util.VarManager import VarManager
 from upm.util.SystemHelper import SystemHelper
 from upm.log.Logger import Logger
-from upm.config.ConfigXml import ConfigXml
 
 class TestSystemHelper(unittest.TestCase):
     def setUp(self):
         Container.clear()
 
     def test1(self):
-        Container.bind('Config').toSingle(ConfigXml)
+        assertThat(False, "TODO")
+        #Container.bind('Config').toSingle(ConfigXml)
         Container.bind('VarManager').toSingle(VarManager)
         Container.bind('SystemHelper').toSingle(SystemHelper)
         Container.bind('Logger').toSingle(Logger)

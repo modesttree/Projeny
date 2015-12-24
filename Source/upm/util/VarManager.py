@@ -25,7 +25,7 @@ class VarManager:
         if self._config.mainPath:
             self._params['ConfigDir'] = os.path.dirname(self._config.mainPath).replace('\\', '/')
 
-        configPaths = self._config.tryGetDictionary('PathVars', {})
+        configPaths = self._config.tryGetDictionary(None, 'PathVars')
 
         for key, value in configPaths.items():
             assertThat(not key in self._params.keys())

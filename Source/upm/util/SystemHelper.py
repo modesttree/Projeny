@@ -3,7 +3,6 @@ import sys
 
 from upm.log.Logger import Logger
 from upm.util.VarManager import VarManager
-from upm.config.ConfigXml import ConfigXml
 from upm.util.ProcessRunner import ProcessRunner, ResultType
 
 from upm.util.Assert import *

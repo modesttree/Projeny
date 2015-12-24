@@ -9,14 +9,14 @@ import upm.ioc.IocAssertions as Assertions
 
 from upm.util.Assert import *
 from upm.util.VarManager import VarManager
-from upm.config.ConfigXml import ConfigXml
 
 class TestVarManager(unittest.TestCase):
     def setUp(self):
         Container.clear()
 
     def test1(self):
-        Container.bind('Config').toSingle(ConfigXml)
+        assertThat(False)
+        #Container.bind('Config').toSingle(ConfigXml)
         Container.bind('VarManager').toSingle(VarManager, {'foo': 'yep [bar]', 'bar': 'result2'})
 
         pathMgr = Container.resolve('VarManager')

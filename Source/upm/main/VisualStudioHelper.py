@@ -67,7 +67,7 @@ class VisualStudioHelper:
         self.buildVisualStudioProject(solutionPath, 'Debug')
 
     def buildVisualStudioProject(self, solutionPath, buildConfig):
-        if self._config.getBool('Compilation', 'UseDevenv', False):
+        if self._config.tryGetBool(False, 'Compilation', 'UseDevenv'):
             buildCommand = '"[VisualStudioCommandLinePath]" {0} /build "{1}"'.format(solutionPath, buildConfig)
         else:
             buildCommand = '"[MsBuildExePath]" /p:VisualStudioVersion=12.0'

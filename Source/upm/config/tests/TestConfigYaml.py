@@ -57,5 +57,18 @@ class TestConfigYaml(unittest.TestCase):
         # Test concatenating dictionaries together
         assertIsEqual(config.getDictionary('dict1'), {'joe': 5, 'mary': 15, 'kate': 5, 'jim': 10})
 
+        assertIsEqual(config.tryGetDictionary(None, 'asdfasdfasdf'), None)
+        assertIsEqual(config.tryGetDictionary({ 5: 1 }, 'asdfasdfasdf'), { 5: 1 })
+
+        assertIsEqual(config.tryGetList(None, 'asdfasdfasdf'), None)
+        assertIsEqual(config.tryGetList([1, 2], 'asdfasdfasdf'), [1, 2])
+
+        assertIsEqual(config.tryGetBool(False, 'zxvzasdfasdfasdf'), False)
+        assertIsEqual(config.tryGetBool(True, 'zxvzasdfasdfasdf'), True)
+
+        assertIsEqual(config.tryGetString('asdf', 'zxvzasdfasdfasdf'), 'asdf')
+
+        assertIsEqual(config.tryGetInt(5, 'zxvzasdfasdfasdf'), 5)
+
 if __name__ == '__main__':
     unittest.main()
