@@ -58,7 +58,7 @@ class Runner:
         self._sys.copyDirectory('[RootDir]/Projeny/Source', '[OutDir]/Projeny/Source')
         self._sys.copyDirectory('[RootDir]/Projeny/Templates', '[OutDir]/Projeny/Templates')
 
-        self._sys.copyFile('[RootDir]/Projeny/ProjenyConfig.xml', '[OutDir]/Projeny/ProjenyConfig.xml')
+        self._sys.copyFile('[RootDir]/Projeny/upm.yaml', '[OutDir]/Projeny/upm.yaml')
 
         self._sys.removeByRegex('[OutDir]/Projeny/Bin/ProjenyLog*')
         self._sys.removeFile('[OutDir]/Projeny/Bin/.gitignore')

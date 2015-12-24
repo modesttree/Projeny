@@ -38,7 +38,7 @@ class SystemHelper:
     def __init__(self, timeout = 60 * 60):
         self._timeout = timeout
 
-    def cleanUpPath(self, pathStr):
+    def canonicalizePath(self, pathStr):
         return os.path.realpath(pathStr)
 
     def executeAndWait(self, commandStr, startDir = None):

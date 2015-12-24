@@ -19,8 +19,10 @@ class VisualStudioHelper:
     _vsSolutionGenerator = Inject('VisualStudioSolutionGenerator')
 
     def openFile(self, filePath, lineNo, project, platform):
-        lineNo = lineNo if lineNo > 0 else 1
-        filePath = self._sys.cleanUpPath(filePath).replace('\\', '/')
+        if not lineNo or lineNo <= 0:
+            lineNo = 1
+
+        filePath = self._sys.canonicalizePath(filePath).replace('\\', '/')
 
         if MiscUtil.doesProcessExist('^devenv\.exe$'):
             self.openFileInExistingVisualStudioInstance(filePath, lineNo)
@@ -39,11 +41,11 @@ class VisualStudioHelper:
             dte.ItemOperations.OpenFile(filePath)
             dte.ActiveDocument.Selection.MoveToLineAndOffset(lineNo, 1)
         except Exception as error:
-            raise Exception("COM Error: " + win32api.FormatMessage(error.excepinfo[5]))
+            raise Exception("COM Error.  This is often triggered when given a bad line number. Details: {0}".format(win32api.FormatMessage(error.excepinfo[5])))
 
     def openVisualStudioSolution(self, solutionPath, filePath = None):
         if not self._varMgr.hasKey('VisualStudioIdePath'):
-            assertThat(False, "Path to visual studio has not been defined.  Please set <VisualStudioIdePath> within the ProjenyConfig.xml file")
+            assertThat(False, "Path to visual studio has not been defined.  Please set <VisualStudioIdePath> within the upm.yaml file")
 
         if self._sys.fileExists('[VisualStudioIdePath]'):
             self._sys.executeNoWait('[VisualStudioIdePath] {0} {1}'.format(solutionPath, filePath if filePath else ""))

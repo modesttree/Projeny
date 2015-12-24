@@ -74,22 +74,6 @@ class UpmRunner:
         if self._args.openCustomSolution:
             self._vsSolutionHelper.openCustomSolution(self._project, self._platform)
 
-        if self._args.openCsFile:
-            filePath, lineNo = self._parseFile(self._args.openCsFile)
-            self._vsSolutionHelper.openFile(filePath, lineNo, self._project, self._platform)
-
-    def _parseFile(self, filePathAndLine):
-        delPos = filePathAndLine.rfind(':')
-
-        if delPos == -1:
-            return filePathAndLine, 1
-
-        filePath = filePathAndLine[0:delPos]
-        lineNoStr = filePathAndLine[delPos+1:]
-        lineNo = int(lineNoStr)
-
-        return filePath, lineNo
-
     def _runInternal(self):
         self._log.debug("Started UPM with arguments: {0}".format(" ".join(sys.argv[1:])))
 
@@ -101,45 +85,22 @@ class UpmRunner:
 
     def processArgs(self):
 
-        if self._args.openCsFile != None and (self._args.platform == None or self._args.project == None):
-            self._project, self._platform = self._getProjectAndPlatformFromFilePath(self._args.openCsFile)
-        else:
-            self._project = self._args.project
+        self._project = self._args.project
 
-            if not self._project:
-                self._project = self._config.tryGetString(None, 'Projeny', 'DefaultProject')
+        if not self._project:
+            self._project = self._config.tryGetString(None, 'Projeny', 'DefaultProject')
 
-            if self._project and not self._packageMgr.projectExists(self._project):
-                self._project = self._packageMgr.getProjectFromAlias(self._project)
+        if self._project and not self._packageMgr.projectExists(self._project):
+            self._project = self._packageMgr.getProjectFromAlias(self._project)
 
-            self._platform = PlatformUtil.fromPlatformArgName(self._args.platform)
-
-    def _getProjectAndPlatformFromFilePath(self, filePath):
-        unityProjectsDir = self._sys.cleanUpPath(self._varMgr.expand('[UnityProjectsDir]'))
-        filePath = self._sys.cleanUpPath(filePath)
-
-        if not filePath.startswith(unityProjectsDir):
-            raise Exception("The given file path is not within the UnityProjects directory")
-
-        relativePath = filePath[len(unityProjectsDir)+1:]
-        dirs = relativePath.split(os.path.sep)
-
-        projectName = dirs[0]
-
-        platformProjectDirName = dirs[1]
-        platformDirName = platformProjectDirName[platformProjectDirName.rfind('-')+1:]
-
-        platform = PlatformUtil.fromPlatformFolderName(platformDirName)
-
-        return projectName, platform
+        self._platform = PlatformUtil.fromPlatformArgName(self._args.platform)
 
     def _validateArgs(self):
         requiresProject = self._args.updateLinks or self._args.updateUnitySolution \
            or self._args.updateCustomSolution or self._args.buildCustomSolution \
            or self._args.clearProjectGeneratedFiles or self._args.buildFull \
-           or self._args.openUnity or self._args.openCustomSolution \
-           or (self._args.openCsFile != None)
+           or self._args.openUnity or self._args.openCustomSolution
 
         if requiresProject and not self._project:
-            assertThat(False, "Cannot execute the given arguments without a project specified, or a default project defined in the ProjenyConfig.xml file")
+            assertThat(False, "Cannot execute the given arguments without a project specified, or a default project defined in the upm.yaml file")
 

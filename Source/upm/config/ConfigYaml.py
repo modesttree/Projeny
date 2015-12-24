@@ -34,7 +34,8 @@ class ConfigYaml:
 
     @property
     def mainPath(self):
-        assertThat(len(self.configPaths) > 0)
+        if len(self.configPaths) == 0:
+            return None
         return self.configPaths[0]
 
     def readAllTextFromFile(self, filePath):

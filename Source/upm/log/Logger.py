@@ -37,7 +37,7 @@ class Logger:
     def hasHeading(self):
         return self._headerStartTime != None
 
-    def heading(self, msg):
+    def heading(self, msg, *args):
 
         self.endHeading()
 
@@ -48,32 +48,32 @@ class Logger:
             self._startTime = datetime.now()
 
         self.currentHeading = msg
-        self._logInternal(msg + '...', LogType.Heading)
+        self._logInternal(msg + '...', LogType.Heading, *args)
 
-    def debug(self, msg):
-        self._logInternal(msg, LogType.Debug)
+    def debug(self, msg, *args):
+        self._logInternal(msg, LogType.Debug, *args)
 
-    def info(self, msg):
-        self._logInternal(msg, LogType.Info)
+    def info(self, msg, *args):
+        self._logInternal(msg, LogType.Info, *args)
 
-    def error(self, msg):
+    def error(self, msg, *args):
 
         if self._headerStartTime:
             self._errorOccurred = True
 
-        self._logInternal(msg, LogType.Error)
+        self._logInternal(msg, LogType.Error, *args)
 
-    def warn(self, msg):
-        self._logInternal(msg, LogType.Warn)
+    def warn(self, msg, *args):
+        self._logInternal(msg, LogType.Warn, *args)
 
-    def finished(self, msg):
+    def finished(self, msg, *args):
         ''' Call this when your script is completely finished '''
 
         self.endHeading()
-        self._logInternal(msg, LogType.Heading)
+        self._logInternal(msg, LogType.Heading, *args)
 
-    def good(self, msg):
-        self._logInternal(msg, LogType.Good)
+    def good(self, msg, *args):
+        self._logInternal(msg, LogType.Good, *args)
 
     def endHeading(self):
 
@@ -99,7 +99,10 @@ class Logger:
         else:
             self._logInternal(message, LogType.HeadingSucceeded)
 
-    def _logInternal(self, msg, logType):
+    def _logInternal(self, msg, logType, *args):
+
+        if len(args) > 0:
+            msg = msg.format(*args)
 
         for stream in self._streams:
             stream.log(logType, msg)

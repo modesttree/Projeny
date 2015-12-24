@@ -59,21 +59,14 @@ def addArguments(parser):
 
     parser.add_argument('-ou', '--openUnity', action='store_true', help='Open unity for the given project')
     parser.add_argument('-ocs', '--openCustomSolution', action='store_true', help='Open the solution for the given project/platform')
-    parser.add_argument('-ocf', '--openCsFile', metavar='FILE_PATH', type=str, help="Open the given C# file in an active instance of visual studio")
 
-def getConfigPaths(args):
-    if args.configPath:
-        return [args.configPath]
-
-    return [os.path.join(os.getcwd(), 'Upm.yaml')]
-
-def installBindings(args):
-    Container.bind('Config').toSingle(ConfigYaml, getConfigPaths(args))
+def installBindings(verbose, veryVerbose, configPaths):
+    Container.bind('Config').toSingle(ConfigYaml, configPaths)
     Container.bind('VarManager').toSingle(VarManager)
     Container.bind('SystemHelper').toSingle(SystemHelper)
     Container.bind('Logger').toSingle(Logger)
     Container.bind('LogStream').toSingle(LogStreamFile)
-    Container.bind('LogStream').toSingle(LogStreamConsole, args.verbose, args.veryVerbose)
+    Container.bind('LogStream').toSingle(LogStreamConsole, verbose, veryVerbose)
     Container.bind('UnityHelper').toSingle(UnityHelper)
     Container.bind('ScriptRunner').toSingle(ScriptRunner)
     Container.bind('PackageManager').toSingle(PackageManager)
@@ -116,6 +109,14 @@ def installPlugins():
         print("Loading plugin at {0}".format(basePath))
         importlib.import_module('plugins.' + basePath)
 
+ConfigFileName = 'Upm.yaml'
+
+def getConfigPaths(args):
+    if args.configPath:
+        return [args.configPath]
+
+    return [os.path.join(os.getcwd(), ConfigFileName)]
+
 if __name__ == '__main__':
     if (sys.version_info < (3, 0)):
         print('Wrong version of python!  Install python 3 and try again')
@@ -138,7 +139,7 @@ if __name__ == '__main__':
 
     processArgs(args)
 
-    installBindings(args)
+    installBindings(args.verbose, args.veryVerbose, getConfigPaths(args))
     installPlugins()
 
     from upm.main.UpmRunner import UpmRunner
