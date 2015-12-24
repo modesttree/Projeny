@@ -65,10 +65,10 @@ class LogStreamConsole:
         self.debugPatterns = self._getPatterns('DebugPatterns')
         self.debugMaps = self._getPatternMaps('DebugPatternMaps')
 
-        self._useColors = self._config.tryGetBool(False, 'Console', 'UseColors')
+        self._useColors = self._config.getBool('Console', 'UseColors')
 
         self._fileStream = None
-        if self._config.tryGetBool(False, 'Console', 'OutputToFilteredLog'):
+        if self._config.getBool('Console', 'OutputToFilteredLog'):
             self._fileStream = self._getFileStream()
 
         if self._useColors:

@@ -22,6 +22,8 @@ from upm.main.ProjectSchemaLoader import ProjectSchemaLoader
 from upm.util.ScriptRunner import ScriptRunner
 from upm.util.CommonSettings import CommonSettings
 
+from upm.util.Assert import *
+
 from upm.util.PlatformUtil import Platforms
 from upm.main.PackageManager import PackageManager
 
@@ -60,9 +62,27 @@ def addArguments(parser):
     parser.add_argument('-ou', '--openUnity', action='store_true', help='Open unity for the given project')
     parser.add_argument('-ocs', '--openCustomSolution', action='store_true', help='Open the solution for the given project/platform')
 
-def installBindings(verbose, veryVerbose, configPaths):
+def getProjenyDir():
+    if MiscUtil.isRunningAsExe():
+        return os.path.join(MiscUtil.getExecDirectory(), '../..')
+
+    return os.path.join(MiscUtil.getExecDirectory(), '../../..')
+
+def installBindings(verbose, veryVerbose, userConfigPaths):
+    projenyDir = getProjenyDir()
+    projenyConfigPath = os.path.join(projenyDir, 'upm.yaml')
+
+    # Put the standard config first so it can be over-ridden by user settings
+    configPaths = [projenyConfigPath] + list(userConfigPaths)
+
     Container.bind('Config').toSingle(ConfigYaml, configPaths)
-    Container.bind('VarManager').toSingle(VarManager)
+
+    initialVars = { 
+        'ProjenyDir': projenyDir,
+        'ConfigDir': os.path.dirname(userConfigPaths[0]) 
+    }
+
+    Container.bind('VarManager').toSingle(VarManager, initialVars)
     Container.bind('SystemHelper').toSingle(SystemHelper)
     Container.bind('Logger').toSingle(Logger)
     Container.bind('LogStream').toSingle(LogStreamFile)
@@ -111,7 +131,7 @@ def installPlugins():
 
 ConfigFileName = 'Upm.yaml'
 
-def getConfigPaths(args):
+def getUserConfigPaths(args):
     if args.configPath:
         return [args.configPath]
 
@@ -139,7 +159,7 @@ if __name__ == '__main__':
 
     processArgs(args)
 
-    installBindings(args.verbose, args.veryVerbose, getConfigPaths(args))
+    installBindings(args.verbose, args.veryVerbose, getUserConfigPaths(args))
     installPlugins()
 
     from upm.main.UpmRunner import UpmRunner

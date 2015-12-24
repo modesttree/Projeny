@@ -5,5 +5,4 @@ set PYTHONPATH=%~dp0\..\Source;%PYTHONPATH%
 python -m upm.main.Upm %*
 
 REM Option B - use compiled exe - this is easier for teams since you don't need python
-REM cd %~dp0\..\Bin
-REM Upm.exe %*
+REM Bin\Upm.exe %*

@@ -1,0 +1,16 @@
+
+# Default values
+# These can all be overriden by user config files
+PathVars+:
+    TemplatesDir: '[ProjenyDir]/Templates'
+    CsProjectTemplate: '[TemplatesDir]/CsProjectTemplate.csproj'
+    CsSolutionTemplate: '[TemplatesDir]/CsSolutionTemplate.sln'
+
+Console:
+    UseColors: False
+    OutputToFilteredLog: False
+
+Compilation:
+    UseDevenv: False
+
+IncludeProjenyInGeneratedSolution: False

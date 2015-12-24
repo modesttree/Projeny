@@ -537,7 +537,7 @@ class VisualStudioSolutionGenerator:
         return minidom.parseString(ET.tostring(doc)).toprettyxml(indent="    ")
 
     def _shouldIgnoreCsProjFile(self, fullPath):
-        if self._config.tryGetBool(False, 'Projeny', 'IncludeProjenyInGeneratedSolution'):
+        if self._config.getBool('IncludeProjenyInGeneratedSolution'):
             return False
 
         return UpmDirectoryIgnorePattern.match(fullPath)

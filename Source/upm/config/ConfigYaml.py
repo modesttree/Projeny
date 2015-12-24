@@ -1,4 +1,5 @@
 
+import sys
 import os
 import configparser
 import yaml
@@ -14,23 +15,17 @@ import upm.ioc.IocAssertions as Assertions
 class ConfigYaml:
     ''' Build config info  (eg. path info, etc.) '''
 
-    def __init__(self, configPaths = None, optionalPaths = None):
+    def __init__(self, configPaths = None):
 
         if not configPaths:
             configPaths = []
 
-        if not optionalPaths:
-            optionalPaths = []
-
         self.configs = []
-        self.configPaths = configPaths
+        self.configPaths = reversed(configPaths)
 
-        for path in optionalPaths:
-            if os.path.isfile(path):
-                self.configPaths.append(path)
-
-        for configPath in reversed(self.configPaths):
-            self.configs.append(yaml.load(self.readAllTextFromFile(configPath)))
+        for configPath in self.configPaths:
+            config = yaml.load(self.readAllTextFromFile(configPath))
+            self.configs.append(config)
 
     @property
     def mainPath(self):
@@ -43,7 +38,7 @@ class ConfigYaml:
         with open(filePath, 'r', encoding='utf-8') as f:
             return f.read()
 
-    def getBool(self, fallback, *args):
+    def getBool(self, *args):
         return self._getPrimitive(bool, *args)
 
     def tryGetBool(self, fallback, *args):
@@ -63,12 +58,12 @@ class ConfigYaml:
 
     def _getPrimitive(self, propType, *args):
         result = self._tryGetPrimitive(None, propType, *args)
-        assertThat(result, "Could not find match for YAML element {0}", self._propNameToString(args))
+        assertThat(result is not None, "Could not find match for YAML element {0}", self._propNameToString(args))
         return result
 
     def _tryGetPrimitive(self, fallback, propType, *args):
         result = self.tryGet(*args)
-        if not result:
+        if result == None:
             return fallback
         assertIsType(result, propType, "Unexpected type for yaml property '{0}'", self._propNameToString(args))
         return result
@@ -78,7 +73,7 @@ class ConfigYaml:
 
     def get(self, *args):
         match = self.tryGet(*args)
-        assertThat(match, "Could not find match for YAML element {0}", self._propNameToString(args))
+        assertThat(match is not None, "Could not find match for YAML element {0}", self._propNameToString(args))
         return match
 
     def tryGet(self, *args):
@@ -107,13 +102,13 @@ class ConfigYaml:
 
     def getList(self, *args):
         result = self.tryGetList(None, *args)
-        assertThat(result, "Could not find match for YAML element {0}", self._propNameToString(args))
+        assertThat(result is not None, "Could not find match for YAML element {0}", self._propNameToString(args))
         return result
 
     def tryGetList(self, fallback, *args):
         result = self.tryGet(*args)
 
-        if not result:
+        if result == None:
             return fallback
 
         assertIsType(result, list, "Unexpected type for yaml property '{0}'", self._propNameToString(args))
@@ -128,13 +123,13 @@ class ConfigYaml:
 
     def getDictionary(self, *args):
         result = self.tryGetDictionary(None, *args)
-        assertThat(result, "Could not find match for YAML element {0}", self._propNameToString(args))
+        assertThat(result is not None, "Could not find match for YAML element {0}", self._propNameToString(args))
         return result
 
     def tryGetDictionary(self, fallback, *args):
         result = self.tryGet(*args)
 
-        if not result:
+        if result == None:
             return fallback
 
         assertIsType(result, dict, "Unexpected type for yaml property '{0}'", self._propNameToString(args))

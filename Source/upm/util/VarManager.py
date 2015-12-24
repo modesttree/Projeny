@@ -22,10 +22,7 @@ class VarManager:
         self._params['StartCurrentDir'] = os.getcwd()
         self._params['ExecDir'] = MiscUtil.getExecDirectory().replace('\\', '/')
 
-        if self._config.mainPath:
-            self._params['ConfigDir'] = os.path.dirname(self._config.mainPath).replace('\\', '/')
-
-        configPaths = self._config.tryGetDictionary(None, 'PathVars')
+        configPaths = self._config.tryGetDictionary({}, 'PathVars')
 
         for key, value in configPaths.items():
             assertThat(not key in self._params.keys())

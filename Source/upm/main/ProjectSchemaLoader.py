@@ -24,7 +24,7 @@ class ProjectSchemaLoader:
         schemaPathUserGlobal = self._varMgr.expandPath('[UnityProjectsDir]/projectUser.yaml')
 
         self._log.debug('Loading schema at path "{0}"'.format(schemaPath))
-        config = ConfigYaml([schemaPath], [schemaPathUser, schemaPathGlobal, schemaPathUserGlobal])
+        config = ConfigYaml([schemaPath, schemaPathUser, schemaPathGlobal, schemaPathUserGlobal])
 
         pluginDependencies = config.tryGetList([], 'packagesPlugins')
         scriptsDependencies = config.tryGetList([], 'packages')
