@@ -3,6 +3,8 @@ import re
 import sys
 import os
 
+import upm.util.MiscUtil as MiscUtil
+
 import mtm.ioc.Container as Container
 from mtm.ioc.Inject import Inject, InjectOptional
 import mtm.ioc.Assertions as Assertions
@@ -13,9 +15,10 @@ class VarManager:
     '''
     Stores a dictionary of keys to values to replace path variables with
     '''
-    def __init__(self, pythonDir, initialParams = None):
+    def __init__(self, initialParams = None):
         self._params = initialParams if initialParams else {}
-        self._params['PythonDir'] = pythonDir.replace('\\', '/')
+        self._params['StartCurrentDir'] = os.getcwd()
+        self._params['ExecDir'] = MiscUtil.getExecDirectory().replace('\\', '/')
 
         if self._config.mainPath:
             self._params['ConfigDir'] = os.path.dirname(self._config.mainPath).replace('\\', '/')

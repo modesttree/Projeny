@@ -17,7 +17,7 @@ class TestConfigXml(unittest.TestCase):
         Container.clear()
 
     def test1(self):
-        Container.bind('ConfigXml').toSingle(ConfigXml, ScriptDir + '/TestConfig.xml')
+        Container.bind('ConfigXml').toSingle(ConfigXml, [ScriptDir + '/TestConfig.xml'])
 
         self._testConfig(Container.resolve('ConfigXml'))
 
@@ -39,7 +39,6 @@ class TestConfigXml(unittest.TestCase):
         self.assertEqual(stringFoo, 'bar')
 
         fooDict = config.getDictionary('Paths')
-        assert 'SourceDir' in fooDict.keys()
 
         self.assertRaises(Exception, lambda: config.getString('Heading', 'nonexistentitem'))
         self.assertEqual(config.getString('Heading', 'nonexistentitem', 'default1'), 'default1')

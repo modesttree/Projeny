@@ -41,11 +41,9 @@ import mtm.ioc.Assertions as Assertions
 
 from upm.util.UnityHelper import UnityHelper
 
-# We assume here that we always start in the python directory or the bin directory
-PythonDir = os.getcwd()
-ProjenyDir = os.path.realpath(os.path.join(PythonDir, '..'))
-
 def addArguments(parser):
+    parser.add_argument('-cfg', '--configPath', metavar='CONFIG_PATH', type=str, help="TBD")
+
     parser.add_argument('-p', '--project', metavar='PROJECT_NAME', type=str, help="The project to apply changes to.")
     parser.add_argument('-pl', '--platform', type=str, default='win', choices=['win', 'webp', 'webgl', 'and', 'osx', 'ios', 'lin'], help='The platform to use.  If unspecified, windows is assumed.')
 
@@ -74,16 +72,19 @@ def addArguments(parser):
     parser.add_argument('-ocs', '--openCustomSolution', action='store_true', help='Open the solution for the given project/platform')
     parser.add_argument('-ocf', '--openCsFile', metavar='FILE_PATH', type=str, help="Open the given C# file in an active instance of visual studio")
 
-def getConfigPaths():
-    return [os.path.join(ProjenyDir, 'ProjenyConfig.xml'), os.path.join(ProjenyDir, 'ProjenyConfigCustom.xml')]
+def getConfigPaths(args):
+    if args.configPath:
+        return [args.configPath]
 
-def installBindings(verbose, veryVerbose):
-    Container.bind('Config').toSingle(ConfigXml, getConfigPaths())
-    Container.bind('VarManager').toSingle(VarManager, PythonDir, { 'ProjenyDir': '[PythonDir]/..' })
+    return [os.path.join(os.getcwd(), 'ProjenyConfig.xml')]
+
+def installBindings(args):
+    Container.bind('Config').toSingle(ConfigXml, getConfigPaths(args))
+    Container.bind('VarManager').toSingle(VarManager)
     Container.bind('SystemHelper').toSingle(SystemHelper)
     Container.bind('Logger').toSingle(Logger)
     Container.bind('LogStream').toSingle(LogStreamFile)
-    Container.bind('LogStream').toSingle(LogStreamConsole, verbose, veryVerbose)
+    Container.bind('LogStream').toSingle(LogStreamConsole, args.verbose, args.veryVerbose)
     Container.bind('UnityHelper').toSingle(UnityHelper)
     Container.bind('ScriptRunner').toSingle(ScriptRunner)
     Container.bind('PackageManager').toSingle(PackageManager)
@@ -110,15 +111,20 @@ def findAllFiles(directory, pattern):
                 yield filename
 
 def installPlugins():
+
+    if MiscUtil.isRunningAsExe():
+        # Must be running from source for plugins
+        return
+
     import importlib
 
-    pluginDir = os.path.join(PythonDir, 'plugins')
+    pluginDir = os.path.join(MiscUtil.getExecDirectory(), '../../../plugins')
 
     for filePath in findAllFiles(pluginDir, '*.py'):
         basePath = filePath[len(pluginDir) + 1:]
         basePath = os.path.splitext(basePath)[0]
         basePath = basePath.replace('\\', '.')
-        #print("Found plugin at {0}".format(basePath))
+        print("Loading plugin at {0}".format(basePath))
         importlib.import_module('plugins.' + basePath)
 
 if __name__ == '__main__':
@@ -126,35 +132,24 @@ if __name__ == '__main__':
         print('Wrong version of python!  Install python 3 and try again')
         sys.exit(2)
 
-    argv = sys.argv[1:]
-
-    # If it's 2 then it only has the -cfg param
-    if len(argv) == 0:
-        print("""
-.______   .______      ______          __   _______ .__   __. ____    ____
-|   _  \  |   _  \    /  __  \        |  | |   ____||  \ |  | \   \  /   /
-|  |_)  | |  |_)  |  |  |  |  |       |  | |  |__   |   \|  |  \   \/   /
-|   ___/  |      /   |  |  |  | .--.  |  | |   __|  |  . `  |   \_    _/
-|  |      |  |\  \-. |  `--'  | |  `--'  | |  |____ |  |\   |     |  |
-| _|      | _| `.__|  \______/   \______/  |_______||__| \__|     |__|
-
-                    Unity Package Manager""")
-        print()
-        print(' Run "Upm -d" to open up the documentation page.  If this is your first time using Projeny this is what you should do.')
-        print(' Run "Upm -h" to print the full list of command line options')
-        print()
-        sys.exit(2)
-
     # Here we split out some functionality into various methods
     # so that other python code can make use of them
     # if they want to extend projeny
     parser = argparse.ArgumentParser(description='Unity Package Manager')
     addArguments(parser)
+
+    argv = sys.argv[1:]
+
+    # If it's 2 then it only has the -cfg param
+    if len(argv) == 0:
+        parser.print_help()
+        sys.exit(2)
+
     args = parser.parse_args(sys.argv[1:])
 
     processArgs(args)
 
-    installBindings(args.verbose, args.veryVerbose)
+    installBindings(args)
     installPlugins()
 
     from upm.main.UpmRunner import UpmRunner
