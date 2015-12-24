@@ -1,0 +1,9 @@
+---
+thing1: Foo
+foo2: ipsum
+list1+:
+    - joe
+    - frank
+dict1+:
+    kate: 5
+    jim: 10
