@@ -1,13 +1,14 @@
 
-import mtm.ioc.Container as Container
-from mtm.ioc.Inject import Inject
-from mtm.ioc.Inject import InjectMany
-import mtm.ioc.Assertions as Assertions
+import upm.ioc.Container as Container
+from upm.ioc.Inject import Inject
+from upm.ioc.Inject import InjectMany
+import upm.ioc.IocAssertions as Assertions
 import upm.util.MiscUtil as MiscUtil
 
 import win32api
 import win32com.client
 
+from upm.util.Assert import *
 class VisualStudioHelper:
     _log = Inject('Logger')
     _config = Inject('Config')
@@ -42,12 +43,12 @@ class VisualStudioHelper:
 
     def openVisualStudioSolution(self, solutionPath, filePath = None):
         if not self._varMgr.hasKey('VisualStudioIdePath'):
-            assert False, "Path to visual studio has not been defined.  Please set <VisualStudioIdePath> within the ProjenyConfig.xml file"
+            assertThat(False, "Path to visual studio has not been defined.  Please set <VisualStudioIdePath> within the ProjenyConfig.xml file")
 
         if self._sys.fileExists('[VisualStudioIdePath]'):
             self._sys.executeNoWait('[VisualStudioIdePath] {0} {1}'.format(solutionPath, filePath if filePath else ""))
         else:
-            assert False, "Cannot find path to visual studio.  Expected to find it at '{0}'".format(self._varMgr.expand('[VisualStudioIdePath]'))
+            assertThat(False, "Cannot find path to visual studio.  Expected to find it at '{0}'".format(self._varMgr.expand('[VisualStudioIdePath]')))
 
     def updateCustomSolution(self, project, platform):
         self._vsSolutionGenerator.updateVisualStudioSolution(project, platform)

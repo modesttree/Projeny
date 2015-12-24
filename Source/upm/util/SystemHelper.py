@@ -6,8 +6,9 @@ from upm.util.VarManager import VarManager
 from upm.config.ConfigXml import ConfigXml
 from upm.util.ProcessRunner import ProcessRunner, ResultType
 
-import mtm.ioc.Container as Container
-from mtm.ioc.Inject import Inject, InjectOptional
+from upm.util.Assert import *
+import upm.ioc.Container as Container
+from upm.ioc.Inject import Inject, InjectOptional
 
 import time
 import os
@@ -61,7 +62,7 @@ class SystemHelper:
         if result == ResultType.TimedOut:
             raise ProcessTimeoutException('Timed out while waiting for command: %s' % expandedStr)
 
-        assert result == ResultType.Success
+        assertThat(result == ResultType.Success)
 
     def executeNoWait(self, commandStr, startDir = None):
         expandedStr = self._varManager.expand(commandStr)
@@ -91,7 +92,7 @@ class SystemHelper:
         if result == ResultType.Error:
             raise ProcessErrorCodeException('Command returned with error code while executing: %s' % expandedStr)
 
-        assert result == ResultType.Success, "Expected success result but found '{0}'".format(result)
+        assertThat(result == ResultType.Success, "Expected success result but found '{0}'".format(result))
 
     def executeAndReturnOutput(self, commandStr):
         self._log.debug("Executing '%s'" % commandStr)

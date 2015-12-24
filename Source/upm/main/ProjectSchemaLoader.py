@@ -3,11 +3,12 @@ import re
 import os
 from upm.config.ConfigIni import ConfigIni
 
+from upm.util.Assert import *
 from upm.util.PlatformUtil import Platforms
 import upm.util.Util as Util
-import mtm.ioc.Container as Container
-from mtm.ioc.Inject import Inject
-import mtm.ioc.Assertions as Assertions
+import upm.ioc.Container as Container
+from upm.ioc.Inject import Inject
+import upm.ioc.IocAssertions as Assertions
 import upm.util.JunctionUtil as JunctionUtil
 
 RequiredDependencies = ["Projeny"]
@@ -35,10 +36,10 @@ class ProjectSchemaLoader:
         Util.ensureNoDuplicates(pluginDependencies, 'pluginDependencies')
 
         for packageName in pluginDependencies:
-            assert not packageName in scriptsDependencies, "Found package '{0}' in both scripts and plugins.  Must be in only one or the other".format(packageName)
+            assertThat(not packageName in scriptsDependencies, "Found package '{0}' in both scripts and plugins.  Must be in only one or the other".format(packageName))
 
         for dependName in RequiredDependencies:
-            assert not dependName in scriptsDependencies
+            assertThat(not dependName in scriptsDependencies)
 
             if not dependName in pluginDependencies:
                 pluginDependencies.append(dependName)
@@ -63,9 +64,9 @@ class ProjectSchemaLoader:
             isPluginsDir = packageName in pluginDependencies
 
             if isPluginsDir:
-                assert not packageName in scriptsDependencies
+                assertThat(not packageName in scriptsDependencies)
             else:
-                assert packageName in scriptsDependencies
+                assertThat(packageName in scriptsDependencies)
 
             if packageConfig.getBool('Config', 'ForceAssetsDirectory', False):
                 isPluginsDir = False
@@ -74,7 +75,7 @@ class ProjectSchemaLoader:
 
             forcePluginsDir = packageConfig.getBool('Config', 'ForcePluginsDirectory', False)
 
-            assert not packageName in packageMap
+            assertThat(not packageName in packageMap)
             packageMap[packageName] = PackageInfo(isPluginsDir, packageName, packageConfig, createCustomVsProject, explicitDependencies, forcePluginsDir)
 
             for dependName in explicitDependencies:
@@ -99,7 +100,7 @@ class ProjectSchemaLoader:
         self._fillOutDependencies(packageMap)
 
         for customProj in customProjects:
-            assert customProj.startswith('/') or customProj in allDependencies, 'Given project "{0}" in schema is not included in either "scripts" or "plugins"'.format(customProj)
+            assertThat(customProj.startswith('/') or customProj in allDependencies, 'Given project "{0}" in schema is not included in either "scripts" or "plugins"'.format(customProj))
 
         self._addPrebuiltProjectsFromPackages(packageMap, prebuiltProjects)
 
@@ -117,7 +118,7 @@ class ProjectSchemaLoader:
 
         for info in packageMap.values():
             if info.forcePluginsDir and not info.isPluginDir:
-                assert False, "Package '{0}' must be in plugins directory".format(info.name)
+                assertThat(False, "Package '{0}' must be in plugins directory".format(info.name))
 
         return ProjectSchema(name, packageMap, customFolders, prebuiltProjectPaths)
 
@@ -246,7 +247,7 @@ class ProjectSchemaLoader:
     def _fillOutDependenciesForPackage(self, packageInfo, packageMap, inProgress):
 
         if packageInfo.name in inProgress:
-            assert False, "Found circular dependency when processing package {0}.  Dependency list: {1}".format(packageInfo.name, ' -> '.join([x for x in inProgress]) + '-> ' + packageInfo.name)
+            assertThat(False, "Found circular dependency when processing package {0}.  Dependency list: {1}".format(packageInfo.name, ' -> '.join([x for x in inProgress]) + '-> ' + packageInfo.name))
 
         inProgress.add(packageInfo.name)
         allDependencies = set(packageInfo.explicitDependencies)
@@ -314,7 +315,7 @@ class PackageInfo:
         if value == FolderTypes.StreamingAssets:
             return FolderTypes.StreamingAssets
 
-        assert False, "Unrecognized folder type '{0}'".format(value)
+        assertThat(False, "Unrecognized folder type '{0}'".format(value))
         return ""
 
     @property

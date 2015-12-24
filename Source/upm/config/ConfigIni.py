@@ -3,9 +3,10 @@ import os
 import configparser
 
 import upm.util.Util as Util
-import mtm.ioc.Container as Container
-from mtm.ioc.Inject import Inject, InjectOptional
-import mtm.ioc.Assertions as Assertions
+import upm.ioc.Container as Container
+from upm.ioc.Inject import Inject, InjectOptional
+import upm.ioc.IocAssertions as Assertions
+from upm.util.Assert import *
 
 class ConfigIni:
     ''' Build config info  (eg. path info, etc.) '''
@@ -15,7 +16,7 @@ class ConfigIni:
         self.configs = []
 
         if len(configPaths) > 0:
-            assert os.path.isfile(configPaths[0]), 'Could not find config file at path "{0}"'.format(configPaths[0])
+            assertThat(os.path.isfile(configPaths[0]), 'Could not find config file at path "{0}"'.format(configPaths[0]))
 
         for path in reversed(configPaths):
             if not os.path.isfile(path):
@@ -55,13 +56,13 @@ class ConfigIni:
         return config.items(sectionName)
 
     def getString(self, sectionName, optionName, *args):
-        assert len(args) <= 1
+        assertThat(len(args) <= 1)
 
         val = self._Get(sectionName, optionName)
 
         if val == None:
-            assert len(args) > 0, "Could not find option '{0}.{1}'".format(sectionName, optionName)
-            assert not args[0] or type(args[0]) is str
+            assertThat(len(args) > 0, "Could not find option '{0}.{1}'".format(sectionName, optionName))
+            assertThat(not args[0] or type(args[0]) is str)
             return args[0]
 
         return val
@@ -70,8 +71,8 @@ class ConfigIni:
         val = self._Get(sectionName, optionName)
 
         if val == None:
-            assert len(args) > 0, "Could not find option '{0}.{1}'".format(sectionName, optionName)
-            assert not args[0] or type(args[0]) is int
+            assertThat(len(args) > 0, "Could not find option '{0}.{1}'".format(sectionName, optionName))
+            assertThat(not args[0] or type(args[0]) is int)
             return args[0]
 
         return int(val)
@@ -80,8 +81,8 @@ class ConfigIni:
         val = self._Get(sectionName, optionName)
 
         if val == None:
-            assert len(args) > 0, "Could not find option '{0}.{1}'".format(sectionName, optionName)
-            assert not args[0] or type(args[0]) is bool
+            assertThat(len(args) > 0, "Could not find option '{0}.{1}'".format(sectionName, optionName))
+            assertThat(not args[0] or type(args[0]) is bool)
             return args[0]
 
         return val == 'True'

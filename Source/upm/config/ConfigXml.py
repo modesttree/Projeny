@@ -4,9 +4,10 @@ import configparser
 
 import xml.etree.ElementTree as ET
 
-import mtm.ioc.Container as Container
-from mtm.ioc.Inject import Inject, InjectOptional
-import mtm.ioc.Assertions as Assertions
+import upm.ioc.Container as Container
+from upm.ioc.Inject import Inject, InjectOptional
+import upm.ioc.IocAssertions as Assertions
+from upm.util.Assert import *
 
 class ConfigXml:
     ''' Build config info  (eg. path info, etc.) '''
@@ -32,7 +33,7 @@ class ConfigXml:
         self.rootSecondary = None
 
         if self.mainPath:
-            assert os.path.isfile(self.mainPath), 'Could not find config file at path "{0}"'.format(self.mainPath)
+            assertThat(os.path.isfile(self.mainPath), 'Could not find config file at path "{0}"'.format(self.mainPath))
             self.root = ET.parse(self.mainPath).getroot()
 
         if self.secondaryPath and os.path.isfile(self.secondaryPath):
@@ -41,7 +42,7 @@ class ConfigXml:
     def addList(self, sectionName, optionName, values):
         matches = self._getElements('./{0}/{1}'.format(sectionName, optionName))
 
-        assert len(matches) == 1
+        assertThat(len(matches) == 1)
 
         match = matches[0]
 
@@ -52,7 +53,7 @@ class ConfigXml:
 
     def _getSingleElement(self, pattern):
         elems = self._getElements(pattern)
-        assert len(elems) == 1, "Could not find unique element with pattern '{0}'".format(pattern)
+        assertThat(len(elems) == 1, "Could not find unique element with pattern '{0}'".format(pattern))
         return elems[0]
 
     def _getElements(self, pattern):
@@ -68,7 +69,7 @@ class ConfigXml:
 
     def getList(self, sectionName, optionName):
         result = self.tryGetList(sectionName, optionName)
-        assert result != None, "Could not find list with name '{0}.{1}'".format(sectionName, optionName)
+        assertThat(result != None, "Could not find list with name '{0}.{1}'".format(sectionName, optionName))
         return result
 
     def tryGetList(self, sectionName, optionName, fallback = None):
@@ -91,12 +92,12 @@ class ConfigXml:
 
     def getDictionary(self, sectionName):
         result = self.tryGetDictionary(sectionName)
-        assert result != None, "Could not find dictionary with name '{0}'".format(sectionName)
+        assertThat(result != None, "Could not find dictionary with name '{0}'".format(sectionName))
         return result
 
     def getKeyValueDictionary(self, sectionName, optionName, fallback = None):
         result = self.tryGetKeyValueDictionary(sectionName, optionName)
-        assert result != None, "Could not find key value dictionary with name '{0}'".format(sectionName)
+        assertThat(result != None, "Could not find key value dictionary with name '{0}'".format(sectionName))
         return result
 
     def tryGetKeyValueDictionary(self, sectionName, optionName, fallback = None):
@@ -138,13 +139,13 @@ class ConfigXml:
         return result
 
     def getString(self, sectionName, optionName, *args):
-        assert len(args) <= 1
+        assertThat(len(args) <= 1)
 
         val = self._getSingleOrNone(sectionName, optionName)
 
         if val == None:
-            assert len(args) > 0, "Could not find option '{0}.{1}'".format(sectionName, optionName)
-            assert not args[0] or type(args[0]) is str
+            assertThat(len(args) > 0, "Could not find option '{0}.{1}'".format(sectionName, optionName))
+            assertThat(not args[0] or type(args[0]) is str)
             return args[0]
 
         return val
@@ -153,8 +154,8 @@ class ConfigXml:
         val = self._getSingleOrNone(sectionName, optionName)
 
         if val == None:
-            assert len(args) > 0, "Could not find option '{0}.{1}'".format(sectionName, optionName)
-            assert not args[0] or type(args[0]) is int
+            assertThat(len(args) > 0, "Could not find option '{0}.{1}'".format(sectionName, optionName))
+            assertThat(not args[0] or type(args[0]) is int)
             return args[0]
 
         return int(val)
@@ -163,8 +164,8 @@ class ConfigXml:
         val = self._getSingleOrNone(sectionName, optionName)
 
         if val == None:
-            assert len(args) > 0, "Could not find option '{0}.{1}'".format(sectionName, optionName)
-            assert not args[0] or type(args[0]) is bool
+            assertThat(len(args) > 0, "Could not find option '{0}.{1}'".format(sectionName, optionName))
+            assertThat(not args[0] or type(args[0]) is bool)
             return args[0]
 
         return val == 'True'
@@ -183,7 +184,7 @@ class ConfigXml:
             elems += self.root.findall(pattern)
 
         if len(elems) > 0:
-            assert len(elems) == 1, "Unexpected number of elements for tag '{0}/{1}'".format(sectionName, optionName)
+            assertThat(len(elems) == 1, "Unexpected number of elements for tag '{0}/{1}'".format(sectionName, optionName))
             return elems[0].text
 
         return None

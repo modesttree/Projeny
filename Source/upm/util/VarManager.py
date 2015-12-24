@@ -5,9 +5,11 @@ import os
 
 import upm.util.MiscUtil as MiscUtil
 
-import mtm.ioc.Container as Container
-from mtm.ioc.Inject import Inject, InjectOptional
-import mtm.ioc.Assertions as Assertions
+import upm.ioc.Container as Container
+from upm.ioc.Inject import Inject, InjectOptional
+import upm.ioc.IocAssertions as Assertions
+
+from upm.util.Assert import *
 
 class VarManager:
     _config = Inject('Config')
@@ -26,18 +28,18 @@ class VarManager:
         configPaths = self._config.tryGetDictionary('PathVars', {})
 
         for key, value in configPaths.items():
-            assert not key in self._params.keys()
+            assertThat(not key in self._params.keys())
             self._params[key] = value
 
     def hasKey(self, key):
         return key in self._params
 
     def get(self, key):
-        assert key in self._params, 'Missing variable "{0}"'.format(key)
+        assertThat(key in self._params, 'Missing variable "{0}"'.format(key))
         return self._params[key]
 
     def add(self, key, value):
-        assert not key in self._params
+        assertThat(not key in self._params)
         self._params[key] = value
 
     def set(self, key, value):

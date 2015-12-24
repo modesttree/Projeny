@@ -130,7 +130,7 @@ def readlink(path):
 
 if __name__ == '__main__':
 
-    path = "C:/M3d/1/Src/UP/Modest3d/Mod-Win/Assets/Packages/Mtm.AssetsExplorer.Gui"
+    path = "C:/Temp/JunctionTest"
 
     if islink(path):
         print("yep")

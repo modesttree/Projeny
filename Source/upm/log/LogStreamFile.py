@@ -2,7 +2,7 @@
 import os
 import sys
 from datetime import datetime
-from mtm.ioc.Inject import Inject
+from upm.ioc.Inject import Inject
 from upm.log.Logger import LogType
 
 import shutil
@@ -55,7 +55,7 @@ class LogStreamFile:
         return open(primaryPath, 'w', encoding='utf-8', errors='ignore')
 
 if __name__ == '__main__':
-    import mtm.ioc.Container as Container
+    import upm.ioc.Container as Container
     from upm.log.Logger import Logger
     from upm.util.VarManager import VarManager
     from upm.config.ConfigXml import ConfigXml

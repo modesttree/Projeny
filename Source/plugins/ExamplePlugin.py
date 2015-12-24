@@ -3,8 +3,8 @@
 # If you uncomment this then initialize a new project (for eg. "upm -p MyProject -bf")
 # Then after that completes there should be a new file at UnityProjects/MyProject/MyP-win/MyExampleFile.txt
 
-#import mtm.ioc.Container as Container
-#from mtm.ioc.Inject import Inject
+#import upm.ioc.Container as Container
+#from upm.ioc.Inject import Inject
 
 #class CustomProjectInitHandler:
     #_varMgr = Inject('VarManager')

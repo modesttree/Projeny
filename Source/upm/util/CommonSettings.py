@@ -1,5 +1,5 @@
 
-from mtm.ioc.Inject import Inject
+from upm.ioc.Inject import Inject
 
 class CommonSettings:
     _config = Inject('Config')

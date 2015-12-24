@@ -4,11 +4,12 @@ import re
 import sys
 from datetime import datetime
 import traceback
-from mtm.ioc.Inject import Inject
+from upm.ioc.Inject import Inject
 import upm.util.Util as Util
 from upm.log.Logger import LogType
 import shutil
 
+from upm.util.Assert import *
 import upm.log.ColorConsole as ColorConsole
 
 class AnsiiCodes:
@@ -137,7 +138,7 @@ class LogStreamConsole:
         if logType == LogType.Debug:
             return ColorConsole.FOREGROUND_BLACK | self._defaultBg | ColorConsole.FOREGROUND_INTENSITY
 
-        assert False, 'Unrecognized log type "{0}"'.format(logType)
+        assertThat(False, 'Unrecognized log type "{0}"'.format(logType))
 
     def _getPatternMaps(self, settingName):
         maps = self._config.tryGetKeyValueDictionary('LogStreamConsole', settingName, {})
@@ -215,7 +216,7 @@ class LogStreamConsole:
 
 if __name__ == '__main__':
 
-    import mtm.ioc.Container as Container
+    import upm.ioc.Container as Container
     from upm.log.Logger import Logger
     from upm.util.VarManager import VarManager
     from upm.config.ConfigXml import ConfigXml

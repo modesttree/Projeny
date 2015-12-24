@@ -5,7 +5,7 @@ import sys
 from contextlib import contextmanager
 import time
 import shlex
-from mtm.ioc.Inject import Inject
+from upm.ioc.Inject import Inject
 from queue import Queue, Empty
 
 from upm.log.LogStreamStdout import LogStreamStdout
@@ -165,7 +165,7 @@ class KillProcessThread:
                 raise e
 
 if __name__ == '__main__':
-    import mtm.ioc.Container as Container
+    import upm.ioc.Container as Container
 
     from upm.config.ConfigXml import ConfigXml
     from upm.log.Logger import Logger

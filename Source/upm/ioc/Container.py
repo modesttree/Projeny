@@ -1,5 +1,6 @@
 import collections
 import os
+from upm.util.Assert import *
 
 _providers = {}
 _singletons = {}
@@ -12,12 +13,12 @@ def hasBinding(identifier):
 
 def resolve(identifier):
     try:
-        assert identifier in _providers, \
-            'Could not find dependency with identifier "{0}"'.format(identifier)
+        assertThat(identifier in _providers, \
+            'Could not find dependency with identifier "{0}"'.format(identifier))
         matches = _providers[identifier]
 
-        assert len(matches) == 1, \
-            'Found multiple matches when only one was expected for identifier "{0}"'.format(identifier)
+        assertThat(len(matches) == 1, \
+            'Found multiple matches when only one was expected for identifier "{0}"'.format(identifier))
 
         provider = matches[0]
     except KeyError:
@@ -55,7 +56,7 @@ class Binder:
         In both cases you can also provide arguments using the rest
         of the arguments
         '''
-        assert not type(provider) in (str, int, float)
+        assertThat(not type(provider) in (str, int, float))
 
         if isinstance(provider, collections.Callable):
             # It is either a method or a class
@@ -67,7 +68,7 @@ class Binder:
                 return instance
         else:
             # Assume its an instance
-            assert not type(provider) in _singletons
+            assertThat(not type(provider) in _singletons)
             _singletons[type(provider)] = provider
             def call():
                 return provider

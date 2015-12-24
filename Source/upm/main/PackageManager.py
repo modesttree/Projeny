@@ -20,10 +20,12 @@ import traceback
 import upm.util.MiscUtil as MiscUtil
 import upm.util.PlatformUtil as PlatformUtil
 
-import mtm.ioc.Container as Container
-from mtm.ioc.Inject import Inject
-from mtm.ioc.Inject import InjectMany
-import mtm.ioc.Assertions as Assertions
+from upm.util.Assert import *
+
+import upm.ioc.Container as Container
+from upm.ioc.Inject import Inject
+from upm.ioc.Inject import InjectMany
+import upm.ioc.IocAssertions as Assertions
 
 class PackageManager:
     """
@@ -57,7 +59,7 @@ class PackageManager:
     def getProjectFromAlias(self, alias):
         aliasMap = self._config.getDictionary('ProjectAliases')
 
-        assert alias in aliasMap.keys(), "Unrecognized project '{0}' and could not find an alias with that name either".format(alias)
+        assertThat(alias in aliasMap.keys(), "Unrecognized project '{0}' and could not find an alias with that name either".format(alias))
         return aliasMap[alias]
 
     def tryGetAliasFromFullName(self, name):
@@ -71,7 +73,7 @@ class PackageManager:
 
     def _validateDirForFolderType(self, packageInfo, sourceDir):
         if packageInfo.folderType == FolderTypes.AndroidProject:
-            assert os.path.exists(os.path.join(sourceDir, "project.properties")), "Project '{0}' is marked with foldertype AndroidProject and therefore must contain a project.properties file".format(packageInfo.name)
+            assertThat(os.path.exists(os.path.join(sourceDir, "project.properties")), "Project '{0}' is marked with foldertype AndroidProject and therefore must contain a project.properties file".format(packageInfo.name))
 
     def updateProjectJunctions(self, projectName, platform):
         """
@@ -120,13 +122,13 @@ class PackageManager:
 
             self._validateDirForFolderType(packageInfo, sourceDir)
 
-            assert os.path.exists(sourceDir), "Could not find package with name '{0}' while processing schema '{1}'.  See build log for full object graph to see where it is referenced".format(packageInfo.name, schema.name)
+            assertThat(os.path.exists(sourceDir), "Could not find package with name '{0}' while processing schema '{1}'.  See build log for full object graph to see where it is referenced".format(packageInfo.name, schema.name))
 
             outputPackageDir = self._varMgr.expandPath(packageInfo.outputDirVar)
 
             linkDir = os.path.join(outputPackageDir, packageInfo.name)
 
-            assert not os.path.exists(linkDir), "Did not expect this path to exist: '{0}'".format(linkDir)
+            assertThat(not os.path.exists(linkDir), "Did not expect this path to exist: '{0}'".format(linkDir))
 
             self._junctionHelper.makeJunction(sourceDir, linkDir)
 

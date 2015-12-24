@@ -9,10 +9,11 @@ import sys
 
 from upm.config.ConfigIni import ConfigIni
 
-import mtm.ioc.Container as Container
-from mtm.ioc.Inject import Inject
-from mtm.ioc.Inject import InjectMany
-import mtm.ioc.Assertions as Assertions
+import upm.ioc.Container as Container
+from upm.ioc.Inject import Inject
+from upm.ioc.Inject import InjectMany
+import upm.ioc.IocAssertions as Assertions
+from upm.util.Assert import *
 
 CsProjXmlNs = 'http://schemas.microsoft.com/developer/msbuild/2003'
 NsPrefix = '{' + CsProjXmlNs + '}'
@@ -62,7 +63,7 @@ class VisualStudioSolutionGenerator:
 
             if len(children) > 0:
                 hintPathElem = children[0]
-                assert hintPathElem.tag == '{0}HintPath'.format(NsPrefix)
+                assertThat(hintPathElem.tag == '{0}HintPath'.format(NsPrefix))
 
                 hintPath = hintPathElem.text.replace('/', '\\')
 
@@ -70,7 +71,7 @@ class VisualStudioSolutionGenerator:
                 if not os.path.isabs(hintPath):
                     hintPath = self._varMgr.expandPath('[ProjectPlatformRoot]/{0}'.format(hintPath))
 
-                assert self._sys.fileExists(hintPath), "Expected to find file at '{0}'".format(hintPath)
+                assertThat(self._sys.fileExists(hintPath), "Expected to find file at '{0}'".format(hintPath))
 
             items.append(RefInfo(name, hintPath))
 
@@ -111,8 +112,8 @@ class VisualStudioSolutionGenerator:
         unityEditorProjPath = self._chooseMostRecentFile(
             '[UnityGeneratedProjectEditorPath]', '[UnityGeneratedProjectEditorPath2]')
 
-        assert unityProjPath and self._sys.fileExists(unityProjPath) and unityEditorProjPath and self._sys.fileExists(unityEditorProjPath), \
-            'Could not find unity-generated project when generating custom solution.  This is necessary so the custom solution can add things like unity defines and DLL references within the unity project.'
+        assertThat(unityProjPath and self._sys.fileExists(unityProjPath) and unityEditorProjPath and self._sys.fileExists(unityEditorProjPath), \
+            'Could not find unity-generated project when generating custom solution.  This is necessary so the custom solution can add things like unity defines and DLL references within the unity project.')
 
         unityProjRoot = ET.parse(unityProjPath)
         unityProjEditorRoot = ET.parse(unityEditorProjPath)
@@ -216,7 +217,7 @@ class VisualStudioSolutionGenerator:
     def _ensureNoMatchingPrebuiltCsProjNames(self, projects, prebuiltProjects):
         for proj in projects:
             for prebuiltProj in prebuiltProjects:
-                assert prebuiltProj.name != proj.name, 'Found prebuilt project and normal project both using the same name "{0}".  This will not work in the same visual studio solution'.format(prebuiltProj.name)
+                assertThat(prebuiltProj.name != proj.name, 'Found prebuilt project and normal project both using the same name "{0}".  This will not work in the same visual studio solution'.format(prebuiltProj.name))
 
     def _createPrebuiltProjInfo(self, prebuiltProjects):
 
@@ -293,7 +294,7 @@ class VisualStudioSolutionGenerator:
                 projDependencies.append(scriptsProj)
 
         for dependName in packageInfo.allDependencies:
-            assert not dependName in projDependencies
+            assertThat(not dependName in projDependencies)
 
             if dependName in customCsProjects:
                 dependProj = customCsProjects[dependName]
@@ -356,9 +357,9 @@ class VisualStudioSolutionGenerator:
                 .format(SolutionFolderTypeGuid, folderName, folderName, folderId)
 
         for proj in projects:
-            assert proj.name
-            assert proj.id
-            assert proj.absPath
+            assertThat(proj.name)
+            assertThat(proj.id)
+            assertThat(proj.absPath)
 
             if proj.isIgnored:
                 continue
@@ -462,7 +463,7 @@ class VisualStudioSolutionGenerator:
 
             if refInfo.hintPath:
                 refPath = refInfo.hintPath
-                assert os.path.isabs(refPath), "Invalid path '{0}'".format(refPath)
+                assertThat(os.path.isabs(refPath), "Invalid path '{0}'".format(refPath))
 
                 if refPath.startswith(outputDir):
                     refPath = os.path.relpath(refPath, outputDir)
@@ -555,7 +556,7 @@ class VisualStudioSolutionGenerator:
         #self._log.debug('Processing ' + dirPath)
 
         for excludeDir in excludeDirs:
-            assert not dirPath.startswith(excludeDir + "\\")
+            assertThat(not dirPath.startswith(excludeDir + "\\"))
 
         if not self._sys.directoryExists(dirPath):
             return
@@ -580,7 +581,7 @@ class RefInfo:
 
 class CsProjInfo:
     def __init__(self, id, absPath, name, isPrebuild, files, isIgnored):
-        assert name
+        assertThat(name)
 
         self.id = id
         self.absPath = absPath

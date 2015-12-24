@@ -4,10 +4,11 @@ import time
 
 from upm.log.LogWatcher import LogWatcher
 
-import mtm.ioc.Container as Container
-from mtm.ioc.Inject import Inject
-import mtm.ioc.Assertions as Assertions
+import upm.ioc.Container as Container
+from upm.ioc.Inject import Inject
+import upm.ioc.IocAssertions as Assertions
 
+from upm.util.Assert import *
 import upm.util.MiscUtil as MiscUtil
 import upm.util.PlatformUtil as PlatformUtil
 from upm.util.PlatformUtil import Platforms
@@ -75,7 +76,7 @@ class UnityHelper:
         if platform == Platforms.Ios:
             return 'ios'
 
-        assert False
+        assertThat(False)
 
     def runEditorFunctionRaw(self, projectName, platform, editorCommand, extraArgs):
 
@@ -86,7 +87,7 @@ class UnityHelper:
 
         os.environ['ModestTreeBuildConfigOverride'] = "FromBuildScript"
 
-        assert self._varMgr.hasKey('UnityExePath'), "Could not find path variable 'UnityExePath'"
+        assertThat(self._varMgr.hasKey('UnityExePath'), "Could not find path variable 'UnityExePath'")
 
         try:
             command = '"[UnityExePath]" -buildTarget {0} -projectPath "[UnityProjectsDir]/{1}/{2}-{3}"'.format(self._getBuildTargetArg(platform), projectName, self._commonSettings.getShortProjectName(projectName), PlatformUtil.toPlatformFolderName(platform))

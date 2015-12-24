@@ -9,8 +9,8 @@ from upm.util.VarManager import VarManager
 
 import upm.util.Util as Util
 
-import mtm.ioc.Container as Container
-from mtm.ioc.Inject import Inject, InjectMany
+import upm.ioc.Container as Container
+from upm.ioc.Inject import Inject, InjectMany
 
 import time
 
@@ -106,7 +106,7 @@ class Logger:
             stream.log(logType, msg)
 
 if __name__ == '__main__':
-    import mtm.ioc.Container as Container
+    import upm.ioc.Container as Container
 
     class Log1:
         def log(self, logType, msg):

@@ -1,3 +1,4 @@
+from upm.util.Assert import *
 
 class Platforms:
     Windows = 'Windows'
@@ -40,5 +41,5 @@ def fromPlatformArgName(platformArgStr):
     if platformArgStr == 'lin':
         return Platforms.Linux
 
-    assert False
+    assertThat(False)
     return ''

@@ -3,10 +3,11 @@ import sys
 import os
 import unittest
 
-import mtm.ioc.Container as Container
-from mtm.ioc.Inject import Inject
-import mtm.ioc.Assertions as Assertions
+import upm.ioc.Container as Container
+from upm.ioc.Inject import Inject
+import upm.ioc.IocAssertions as Assertions
 
+from upm.util.Assert import *
 from upm.util.VarManager import VarManager
 from upm.config.ConfigXml import ConfigXml
 
@@ -20,16 +21,16 @@ class TestVarManager(unittest.TestCase):
 
         pathMgr = Container.resolve('VarManager')
 
-        assert pathMgr.hasKey('foo')
-        assert not pathMgr.hasKey('asdf')
-        assert pathMgr.tryGet('bobsdf') == None
-        assert pathMgr.expand('before [bar] after') == 'before result2 after'
-        assert pathMgr.expand('before [foo] after') == 'before yep result2 after'
+        assertThat(pathMgr.hasKey('foo'))
+        assertThat(not pathMgr.hasKey('asdf'))
+        assertThat(pathMgr.tryGet('bobsdf') == None)
+        assertThat(pathMgr.expand('before [bar] after') == 'before result2 after')
+        assertThat(pathMgr.expand('before [foo] after') == 'before yep result2 after')
 
-        assert not pathMgr.hasKey('qux')
+        assertThat(not pathMgr.hasKey('qux'))
         pathMgr.add('qux', 'sadf')
-        assert pathMgr.hasKey('qux')
-        assert pathMgr.expand('[qux]') == 'sadf'
+        assertThat(pathMgr.hasKey('qux'))
+        assertThat(pathMgr.expand('[qux]') == 'sadf')
 
         print('Done')
 

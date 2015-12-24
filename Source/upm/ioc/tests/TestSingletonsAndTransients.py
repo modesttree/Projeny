@@ -4,9 +4,9 @@ import os
 from random import randint
 import unittest
 
-import mtm.ioc.Container as Container
-from mtm.ioc.Inject import Inject
-import mtm.ioc.Assertions as Assertions
+import upm.ioc.Container as Container
+from upm.ioc.Inject import Inject
+import upm.ioc.IocAssertions as Assertions
 
 class TestSingletonsAndTransients(unittest.TestCase):
     def setUp(self):

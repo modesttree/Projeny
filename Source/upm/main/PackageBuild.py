@@ -2,9 +2,9 @@ import sys
 import argparse
 import os
 
-import mtm.ioc.Container as Container
-from mtm.ioc.Inject import Inject, InjectOptional
-import mtm.ioc.Assertions as Assertions
+import upm.ioc.Container as Container
+from upm.ioc.Inject import Inject, InjectOptional
+import upm.ioc.IocAssertions as Assertions
 
 import upm.util.MiscUtil as MiscUtil
 

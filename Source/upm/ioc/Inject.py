@@ -1,5 +1,5 @@
 
-import mtm.ioc.Container as Container
+import upm.ioc.Container as Container
 import uuid
 
 def NoAssertion(obj):

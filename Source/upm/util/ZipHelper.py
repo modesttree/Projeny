@@ -2,16 +2,17 @@
 import zipfile
 import os
 
-import mtm.ioc.Container as Container
-from mtm.ioc.Inject import Inject, InjectOptional
-import mtm.ioc.Assertions as Assertions
+import upm.ioc.Container as Container
+from upm.ioc.Inject import Inject, InjectOptional
+import upm.ioc.IocAssertions as Assertions
+from upm.util.Assert import *
 
 class ZipHelper:
     _sys = Inject('SystemHelper')
     _varMgr = Inject('VarManager')
 
     def createZipFile(self, dirPath, zipFilePath):
-        assert zipFilePath.endswith('.zip')
+        assertThat(zipFilePath.endswith('.zip'))
 
         zipFilePath = self._varMgr.expandPath(zipFilePath)
 
@@ -27,7 +28,7 @@ class ZipHelper:
     def _zipAddDir(self, zipf, dirPath, zipPathPrefix = None):
         dirPath = self._varMgr.expandPath(dirPath)
 
-        assert os.path.isdir(dirPath), 'Invalid directory given at "{0}"'.format(dirPath)
+        assertThat(os.path.isdir(dirPath), 'Invalid directory given at "{0}"'.format(dirPath))
 
         if zipPathPrefix is None:
             zipPathPrefix = os.path.basename(dirPath)

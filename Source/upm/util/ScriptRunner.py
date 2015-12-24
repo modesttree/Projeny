@@ -1,7 +1,7 @@
 
 from datetime import datetime
 import traceback
-from mtm.ioc.Inject import Inject
+from upm.ioc.Inject import Inject
 import upm.util.Util as Util
 from upm.util.SystemHelper import ProcessErrorCodeException, ProcessTimeoutException
 

@@ -4,9 +4,9 @@ import os
 from random import randint
 import unittest
 
-import mtm.ioc.Container as Container
-from mtm.ioc.Inject import Inject, InjectOptional
-import mtm.ioc.Assertions as Assertions
+import upm.ioc.Container as Container
+from upm.ioc.Inject import Inject, InjectOptional
+import upm.ioc.IocAssertions as Assertions
 
 class TestConditionalInjections(unittest.TestCase):
     ''' Test assertions in inject statements '''

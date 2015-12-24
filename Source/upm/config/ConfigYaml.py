@@ -7,9 +7,9 @@ import upm.util.Util as Util
 
 import datetime
 from upm.util.Assert import *
-import mtm.ioc.Container as Container
-from mtm.ioc.Inject import Inject, InjectOptional
-import mtm.ioc.Assertions as Assertions
+import upm.ioc.Container as Container
+from upm.ioc.Inject import Inject, InjectOptional
+import upm.ioc.IocAssertions as Assertions
 
 class ConfigYaml:
     ''' Build config info  (eg. path info, etc.) '''

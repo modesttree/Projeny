@@ -1,6 +1,7 @@
 
 import os
 import stat
+from upm.util.Assert import *
 
 def printVisualStudioFriendlyError(msg):
     # Use a visual studio friendly error so it pops up as an error
@@ -30,7 +31,7 @@ def ensureNoDuplicates(items, collectionName):
 
         seen.add(item)
 
-    assert len(duplicates) == 0, "Found duplicates in collection '{0}': {1}".format(collectionName, ', '.join([str(x) for x in duplicates]))
+    assertThat(len(duplicates) == 0, "Found duplicates in collection '{0}': {1}".format(collectionName, ', '.join([str(x) for x in duplicates])))
 
 def mergeDictionaries(x, y):
     z = x.copy()

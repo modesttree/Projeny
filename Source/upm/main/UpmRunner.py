@@ -14,6 +14,7 @@ from glob import glob
 import traceback
 import webbrowser
 
+from upm.util.Assert import *
 import upm.util.MiscUtil as MiscUtil
 import upm.util.PlatformUtil as PlatformUtil
 
@@ -33,9 +34,9 @@ from upm.util.ScriptRunner import ScriptRunner
 from upm.util.PlatformUtil import Platforms
 from upm.main.PackageManager import PackageManager
 
-import mtm.ioc.Container as Container
-from mtm.ioc.Inject import Inject
-import mtm.ioc.Assertions as Assertions
+import upm.ioc.Container as Container
+from upm.ioc.Inject import Inject
+import upm.ioc.IocAssertions as Assertions
 
 from upm.util.UnityHelper import UnityHelper
 
@@ -166,5 +167,5 @@ class UpmRunner:
            or (self._args.openCsFile != None)
 
         if requiresProject and not self._project:
-            assert False, "Cannot execute the given arguments without a project specified, or a default project defined in the ProjenyConfig.xml file"
+            assertThat(False, "Cannot execute the given arguments without a project specified, or a default project defined in the ProjenyConfig.xml file")
 
