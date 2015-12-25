@@ -22,6 +22,10 @@ from upm.main.ProjectSchemaLoader import ProjectSchemaLoader
 from upm.util.ScriptRunner import ScriptRunner
 from upm.util.CommonSettings import CommonSettings
 
+from upm.util.CommonSettings import ConfigFileName
+
+from upm.main.UpmRunner import UpmRunner
+
 from upm.util.Assert import *
 
 from upm.util.PlatformUtil import Platforms
@@ -55,12 +59,15 @@ def addArguments(parser):
     parser.add_argument('-cla', '--clearAllProjectGeneratedFiles', action='store_true', help='Remove all the generated files for all projects')
     parser.add_argument('-dal', '--deleteAllLinks', action='store_true', help='Delete all directory links for all projects')
 
-    parser.add_argument('-ina', '--initAll', action='store_true', help='Initialize all projects for all platforms')
+    parser.add_argument('-ula', '--updateLinksAllProjects', action='store_true', help='Updates the directory links for all projects')
 
     parser.add_argument('-bf', '--buildFull', action='store_true', help='Perform a full build of the given project')
 
     parser.add_argument('-ou', '--openUnity', action='store_true', help='Open unity for the given project')
     parser.add_argument('-ocs', '--openCustomSolution', action='store_true', help='Open the solution for the given project/platform')
+
+    parser.add_argument('-inc', '--initConfig', action='store_true', help='')
+    parser.add_argument('-inp', '--initProject', metavar='NEW_PROJECT_NAME', type=str, help="")
 
 def getProjenyDir():
     if MiscUtil.isRunningAsExe():
@@ -70,17 +77,18 @@ def getProjenyDir():
 
 def installBindings(verbose, veryVerbose, userConfigPaths):
     projenyDir = getProjenyDir()
-    projenyConfigPath = os.path.join(projenyDir, 'upm.yaml')
+    projenyConfigPath = os.path.join(projenyDir, ConfigFileName)
 
     # Put the standard config first so it can be over-ridden by user settings
     configPaths = [projenyConfigPath] + list(userConfigPaths)
 
     Container.bind('Config').toSingle(ConfigYaml, configPaths)
 
-    initialVars = { 
-        'ProjenyDir': projenyDir,
-        'ConfigDir': os.path.dirname(userConfigPaths[0]) 
-    }
+    initialVars = { 'ProjenyDir': projenyDir, }
+
+    if len(userConfigPaths) > 0:
+        mainConfigPath = userConfigPaths[0]
+        initialVars['ConfigDir'] = os.path.dirname(mainConfigPath)
 
     Container.bind('VarManager').toSingle(VarManager, initialVars)
     Container.bind('SystemHelper').toSingle(SystemHelper)
@@ -129,19 +137,13 @@ def installPlugins():
         print("Loading plugin at {0}".format(basePath))
         importlib.import_module('plugins.' + basePath)
 
-ConfigFileName = 'Upm.yaml'
-
 def getUserConfigPaths(args):
     if args.configPath:
         return [args.configPath]
 
     return [os.path.join(os.getcwd(), ConfigFileName)]
 
-if __name__ == '__main__':
-    if (sys.version_info < (3, 0)):
-        print('Wrong version of python!  Install python 3 and try again')
-        sys.exit(2)
-
+def main():
     # Here we split out some functionality into various methods
     # so that other python code can make use of them
     # if they want to extend projeny
@@ -162,6 +164,30 @@ if __name__ == '__main__':
     installBindings(args.verbose, args.veryVerbose, getUserConfigPaths(args))
     installPlugins()
 
-    from upm.main.UpmRunner import UpmRunner
     UpmRunner().run(args)
 
+if __name__ == '__main__':
+
+    if (sys.version_info < (3, 0)):
+        print('Wrong version of python!  Install python 3 and try again')
+        sys.exit(2)
+
+    succeeded = True
+
+    try:
+        main()
+
+    except KeyboardInterrupt as e:
+        print('Operation aborted by user by hitting CTRL+C')
+        succeeded = False
+
+    except Exception as e:
+        print("Error Message: {0}".format(str(e)))
+
+        if not MiscUtil.isRunningAsExe():
+            print('\n' + traceback.format_exc())
+
+        succeeded = False
+
+    if not succeeded:
+        sys.exit(1)

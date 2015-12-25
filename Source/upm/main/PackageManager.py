@@ -62,7 +62,7 @@ class PackageManager:
         return aliasMap[alias]
 
     def tryGetAliasFromFullName(self, name):
-        aliasMap = self._config.getDictionary('ProjectAliases')
+        aliasMap = self._config.tryGetDictionary({}, 'ProjectAliases')
 
         for pair in aliasMap.items():
             if pair[1] == name:
@@ -90,6 +90,8 @@ class PackageManager:
         self._log.good('Finished updating packages for project "{0}"'.format(schema.name))
 
     def getAllProjects(self):
+        assertThat(self._varMgr.hasKey('UnityProjectsDir'), "Could not find 'UnityProjectsDir' in PathVars.  Have you set up your upm.yaml file?")
+
         results = []
         for name in self._sys.walkDir('[UnityProjectsDir]'):
             if self._sys.IsDir('[UnityProjectsDir]/' + name):
@@ -97,7 +99,7 @@ class PackageManager:
         return results
 
     # This will set up all the directory junctions for all projects for all platforms
-    def initAllProjects(self):
+    def updateLinksForAllProjects(self):
         for projectName in self.getAllProjects():
             self._log.heading('Initializing project "{0}"'.format(projectName))
 
@@ -121,7 +123,8 @@ class PackageManager:
 
             self._validateDirForFolderType(packageInfo, sourceDir)
 
-            assertThat(os.path.exists(sourceDir), "Could not find package with name '{0}' while processing schema '{1}'.  See build log for full object graph to see where it is referenced".format(packageInfo.name, schema.name))
+            assertThat(os.path.exists(sourceDir),
+               "Could not find package with name '{0}' while processing schema '{1}'.  See build log for full object graph to see where it is referenced".format(packageInfo.name, schema.name))
 
             outputPackageDir = self._varMgr.expandPath(packageInfo.outputDirVar)
 
@@ -244,9 +247,6 @@ class PackageManager:
 
         if not self._sys.directoryExists('[ProjectRoot]/ProjectSettings'):
             self._sys.createDirectory('[ProjectRoot]/ProjectSettings')
-
-        if not self._sys.fileExists('[ProjectRoot]/.gitignore'):
-            self._sys.copyFile('[ProjectRootGitIgnoreTemplate]', '[ProjectRoot]/.gitignore')
 
         if self._sys.directoryExists('[ProjectPlatformRoot]'):
             raise Exception('Unable to create project "{0}". Directory already exists at path "{1}".'.format(projectName, self._varMgr.expandPath('[ProjectPlatformRoot]')))

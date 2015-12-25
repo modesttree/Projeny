@@ -24,17 +24,11 @@ class ConfigYaml:
         self.configPaths = reversed(configPaths)
 
         for configPath in self.configPaths:
-            config = yaml.load(self.readAllTextFromFile(configPath))
-            self.configs.append(config)
-
-    @property
-    def mainPath(self):
-        if len(self.configPaths) == 0:
-            return None
-        return self.configPaths[0]
+            if os.path.isfile(configPath):
+                config = yaml.load(self.readAllTextFromFile(configPath))
+                self.configs.append(config)
 
     def readAllTextFromFile(self, filePath):
-        assertThat(os.path.isfile(filePath), "Could not find YAML config file at path '{0}'", filePath)
         with open(filePath, 'r', encoding='utf-8') as f:
             return f.read()
 

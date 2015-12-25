@@ -9,10 +9,13 @@ import upm.util.MiscUtil as MiscUtil
 import upm.util.PlatformUtil as PlatformUtil
 
 from upm.util.PlatformUtil import Platforms
+from upm.util.CommonSettings import ConfigFileName
 
 import upm.ioc.Container as Container
-from upm.ioc.Inject import Inject
+from upm.ioc.Inject import Inject, InjectOptional
 import upm.ioc.IocAssertions as Assertions
+
+from upm.main.ProjectSchemaLoader import ProjectConfigFileName
 
 class UpmRunner:
     _scriptRunner = Inject('ScriptRunner')
@@ -21,6 +24,7 @@ class UpmRunner:
     _unityHelper = Inject('UnityHelper')
     _varMgr = Inject('VarManager')
     _log = Inject('Logger')
+    _mainConfig = InjectOptional('MainConfigPath', None)
     _sys = Inject('SystemHelper')
     _vsSolutionHelper = Inject('VisualStudioHelper')
 
@@ -44,8 +48,8 @@ class UpmRunner:
         if self._args.deleteAllLinks:
             self._packageMgr.deleteAllLinks()
 
-        if self._args.initAll:
-            self._packageMgr.initAllProjects()
+        if self._args.updateLinksAllProjects:
+            self._packageMgr.updateLinksForAllProjects()
 
         if self._args.updateLinks:
             self._packageMgr.updateProjectJunctions(self._project, self._platform)
@@ -79,9 +83,53 @@ class UpmRunner:
 
         self.processArgs()
         self._validateArgs()
+
+        if self._args.initConfig:
+            self._initConfig()
+
+        if self._args.initProject:
+            self._initProject(self._args.initProject)
+
         self._runPreBuild()
         self._runBuild()
         self._runPostBuild()
+
+    def _initProject(self, projName):
+        self._log.heading('Initializing new project "{0}"', projName)
+
+        projDirPath = self._varMgr.expand('[UnityProjectsDir]/{0}'.format(projName))
+        assertThat(not self._sys.directoryExists(projDirPath), "Cannot initialize new project '{0}', found existing project at '{1}'", projName, projDirPath)
+
+        self._sys.createDirectory(projDirPath)
+
+        with self._sys.openOutputFile(os.path.join(projDirPath, ProjectConfigFileName)) as outFile:
+            outFile.write(
+"""
+packages:
+    # Add package names here
+""")
+
+    def _initConfig(self):
+        self._log.heading('Initializing new projeny config')
+
+        assertThat(not self._mainConfig,
+           "Cannot initialize new projeny project, found existing config at '{0}'".format(self._mainConfig))
+
+        curDir = os.getcwd()
+        configPath = os.path.join(curDir, ConfigFileName)
+
+        assertThat(not os.path.isfile(configPath))
+
+        self._sys.createDirectory(os.path.join(curDir, 'UnityPackages'))
+        self._sys.createDirectory(os.path.join(curDir, 'UnityProjects'))
+
+        with self._sys.openOutputFile(configPath) as outFile:
+            outFile.write(
+"""
+PathVars:
+    UnityPackagesDir: '[ConfigDir]/UnityPackages'
+    UnityProjectsDir: '[ConfigDir]/UnityProjects'
+""")
 
     def processArgs(self):
 
@@ -102,5 +150,5 @@ class UpmRunner:
            or self._args.openUnity or self._args.openCustomSolution
 
         if requiresProject and not self._project:
-            assertThat(False, "Cannot execute the given arguments without a project specified, or a default project defined in the upm.yaml file")
+            assertThat(False, "Cannot execute the given arguments without a project specified, or a default project defined in the {0} file", ConfigFileName)
 

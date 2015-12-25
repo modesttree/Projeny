@@ -5,6 +5,8 @@ from upm.ioc.Inject import InjectMany
 import upm.ioc.IocAssertions as Assertions
 import upm.util.MiscUtil as MiscUtil
 
+from upm.util.CommonSettings import ConfigFileName
+
 import win32api
 import win32com.client
 
@@ -46,7 +48,7 @@ class VisualStudioHelper:
 
     def openVisualStudioSolution(self, solutionPath, filePath = None):
         if not self._varMgr.hasKey('VisualStudioIdePath'):
-            assertThat(False, "Path to visual studio has not been defined.  Please set <VisualStudioIdePath> within the upm.yaml file")
+            assertThat(False, "Path to visual studio has not been defined.  Please set <VisualStudioIdePath> within the {0} file", ConfigFileName)
 
         if self._sys.fileExists('[VisualStudioIdePath]'):
             self._sys.executeNoWait('[VisualStudioIdePath] {0} {1}'.format(solutionPath, filePath if filePath else ""))

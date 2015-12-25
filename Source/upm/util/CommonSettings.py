@@ -1,6 +1,8 @@
 
 from upm.ioc.Inject import Inject
 
+ConfigFileName = 'upm.yaml'
+
 class CommonSettings:
     _config = Inject('Config')
 

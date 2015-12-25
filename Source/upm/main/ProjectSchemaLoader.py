@@ -13,15 +13,18 @@ from upm.config.ConfigYaml import ConfigYaml
 
 RequiredDependencies = ["Projeny"]
 
+ProjectConfigFileName = 'project.yaml'
+ProjectUserConfigFileName = 'projectUser.yaml'
+
 class ProjectSchemaLoader:
     _varMgr = Inject('VarManager')
     _log = Inject('Logger')
 
     def loadSchema(self, name, platform):
-        schemaPath = self._varMgr.expandPath('[UnityProjectsDir]/{0}/project.yaml'.format(name))
-        schemaPathUser = self._varMgr.expandPath('[UnityProjectsDir]/{0}/projectUser.yaml'.format(name))
-        schemaPathGlobal = self._varMgr.expandPath('[UnityProjectsDir]/project.yaml')
-        schemaPathUserGlobal = self._varMgr.expandPath('[UnityProjectsDir]/projectUser.yaml')
+        schemaPath = self._varMgr.expandPath('[UnityProjectsDir]/{0}/{1}'.format(name, ProjectConfigFileName))
+        schemaPathUser = self._varMgr.expandPath('[UnityProjectsDir]/{0}/{1}'.format(name, ProjectUserConfigFileName))
+        schemaPathGlobal = self._varMgr.expandPath('[UnityProjectsDir]/{0}'.format(ProjectConfigFileName))
+        schemaPathUserGlobal = self._varMgr.expandPath('[UnityProjectsDir]/{0}'.format(ProjectUserConfigFileName))
 
         self._log.debug('Loading schema at path "{0}"'.format(schemaPath))
         config = ConfigYaml([schemaPath, schemaPathUser, schemaPathGlobal, schemaPathUserGlobal])

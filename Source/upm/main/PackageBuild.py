@@ -6,6 +6,7 @@ import upm.ioc.Container as Container
 from upm.ioc.Inject import Inject, InjectOptional
 import upm.ioc.IocAssertions as Assertions
 
+from upm.util.CommonSettings import ConfigFileName
 import upm.util.MiscUtil as MiscUtil
 
 import upm.main.Upm as Upm
@@ -58,7 +59,7 @@ class Runner:
         self._sys.copyDirectory('[RootDir]/Projeny/Source', '[OutDir]/Projeny/Source')
         self._sys.copyDirectory('[RootDir]/Projeny/Templates', '[OutDir]/Projeny/Templates')
 
-        self._sys.copyFile('[RootDir]/Projeny/upm.yaml', '[OutDir]/Projeny/upm.yaml')
+        self._sys.copyFile('[RootDir]/Projeny/{0}'.format(ConfigFileName), '[OutDir]/Projeny/{0}'.format(ConfigFileName))
 
         self._sys.removeByRegex('[OutDir]/Projeny/Bin/ProjenyLog*')
         self._sys.removeFile('[OutDir]/Projeny/Bin/.gitignore')

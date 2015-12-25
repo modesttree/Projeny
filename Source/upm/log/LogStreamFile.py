@@ -11,7 +11,7 @@ class LogStreamFile:
     _varManager = Inject('VarManager')
 
     def __init__(self):
-        self._fileStream = self._getFileStream()
+        self._fileStream = self._tryGetFileStream()
 
     def log(self, logType, message):
 
@@ -33,15 +33,16 @@ class LogStreamFile:
         self._write('\n' + value)
 
     def _write(self, value):
-        self._fileStream.write(value)
-        self._fileStream.flush()
+        if self._fileStream:
+            self._fileStream.write(value)
+            self._fileStream.flush()
 
-    def _getFileStream(self):
+    def _tryGetFileStream(self):
+
+        if not self._varManager.hasKey('LogPath'):
+            return None
 
         primaryPath = self._varManager.expand('[LogPath]')
-
-        if not primaryPath:
-            raise Exception("Could not find path for log file")
 
         previousPath = None
         if self._varManager.hasKey('LogPreviousPath'):
