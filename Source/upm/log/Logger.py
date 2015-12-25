@@ -47,8 +47,12 @@ class Logger:
         if not self._startTime:
             self._startTime = datetime.now()
 
+        # Need to format it now so that heading gets the args
+        if len(args) > 0:
+            msg = msg.format(*args)
+
         self.currentHeading = msg
-        self._logInternal(msg + '...', LogType.Heading, *args)
+        self._logInternal(msg + '...', LogType.Heading)
 
     def debug(self, msg, *args):
         self._logInternal(msg, LogType.Debug, *args)

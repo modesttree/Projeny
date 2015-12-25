@@ -66,8 +66,10 @@ def addArguments(parser):
     parser.add_argument('-ou', '--openUnity', action='store_true', help='Open unity for the given project')
     parser.add_argument('-ocs', '--openCustomSolution', action='store_true', help='Open the solution for the given project/platform')
 
-    parser.add_argument('-inc', '--initConfig', action='store_true', help='')
-    parser.add_argument('-inp', '--initProject', metavar='NEW_PROJECT_NAME', type=str, help="")
+    parser.add_argument('-cc', '--createConfig', action='store_true', help='')
+    parser.add_argument('-cp', '--createProject', metavar='NEW_PROJECT_NAME', type=str, help="")
+
+    parser.add_argument('-ins', '--installRelease', metavar='RELEASE_NAME', type=str, help="")
 
 def getProjenyDir():
     # This works for both exe builds (Bin/Upm/Data/Upm.exe) and running from source (Source/upm/main/Upm.py) by coincidence

@@ -111,6 +111,8 @@ By using directory links, you can have multiple unity projects all using the sam
 
 Previously, the best way to share code between different unity projects was to put the code into a DLL and then output that DLL to all the Unity Projects that you want to use it in.  This works ok but has a number of <a href="#dllgotchas">gotchas</a> that make this approach difficult to do correctly.
 
+Want to just test one part of your game without needing to fire up the entire project?  Just create another unity project and reference only the parts of the game you want to test.
+
 To see this in action, do the following:
 * Execute `upm --project SphereMover --updateLinks` (or the shortened form `upm -p SphereMover -ul`)
 * Open unity then open the project at UnityProjects/SphereMover/SphereMover-Windows

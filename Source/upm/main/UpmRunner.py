@@ -12,7 +12,7 @@ from upm.util.PlatformUtil import Platforms
 from upm.util.CommonSettings import ConfigFileName
 
 import upm.ioc.Container as Container
-from upm.ioc.Inject import Inject, InjectOptional
+from upm.ioc.Inject import Inject, InjectOptional, InjectMany
 import upm.ioc.IocAssertions as Assertions
 
 from upm.main.ProjectSchemaLoader import ProjectConfigFileName
@@ -33,6 +33,7 @@ class UpmRunner:
     _mainConfig = InjectOptional('MainConfigPath', None)
     _sys = Inject('SystemHelper')
     _vsSolutionHelper = Inject('VisualStudioHelper')
+    _releaseRegistries = InjectMany('ReleaseRegistry')
 
     def run(self, args):
         self._args = args
@@ -54,6 +55,9 @@ class UpmRunner:
         if self._args.deleteAllLinks:
             self._packageMgr.deleteAllLinks()
 
+        if self._args.installRelease:
+            self._installRelease(self._args.installRelease)
+
         if self._args.updateLinksAllProjects:
             self._packageMgr.updateLinksForAllProjects()
 
@@ -65,6 +69,17 @@ class UpmRunner:
 
         if self._args.updateCustomSolution:
             self._vsSolutionHelper.updateCustomSolution(self._project, self._platform)
+
+    def _installRelease(self, releaseName):
+        self._log.heading("Attempting to install release '{0}'", releaseName)
+
+        assertThat(len(self._releaseRegistries) > 0, "Could not find any registries to search for the given release name")
+
+        for registry in self._releaseRegistries:
+            if registry.tryInstallRelease(releaseName):
+                return
+
+        assertThat(False, "Failed to install release '{0}' - could not find it in any of the release registries.  Registries checked: {1}", releaseName, ", ".join([x.getName() for x in self._releaseRegistries]))
 
     def _openDocumentation(self):
         webbrowser.open('https://github.com/modesttree/ModestUnityPackageManager')
@@ -90,17 +105,17 @@ class UpmRunner:
         self.processArgs()
         self._validateArgs()
 
-        if self._args.initConfig:
-            self._initConfig()
+        if self._args.createConfig:
+            self._createConfig()
 
-        if self._args.initProject:
-            self._initProject(self._args.initProject)
+        if self._args.createProject:
+            self._createProject(self._args.createProject)
 
         self._runPreBuild()
         self._runBuild()
         self._runPostBuild()
 
-    def _initProject(self, projName):
+    def _createProject(self, projName):
         self._log.heading('Initializing new project "{0}"', projName)
 
         sourceControlType = self._findSourceControl()
@@ -134,7 +149,7 @@ packages:
 
         return None
 
-    def _initConfig(self):
+    def _createConfig(self):
         self._log.heading('Initializing new projeny config')
 
         assertThat(not self._mainConfig,
