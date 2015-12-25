@@ -102,6 +102,24 @@ class SystemHelper:
         dirPath = self._varManager.expand(dirPath)
         return os.listdir(dirPath)
 
+    def getParentDirectoriesWithSelf(self, path):
+        yield path
+
+        for parentDir in self.getParentDirectories(path):
+            yield parentDir
+
+    def getParentDirectories(self, path):
+        path = self._varManager.expand(path)
+
+        lastParentDir = None
+        parentDir = os.path.dirname(path)
+
+        while parentDir and parentDir != lastParentDir:
+            yield parentDir
+
+            lastParentDir = parentDir
+            parentDir = os.path.dirname(parentDir)
+
     def createDirectory(self, dirPath):
         dirPath = self._varManager.expand(dirPath)
         try:

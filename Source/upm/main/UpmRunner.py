@@ -17,6 +17,12 @@ import upm.ioc.IocAssertions as Assertions
 
 from upm.main.ProjectSchemaLoader import ProjectConfigFileName
 
+class SourceControlTypes:
+    Git = 'Git'
+    Subversion = 'Subversion'
+    # TODO - how to detect?
+    #Perforce = 'Perforce'
+
 class UpmRunner:
     _scriptRunner = Inject('ScriptRunner')
     _config = Inject('Config')
@@ -97,10 +103,19 @@ class UpmRunner:
     def _initProject(self, projName):
         self._log.heading('Initializing new project "{0}"', projName)
 
+        sourceControlType = self._findSourceControl()
+
         projDirPath = self._varMgr.expand('[UnityProjectsDir]/{0}'.format(projName))
         assertThat(not self._sys.directoryExists(projDirPath), "Cannot initialize new project '{0}', found existing project at '{1}'", projName, projDirPath)
 
         self._sys.createDirectory(projDirPath)
+
+        if sourceControlType == SourceControlTypes.Git:
+            self._sys.copyFile('[ProjectRootGitIgnoreTemplate]', os.path.join(projDirPath, '.gitignore'))
+        elif sourceControlType == SourceControlTypes.Subversion:
+            self._sys.copyFile('[ProjectRootSvnIgnoreTemplate]', os.path.join(projDirPath, '.svnignore'))
+        else:
+            self._log.warn('Could not determine source control in use!  An ignore file will not be added for your project.  If you add this project to source control later be careful to create an ignore file - the ganerated project directory should _never_ be stored in source control.')
 
         with self._sys.openOutputFile(os.path.join(projDirPath, ProjectConfigFileName)) as outFile:
             outFile.write(
@@ -108,6 +123,16 @@ class UpmRunner:
 packages:
     # Add package names here
 """)
+
+    def _findSourceControl(self):
+        for dirPath in self._sys.getParentDirectoriesWithSelf('[ConfigDir]'):
+            if self._sys.directoryExists(os.path.join(dirPath, '.git')):
+                return SourceControlTypes.Git
+
+            if self._sys.directoryExists(os.path.join(dirPath, '.svn')):
+                return SourceControlTypes.Subversion
+
+        return None
 
     def _initConfig(self):
         self._log.heading('Initializing new projeny config')

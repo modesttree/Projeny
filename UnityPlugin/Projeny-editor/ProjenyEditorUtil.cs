@@ -13,8 +13,6 @@ namespace Projeny
 {
     public static class ProjenyEditorUtil
     {
-        static string UpmBatchFileRelativePath = "../../../../Upm.bat";
-
         [MenuItem("Projeny/Help...", false, 9)]
         public static void OpenHelp()
         {
@@ -316,7 +314,7 @@ namespace Projeny
         {
             Process proc = new Process();
 
-            proc.StartInfo.FileName = Path.GetFullPath(Path.Combine(Application.dataPath, UpmBatchFileRelativePath));
+            proc.StartInfo.FileName = "Upm";
             proc.StartInfo.Arguments = args;
             proc.StartInfo.WindowStyle = ProcessWindowStyle.Minimized;
 

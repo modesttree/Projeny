@@ -9,8 +9,13 @@ LinkToProjenyEditorDir: False
 
 PathVars+:
     TemplatesDir: '[ProjenyDir]/Templates'
+
     CsProjectTemplate: '[TemplatesDir]/CsProjectTemplate.csproj'
     CsSolutionTemplate: '[TemplatesDir]/CsSolutionTemplate.sln'
+
+    ProjectRootGitIgnoreTemplate: '[TemplatesDir]/customProjectRootGitIgnore'
+    ProjectRootSvnIgnoreTemplate: '[TemplatesDir]/customProjectRootSvnIgnore'
+
     ProjenyUnityEditorDllPath: '[ProjenyDir]/Bin/UnityPlugin/Release/Projeny-editor.dll'
 
     # Guess this one
