@@ -70,9 +70,7 @@ def addArguments(parser):
     parser.add_argument('-inp', '--initProject', metavar='NEW_PROJECT_NAME', type=str, help="")
 
 def getProjenyDir():
-    if MiscUtil.isRunningAsExe():
-        return os.path.join(MiscUtil.getExecDirectory(), '../..')
-
+    # This works for both exe builds (Bin/Upm/Data/Upm.exe) and running from source (Source/upm/main/Upm.py) by coincidence
     return os.path.join(MiscUtil.getExecDirectory(), '../../..')
 
 def getExtraUserConfigPaths():

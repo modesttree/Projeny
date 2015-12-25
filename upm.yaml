@@ -1,11 +1,20 @@
-MaxProjectNameLength: 10
-
 # Default values
 # These can all be overriden by user config files
+
+MaxProjectNameLength: 10
+
+# Set to true if you don't want to use the Projeny editor DLL and instead want to link directly
+# to UnityPlugin\Projeny-editor
+LinkToProjenyEditorDir: False
+
 PathVars+:
     TemplatesDir: '[ProjenyDir]/Templates'
     CsProjectTemplate: '[TemplatesDir]/CsProjectTemplate.csproj'
     CsSolutionTemplate: '[TemplatesDir]/CsSolutionTemplate.sln'
+    ProjenyUnityEditorDllPath: '[ProjenyDir]/Bin/UnityPlugin/Release/Projeny-editor.dll'
+
+    # Guess this one
+    MsBuildExePath: 'C:/Windows/Microsoft.NET/Framework/v4.0.30319/msbuild.exe'
 
 Console:
     UseColors: False

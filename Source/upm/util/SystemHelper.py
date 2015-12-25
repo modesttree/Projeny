@@ -157,7 +157,7 @@ class SystemHelper:
                 continue
             break
 
-    def deleteDirectory(self, dirPath):
+    def deleteDirectoryIfExists(self, dirPath):
         dirPath = self._varManager.expand(dirPath)
 
         if os.path.exists(dirPath):

@@ -11,8 +11,6 @@ import upm.ioc.IocAssertions as Assertions
 import upm.util.JunctionUtil as JunctionUtil
 from upm.config.ConfigYaml import ConfigYaml
 
-RequiredDependencies = ["Projeny"]
-
 ProjectConfigFileName = 'project.yaml'
 ProjectUserConfigFileName = 'projectUser.yaml'
 
@@ -41,12 +39,6 @@ class ProjectSchemaLoader:
 
         for packageName in pluginDependencies:
             assertThat(not packageName in scriptsDependencies, "Found package '{0}' in both scripts and plugins.  Must be in only one or the other".format(packageName))
-
-        for dependName in RequiredDependencies:
-            assertThat(not dependName in scriptsDependencies)
-
-            if not dependName in pluginDependencies:
-                pluginDependencies.append(dependName)
 
         allDependencies = pluginDependencies + scriptsDependencies
 

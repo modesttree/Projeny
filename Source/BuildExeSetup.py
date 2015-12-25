@@ -6,7 +6,7 @@ import py2exe
 
 ScriptDir = os.path.dirname(os.path.realpath(__file__))
 
-outputPath = os.path.join(ScriptDir, '../Bin/Data')
+outputPath = os.path.join(ScriptDir, '../Bin/Upm/Data')
 
 if os.path.exists(outputPath):
     shutil.rmtree(outputPath)

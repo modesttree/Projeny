@@ -72,7 +72,7 @@ class Runner:
 
         for packageName in self._sys.walkDir('[OutDir]/UnityPackages'):
             if packageName != "Projeny":
-                self._sys.deleteDirectory('[OutDir]/UnityPackages/{0}'.format(packageName))
+                self._sys.deleteDirectoryIfExists('[OutDir]/UnityPackages/{0}'.format(packageName))
 
         self._sys.clearDirectoryContents('[OutDir]/UnityProjects')
         self._zipHelper.createZipFile('[OutDir]', '[OutRootDir]/Projeny-{0}.zip'.format(versionStr))

@@ -1,4 +1,6 @@
 
+/Temp
+
 project_root_marker
 .vimrc_l
 
@@ -7,3 +9,6 @@ project_root_marker
 /.vim_l
 
 *.pyc
+
+*.csproj.user
+*.suo

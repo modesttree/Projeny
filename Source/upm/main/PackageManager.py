@@ -115,6 +115,19 @@ class PackageManager:
     def _updateDirLinksForSchema(self, schema):
         self._removePackageJunctions()
 
+        self._sys.deleteDirectoryIfExists('[PluginsDir]/Projeny')
+
+        if self._config.getBool('LinkToProjenyEditorDir'):
+            self._junctionHelper.makeJunction('[ProjenyDir]/UnityPlugin/Projeny-editor', '[PluginsDir]/Projeny/Editor')
+        else:
+            self._sys.copyFile('[ProjenyUnityEditorDllPath]', '[PluginsDir]/Projeny/Editor/Projeny.dll')
+
+        with self._sys.openOutputFile('[PluginsDir]/Projeny/Placeholder.cs') as outFile:
+            outFile.write(
+"""
+    // This file exists purely as a way to force unity to generate the MonoDevelop csproj files so that Projeny can read the settings from it
+""")
+
         for packageInfo in schema.packages.values():
 
             self._log.debug('Processing package "{0}"'.format(packageInfo.name))
