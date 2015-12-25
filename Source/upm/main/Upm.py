@@ -75,19 +75,27 @@ def getProjenyDir():
 
     return os.path.join(MiscUtil.getExecDirectory(), '../../..')
 
-def installBindings(verbose, veryVerbose, userConfigPaths):
+def getExtraUserConfigPaths():
+    return [os.path.join(os.path.expanduser('~'), ConfigFileName)]
+
+def installBindings(verbose, veryVerbose, mainConfigPath):
+
     projenyDir = getProjenyDir()
     projenyConfigPath = os.path.join(projenyDir, ConfigFileName)
 
     # Put the standard config first so it can be over-ridden by user settings
-    configPaths = [projenyConfigPath] + list(userConfigPaths)
+    configPaths = [projenyConfigPath]
+
+    if mainConfigPath:
+        configPaths += [mainConfigPath]
+
+    configPaths += getExtraUserConfigPaths()
 
     Container.bind('Config').toSingle(ConfigYaml, configPaths)
 
     initialVars = { 'ProjenyDir': projenyDir, }
 
-    if len(userConfigPaths) > 0:
-        mainConfigPath = userConfigPaths[0]
+    if mainConfigPath:
         initialVars['ConfigDir'] = os.path.dirname(mainConfigPath)
 
     Container.bind('VarManager').toSingle(VarManager, initialVars)
@@ -137,11 +145,17 @@ def installPlugins():
         print("Loading plugin at {0}".format(basePath))
         importlib.import_module('plugins.' + basePath)
 
-def getUserConfigPaths(args):
+def tryGetMainConfigPath(args):
     if args.configPath:
-        return [args.configPath]
+        assertThat(os.path.isfile(args.configPath), "Could not find config file at '{0}'", args.configPath)
+        return args.configPath
 
-    return [os.path.join(os.getcwd(), ConfigFileName)]
+    configPathGuess = os.path.join(os.getcwd(), ConfigFileName)
+
+    if os.path.isfile(configPathGuess):
+        return configPathGuess
+
+    return None
 
 def main():
     # Here we split out some functionality into various methods
@@ -161,7 +175,7 @@ def main():
 
     processArgs(args)
 
-    installBindings(args.verbose, args.veryVerbose, getUserConfigPaths(args))
+    installBindings(args.verbose, args.veryVerbose, tryGetMainConfigPath(args))
     installPlugins()
 
     UpmRunner().run(args)
