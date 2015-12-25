@@ -5,6 +5,7 @@ from upm.log.Logger import Logger
 from upm.util.VarManager import VarManager
 from upm.util.ProcessRunner import ProcessRunner, ResultType
 
+import fnmatch
 from upm.util.Assert import *
 import upm.ioc.Container as Container
 from upm.ioc.Inject import Inject, InjectOptional
@@ -260,6 +261,15 @@ class SystemHelper:
             return True
 
         return False
+
+    def findFilesByPattern(self, startDir, pattern):
+        startDir = self._varManager.expand(startDir)
+
+        for root, dirs, files in os.walk(startDir):
+            for basename in files:
+                if fnmatch.fnmatch(basename, pattern):
+                    filename = os.path.join(root, basename)
+                    yield filename
 
     def removeFileWaitIfNecessary(self, fileName):
         outputPath = self._varManager.expand(fileName)

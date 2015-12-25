@@ -33,7 +33,7 @@ class UpmRunner:
     _mainConfig = InjectOptional('MainConfigPath', None)
     _sys = Inject('SystemHelper')
     _vsSolutionHelper = Inject('VisualStudioHelper')
-    _releaseRegistries = InjectMany('ReleaseRegistry')
+    _releaseRegistryManager = Inject('ReleaseRegistryManager')
 
     def run(self, args):
         self._args = args
@@ -56,7 +56,7 @@ class UpmRunner:
             self._packageMgr.deleteAllLinks()
 
         if self._args.installRelease:
-            self._installRelease(self._args.installRelease)
+            self._releaseRegistryManager.installRelease(self._args.installRelease)
 
         if self._args.updateLinksAllProjects:
             self._packageMgr.updateLinksForAllProjects()
@@ -70,17 +70,6 @@ class UpmRunner:
         if self._args.updateCustomSolution:
             self._vsSolutionHelper.updateCustomSolution(self._project, self._platform)
 
-    def _installRelease(self, releaseName):
-        self._log.heading("Attempting to install release '{0}'", releaseName)
-
-        assertThat(len(self._releaseRegistries) > 0, "Could not find any registries to search for the given release name")
-
-        for registry in self._releaseRegistries:
-            if registry.tryInstallRelease(releaseName):
-                return
-
-        assertThat(False, "Failed to install release '{0}' - could not find it in any of the release registries.  Registries checked: {1}", releaseName, ", ".join([x.getName() for x in self._releaseRegistries]))
-
     def _openDocumentation(self):
         webbrowser.open('https://github.com/modesttree/ModestUnityPackageManager')
 
@@ -89,6 +78,10 @@ class UpmRunner:
             self._vsSolutionHelper.buildCustomSolution(self._project, self._platform)
 
     def _runPostBuild(self):
+
+        if self._args.listReleases:
+            self._releaseRegistryManager.listAllReleases()
+
         if self._args.listProjects:
             self._packageMgr.listAllProjects()
 

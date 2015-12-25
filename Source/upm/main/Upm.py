@@ -23,6 +23,7 @@ from upm.util.ScriptRunner import ScriptRunner
 from upm.util.CommonSettings import CommonSettings
 
 from upm.util.CommonSettings import ConfigFileName
+from upm.reg.ReleaseRegistryManager import ReleaseRegistryManager
 
 from upm.main.UpmRunner import UpmRunner
 
@@ -45,6 +46,7 @@ def addArguments(parser):
     parser.add_argument('-ul', '--updateLinks', action='store_true', help='Updates directory links for the given project using package manager')
 
     parser.add_argument('-lp', '--listProjects', action='store_true', help='Display the list of all projects that are in the UnityProjects directory')
+    parser.add_argument('-lr', '--listReleases', action='store_true', help='')
 
     parser.add_argument('-uus', '--updateUnitySolution', action='store_true', help='Equivalent to executing the menu option "Assets/Sync MonoDevelop Project" in unity')
     parser.add_argument('-ucs', '--updateCustomSolution', action='store_true', help='Updates the custom solution for the given project with the files found in the Assets/ folder.  It will also take settings from the generated unity solution such as defines, and references.')
@@ -114,6 +116,8 @@ def installBindings(verbose, veryVerbose, mainConfigPath):
     Container.bind('CommonSettings').toSingle(CommonSettings)
     Container.bind('ZipHelper').toSingle(ZipHelper)
 
+    Container.bind('ReleaseRegistryManager').toSingle(ReleaseRegistryManager)
+
 def processArgs(args):
     if args.buildFull:
         args.updateLinks = True
@@ -121,7 +125,7 @@ def processArgs(args):
         args.updateCustomSolution = True
         args.buildCustomSolution = True
 
-def findAllFiles(directory, pattern):
+def findFilesByPattern(directory, pattern):
     for root, dirs, files in os.walk(directory):
         for basename in files:
             if fnmatch.fnmatch(basename, pattern):
@@ -138,7 +142,7 @@ def installPlugins():
 
     pluginDir = os.path.join(MiscUtil.getExecDirectory(), '../../../plugins')
 
-    for filePath in findAllFiles(pluginDir, '*.py'):
+    for filePath in findFilesByPattern(pluginDir, '*.py'):
         basePath = filePath[len(pluginDir) + 1:]
         basePath = os.path.splitext(basePath)[0]
         basePath = basePath.replace('\\', '.')
