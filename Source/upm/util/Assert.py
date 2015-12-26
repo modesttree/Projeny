@@ -18,6 +18,10 @@ def _triggerAssertWithMessage(extraMessage, message, *params):
     fullMessage += extraMessage
     triggerAssert(fullMessage, *params)
 
+def assertIsNone(value, message = None, *params):
+    if value != None:
+        triggerAssert(message, *params)
+
 def assertIsNotNone(value, message = None, *params):
     if value == None:
         triggerAssert(message, *params)

@@ -21,6 +21,7 @@ from upm.main.VisualStudioHelper import VisualStudioHelper
 from upm.main.ProjectSchemaLoader import ProjectSchemaLoader
 from upm.util.ScriptRunner import ScriptRunner
 from upm.util.CommonSettings import CommonSettings
+from upm.reg.UnityPackageExtractor import UnityPackageExtractor
 
 from upm.util.CommonSettings import ConfigFileName
 from upm.reg.ReleaseRegistryManager import ReleaseRegistryManager
@@ -114,6 +115,7 @@ def installBindings(verbose, veryVerbose, mainConfigPath):
     Container.bind('VisualStudioHelper').toSingle(VisualStudioHelper)
     Container.bind('ProjectSchemaLoader').toSingle(ProjectSchemaLoader)
     Container.bind('CommonSettings').toSingle(CommonSettings)
+    Container.bind('UnityPackageExtractor').toSingle(UnityPackageExtractor)
     Container.bind('ZipHelper').toSingle(ZipHelper)
 
     Container.bind('ReleaseRegistryManager').toSingle(ReleaseRegistryManager)

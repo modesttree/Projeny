@@ -18,6 +18,7 @@ class LocalFolderRegistry:
     _log = Inject('Logger')
     _sys = Inject('SystemHelper')
     _varMgr = Inject('VarManager')
+    _extractor = Inject('UnityPackageExtractor')
 
     def __init__(self, settings):
         self._folderPath = self._varMgr.expand(settings['Path']).replace("\\", "/")
@@ -40,10 +41,10 @@ class LocalFolderRegistry:
     def getName(self):
         return "Local Folder ({0})".format(self._folderPath)
 
-    def installRelease(self, releaseInfo):
+    def installRelease(self, releaseInfo, outputDir):
         fileInfo = next(x for x in self._files if x.release == releaseInfo)
-
         assertIsNotNone(fileInfo)
 
-        fileInfo.path
+        self._extractor.extractUnityPackage(fileInfo.path, outputDir)
+
 

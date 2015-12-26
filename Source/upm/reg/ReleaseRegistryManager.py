@@ -7,7 +7,7 @@ from upm.util.Assert import *
 
 from upm.reg.LocalFolderRegistry import LocalFolderRegistry
 from upm.reg.AssetStoreCacheRegistry import AssetStoreCacheRegistry
-from upm.reg.RemoveServerRegistry import RemoveServerRegistry
+from upm.reg.RemoteServerRegistry import RemoteServerRegistry
 
 class ReleaseRegistryManager:
     _log = Inject('Logger')
@@ -44,7 +44,7 @@ class ReleaseRegistryManager:
             return AssetStoreCacheRegistry(settings)
 
         if regType == 'Remote':
-            return RemoveServerRegistry(settings)
+            return RemoteServerRegistry(settings)
 
         assertThat(False, "Could not find registry with type '{0}'", regType)
 
@@ -62,10 +62,13 @@ class ReleaseRegistryManager:
 
         assertThat(len(self._releaseRegistries) > 0, "Could not find any registries to search for the given release name")
 
+        destDir = '[UnityPackagesDir]/{0}'.format(releaseName)
+
         for registry in self._releaseRegistries:
             for release in registry.releases:
                 if release.Title == releaseName:
-                    registry.installRelease(release)
+                    registry.installRelease(release, destDir)
+                    return
 
         assertThat(False, "Failed to install release '{0}' - could not find it in any of the release registries.\nRegistries checked: \n  {1}\nTry listing all available release with the -lr command"
            .format(releaseName, "\n  ".join([x.getName() for x in self._releaseRegistries])))

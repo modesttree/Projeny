@@ -5,7 +5,7 @@ import upm.ioc.IocAssertions as Assertions
 
 from upm.util.Assert import *
 
-class RemoveServerRegistry:
+class RemoteServerRegistry:
     _log = Inject('Logger')
 
     def __init__(self, settings):

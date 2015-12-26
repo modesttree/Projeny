@@ -1,4 +1,3 @@
-
 import sys
 
 from upm.log.Logger import Logger
