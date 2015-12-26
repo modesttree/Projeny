@@ -6,6 +6,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.SceneManagement;
+using UnityEditorInternal;
 using UnityEngine;
 using Projeny.Internal;
 
@@ -17,6 +18,13 @@ namespace Projeny
         public static void OpenHelp()
         {
             Application.OpenURL("https://github.com/modesttree/projeny");
+        }
+
+        [MenuItem("Projeny/Open project.yaml", false, 1)]
+        public static void OpenProjectFile()
+        {
+            var configPath = Path.Combine(Application.dataPath, "../../project.yaml");
+            InternalEditorUtility.OpenFileAtLineExternal(configPath, 1);
         }
 
         [MenuItem("Projeny/Update Links", false, 1)]
