@@ -9,7 +9,8 @@ import upm.ioc.Container as Container
 from upm.ioc.Inject import Inject
 import upm.ioc.IocAssertions as Assertions
 import upm.util.JunctionUtil as JunctionUtil
-from upm.config.ConfigYaml import ConfigYaml
+from upm.config.Config import Config
+from upm.config.YamlLoader import loadYamlFilesThatExist
 
 ProjectConfigFileName = 'project.yaml'
 ProjectUserConfigFileName = 'projectUser.yaml'
@@ -25,7 +26,7 @@ class ProjectSchemaLoader:
         schemaPathUserGlobal = self._varMgr.expandPath('[UnityProjectsDir]/{0}'.format(ProjectUserConfigFileName))
 
         self._log.debug('Loading schema at path "{0}"'.format(schemaPath))
-        config = ConfigYaml([schemaPath, schemaPathUser, schemaPathGlobal, schemaPathUserGlobal])
+        config = Config(loadYamlFilesThatExist(schemaPath, schemaPathUser, schemaPathGlobal, schemaPathUserGlobal))
 
         pluginDependencies = config.tryGetList([], 'packagesPlugins')
         scriptsDependencies = config.tryGetList([], 'packages')
@@ -51,9 +52,9 @@ class ProjectSchemaLoader:
             configPath = self._varMgr.expandPath('[UnityPackagesDir]/{0}/package.yaml'.format(packageName))
 
             if os.path.exists(configPath):
-                packageConfig = ConfigYaml([configPath])
+                packageConfig = Config(loadYamlFilesThatExist(configPath))
             else:
-                packageConfig = ConfigYaml([])
+                packageConfig = Config([])
 
             createCustomVsProject = self._checkCustomProjectMatch(packageName, customProjects)
 

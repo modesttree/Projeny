@@ -7,6 +7,9 @@ import upm.ioc.Container as Container
 from upm.ioc.Inject import Inject
 import upm.ioc.IocAssertions as Assertions
 
+from upm.config.ConfigLoaderHardCoded import ConfigLoaderHardCoded
+from upm.config.Config import Config
+
 from upm.util.Assert import *
 from upm.util.VarManager import VarManager
 
@@ -15,9 +18,16 @@ class TestVarManager(unittest.TestCase):
         Container.clear()
 
     def test1(self):
-        assertThat(False)
-        #Container.bind('Config').toSingle(ConfigXml)
-        Container.bind('VarManager').toSingle(VarManager, {'foo': 'yep [bar]', 'bar': 'result2'})
+        config = {
+            'PathVars': {
+                'foo': 'yep [bar]',
+                'bar': 'result2',
+                'nest1': 'asdf [foo]',
+            }
+        }
+        Container.bind('Config').toSingle(Config, [config])
+
+        Container.bind('VarManager').toSingle(VarManager)
 
         pathMgr = Container.resolve('VarManager')
 
@@ -31,6 +41,8 @@ class TestVarManager(unittest.TestCase):
         pathMgr.add('qux', 'sadf')
         assertThat(pathMgr.hasKey('qux'))
         assertThat(pathMgr.expand('[qux]') == 'sadf')
+
+        assertThat(pathMgr.expand('[nest1]') == 'asdf yep result2')
 
         print('Done')
 

@@ -39,7 +39,9 @@ class SystemHelper:
         self._timeout = timeout
 
     def canonicalizePath(self, pathStr):
-        return os.path.realpath(pathStr)
+        # Make one standard representation of the given path
+        # This will remove ../ and change to always use forward slashes
+        return self._varManager.expandPath(pathStr)
 
     def executeAndWait(self, commandStr, startDir = None):
         expandedStr = self._varManager.expand(commandStr)

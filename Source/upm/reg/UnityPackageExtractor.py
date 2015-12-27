@@ -3,7 +3,6 @@ import upm.ioc.Container as Container
 from upm.log.Logger import Logger
 from upm.log.LogStreamConsole import LogStreamConsole
 from upm.util.SystemHelper import SystemHelper
-from upm.config.ConfigYaml import ConfigYaml
 
 import tempfile
 
@@ -93,7 +92,8 @@ if __name__ == '__main__':
     Container.bind('VarManager').toSingle(VarManager)
     Container.bind('LogStream').toSingle(LogStreamConsole, True, True)
     Container.bind('SystemHelper').toSingle(SystemHelper)
-    Container.bind('Config').toSingle(ConfigYaml)
+    assertThat(False, "TODO")
+    #Container.bind('Config').toSingle(ConfigYaml)
 
     def main():
         runner = UnityPackageExtractor()

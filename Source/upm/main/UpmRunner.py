@@ -177,6 +177,7 @@ packages:
 PathVars:
     UnityPackagesDir: '[ConfigDir]/UnityPackages'
     UnityProjectsDir: '[ConfigDir]/UnityProjects'
+    LogPath: '[ConfigDir]/UpmLog.txt'
 """)
 
     def processArgs(self):

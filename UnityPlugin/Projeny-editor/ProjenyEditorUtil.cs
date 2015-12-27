@@ -326,24 +326,42 @@ namespace Projeny
 
         static bool RunUpm(string args)
         {
-            Process proc = new Process();
+            var startInfo = new ProcessStartInfo();
 
-            proc.StartInfo.FileName = "Upm";
-            proc.StartInfo.Arguments = args;
-            proc.StartInfo.WindowStyle = ProcessWindowStyle.Minimized;
+            startInfo.FileName = "Upm";
+            startInfo.Arguments = args;
+            startInfo.RedirectStandardError = true;
+            startInfo.WindowStyle = ProcessWindowStyle.Minimized;
 
             //UnityEngine.Debug.Log("Running command '{0} {1}'".Fmt(proc.StartInfo.FileName, args));
 
+            Process proc = new Process();
+            proc.StartInfo = startInfo;
             proc.Start();
+
+            string errors = proc.StandardError.ReadToEnd();
             proc.WaitForExit();
 
             return proc.ExitCode == 0;
+            // TODO
+            //if (proc.ExitCode != 0)
+            //{
+                //throw new UpmException(errors);
+            //}
         }
 
         class CurrentProjectInfo
         {
             public string PlatformDirName;
             public string ProjectName;
+        }
+
+        public class UpmException : Exception
+        {
+            public UpmException(string errorMessage)
+                : base(errorMessage)
+            {
+            }
         }
     }
 }

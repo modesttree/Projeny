@@ -12,21 +12,12 @@ import upm.ioc.Container as Container
 from upm.ioc.Inject import Inject, InjectOptional
 import upm.ioc.IocAssertions as Assertions
 
-class ConfigYaml:
+class Config:
     ''' Build config info  (eg. path info, etc.) '''
 
-    def __init__(self, configPaths = None):
-
-        if not configPaths:
-            configPaths = []
-
-        self.configs = []
-        self.configPaths = reversed(configPaths)
-
-        for configPath in self.configPaths:
-            if os.path.isfile(configPath):
-                config = yaml.load(self.readAllTextFromFile(configPath))
-                self.configs.append(config)
+    def __init__(self, configs):
+        # Reverse so that later config settings act as overrides
+        self.configs = list(reversed(configs))
 
     def readAllTextFromFile(self, filePath):
         with open(filePath, 'r', encoding='utf-8') as f:

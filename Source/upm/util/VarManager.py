@@ -45,37 +45,27 @@ class VarManager:
     def tryGet(self, key):
         return self._params.get(key)
 
-    def expandPath(self, text, extraVars = None, positionArgs = None):
+    def expandPath(self, text, extraVars = None):
         ''' Same as expand() except it cleans up the path to remove ../ '''
+        return os.path.realpath(self.expand(text, extraVars)).replace("\\", "/")
 
-        # Forward slashes seem to work better with system helper
-        return os.path.realpath(self.expand(text, extraVars, positionArgs))
-        # This would be nice but causes something to go to hell
-        # eg: scripts and plugins project directories get filled with the same files
-        #.replace("\\", "/")
-
-    def expand(self, text, extraVars = None, positionArgs = None):
+    def expand(self, text, extraVars = None):
 
         if not extraVars:
             extraVars = {}
 
-        if not positionArgs:
-            positionArgs = []
-
         allArgs = self._params.copy()
         allArgs.update(extraVars)
 
-        try:
-            while True:
-                text = text.replace('[', '{').replace(']', '}')
+        lastText = None
 
-                if not ('{' in text):
-                    break
+        while '[' in text and lastText != text:
+            lastText = text
+            for arg in allArgs.items():
+                text = text.replace('[' + arg[0] + ']', arg[1])
 
-                text = text.format(*positionArgs, **allArgs)
-
-        except KeyError as e:
-            raise Exception('Unable to find key {0} in the list of known variables'.format(e))
+        if '[' in text:
+            raise Exception("Unable to find all keys in path '{0}'".format(text))
 
         return text
 

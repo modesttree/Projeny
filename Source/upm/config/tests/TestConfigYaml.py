@@ -10,7 +10,8 @@ from upm.ioc.Inject import Inject
 import upm.ioc.IocAssertions as Assertions
 
 from upm.util.VarManager import VarManager
-from upm.config.ConfigYaml import ConfigYaml
+from upm.config.Config import Config
+from upm.config.YamlLoader import loadYamlFilesThatExist
 
 ScriptDir = os.path.dirname(os.path.realpath(__file__))
 
@@ -20,8 +21,10 @@ class TestConfigYaml(unittest.TestCase):
 
     def testSimple(self):
         yamlPath = ScriptDir + '/ExampleConfig.yaml'
-        Container.bind('ConfigYaml').toSingle(ConfigYaml, [yamlPath])
-        config = Container.resolve('ConfigYaml')
+
+        Container.bind('Config').toSingle(Config, loadYamlFilesThatExist(yamlPath))
+
+        config = Container.resolve('Config')
 
         assertIsEqual(config.getString('date'), '2012-08-06')
         assertIsEqual(config.getString('receipt'), 'Oz-Ware Purchase Invoice')
@@ -37,8 +40,10 @@ class TestConfigYaml(unittest.TestCase):
         assertIsEqual(config.getString('foo1'), config.getString('receipt'))
 
     def testMultiple(self):
-        Container.bind('ConfigYaml').toSingle(ConfigYaml, [ScriptDir + '/ExampleConfig.yaml', ScriptDir + '/ExampleConfig2.yaml'])
-        config = Container.resolve('ConfigYaml')
+
+        Container.bind('Config').toSingle(Config, loadYamlFilesThatExist(ScriptDir + '/ExampleConfig.yaml', ScriptDir + '/ExampleConfig2.yaml'))
+
+        config = Container.resolve('Config')
 
         # From 1
         assertIsEqual(config.getString('receipt'), 'Oz-Ware Purchase Invoice')
@@ -71,8 +76,9 @@ class TestConfigYaml(unittest.TestCase):
         assertIsEqual(config.tryGetInt(5, 'zxvzasdfasdfasdf'), 5)
 
     def testSpecialChars(self):
-        Container.bind('ConfigYaml').toSingle(ConfigYaml, [ScriptDir + '/ExampleConfig.yaml', ScriptDir + '/ExampleConfig2.yaml'])
-        config = Container.resolve('ConfigYaml')
+        Container.bind('Config').toSingle(Config, loadYamlFilesThatExist(ScriptDir + '/ExampleConfig.yaml', ScriptDir + '/ExampleConfig2.yaml'))
+
+        config = Container.resolve('Config')
 
         assertIsEqual(config.tryGetString(None, 'foo4'), 'asdf')
 

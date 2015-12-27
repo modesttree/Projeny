@@ -7,7 +7,8 @@ import argparse
 import upm.util.MiscUtil as MiscUtil
 import upm.util.PlatformUtil as PlatformUtil
 
-from upm.config.ConfigYaml import ConfigYaml
+from upm.config.YamlLoader import loadYamlFilesThatExist
+from upm.config.Config import Config
 from upm.util.VarManager import VarManager
 from upm.util.ZipHelper import ZipHelper
 from upm.log.Logger import Logger
@@ -97,7 +98,7 @@ def installBindings(verbose, veryVerbose, mainConfigPath):
 
     configPaths += getExtraUserConfigPaths()
 
-    Container.bind('Config').toSingle(ConfigYaml, configPaths)
+    Container.bind('Config').toSingle(Config, loadYamlFilesThatExist(*configPaths))
 
     initialVars = { 'ProjenyDir': projenyDir, }
 

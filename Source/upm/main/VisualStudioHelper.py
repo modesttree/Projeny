@@ -51,7 +51,7 @@ class VisualStudioHelper:
             assertThat(False, "Path to visual studio has not been defined.  Please set <VisualStudioIdePath> within the {0} file", ConfigFileName)
 
         if self._sys.fileExists('[VisualStudioIdePath]'):
-            self._sys.executeNoWait('[VisualStudioIdePath] {0} {1}'.format(solutionPath, filePath if filePath else ""))
+            self._sys.executeNoWait('[VisualStudioIdePath] {0} {1}'.format(self._sys.canonicalizePath(solutionPath), self._sys.canonicalizePath(filePath) if filePath else ""))
         else:
             assertThat(False, "Cannot find path to visual studio.  Expected to find it at '{0}'".format(self._varMgr.expand('[VisualStudioIdePath]')))
 
