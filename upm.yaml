@@ -14,7 +14,7 @@ Registries:
     - Remote:
         ConfigUrl: 'http://internal.modest3d.com/UnityReleases/releaseRegistry.yaml'
 
-PathVars+:
+PathVars:
     TemplatesDir: '[ProjenyDir]/Templates'
 
     CsProjectTemplate: '[TemplatesDir]/CsProjectTemplate.csproj'

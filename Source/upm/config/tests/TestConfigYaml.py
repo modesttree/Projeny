@@ -70,5 +70,16 @@ class TestConfigYaml(unittest.TestCase):
 
         assertIsEqual(config.tryGetInt(5, 'zxvzasdfasdfasdf'), 5)
 
+    def testSpecialChars(self):
+        Container.bind('ConfigYaml').toSingle(ConfigYaml, [ScriptDir + '/ExampleConfig.yaml', ScriptDir + '/ExampleConfig2.yaml'])
+        config = Container.resolve('ConfigYaml')
+
+        assertIsEqual(config.tryGetString(None, 'foo4'), 'asdf')
+
+        assertIsEqual(config.tryGetString(None, 'foo5'), 'zxcv')
+
+        assertIsEqual(config.tryGetString(None, 'foo6'), 'asdf')
+        assertIsEqual(config.tryGetString(None, 'foo7'), 'zxcv')
+
 if __name__ == '__main__':
     unittest.main()

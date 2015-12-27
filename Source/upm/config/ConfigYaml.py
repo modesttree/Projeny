@@ -71,7 +71,7 @@ class ConfigYaml:
         return match
 
     def tryGet(self, *args):
-        matches = list(self.getAll(*args))
+        matches = self.getAll(*args)
 
         if len(matches) == 0:
             return None
@@ -80,6 +80,28 @@ class ConfigYaml:
         return matches[0]
 
     def getAll(self, *args):
+        assertThat(len(args) > 0)
+
+        # When ! is appended to the end of the key, this is treated as an override
+        newArgs = list(args)
+        newArgs[len(newArgs)-1] += '!'
+        result = self._getAllInternal(*newArgs)
+
+        if len(result) > 0:
+            return result
+
+        result = self._getAllInternal(*args)
+
+        if len(result) == 0:
+            # When ? is appended to the end of the key, this is treated as a fallback
+            newArgs = list(args)
+            newArgs[len(newArgs)-1] += '?'
+            result = self._getAllInternal(*newArgs)
+
+        return result
+
+    def _getAllInternal(self, *args):
+        result = []
         for config in self.configs:
             currentDict = config
             for i in range(len(args)):
@@ -89,10 +111,12 @@ class ConfigYaml:
                     break
 
                 if i == len(args) - 1:
-                    yield currentDict[name]
+                    result.append(currentDict[name])
                     break
 
                 currentDict = currentDict[name]
+
+        return result
 
     def getList(self, *args):
         result = self.tryGetList(None, *args)
@@ -100,18 +124,16 @@ class ConfigYaml:
         return result
 
     def tryGetList(self, fallback, *args):
-        result = self.tryGet(*args)
+        matches = self.getAll(*args)
 
-        if result == None:
+        if len(matches) == 0:
             return fallback
 
-        assertIsType(result, list, "Unexpected type for yaml property '{0}'", self._propNameToString(args))
+        result = []
 
-        # When a + is added at the end we interpret this to mean concatenate to the existing list
-        extraArgs = list(args)
-        extraArgs[len(extraArgs)-1] += '+'
-        for extra in self.getAll(*extraArgs):
-            result += extra
+        for match in reversed(matches):
+            assertIsType(match, list, "Unexpected type for yaml property '{0}'", self._propNameToString(args))
+            result += match
 
         return result
 
@@ -121,18 +143,15 @@ class ConfigYaml:
         return result
 
     def tryGetDictionary(self, fallback, *args):
-        result = self.tryGet(*args)
+        matches = self.getAll(*args)
 
-        if result == None:
+        if len(matches) == 0:
             return fallback
 
-        assertIsType(result, dict, "Unexpected type for yaml property '{0}'", self._propNameToString(args))
+        result = {}
 
-        # When a + is added at the end we interpret this to mean concatenate to the existing list
-        extraArgs = list(args)
-        extraArgs[len(extraArgs)-1] += '+'
-        for extra in self.getAll(*extraArgs):
-            result = Util.mergeDictionaries(result, extra)
+        for match in matches:
+            assertIsType(match, dict, "Unexpected type for yaml property '{0}'", self._propNameToString(args))
+            result = Util.mergeDictionaries(result, match)
 
         return result
-

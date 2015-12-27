@@ -4,6 +4,10 @@ receipt:     &id002
 date:        "2012-08-06"
 foo1:     *id002
 foo2: Lorem
+foo3: Joe
+foo5: zxcv
+foo6: zxcv
+foo7!: zxcv
 customer:
     first_name:   Dorothy
     family_name:  Gale
