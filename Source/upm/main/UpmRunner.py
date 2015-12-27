@@ -92,6 +92,14 @@ class UpmRunner:
         if self._args.openCustomSolution:
             self._vsSolutionHelper.openCustomSolution(self._project, self._platform)
 
+        if self._args.editProjectYaml:
+            self._editProjectYaml()
+
+    def _editProjectYaml(self):
+        assertThat(self._project)
+        schemaPath = self._varMgr.expandPath('[UnityProjectsDir]/{0}/{1}'.format(self._project, ProjectConfigFileName))
+        os.startfile(schemaPath)
+
     def _runInternal(self):
         self._log.debug("Started UPM with arguments: {0}".format(" ".join(sys.argv[1:])))
 
@@ -104,9 +112,16 @@ class UpmRunner:
         if self._args.createProject:
             self._createProject(self._args.createProject)
 
+        if self._args.createPackage:
+            self._createPackage(self._args.createPackage)
+
         self._runPreBuild()
         self._runBuild()
         self._runPostBuild()
+
+    def _createPackage(self, packageName):
+        self._log.heading('Creating new package "{0}"', packageName)
+        self._sys.createDirectory('[UnityPackagesDir]/{0}'.format(packageName))
 
     def _createProject(self, projName):
         self._log.heading('Initializing new project "{0}"', projName)
@@ -174,13 +189,21 @@ PathVars:
         if self._project and not self._packageMgr.projectExists(self._project):
             self._project = self._packageMgr.getProjectFromAlias(self._project)
 
+        if not self._project:
+            allProjects = self._packageMgr.getAllProjects()
+
+            # If there's only one project, then just always assume they are operating on that
+            if len(allProjects) == 1:
+                self._project = allProjects[0]
+
         self._platform = PlatformUtil.fromPlatformArgName(self._args.platform)
 
     def _validateArgs(self):
         requiresProject = self._args.updateLinks or self._args.updateUnitySolution \
            or self._args.updateCustomSolution or self._args.buildCustomSolution \
            or self._args.clearProjectGeneratedFiles or self._args.buildFull \
-           or self._args.openUnity or self._args.openCustomSolution
+           or self._args.openUnity or self._args.openCustomSolution \
+           or self._args.editProjectYaml
 
         if requiresProject and not self._project:
             assertThat(False, "Cannot execute the given arguments without a project specified, or a default project defined in the {0} file", ConfigFileName)

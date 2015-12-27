@@ -16,6 +16,7 @@ from upm.util.PlatformUtil import Platforms
 import shutil
 import traceback
 
+from upm.util.CommonSettings import ConfigFileName
 import upm.util.MiscUtil as MiscUtil
 import upm.util.PlatformUtil as PlatformUtil
 
@@ -90,7 +91,7 @@ class PackageManager:
         self._log.good('Finished updating packages for project "{0}"'.format(schema.name))
 
     def getAllProjects(self):
-        assertThat(self._varMgr.hasKey('UnityProjectsDir'), "Could not find 'UnityProjectsDir' in PathVars.  Have you set up your upm.yaml file?")
+        assertThat(self._varMgr.hasKey('UnityProjectsDir'), "Could not find 'UnityProjectsDir' in PathVars.  Have you set up your {0} file?", ConfigFileName)
 
         results = []
         for name in self._sys.walkDir('[UnityProjectsDir]'):

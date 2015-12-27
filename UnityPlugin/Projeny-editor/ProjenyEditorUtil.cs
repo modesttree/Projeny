@@ -27,6 +27,12 @@ namespace Projeny
             InternalEditorUtility.OpenFileAtLineExternal(configPath, 1);
         }
 
+        [MenuItem("Projeny/Package Manager...", false, 1)]
+        public static void OpenPackageManager()
+        {
+            EditorWindow.GetWindow(typeof(PackageManagerWindow));
+        }
+
         [MenuItem("Projeny/Update Links", false, 1)]
         public static void UpdateLinks()
         {
@@ -45,7 +51,7 @@ namespace Projeny
         {
             if (RunUpmWithCurrentProjectAndPlatform("--updateCustomSolution"))
             {
-                //UnityEngine.Debug.Log("Projeny: Custom solution has been updated successfully");
+                UnityEngine.Debug.Log("Projeny: Custom solution has been updated successfully");
             }
             else
             {
