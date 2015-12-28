@@ -56,8 +56,14 @@ class PackageManager:
                 proj = "{0} ({1})".format(proj, alias)
             self._log.info("  " + proj)
 
+    def listAllPackages(self):
+        packagesNames = self.getAllPackageNames()
+        self._log.info("Found {0} Packages:".format(len(packagesNames)))
+        for packageName in packagesNames:
+            self._log.info("  " + packageName)
+
     def getProjectFromAlias(self, alias):
-        aliasMap = self._config.getDictionary('ProjectAliases')
+        aliasMap = self._config.tryGetDictionary({}, 'ProjectAliases')
 
         assertThat(alias in aliasMap.keys(), "Unrecognized project '{0}' and could not find an alias with that name either".format(alias))
         return aliasMap[alias]
@@ -89,6 +95,15 @@ class PackageManager:
         self._updateDirLinksForSchema(schema)
 
         self._log.good('Finished updating packages for project "{0}"'.format(schema.name))
+
+    def getAllPackageNames(self):
+        assertThat(self._varMgr.hasKey('UnityPackagesDir'), "Could not find 'UnityPackagesDir' in PathVars.  Have you set up your {0} file?", ConfigFileName)
+
+        results = []
+        for name in self._sys.walkDir('[UnityPackagesDir]'):
+            if self._sys.IsDir('[UnityPackagesDir]/' + name):
+                results.append(name)
+        return results
 
     def getAllProjects(self):
         assertThat(self._varMgr.hasKey('UnityProjectsDir'), "Could not find 'UnityProjectsDir' in PathVars.  Have you set up your {0} file?", ConfigFileName)

@@ -1,3 +1,4 @@
+using System.IO;
 using UnityEngine;
 using UnityEditor;
 using System.Collections;
@@ -13,42 +14,25 @@ namespace Projeny
         DraggableList _pluginsList;
 
         PackageManagerWindowSkin _skin;
-        ProjectFiles _selectFile;
+        ProjectConfigTypes _projectConfigType;
 
         void OnEnable()
         {
             _skin = Resources.Load<PackageManagerWindowSkin>("Projeny/PackageManagerSkin");
 
-            //if (_availableList == null)
+            if (_availableList == null)
             {
                 _availableList = new DraggableList();
-
-                _availableList.Add("bob");
-                _availableList.Add("joe");
-                _availableList.Add("frank");
-                _availableList.Add("mary");
-                _availableList.Add("mary");
-                _availableList.Add("zxcv");
-                _availableList.Add("wetqsdf");
-                _availableList.Add("dsgfasdgz");
-                _availableList.Add("235325");
-                _availableList.Add("623");
             }
 
-            //if (_assetsList == null)
+            if (_assetsList == null)
             {
                 _assetsList = new DraggableList();
-
-                _assetsList.Add("john");
-                _assetsList.Add("zack");
             }
 
-            //if (_pluginsList == null)
+            if (_pluginsList == null)
             {
                 _pluginsList = new DraggableList();
-
-                _pluginsList.Add("asdf");
-                _pluginsList.Add("zxcv");
             }
         }
 
@@ -76,16 +60,24 @@ namespace Projeny
             var startX = _skin.MarginLeft;
             var endX = _skin.AvailablePercentWidth * windowRect.width - 0.5f * _skin.ListVerticalSpacing;
             var startY = _skin.HeaderHeight;
-            var endY = windowRect.height - _skin.MarginBottom;
+            var endY = windowRect.height - _skin.MarginBottom - _skin.ApplyButtonHeight - _skin.ApplyButtonTopPadding;
 
             _availableList.Draw(Rect.MinMaxRect(startX, startY, endX, endY));
+
+            startY = endY + _skin.ApplyButtonTopPadding;
+            endY = windowRect.height - _skin.MarginBottom;
+
+            if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh Packages"))
+            {
+                RefreshPackages();
+            }
         }
 
         void DrawRightLists(Rect windowRect)
         {
             var startX = _skin.AvailablePercentWidth * windowRect.width + 0.5f * _skin.ListVerticalSpacing;
             var endX = windowRect.width - _skin.MarginRight;
-            var startY = _skin.FileDropdownTopPadding;
+            var startY = _skin.HeaderHeight;
             var endY = startY + _skin.FileDropdownHeight;
 
             DrawFileDropdown(Rect.MinMaxRect(startX, startY, endX, endY));
@@ -111,21 +103,77 @@ namespace Projeny
             var halfWidth = rect.width * 0.5f;
             var padding = 0.5f * _skin.ProjectButtonsPadding;
 
-            if (GUI.Button(new Rect(rect.x, rect.y, halfWidth - padding, rect.height), "Refresh"))
+            if (GUI.Button(new Rect(rect.x, rect.y, halfWidth - padding, rect.height), "Reload File"))
             {
                 RefreshProject();
             }
 
-            if (GUI.Button(Rect.MinMaxRect(rect.x + halfWidth + padding, rect.y, rect.right, rect.bottom), "Apply"))
+            if (GUI.Button(Rect.MinMaxRect(rect.x + halfWidth + padding, rect.y, rect.xMax, rect.yMax), "Apply"))
             {
                 ApplyChanges();
             }
         }
 
+        void RefreshPackages()
+        {
+            // TODO
+        }
+
         void RefreshProject()
         {
-            Log.Trace("TODO");
-            //var project = ProjectConfigSerializer.Deserialize();
+            var configPath = GetProjectConfigPath();
+
+            if (File.Exists(configPath))
+            {
+                var project = ProjectConfigSerializer.Deserialize(File.ReadAllText(configPath));
+                PopulateListsFromConfig(project);
+            }
+            else
+            {
+                ClearProjectLists();
+            }
+        }
+
+        string GetProjectConfigPath()
+        {
+            var projectRootDir = Path.Combine(Application.dataPath, "../..");
+            var unityProjectsDir = Path.Combine(projectRootDir, "..");
+
+            switch (_projectConfigType)
+            {
+                case ProjectConfigTypes.LocalProject:
+                {
+                    return Path.Combine(projectRootDir, ProjenyEditorUtil.ProjectConfigFileName);
+                }
+                case ProjectConfigTypes.LocalProjectUser:
+                {
+                    return Path.Combine(projectRootDir, ProjenyEditorUtil.ProjectConfigUserFileName);
+                }
+                case ProjectConfigTypes.AllProjects:
+                {
+                    return Path.Combine(unityProjectsDir, ProjenyEditorUtil.ProjectConfigFileName);
+                }
+                case ProjectConfigTypes.AllProjectsUser:
+                {
+                    return Path.Combine(unityProjectsDir, ProjenyEditorUtil.ProjectConfigUserFileName);
+                }
+            }
+
+            return null;
+        }
+
+        void ClearProjectLists()
+        {
+            _pluginsList.Clear();
+            _assetsList.Clear();
+        }
+
+        void PopulateListsFromConfig(ProjectConfig config)
+        {
+            ClearProjectLists();
+
+            _assetsList.AddRange(config.Packages);
+            _pluginsList.AddRange(config.PluginPackages);
         }
 
         void ApplyChanges()
@@ -135,12 +183,12 @@ namespace Projeny
 
         void DrawFileDropdown(Rect rect)
         {
-            var desiredFile = (ProjectFiles)EditorGUI.EnumPopup(rect, _selectFile, EditorStyles.popup);
+            var desiredConfigType = (ProjectConfigTypes)EditorGUI.EnumPopup(rect, _projectConfigType, EditorStyles.popup);
 
-            if (desiredFile != _selectFile)
+            if (desiredConfigType != _projectConfigType)
             {
                 // TODO: Confirm dialog if something changed
-                _selectFile = desiredFile;
+                _projectConfigType = desiredConfigType;
             }
         }
 
@@ -154,7 +202,7 @@ namespace Projeny
             _assetsList.Draw(rect1);
             _pluginsList.Draw(rect2);
 
-            GUI.Label(Rect.MinMaxRect(rect1.left, rect1.bottom, rect1.right, rect2.top), "Plugins Folder", _skin.HeaderTextStyle);
+            GUI.Label(Rect.MinMaxRect(rect1.xMin, rect1.yMax, rect1.xMax, rect2.yMin), "Plugins Folder", _skin.HeaderTextStyle);
         }
 
         public void OnGUI()
@@ -167,7 +215,7 @@ namespace Projeny
             DrawLists(windowRect);
         }
 
-        enum ProjectFiles
+        enum ProjectConfigTypes
         {
             LocalProject,
             LocalProjectUser,

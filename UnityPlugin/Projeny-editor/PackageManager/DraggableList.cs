@@ -10,9 +10,6 @@ namespace Projeny
     [Serializable]
     public class DraggableList
     {
-        static readonly Color BackgroundColor = Color.white;
-        static readonly Color SelectedItemColor = Color.blue;
-
         static readonly string DragId = "DraggableListData";
 
         readonly DraggableListSkin _skin;
@@ -31,6 +28,19 @@ namespace Projeny
         public void Add(string name)
         {
             _entryList.Add(new Entry(name));
+        }
+
+        public void AddRange(IEnumerable<string> names)
+        {
+            foreach (var name in names)
+            {
+                Add(name);
+            }
+        }
+
+        public void Clear()
+        {
+            _entryList.Clear();
         }
 
         public void Draw(Rect listRect)

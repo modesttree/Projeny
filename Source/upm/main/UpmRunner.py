@@ -85,6 +85,9 @@ class UpmRunner:
         if self._args.listProjects:
             self._packageMgr.listAllProjects()
 
+        if self._args.listPackages:
+            self._packageMgr.listAllPackages()
+
         if self._args.openUnity:
             self._packageMgr.checkProjectInitialized(self._project, self._platform)
             self._unityHelper.openUnity(self._project, self._platform)

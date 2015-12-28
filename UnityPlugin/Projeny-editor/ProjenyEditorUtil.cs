@@ -15,6 +15,11 @@ namespace Projeny
 {
     public static class ProjenyEditorUtil
     {
+        public const string ConfigFileName = "upm.yaml";
+
+        public const string ProjectConfigFileName = "project.yaml";
+        public const string ProjectConfigUserFileName = "projectUser.yaml";
+
         [MenuItem("Projeny/Help...", false, 9)]
         public static void OpenHelp()
         {
@@ -49,6 +54,7 @@ namespace Projeny
             }
 
             AssetDatabase.Refresh();
+            UnityEngine.Debug.Log("Projeny: Directory links have been updated");
         }
 
         [MenuItem("Projeny/Custom Solution/Update", false, 6)]
@@ -64,7 +70,7 @@ namespace Projeny
                 return;
             }
 
-            UnityEngine.Debug.Log("Projeny: Custom solution has been updated successfully");
+            UnityEngine.Debug.Log("Projeny: Custom solution has been updated");
         }
 
         [MenuItem("Projeny/Custom Solution/Open", false, 6)]
@@ -343,9 +349,9 @@ namespace Projeny
             var startInfo = new ProcessStartInfo();
 
             // TODO - replace with lookup into PATH env var
-            startInfo.FileName = "C:/Projects/ModestTree/projeny/Bin/Upm/Upm.bat";
+            startInfo.FileName = FindUpmExePath();
 
-            startInfo.Arguments = "--configPath \"{0}\" {1}".Fmt(FindConfigPath(), args);
+            startInfo.Arguments = "--configPath \"{0}\" {1}".Fmt(FindUpmConfigPath(), args);
 
             startInfo.CreateNoWindow = true;
             startInfo.UseShellExecute = false;
@@ -380,9 +386,33 @@ namespace Projeny
             }
         }
 
-        static string FindConfigPath()
+        static string FindUpmExePath()
         {
-            return "F:/Temp/Test1/upm.yaml";
+            try
+            {
+                return PathUtil.FindExePath("Upm.bat");
+            }
+            catch (FileNotFoundException)
+            {
+                throw new UpmException(
+                    "Could not locate path to UPM.  Have you added 'projeny/Bin/Upm' to your environment PATH?  See documentation for details.");
+            }
+        }
+
+        public static string FindUpmConfigPath()
+        {
+            foreach (var dirInfo in PathUtil.GetAllParentDirectories(Application.dataPath))
+            {
+                var configPath = Path.Combine(dirInfo.FullName, ConfigFileName);
+
+                if (File.Exists(configPath))
+                {
+                    return configPath;
+                }
+            }
+
+            throw new UpmException(
+                "Could not locate {0} when searching from {1} upwards".Fmt(ConfigFileName, Application.dataPath));
         }
 
         class CurrentProjectInfo

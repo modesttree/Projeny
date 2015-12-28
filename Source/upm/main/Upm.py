@@ -47,7 +47,9 @@ def addArguments(parser):
 
     parser.add_argument('-ul', '--updateLinks', action='store_true', help='Updates directory links for the given project using package manager')
 
-    parser.add_argument('-lp', '--listProjects', action='store_true', help='Display the list of all projects that are in the UnityProjects directory')
+    parser.add_argument('-lpr', '--listProjects', action='store_true', help='Display the list of all projects that are in the UnityProjects directory')
+    parser.add_argument('-lpa', '--listPackages', action='store_true', help='')
+
     parser.add_argument('-lr', '--listReleases', action='store_true', help='')
 
     parser.add_argument('-uus', '--updateUnitySolution', action='store_true', help='Equivalent to executing the menu option "Assets/Sync MonoDevelop Project" in unity')
