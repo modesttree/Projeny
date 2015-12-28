@@ -163,6 +163,11 @@ namespace Projeny.Internal
             }
         }
 
+        public static void Throw()
+        {
+            throw new Exception("Assert Hit!");
+        }
+
         public static void Throw(string message)
         {
             throw new Exception(message);

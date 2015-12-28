@@ -28,11 +28,11 @@ class ProjectSchemaLoader:
         self._log.debug('Loading schema at path "{0}"'.format(schemaPath))
         config = Config(loadYamlFilesThatExist(schemaPath, schemaPathUser, schemaPathGlobal, schemaPathUserGlobal))
 
-        pluginDependencies = config.tryGetList([], 'packagesPlugins')
-        scriptsDependencies = config.tryGetList([], 'packages')
-        customProjects = config.tryGetList([], 'solutionProjects')
+        pluginDependencies = config.tryGetList([], 'PackagesPlugins')
+        scriptsDependencies = config.tryGetList([], 'Packages')
+        customProjects = config.tryGetList([], 'SolutionProjects')
         customFolders = config.tryGetDictionary({}, 'ProjectFolders')
-        prebuiltProjects = config.tryGetList([], 'prebuilt')
+        prebuiltProjects = config.tryGetList([], 'Prebuilt')
 
         # Check for duplicates
         Util.ensureNoDuplicates(scriptsDependencies, 'scriptsDependencies')
