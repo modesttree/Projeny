@@ -16,6 +16,7 @@ class Config:
     ''' Build config info  (eg. path info, etc.) '''
 
     def __init__(self, configs):
+        assertThat(all(x != None for x in configs))
         # Reverse so that later config settings act as overrides
         self.configs = list(reversed(configs))
 

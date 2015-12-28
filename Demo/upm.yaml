@@ -1,0 +1,4 @@
+
+PathVars:
+    UnityPackagesDir: '[ConfigDir]/UnityPackages'
+    UnityProjectsDir: '[ConfigDir]/UnityProjects'

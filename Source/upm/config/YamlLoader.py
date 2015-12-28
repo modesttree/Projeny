@@ -10,7 +10,9 @@ def loadYamlFilesThatExist(*paths):
     for path in paths:
         if os.path.isfile(path):
             config = yaml.load(readAllTextFromFile(path))
-            configs.append(config)
+
+            if config != None:
+                configs.append(config)
 
     return configs
 

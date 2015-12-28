@@ -143,8 +143,8 @@ class UpmRunner:
         with self._sys.openOutputFile(os.path.join(projDirPath, ProjectConfigFileName)) as outFile:
             outFile.write(
 """
-packages:
-    # Add package names here
+#packages:
+    # Uncomment and Add package names here
 """)
 
     def _findSourceControl(self):
@@ -190,7 +190,7 @@ PathVars:
         if self._project and not self._packageMgr.projectExists(self._project):
             self._project = self._packageMgr.getProjectFromAlias(self._project)
 
-        if not self._project:
+        if not self._project and self._varMgr.hasKey('UnityProjectsDir'):
             allProjects = self._packageMgr.getAllProjects()
 
             # If there's only one project, then just always assume they are operating on that
