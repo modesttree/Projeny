@@ -40,7 +40,7 @@ namespace Projeny
             window.titleContent = new GUIContent("  Projeny", Resources.Load<Texture2D>("Projeny/Icon"));
         }
 
-        //[MenuItem("Projeny/Update Links", false, 1)]
+        [MenuItem("Projeny/Update Links", false, 1)]
         public static void UpdateLinks()
         {
             try
@@ -49,7 +49,7 @@ namespace Projeny
             }
             catch (UpmException e)
             {
-                EditorUtility.DisplayDialog("Error", "Update custom solution failed with errors: \n\n" + e.Message, "Ok");
+                EditorUtility.DisplayDialog("Error", "Update directory links failed with errors: \n\n" + e.Message, "Ok");
                 return;
             }
 
@@ -384,7 +384,7 @@ namespace Projeny
 
             if (!succeeded)
             {
-                throw new UpmException(allOutput.ToString());
+                throw new UpmException(allOutput.ToString().Trim());
             }
 
             return allOutput.ToString();

@@ -1,7 +1,3 @@
 Packages:
   - AllMovers
-PluginPackages:
-  - CubeMover
-  - SphereMover
-  - CommonShapeMover
 

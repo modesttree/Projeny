@@ -34,9 +34,9 @@ class ProjectSchemaLoader:
         customFolders = config.tryGetDictionary({}, 'ProjectFolders')
         prebuiltProjects = config.tryGetList([], 'Prebuilt')
 
-        # Check for duplicates
-        Util.ensureNoDuplicates(scriptsDependencies, 'scriptsDependencies')
-        Util.ensureNoDuplicates(pluginDependencies, 'pluginDependencies')
+        # Remove duplicates
+        scriptsDependencies = list(set(scriptsDependencies))
+        pluginDependencies = list(set(pluginDependencies))
 
         for packageName in pluginDependencies:
             assertThat(not packageName in scriptsDependencies, "Found package '{0}' in both scripts and plugins.  Must be in only one or the other".format(packageName))

@@ -62,7 +62,7 @@ namespace Projeny
 
             var viewRect = new Rect(0, 0, listRect.width - widthOfScrollBar, _entryList.Count * _skin.ItemHeight);
 
-            DrawColor(listRect, _skin.ListColor);
+            ImguiUtil.DrawColoredQuad(listRect, _skin.ListColor);
 
             var isListUnderMouse = listRect.Contains(Event.current.mousePosition);
 
@@ -119,7 +119,7 @@ namespace Projeny
 
                     bool isItemUnderMouse = labelRect.Contains(Event.current.mousePosition);
 
-                    DrawColor(labelRect, isItemUnderMouse ? _skin.ListItemHoverColor : _skin.ListItemColor);
+                    ImguiUtil.DrawColoredQuad(labelRect, isItemUnderMouse ? _skin.ListItemHoverColor : _skin.ListItemColor);
 
                     switch (Event.current.type)
                     {
@@ -167,13 +167,6 @@ namespace Projeny
                 Entry = entry,
                 SourceList = this,
             };
-        }
-
-        void DrawColor(Rect rect, Color color)
-        {
-            GUI.color = color;
-            GUI.DrawTexture(rect, Texture2D.whiteTexture);
-            GUI.color = Color.white;
         }
 
         public class DragData
