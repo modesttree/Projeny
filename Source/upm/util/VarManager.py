@@ -47,7 +47,7 @@ class VarManager:
 
     def expandPath(self, text, extraVars = None):
         ''' Same as expand() except it cleans up the path to remove ../ '''
-        return os.path.realpath(self.expand(text, extraVars)).replace("\\", "/")
+        return os.path.realpath(self.expand(text, extraVars))
 
     def expand(self, text, extraVars = None):
 

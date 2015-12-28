@@ -20,8 +20,6 @@ class ProcessRunner:
 
     def execNoWait(self, vals, startDir):
         params = {}
-        params['stdout'] = subprocess.DEVNULL
-        params['stderr'] = subprocess.DEVNULL
 
         if startDir != None:
             params['cwd'] = startDir

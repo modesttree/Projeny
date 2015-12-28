@@ -17,6 +17,7 @@ import distutils.core
 import datetime
 import shutil
 import argparse
+import platform
 from glob import glob
 
 class ProcessErrorCodeException(Exception):
@@ -40,7 +41,7 @@ class SystemHelper:
 
     def canonicalizePath(self, pathStr):
         # Make one standard representation of the given path
-        # This will remove ../ and change to always use forward slashes
+        # This will remove ..\ and also change to always use back slashes since this is what os.path.join etc. uses
         return self._varManager.expandPath(pathStr)
 
     def executeAndWait(self, commandStr, startDir = None):
@@ -48,9 +49,7 @@ class SystemHelper:
 
         self._log.debug("Executing '%s'" % expandedStr)
 
-        # Convert command to argument list to avoid issues with escape characters, etc.
-        # Based on an answer here: http://stackoverflow.com/questions/12081970/python-using-quotes-in-the-subprocess-popen
-        vals = shlex.split(expandedStr)
+        vals = self._splitCommandStr(expandedStr)
 
         if startDir != None:
             startDir = self._varManager.expand(startDir)
@@ -70,9 +69,7 @@ class SystemHelper:
 
         self._log.debug("Executing '{0}'".format(expandedStr))
 
-        # Convert command to argument list to avoid issues with escape characters, etc.
-        # Based on an answer here: http://stackoverflow.com/questions/12081970/python-using-quotes-in-the-subprocess-popen
-        vals = shlex.split(expandedStr)
+        vals = self._splitCommandStr(expandedStr)
 
         if startDir != None:
             startDir = self._varManager.expand(startDir)
@@ -95,10 +92,18 @@ class SystemHelper:
 
         assertThat(result == ResultType.Success, "Expected success result but found '{0}'".format(result))
 
+    def _splitCommandStr(self, commandStr):
+        # Hacky but necessary since shlex.split will otherwise remove our backslashes
+        if platform.platform().startswith('Windows'):
+            commandStr = commandStr.replace(os.sep, os.sep + os.sep)
+
+        # Convert command to argument list to avoid issues with escape characters, etc.
+        # Based on an answer here: http://stackoverflow.com/questions/12081970/python-using-quotes-in-the-subprocess-popen
+        return shlex.split(commandStr)
+
     def executeAndReturnOutput(self, commandStr):
         self._log.debug("Executing '%s'" % commandStr)
-        vals = shlex.split(commandStr)
-        return subprocess.getoutput(vals).strip()
+        return subprocess.getoutput(self._splitCommandStr(commandStr)).strip()
 
     def walkDir(self, dirPath):
         dirPath = self._varManager.expand(dirPath)

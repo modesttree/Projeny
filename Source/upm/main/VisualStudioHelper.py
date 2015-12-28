@@ -25,8 +25,6 @@ class VisualStudioHelper:
         if not lineNo or lineNo <= 0:
             lineNo = 1
 
-        filePath = self._sys.canonicalizePath(filePath).replace('\\', '/')
-
         if MiscUtil.doesProcessExist('^devenv\.exe$'):
             self.openFileInExistingVisualStudioInstance(filePath, lineNo)
 
@@ -41,17 +39,17 @@ class VisualStudioHelper:
             dte = win32com.client.GetActiveObject("VisualStudio.DTE.12.0")
 
             dte.MainWindow.Activate
-            dte.ItemOperations.OpenFile(filePath)
+            dte.ItemOperations.OpenFile(self._sys.canonicalizePath(filePath))
             dte.ActiveDocument.Selection.MoveToLineAndOffset(lineNo, 1)
         except Exception as error:
             raise Exception("COM Error.  This is often triggered when given a bad line number. Details: {0}".format(win32api.FormatMessage(error.excepinfo[5])))
 
     def openVisualStudioSolution(self, solutionPath, filePath = None):
         if not self._varMgr.hasKey('VisualStudioIdePath'):
-            assertThat(False, "Path to visual studio has not been defined.  Please set <VisualStudioIdePath> within the {0} file", ConfigFileName)
+            assertThat(False, "Path to visual studio has not been defined.  Please set <VisualStudioIdePath> within one of your {0} files", ConfigFileName)
 
         if self._sys.fileExists('[VisualStudioIdePath]'):
-            self._sys.executeNoWait('[VisualStudioIdePath] {0} {1}'.format(self._sys.canonicalizePath(solutionPath), self._sys.canonicalizePath(filePath) if filePath else ""))
+            self._sys.executeNoWait('"[VisualStudioIdePath]" {0} {1}'.format(self._sys.canonicalizePath(solutionPath), self._sys.canonicalizePath(filePath) if filePath else ""))
         else:
             assertThat(False, "Cannot find path to visual studio.  Expected to find it at '{0}'".format(self._varMgr.expand('[VisualStudioIdePath]')))
 

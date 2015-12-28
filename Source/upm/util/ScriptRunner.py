@@ -23,7 +23,7 @@ class ScriptRunner:
 
         except Exception as e:
             self._log.endHeading()
-            self._log.error("Error Message: {0}".format(str(e)))
+            self._log.error(str(e))
 
             if self._log.currentHeading:
                 self._log.error("Failed while executing '" + self._log.currentHeading + "'")

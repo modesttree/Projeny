@@ -105,6 +105,9 @@ def installBindings(verbose, veryVerbose, mainConfigPath):
     if mainConfigPath:
         initialVars['ConfigDir'] = os.path.dirname(mainConfigPath)
 
+    if not MiscUtil.isRunningAsExe():
+        initialVars['PythonPluginDir'] = getPluginDirPath()
+
     Container.bind('VarManager').toSingle(VarManager, initialVars)
     Container.bind('SystemHelper').toSingle(SystemHelper)
     Container.bind('Logger').toSingle(Logger)
@@ -138,6 +141,9 @@ def findFilesByPattern(directory, pattern):
                 filename = os.path.join(root, basename)
                 yield filename
 
+def getPluginDirPath():
+    return os.path.join(MiscUtil.getExecDirectory(), '../../plugins')
+
 def installPlugins():
 
     if MiscUtil.isRunningAsExe():
@@ -146,13 +152,12 @@ def installPlugins():
 
     import importlib
 
-    pluginDir = os.path.join(MiscUtil.getExecDirectory(), '../../../plugins')
+    pluginDir = getPluginDirPath()
 
     for filePath in findFilesByPattern(pluginDir, '*.py'):
         basePath = filePath[len(pluginDir) + 1:]
         basePath = os.path.splitext(basePath)[0]
         basePath = basePath.replace('\\', '.')
-        print("Loading plugin at {0}".format(basePath))
         importlib.import_module('plugins.' + basePath)
 
 def tryGetMainConfigPath(args):
@@ -206,10 +211,10 @@ if __name__ == '__main__':
         succeeded = False
 
     except Exception as e:
-        print("Error Message: {0}".format(str(e)))
+        sys.stderr.write(str(e))
 
         if not MiscUtil.isRunningAsExe():
-            print('\n' + traceback.format_exc())
+            sys.stderr.write('\n' + traceback.format_exc())
 
         succeeded = False
 

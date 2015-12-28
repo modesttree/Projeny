@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.SceneManagement;
@@ -30,46 +31,55 @@ namespace Projeny
         [MenuItem("Projeny/Package Manager...", false, 1)]
         public static void OpenPackageManager()
         {
-            EditorWindow.GetWindow(typeof(PackageManagerWindow));
+            EditorWindow.GetWindow<PackageManagerWindow>("Projeny");
         }
 
         [MenuItem("Projeny/Update Links", false, 1)]
         public static void UpdateLinks()
         {
-            if (RunUpmWithCurrentProjectAndPlatform("--updateLinks"))
+            try
             {
-                AssetDatabase.Refresh();
+                RunUpmWithCurrentProjectAndPlatform("--updateLinks");
             }
-            else
+            catch (UpmException e)
             {
-                EditorUtility.DisplayDialog("Error", "Update custom solution failed.  An error occurred while executing UPM.bat from the command line.  See ProjenyLog.txt for details.", "Ok");
+                EditorUtility.DisplayDialog("Error", "Update custom solution failed with errors: \n\n" + e.Message, "Ok");
+                return;
             }
+
+            AssetDatabase.Refresh();
         }
 
         [MenuItem("Projeny/Custom Solution/Update", false, 6)]
         public static void UpdateCustomSolution()
         {
-            if (RunUpmWithCurrentProjectAndPlatform("--updateCustomSolution"))
+            try
             {
-                UnityEngine.Debug.Log("Projeny: Custom solution has been updated successfully");
+                RunUpmWithCurrentProjectAndPlatform("--updateCustomSolution");
             }
-            else
+            catch (UpmException e)
             {
-                EditorUtility.DisplayDialog("Error", "Update custom solution failed.  An error occurred while executing UPM.bat from the command line.  See ProjenyLog.txt for details.", "Ok");
+                EditorUtility.DisplayDialog("Error", "Update custom solution failed with errors: \n\n" + e.Message, "Ok");
+                return;
             }
+
+            UnityEngine.Debug.Log("Projeny: Custom solution has been updated successfully");
         }
 
         [MenuItem("Projeny/Custom Solution/Open", false, 6)]
         public static void OpenCustomSolution()
         {
-            if (RunUpmWithCurrentProjectAndPlatform("--openCustomSolution"))
+            try
             {
-                UnityEngine.Debug.Log("Projeny: Opened custom solution");
+                RunUpmWithCurrentProjectAndPlatform("--openCustomSolution");
             }
-            else
+            catch (UpmException e)
             {
-                EditorUtility.DisplayDialog("Error", "Opening custom solution failed.  An error occurred while executing UPM.bat from the command line.  See ProjenyLog.txt for details.", "Ok");
+                EditorUtility.DisplayDialog("Error", "Opening custom solution failed with errors: \n\n" + e.Message, "Ok");
+                return;
             }
+
+            UnityEngine.Debug.Log("Projeny: Opened custom solution");
         }
 
         [MenuItem("Projeny/Change Platform/Windows", false, 7)]
@@ -196,14 +206,17 @@ namespace Projeny
                 return;
             }
 
-            if (RunUpmWithCurrentProject("--platform {0} --updateLinks --openUnity".Fmt(ToPlatformArgStr(desiredPlatform))))
+            try
             {
-                EditorApplication.Exit(0);
+                RunUpmWithCurrentProject("--platform {0} --updateLinks --openUnity".Fmt(ToPlatformArgStr(desiredPlatform)));
             }
-            else
+            catch (UpmException e)
             {
-                EditorUtility.DisplayDialog("Error", "Change platform failed.  An error occurred while executing UPM.bat from the command line.  See ProjenyLog.txt for details.", "Ok");
+                EditorUtility.DisplayDialog("Error", "Change platform failed with erros: \n" + e.Message, "Ok");
+                return;
             }
+
+            EditorApplication.Exit(0);
         }
 
         static string GetCurrentProjectName()
@@ -308,9 +321,9 @@ namespace Projeny
             throw new NotImplementedException();
         }
 
-        static bool RunUpmWithCurrentProjectAndPlatform(string args)
+        static void RunUpmWithCurrentProjectAndPlatform(string args)
         {
-            return RunUpmWithCurrentProject(
+            RunUpmWithCurrentProject(
                 "--platform {0} {1}".Fmt(ToPlatformArgStr(GetPlatformFromDirectoryName()), args));
         }
 
@@ -319,35 +332,56 @@ namespace Projeny
             return FromPlatformDirStr(GetCurrentPlatformDirName());
         }
 
-        static bool RunUpmWithCurrentProject(string args)
+        static void RunUpmWithCurrentProject(string args)
         {
-            return RunUpm("--project {0} {1}".Fmt(GetCurrentProjectName(), args));
+            RunUpm("--project {0} {1}".Fmt(GetCurrentProjectName(), args));
         }
 
-        static bool RunUpm(string args)
+        static void RunUpm(string args)
         {
             var startInfo = new ProcessStartInfo();
 
-            startInfo.FileName = "Upm";
-            startInfo.Arguments = args;
+            // TODO - replace with lookup into PATH env var
+            startInfo.FileName = "C:/Projects/ModestTree/projeny/Bin/Upm/Upm.bat";
+
+            startInfo.Arguments = "--configPath \"{0}\" {1}".Fmt(FindConfigPath(), args);
+
+            startInfo.CreateNoWindow = true;
+            startInfo.UseShellExecute = false;
+            startInfo.RedirectStandardOutput = true;
             startInfo.RedirectStandardError = true;
-            startInfo.WindowStyle = ProcessWindowStyle.Minimized;
 
             //UnityEngine.Debug.Log("Running command '{0} {1}'".Fmt(proc.StartInfo.FileName, args));
 
             Process proc = new Process();
             proc.StartInfo = startInfo;
+
+            //var stdOut = new StringBuilder();
+            var stdErr = new StringBuilder();
+
+            //proc.OutputDataReceived += (sender, outputArgs) => stdOut.Append(outputArgs.Data);
+            proc.ErrorDataReceived += (sender, outputArgs) => stdErr.Append(outputArgs.Data);
+
             proc.Start();
 
-            string errors = proc.StandardError.ReadToEnd();
+            proc.BeginOutputReadLine();
+            proc.BeginErrorReadLine();
+
             proc.WaitForExit();
 
-            return proc.ExitCode == 0;
-            // TODO
-            //if (proc.ExitCode != 0)
-            //{
-                //throw new UpmException(errors);
-            //}
+            //UnityEngine.Debug.Log(stdOut.ToString());
+
+            bool succeeded = proc.ExitCode == 0;
+
+            if (!succeeded)
+            {
+                throw new UpmException(stdErr.ToString());
+            }
+        }
+
+        static string FindConfigPath()
+        {
+            return "F:/Temp/Test1/upm.yaml";
         }
 
         class CurrentProjectInfo
