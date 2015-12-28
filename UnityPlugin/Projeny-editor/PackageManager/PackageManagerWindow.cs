@@ -15,12 +15,19 @@ namespace Projeny
         DraggableList _assetsList;
         DraggableList _pluginsList;
 
+        List<string> _allPackages;
+
         PackageManagerWindowSkin _skin;
         ProjectConfigTypes _projectConfigType;
 
         void OnEnable()
         {
             _skin = Resources.Load<PackageManagerWindowSkin>("Projeny/PackageManagerSkin");
+
+            if (_allPackages == null)
+            {
+                _allPackages = new List<string>();
+            }
 
             if (_availableList == null)
             {
@@ -118,10 +125,17 @@ namespace Projeny
 
         void RefreshPackages()
         {
-            var allPackages = ProjenyEditorUtil.RunUpm("listPackages").Trim();
+            var allPackagesStr = ProjenyEditorUtil.RunUpm("listPackages").Trim();
 
+            _allPackages = allPackagesStr.Split(new string[] { Environment.NewLine }, StringSplitOptions.None).Select(x => x.Trim()).ToList();
+
+            UpdateAvailablePackagesList();
+        }
+
+        void UpdateAvailablePackagesList()
+        {
             _availableList.Clear();
-            _availableList.AddRange(allPackages.Split(new string[] { Environment.NewLine }, StringSplitOptions.None).Select(x => x.Trim()));
+            _availableList.AddRange(_allPackages.Where(x => !_assetsList.Values.Contains(x) && !_pluginsList.Values.Contains(x)));
         }
 
         void RefreshProject()
@@ -171,47 +185,88 @@ namespace Projeny
         {
             _pluginsList.Clear();
             _assetsList.Clear();
+
+            UpdateAvailablePackagesList();
         }
 
         void PopulateListsFromConfig(ProjectConfig config)
         {
-            ClearProjectLists();
+            _pluginsList.Clear();
+            _assetsList.Clear();
 
             _assetsList.AddRange(config.Packages);
             _pluginsList.AddRange(config.PluginPackages);
+
+            UpdateAvailablePackagesList();
         }
 
         void ApplyChanges()
+        {
+            File.WriteAllText(GetProjectConfigPath(), SerializeProjectConfig());
+            ProjenyEditorUtil.UpdateLinks();
+        }
+
+        bool HasProjectConfigChanged()
+        {
+            var configPath = GetProjectConfigPath();
+
+            var newYamlStr = SerializeProjectConfig();
+
+            if (!File.Exists(configPath))
+            {
+                return newYamlStr.Trim().Length > 0;
+            }
+
+            var currentYamlStr = File.ReadAllText(configPath);
+
+            return newYamlStr != currentYamlStr;
+        }
+
+        string SerializeProjectConfig()
         {
             var config = new ProjectConfig();
 
             config.Packages.AddRange(_assetsList.Values);
             config.PluginPackages.AddRange(_pluginsList.Values);
 
-            var newYamlStr = ProjectConfigSerializer.Serialize(config);
+            return ProjectConfigSerializer.Serialize(config);
+        }
 
-            var configPath = GetProjectConfigPath();
-
-            if (File.Exists(configPath))
+        void TryChangeProjectType(ProjectConfigTypes configType)
+        {
+            if (HasProjectConfigChanged())
             {
-                var currentYamlStr = File.ReadAllText(configPath);
+                int choice = EditorUtility.DisplayDialogComplex(
+                    "Project Changes Detected",
+                    "Do you want to save config changes?",
+                    "Save", "Don't Save", "Cancel");
 
-                if (newYamlStr == currentYamlStr)
+                switch (choice)
                 {
-                    Debug.Log("No changes detected with project config");
-                    return;
+                    case 0:
+                    {
+                        ApplyChanges();
+                        break;
+                    }
+                    case 1:
+                    {
+                        // Do nothing
+                        break;
+                    }
+                    case 2:
+                    {
+                        return;
+                    }
+                    default:
+                    {
+                        Assert.Throw();
+                        break;
+                    }
                 }
-
-                // This is more annoying than it is useful
-                //var configFileName = Path.GetFileName(configPath);
-                //if (!EditorUtility.DisplayDialog("File Overwrite", "Are you sure you wish to overwrite '{0}'?".Fmt(configFileName), "Overwrite", "Cancel"))
-                //{
-                    //return;
-                //}
             }
 
-            File.WriteAllText(configPath, newYamlStr);
-            ProjenyEditorUtil.UpdateLinks();
+            _projectConfigType = configType;
+            RefreshProject();
         }
 
         void DrawFileDropdown(Rect rect)
@@ -220,8 +275,7 @@ namespace Projeny
 
             if (desiredConfigType != _projectConfigType)
             {
-                // TODO: Confirm dialog if something changed
-                _projectConfigType = desiredConfigType;
+                TryChangeProjectType(desiredConfigType);
             }
         }
 

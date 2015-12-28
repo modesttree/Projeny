@@ -26,7 +26,7 @@ namespace Projeny
             Application.OpenURL("https://github.com/modesttree/projeny");
         }
 
-        [MenuItem("Projeny/Open project.yaml", false, 1)]
+        //[MenuItem("Projeny/Open project.yaml", false, 1)]
         public static void OpenProjectFile()
         {
             var configPath = Path.Combine(Application.dataPath, "../../project.yaml");
@@ -40,7 +40,7 @@ namespace Projeny
             window.titleContent = new GUIContent("  Projeny", Resources.Load<Texture2D>("Projeny/Icon"));
         }
 
-        [MenuItem("Projeny/Update Links", false, 1)]
+        //[MenuItem("Projeny/Update Links", false, 1)]
         public static void UpdateLinks()
         {
             try
@@ -57,7 +57,7 @@ namespace Projeny
             UnityEngine.Debug.Log("Projeny: Directory links have been updated");
         }
 
-        [MenuItem("Projeny/Custom Solution/Update", false, 6)]
+        [MenuItem("Projeny/Update C# Project", false, 6)]
         public static void UpdateCustomSolution()
         {
             try
@@ -73,7 +73,7 @@ namespace Projeny
             UnityEngine.Debug.Log("Projeny: Custom solution has been updated");
         }
 
-        [MenuItem("Projeny/Custom Solution/Open", false, 6)]
+        //[MenuItem("Projeny/Custom Solution/Open", false, 6)]
         public static void OpenCustomSolution()
         {
             try
