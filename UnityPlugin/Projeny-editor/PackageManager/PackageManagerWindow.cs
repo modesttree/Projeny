@@ -15,7 +15,7 @@ namespace Projeny
 
         void OnEnable()
         {
-            _skin = Resources.Load<PackageManagerWindowSkin>("PackageManagerSkin");
+            _skin = Resources.Load<PackageManagerWindowSkin>("Projeny/PackageManagerSkin");
 
             //if (_availableList == null)
             {

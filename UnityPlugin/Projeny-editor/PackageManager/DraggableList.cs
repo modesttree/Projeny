@@ -25,7 +25,7 @@ namespace Projeny
 
         public DraggableList()
         {
-            _skin = Resources.Load<DraggableListSkin>("DraggableListSkin");
+            _skin = Resources.Load<DraggableListSkin>("Projeny/DraggableListSkin");
         }
 
         public void Add(string name)
