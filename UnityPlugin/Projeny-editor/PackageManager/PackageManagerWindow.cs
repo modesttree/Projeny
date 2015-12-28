@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
+using Projeny.Internal;
 
 namespace Projeny
 {
@@ -12,6 +13,7 @@ namespace Projeny
         DraggableList _pluginsList;
 
         PackageManagerWindowSkin _skin;
+        ProjectFiles _selectFile;
 
         void OnEnable()
         {
@@ -56,16 +58,11 @@ namespace Projeny
             Repaint();
         }
 
-        void DrawHeaders(Rect windowRect)
+        void DrawHeaders(Rect headerRect)
         {
-            var headerRect = new Rect(0, 0, windowRect.width, _skin.HeaderHeight);
-
-            var halfWidth = 0.5f * headerRect.width;
+            var halfWidth = _skin.AvailablePercentWidth * headerRect.width;
             var rect1 = new Rect(headerRect.x, headerRect.y, halfWidth, headerRect.height);
             GUI.Label(rect1, "Available Packages", _skin.HeaderTextStyle);
-
-            var rect2 = new Rect(headerRect.x + halfWidth, headerRect.y, halfWidth, headerRect.height);
-            GUI.Label(rect2, "Assets Folder", _skin.HeaderTextStyle);
         }
 
         void DrawLists(Rect windowRect)
@@ -77,7 +74,7 @@ namespace Projeny
         void DrawLeftList(Rect windowRect)
         {
             var startX = _skin.MarginLeft;
-            var endX = 0.5f * windowRect.width - 0.5f * _skin.ListVerticalSpacing;
+            var endX = _skin.AvailablePercentWidth * windowRect.width - 0.5f * _skin.ListVerticalSpacing;
             var startY = _skin.HeaderHeight;
             var endY = windowRect.height - _skin.MarginBottom;
 
@@ -86,12 +83,65 @@ namespace Projeny
 
         void DrawRightLists(Rect windowRect)
         {
-            var startX = 0.5f * windowRect.width + 0.5f * _skin.ListVerticalSpacing;
+            var startX = _skin.AvailablePercentWidth * windowRect.width + 0.5f * _skin.ListVerticalSpacing;
             var endX = windowRect.width - _skin.MarginRight;
-            var startY = _skin.HeaderHeight;
-            var endY = windowRect.height - _skin.MarginBottom;
+            var startY = _skin.FileDropdownTopPadding;
+            var endY = startY + _skin.FileDropdownHeight;
+
+            DrawFileDropdown(Rect.MinMaxRect(startX, startY, endX, endY));
+
+            startY = endY;
+            endY = startY + _skin.HeaderHeight;
+
+            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Assets Folder", _skin.HeaderTextStyle);
+
+            startY = endY;
+            endY = windowRect.height - _skin.MarginBottom - _skin.ApplyButtonHeight - _skin.ApplyButtonTopPadding;
 
             DrawRightLists2(Rect.MinMaxRect(startX, startY, endX, endY));
+
+            startY = endY + _skin.ApplyButtonTopPadding;
+            endY = windowRect.height - _skin.MarginBottom;
+
+            DrawButtons(Rect.MinMaxRect(startX, startY, endX, endY));
+        }
+
+        void DrawButtons(Rect rect)
+        {
+            var halfWidth = rect.width * 0.5f;
+            var padding = 0.5f * _skin.ProjectButtonsPadding;
+
+            if (GUI.Button(new Rect(rect.x, rect.y, halfWidth - padding, rect.height), "Refresh"))
+            {
+                RefreshProject();
+            }
+
+            if (GUI.Button(Rect.MinMaxRect(rect.x + halfWidth + padding, rect.y, rect.right, rect.bottom), "Apply"))
+            {
+                ApplyChanges();
+            }
+        }
+
+        void RefreshProject()
+        {
+            Log.Trace("TODO");
+            //var project = ProjectConfigSerializer.Deserialize();
+        }
+
+        void ApplyChanges()
+        {
+            Log.Trace("TODO");
+        }
+
+        void DrawFileDropdown(Rect rect)
+        {
+            var desiredFile = (ProjectFiles)EditorGUI.EnumPopup(rect, _selectFile, EditorStyles.popup);
+
+            if (desiredFile != _selectFile)
+            {
+                // TODO: Confirm dialog if something changed
+                _selectFile = desiredFile;
+            }
         }
 
         void DrawRightLists2(Rect listRect)
@@ -111,8 +161,18 @@ namespace Projeny
         {
             var windowRect = this.position;
 
-            DrawHeaders(windowRect);
+            var headerRect = new Rect(0, 0, windowRect.width, _skin.HeaderHeight);
+            DrawHeaders(headerRect);
+
             DrawLists(windowRect);
+        }
+
+        enum ProjectFiles
+        {
+            LocalProject,
+            LocalProjectUser,
+            AllProjects,
+            AllProjectsUser,
         }
     }
 

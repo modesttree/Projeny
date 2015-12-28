@@ -15,6 +15,13 @@ namespace Projeny
         public float MarginRight;
         public float MarginLeft;
         public float MarginBottom;
+        public float ApplyButtonHeight;
+        public float ApplyButtonTopPadding;
+        public float ProjectButtonsPadding;
+        public float AvailablePercentWidth;
+
+        public float FileDropdownHeight;
+        public float FileDropdownTopPadding;
 
         public GUIStyle HeaderTextStyle;
     }
