@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Projeny
 {
@@ -25,8 +26,19 @@ namespace Projeny
             _skin = Resources.Load<DraggableListSkin>("Projeny/DraggableListSkin");
         }
 
+        public IEnumerable<string> Values
+        {
+            get
+            {
+                return _entryList.Select(x => x.Name);
+            }
+        }
+
         public void Add(string name)
         {
+            Assert.That(!name.Contains("\n"));
+            Assert.That(!name.Contains("\r"));
+
             _entryList.Add(new Entry(name));
         }
 

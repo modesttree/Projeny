@@ -1,9 +1,11 @@
+using System;
 using System.IO;
 using UnityEngine;
 using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
 using Projeny.Internal;
+using System.Linq;
 
 namespace Projeny
 {
@@ -116,7 +118,10 @@ namespace Projeny
 
         void RefreshPackages()
         {
-            // TODO
+            var allPackages = ProjenyEditorUtil.RunUpm("listPackages").Trim();
+
+            _availableList.Clear();
+            _availableList.AddRange(allPackages.Split(new string[] { Environment.NewLine }, StringSplitOptions.None).Select(x => x.Trim()));
         }
 
         void RefreshProject()
@@ -178,7 +183,35 @@ namespace Projeny
 
         void ApplyChanges()
         {
-            Log.Trace("TODO");
+            var config = new ProjectConfig();
+
+            config.Packages.AddRange(_assetsList.Values);
+            config.PluginPackages.AddRange(_pluginsList.Values);
+
+            var newYamlStr = ProjectConfigSerializer.Serialize(config);
+
+            var configPath = GetProjectConfigPath();
+
+            if (File.Exists(configPath))
+            {
+                var currentYamlStr = File.ReadAllText(configPath);
+
+                if (newYamlStr == currentYamlStr)
+                {
+                    Debug.Log("No changes detected with project config");
+                    return;
+                }
+
+                // This is more annoying than it is useful
+                //var configFileName = Path.GetFileName(configPath);
+                //if (!EditorUtility.DisplayDialog("File Overwrite", "Are you sure you wish to overwrite '{0}'?".Fmt(configFileName), "Overwrite", "Cancel"))
+                //{
+                    //return;
+                //}
+            }
+
+            File.WriteAllText(configPath, newYamlStr);
+            ProjenyEditorUtil.UpdateLinks();
         }
 
         void DrawFileDropdown(Rect rect)

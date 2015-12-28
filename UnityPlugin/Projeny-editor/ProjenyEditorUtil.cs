@@ -333,27 +333,27 @@ namespace Projeny
             return FromPlatformDirStr(GetCurrentPlatformDirName());
         }
 
-        static void RunUpm(string requestId)
+        public static string RunUpm(string requestId)
         {
-            RunUpm(requestId, GetCurrentProjectName());
+            return RunUpm(requestId, GetCurrentProjectName());
         }
 
-        static void RunUpm(string requestId, string projectName)
+        public static string RunUpm(string requestId, string projectName)
         {
-            RunUpm(requestId, projectName, GetPlatformFromDirectoryName());
+            return RunUpm(requestId, projectName, GetPlatformFromDirectoryName());
         }
 
-        static void RunUpm(string requestId, BuildTarget platform)
+        public static string RunUpm(string requestId, BuildTarget platform)
         {
-            RunUpm(requestId, GetCurrentProjectName(), platform);
+            return RunUpm(requestId, GetCurrentProjectName(), platform);
         }
 
-        static void RunUpm(string requestId, string projectName, BuildTarget platform)
+        public static string RunUpm(string requestId, string projectName, BuildTarget platform)
         {
-            RunUpm(requestId, projectName, platform, FindUpmConfigPath());
+            return RunUpm(requestId, projectName, platform, FindUpmConfigPath());
         }
 
-        static void RunUpm(string requestId, string projectName, BuildTarget platform, string configPath)
+        public static string RunUpm(string requestId, string projectName, BuildTarget platform, string configPath)
         {
             var startInfo = new ProcessStartInfo();
 
@@ -365,14 +365,14 @@ namespace Projeny
             startInfo.RedirectStandardOutput = true;
             startInfo.RedirectStandardError = true;
 
-            //UnityEngine.Debug.Log("Running command '{0} {1}'".Fmt(startInfo.FileName, startInfo.Arguments));
+            UnityEngine.Debug.Log("Running command '{0} {1}'".Fmt(startInfo.FileName, startInfo.Arguments));
 
             Process proc = new Process();
             proc.StartInfo = startInfo;
 
             var allOutput = new StringBuilder();
-            proc.OutputDataReceived += (sender, outputArgs) => allOutput.Append(outputArgs.Data);
-            proc.ErrorDataReceived += (sender, outputArgs) => allOutput.Append(outputArgs.Data);
+            proc.OutputDataReceived += (sender, outputArgs) => allOutput.AppendLine(outputArgs.Data);
+            proc.ErrorDataReceived += (sender, outputArgs) => allOutput.AppendLine(outputArgs.Data);
 
             proc.Start();
 
@@ -386,6 +386,8 @@ namespace Projeny
             {
                 throw new UpmException(allOutput.ToString());
             }
+
+            return allOutput.ToString();
         }
 
         static string FindUpmExePath()

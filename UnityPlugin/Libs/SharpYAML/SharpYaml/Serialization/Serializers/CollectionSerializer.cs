@@ -1,15 +1,15 @@
 ﻿// Copyright (c) 2015 SharpYaml - Alexandre Mutel
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -17,24 +17,24 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-// 
+//
 // -------------------------------------------------------------------------------
 // SharpYaml is a fork of YamlDotNet https://github.com/aaubry/YamlDotNet
 // published with the following license:
 // -------------------------------------------------------------------------------
-// 
+//
 // Copyright (c) 2008, 2009, 2010, 2011, 2012 Antoine Aubry
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
 // the Software without restriction, including without limitation the rights to
 // use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is furnished to do
 // so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -55,81 +55,81 @@ namespace SharpYaml.Serialization.Serializers
     /// Class for serializing a <see cref="System.Collections.Generic.ICollection{T}"/> or <see cref="System.Collections.ICollection"/>
     /// </summary>
     public class CollectionSerializer : ObjectSerializer
-	{
+    {
         /// <summary>
         /// Initializes a new instance of the <see cref="CollectionSerializer"/> class.
         /// </summary>
-		public CollectionSerializer()
-		{
-		}
+        public CollectionSerializer()
+        {
+        }
 
-		public override IYamlSerializable TryCreate(SerializerContext context, ITypeDescriptor typeDescriptor)
-		{
-			return typeDescriptor is CollectionDescriptor ? this : null;
-		}
+        public override IYamlSerializable TryCreate(SerializerContext context, ITypeDescriptor typeDescriptor)
+        {
+            return typeDescriptor is CollectionDescriptor ? this : null;
+        }
 
-		protected override bool CheckIsSequence(ref ObjectContext objectContext)
-		{
-			var collectionDescriptor = (CollectionDescriptor)objectContext.Descriptor;
+        protected override bool CheckIsSequence(ref ObjectContext objectContext)
+        {
+            var collectionDescriptor = (CollectionDescriptor)objectContext.Descriptor;
 
-			// If the dictionary is pure, we can directly output a sequence instead of a mapping
-			return collectionDescriptor.IsPureCollection;
-		}
+            // If the dictionary is pure, we can directly output a sequence instead of a mapping
+            return collectionDescriptor.IsPureCollection;
+        }
 
-		protected override void ReadMember(ref ObjectContext objectContext)
-		{
+        protected override void ReadMember(ref ObjectContext objectContext)
+        {
             if (CheckIsSequence(ref objectContext))
-			{
+            {
                 ReadCollectionItems(ref objectContext);
-			}
-			else
-			{
+            }
+            else
+            {
                 var keyEvent = objectContext.Reader.Peek<Scalar>();
-				if (keyEvent != null)
-				{
+                if (keyEvent != null)
+                {
                     if (keyEvent.Value == objectContext.Settings.SpecialCollectionMember)
-					{
+                    {
                         var reader = objectContext.Reader;
-						reader.Parser.MoveNext();
+                        reader.Parser.MoveNext();
 
-						// Read inner sequence
-						reader.Expect<SequenceStart>();
+                        // Read inner sequence
+                        reader.Expect<SequenceStart>();
                         ReadCollectionItems(ref objectContext);
-						reader.Expect<SequenceEnd>();
-						return;
-					}
-				}
+                        reader.Expect<SequenceEnd>();
+                        return;
+                    }
+                }
 
                 base.ReadMember(ref objectContext);
-			}
-		}
+            }
+        }
 
-		protected override void WriteMembers(ref ObjectContext objectContext)
-		{
+        protected override void WriteMembers(ref ObjectContext objectContext)
+        {
             if (CheckIsSequence(ref objectContext))
-			{
+            {
                 WriteCollectionItems(ref objectContext);
-			}
-			else
-			{
-				// Serialize Dictionary members
+            }
+            else
+            {
+                // Serialize Dictionary members
                 foreach (var member in objectContext.Descriptor.Members)
-				{
+                {
                     if (member.OriginalName == "Capacity" && !objectContext.Settings.EmitCapacityForList)
-					{
-						continue;
-					}
+                    {
+                        continue;
+                    }
 
                     WriteMember(ref objectContext, member);
-				}
+                }
 
                 WriteMemberName(ref objectContext, null, objectContext.Settings.SpecialCollectionMember);
 
                 objectContext.Writer.Emit(new SequenceStartEventInfo(objectContext.Instance, objectContext.Instance.GetType()) { Style = objectContext.Style });
                 WriteCollectionItems(ref objectContext);
                 objectContext.Writer.Emit(new SequenceEndEventInfo(objectContext.Instance, objectContext.Instance.GetType()));
-			}
-		}
+            }
+        }
 
         /// <summary>
         /// Reads the collection items.
@@ -143,44 +143,44 @@ namespace SharpYaml.Serialization.Serializers
             var collectionDescriptor = (CollectionDescriptor) objectContext.Descriptor;
             var thisObject = objectContext.Instance;
 
-			if (!collectionDescriptor.HasAdd)
-			{
-				throw new InvalidOperationException("Cannot deserialize list to type [{0}]. No Add method found".DoFormat(thisObject.GetType()));
-			}
-			if (collectionDescriptor.IsReadOnly(thisObject))
-			{
-				throw new InvalidOperationException("Cannot deserialize list to readonly collection type [{0}].".DoFormat(thisObject.GetType()));
-			}
+            if (!collectionDescriptor.HasAdd)
+            {
+                throw new InvalidOperationException("Cannot deserialize list to type [{0}]. No Add method found".DoFormat(thisObject.GetType()));
+            }
+            if (collectionDescriptor.IsReadOnly(thisObject))
+            {
+                throw new InvalidOperationException("Cannot deserialize list to readonly collection type [{0}].".DoFormat(thisObject.GetType()));
+            }
 
             var reader = objectContext.Reader;
 
             var elementType = collectionDescriptor.ElementType;
             var index = 0;
-			while (!reader.Accept<SequenceEnd>())
-			{
-				if (objectContext.SerializerContext.AllowErrors)
-				{
-					var currentDepth = objectContext.Reader.CurrentDepth;
+            while (!reader.Accept<SequenceEnd>())
+            {
+                if (objectContext.SerializerContext.AllowErrors)
+                {
+                    var currentDepth = objectContext.Reader.CurrentDepth;
 
-					try
-					{
-						ReadAddCollectionItem(ref objectContext, elementType, collectionDescriptor, thisObject, index);
-					}
-					catch (YamlException ex)
-					{
-					    var logger = objectContext.SerializerContext.ContextSettings.Logger;
+                    try
+                    {
+                        ReadAddCollectionItem(ref objectContext, elementType, collectionDescriptor, thisObject, index);
+                    }
+                    catch (YamlException ex)
+                    {
+                        var logger = objectContext.SerializerContext.ContextSettings.Logger;
                         if (logger != null)
                             logger.Log(LogLevel.Warning, ex, "Ignored collection item that could not be deserialized");
-						objectContext.Reader.Skip(currentDepth);
-					}
-				}
-				else
-				{
-					ReadAddCollectionItem(ref objectContext, elementType, collectionDescriptor, thisObject, index);
-				}
-				index++;
-			}
-		}
+                        objectContext.Reader.Skip(currentDepth);
+                    }
+                }
+                else
+                {
+                    ReadAddCollectionItem(ref objectContext, elementType, collectionDescriptor, thisObject, index);
+                }
+                index++;
+            }
+        }
 
         /// <summary>
         /// Reads and adds item to the collection.
@@ -216,11 +216,11 @@ namespace SharpYaml.Serialization.Serializers
         {
             var collectionDescriptor = (CollectionDescriptor) objectContext.Descriptor;
             var collection = (IEnumerable) objectContext.Instance;
-			foreach (var item in collection)
-			{
+            foreach (var item in collection)
+            {
                 WriteCollectionItem(ref objectContext, item, collectionDescriptor.ElementType);
-			}
-		}
+            }
+        }
 
         /// <summary>
         /// Writes the collection item.
@@ -232,5 +232,5 @@ namespace SharpYaml.Serialization.Serializers
         {
             objectContext.ObjectSerializerBackend.WriteCollectionItem(ref objectContext, item, itemType);
         }
-	}
+    }
 }

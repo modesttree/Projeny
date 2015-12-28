@@ -1,15 +1,15 @@
 ﻿// Copyright (c) 2013 SharpYaml - Alexandre Mutel
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -17,24 +17,24 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-// 
+//
 // -------------------------------------------------------------------------------
 // SharpYaml is a fork of YamlDotNet https://github.com/aaubry/YamlDotNet
 // published with the following license:
 // -------------------------------------------------------------------------------
-// 
+//
 // Copyright (c) 2008, 2009, 2010, 2011, 2012 Antoine Aubry
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
 // the Software without restriction, including without limitation the rights to
 // use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is furnished to do
 // so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -50,23 +50,23 @@ using SharpYaml.Serialization.Logging;
 namespace SharpYaml.Serialization.Serializers
 {
     /// <summary>
-	/// Base class for serializing an object that can be a Yaml !!map or !!seq.
-	/// </summary>
-	public class ObjectSerializer : IYamlSerializable, IYamlSerializableFactory
-	{
-		/// <summary>
-		/// Initializes a new instance of the <see cref="ObjectSerializer"/> class.
-		/// </summary>
-		public ObjectSerializer()
-		{
-		}
+    /// Base class for serializing an object that can be a Yaml !!map or !!seq.
+    /// </summary>
+    public class ObjectSerializer : IYamlSerializable, IYamlSerializableFactory
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ObjectSerializer"/> class.
+        /// </summary>
+        public ObjectSerializer()
+        {
+        }
 
         /// <inheritdoc/>
-		public virtual IYamlSerializable TryCreate(SerializerContext context, ITypeDescriptor typeDescriptor)
-		{
-			// always accept
-			return this;
-		}
+        public virtual IYamlSerializable TryCreate(SerializerContext context, ITypeDescriptor typeDescriptor)
+        {
+            // always accept
+            return this;
+        }
 
         /// <summary>
         /// Checks if a type is a sequence.
@@ -74,10 +74,10 @@ namespace SharpYaml.Serialization.Serializers
         /// <param name="objectContext"></param>
         /// <returns><c>true</c> if a type is a sequence, <c>false</c> otherwise.</returns>
         protected virtual bool CheckIsSequence(ref ObjectContext objectContext)
-		{
-			// By default an object serializer is a mapping
-			return false;
-		}
+        {
+            // By default an object serializer is a mapping
+            return false;
+        }
 
         /// <summary>
         /// Gets the style that will be used to serialized the object.
@@ -89,25 +89,25 @@ namespace SharpYaml.Serialization.Serializers
             return objectContext.ObjectSerializerBackend.GetStyle(ref objectContext);
         }
 
-		public virtual object ReadYaml(ref ObjectContext objectContext)
-		{
+        public virtual object ReadYaml(ref ObjectContext objectContext)
+        {
             // Create or transform the value to deserialize
             // If the new value to serialize is not the same as the one we were expecting to serialize
             CreateOrTransformObjectInternal(ref objectContext);
 
-			// Get the object accessor for the corresponding class
-		    if (CheckIsSequence(ref objectContext))
-		    {
-		        ReadMembers<SequenceStart, SequenceEnd>(ref objectContext);
-		    }
-		    else
-		    {
-		        ReadMembers<MappingStart, MappingEnd>(ref objectContext);
-		    }
+            // Get the object accessor for the corresponding class
+            if (CheckIsSequence(ref objectContext))
+            {
+                ReadMembers<SequenceStart, SequenceEnd>(ref objectContext);
+            }
+            else
+            {
+                ReadMembers<MappingStart, MappingEnd>(ref objectContext);
+            }
 
-			// Process members
-			return objectContext.Instance;
-		}
+            // Process members
+            return objectContext.Instance;
+        }
 
 
         private void CreateOrTransformObjectInternal(ref ObjectContext objectContext)
@@ -128,12 +128,12 @@ namespace SharpYaml.Serialization.Serializers
         /// <param name="objectContext">The object context.</param>
         /// <returns>A new instance of the object or <see cref="ObjectContext.Instance" /> if not null</returns>
         protected virtual void CreateOrTransformObject(ref ObjectContext objectContext)
-	    {
+        {
             if (objectContext.Instance == null)
             {
                 objectContext.Instance = objectContext.SerializerContext.ObjectFactory.Create(objectContext.Descriptor.Type);
             }
-	    }
+        }
 
         /// <summary>
         /// Transforms the object after it has been read. This method is called after an object has been read and before returning the object to
@@ -143,8 +143,8 @@ namespace SharpYaml.Serialization.Serializers
         /// <returns>The actual object deserialized. By default same as <see cref="ObjectContext.Instance"/>.</returns>
         /// <remarks>
         /// This method is usefull in conjunction with <see cref="CreateOrTransformObject"/>.
-        /// For example, in the case of deserializing to an immutable member, where we need to call the constructor of a type instead of setting each of 
-        /// its member, we can instantiate a mutable object in <see cref="CreateOrTransformObject"/>, receive the mutable object filled in 
+        /// For example, in the case of deserializing to an immutable member, where we need to call the constructor of a type instead of setting each of
+        /// its member, we can instantiate a mutable object in <see cref="CreateOrTransformObject"/>, receive the mutable object filled in
         /// <see cref="TransformObjectAfterRead"/> and transform it back to an immutable object.
         /// </remarks>
         protected virtual void TransformObjectAfterRead(ref ObjectContext objectContext)
@@ -158,12 +158,12 @@ namespace SharpYaml.Serialization.Serializers
         /// <typeparam name="TEnd">The type of the t end.</typeparam>
         /// <param name="objectContext"></param>
         /// <returns>Return the object being read, by default thisObject passed by argument.</returns>
-        protected virtual void ReadMembers<TStart, TEnd>(ref ObjectContext objectContext) 
-			where TStart : NodeEvent
-			where TEnd : ParsingEvent
-		{
+        protected virtual void ReadMembers<TStart, TEnd>(ref ObjectContext objectContext)
+            where TStart : NodeEvent
+            where TEnd : ParsingEvent
+        {
             var reader = objectContext.Reader;
-			var start = reader.Expect<TStart>();
+            var start = reader.Expect<TStart>();
 
             // throws an exception while deserializing
             if (objectContext.Instance == null)
@@ -171,14 +171,14 @@ namespace SharpYaml.Serialization.Serializers
                 throw new YamlException(start.Start, start.End, "Cannot instantiate an object for type [{0}]".DoFormat(objectContext.Descriptor));
             }
 
-			while (!reader.Accept<TEnd>())
-			{
+            while (!reader.Accept<TEnd>())
+            {
                 ReadMember(ref objectContext);
-			}
-			reader.Expect<TEnd>();
+            }
+            reader.Expect<TEnd>();
 
             TransformObjectAfterRead(ref objectContext);
-		}
+        }
 
         /// <summary>
         /// Reads an item of the object from the YAML flow (either a sequence item or mapping key/value item).
@@ -278,7 +278,7 @@ namespace SharpYaml.Serialization.Serializers
             var memberType = memberAccessor.Type;
 
             // In case of serializing a property/field which is not writeable
-            // we need to change the expected type to the actual type of the 
+            // we need to change the expected type to the actual type of the
             // content value
             if (memberValue != null)
                 memberType = memberValue.GetType();
@@ -309,33 +309,33 @@ namespace SharpYaml.Serialization.Serializers
         }
 
         /// <inheritdoc/>
-		public virtual void WriteYaml(ref ObjectContext objectContext)
-		{
+        public virtual void WriteYaml(ref ObjectContext objectContext)
+        {
             var value = objectContext.Instance;
-			var typeOfValue = value.GetType();
+            var typeOfValue = value.GetType();
 
             var isSequence = CheckIsSequence(ref objectContext);
 
-			// Resolve the style, use default style if not defined.
+            // Resolve the style, use default style if not defined.
             var style = GetStyle(ref objectContext);
 
             // Allow to create on the fly an object that will be used to serialize an object
             CreateOrTransformObjectInternal(ref objectContext);
 
             var context = objectContext.SerializerContext;
-			if (isSequence)
-			{
+            if (isSequence)
+            {
                 context.Writer.Emit(new SequenceStartEventInfo(value, typeOfValue) { Tag = objectContext.Tag, Anchor = objectContext.Anchor, Style = style });
                 WriteMembers(ref objectContext);
-				context.Writer.Emit(new SequenceEndEventInfo(value, typeOfValue));
-			}
-			else
-			{
+                context.Writer.Emit(new SequenceEndEventInfo(value, typeOfValue));
+            }
+            else
+            {
                 context.Writer.Emit(new MappingStartEventInfo(value, typeOfValue) { Tag = objectContext.Tag, Anchor = objectContext.Anchor, Style = style });
                 WriteMembers(ref objectContext);
-				context.Writer.Emit(new MappingEndEventInfo(value, typeOfValue));
-			}
-		}
+                context.Writer.Emit(new MappingEndEventInfo(value, typeOfValue));
+            }
+        }
 
         /// <summary>
         /// Writes the members of the object to serialize. By default this method is iterating on the <see cref="ITypeDescriptor.Members"/> and
@@ -343,12 +343,12 @@ namespace SharpYaml.Serialization.Serializers
         /// </summary>
         /// <param name="objectContext"></param>
         protected virtual void WriteMembers(ref ObjectContext objectContext)
-		{
+        {
             foreach (var member in objectContext.Descriptor.Members)
-			{
+            {
                 WriteMember(ref objectContext, member);
-			}
-		}
+            }
+        }
 
         /// <summary>
         /// Writes a member.
@@ -370,7 +370,7 @@ namespace SharpYaml.Serialization.Serializers
             var memberType = member.Type;
 
             // In case of serializing a property/field which is not writeable
-            // we need to change the expected type to the actual type of the 
+            // we need to change the expected type to the actual type of the
             // content value
             if (member.SerializeMemberMode == SerializeMemberMode.Content && !member.HasSet)
             {
@@ -394,5 +394,5 @@ namespace SharpYaml.Serialization.Serializers
         {
             objectContext.ObjectSerializerBackend.WriteMemberValue(ref objectContext, member, memberValue, memberType);
         }
-	}
+    }
 }
