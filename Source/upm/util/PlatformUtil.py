@@ -14,9 +14,14 @@ def toPlatformFolderName(platform):
     # We can just directly use the full platform name for folder names
     return platform
 
-def fromPlatformFolderName(platform):
-    # We can just directly use the full platform name for folder names
-    return platform
+def fromPlatformFolderName(platformDirName):
+    platformDirName = platformDirName.lower()
+
+    for curPlatform in Platforms.All:
+        if curPlatform.lower() == platformDirName:
+            return curPlatform
+
+    assertThat(False)
 
 def fromPlatformArgName(platformArgStr):
 

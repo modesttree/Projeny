@@ -194,7 +194,7 @@ PathVars:
             self._project = self._packageMgr.getProjectFromAlias(self._project)
 
         if not self._project and self._varMgr.hasKey('UnityProjectsDir'):
-            allProjects = self._packageMgr.getAllProjects()
+            allProjects = self._packageMgr.getAllProjectNames()
 
             # If there's only one project, then just always assume they are operating on that
             if len(allProjects) == 1:

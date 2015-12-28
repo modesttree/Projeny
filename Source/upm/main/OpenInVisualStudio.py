@@ -79,7 +79,10 @@ def findConfigPath(filePath):
     assertThat(False, "Could not find UPM config path starting at path {0}", filePath)
 
 def installBindings(args):
-    Upm.installBindings(True, False, [findConfigPath(args.filePath)])
+
+    Container.bind('LogStream').toSingle(LogStreamConsole, True, False)
+
+    Upm.installBindings([findConfigPath(args.filePath)])
 
 if __name__ == '__main__':
     if (sys.version_info < (3, 0)):

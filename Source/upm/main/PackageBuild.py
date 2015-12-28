@@ -83,7 +83,8 @@ def addArguments(parser):
     parser.add_argument('-o', '--outDirectory', metavar='OUT_DIRECTORY', type=str, help="")
 
 def installBindings(args):
-    Upm.installBindings(False, False)
+    Container.bind('LogStream').toSingle(LogStreamConsole, False, False)
+    Upm.installBindings()
 
 if __name__ == '__main__':
     if (sys.version_info < (3, 0)):

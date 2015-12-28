@@ -87,7 +87,7 @@ def getProjenyDir():
 def getExtraUserConfigPaths():
     return [os.path.join(os.path.expanduser('~'), ConfigFileName)]
 
-def installBindings(verbose, veryVerbose, mainConfigPath):
+def installBindings(mainConfigPath):
 
     projenyDir = getProjenyDir()
     projenyConfigPath = os.path.join(projenyDir, ConfigFileName)
@@ -113,8 +113,6 @@ def installBindings(verbose, veryVerbose, mainConfigPath):
     Container.bind('VarManager').toSingle(VarManager, initialVars)
     Container.bind('SystemHelper').toSingle(SystemHelper)
     Container.bind('Logger').toSingle(Logger)
-    Container.bind('LogStream').toSingle(LogStreamFile)
-    Container.bind('LogStream').toSingle(LogStreamConsole, verbose, veryVerbose)
     Container.bind('UnityHelper').toSingle(UnityHelper)
     Container.bind('ScriptRunner').toSingle(ScriptRunner)
     Container.bind('PackageManager').toSingle(PackageManager)
@@ -192,7 +190,10 @@ def main():
 
     processArgs(args)
 
-    installBindings(args.verbose, args.veryVerbose, tryGetMainConfigPath(args))
+    Container.bind('LogStream').toSingle(LogStreamFile)
+    Container.bind('LogStream').toSingle(LogStreamConsole, args.verbose, args.veryVerbose)
+
+    installBindings(tryGetMainConfigPath(args))
     installPlugins()
 
     UpmRunner().run(args)

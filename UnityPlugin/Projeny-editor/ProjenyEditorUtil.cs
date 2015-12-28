@@ -45,7 +45,7 @@ namespace Projeny
         {
             try
             {
-                RunUpmWithCurrentProjectAndPlatform("--updateLinks");
+                RunUpm("updateLinks");
             }
             catch (UpmException e)
             {
@@ -62,7 +62,7 @@ namespace Projeny
         {
             try
             {
-                RunUpmWithCurrentProjectAndPlatform("--updateCustomSolution");
+                RunUpm("updateCustomSolution");
             }
             catch (UpmException e)
             {
@@ -78,7 +78,7 @@ namespace Projeny
         {
             try
             {
-                RunUpmWithCurrentProjectAndPlatform("--openCustomSolution");
+                RunUpm("openCustomSolution");
             }
             catch (UpmException e)
             {
@@ -215,7 +215,8 @@ namespace Projeny
 
             try
             {
-                RunUpmWithCurrentProject("--platform {0} --updateLinks --openUnity".Fmt(ToPlatformArgStr(desiredPlatform)));
+                RunUpm("updateLinks", desiredPlatform);
+                RunUpm("openUnity", desiredPlatform);
             }
             catch (UpmException e)
             {
@@ -250,6 +251,43 @@ namespace Projeny
             info.PlatformDirName = projectAndPlatform.Substring(projectAndPlatform.LastIndexOf("-")+1);
 
             return info;
+        }
+
+        static string ToPlatformDirStr(BuildTarget platform)
+        {
+            switch (platform)
+            {
+                case BuildTarget.StandaloneWindows:
+                {
+                    return "windows";
+                }
+                case BuildTarget.Android:
+                {
+                    return "android";
+                }
+                case BuildTarget.WebPlayer:
+                {
+                    return "webplayer";
+                }
+                case BuildTarget.WebGL:
+                {
+                    return "webgl";
+                }
+                case BuildTarget.StandaloneOSXUniversal:
+                {
+                    return "osx";
+                }
+                case BuildTarget.iOS:
+                {
+                    return "ios";
+                }
+                case BuildTarget.StandaloneLinux:
+                {
+                    return "linux";
+                }
+            }
+
+            throw new NotImplementedException();
         }
 
         // NOTE: This needs to stay in sync with BuildUtil.py
@@ -290,99 +328,63 @@ namespace Projeny
             throw new NotImplementedException();
         }
 
-        // NOTE: This needs to stay in sync with BuildUtil.py
-        static string ToPlatformArgStr(BuildTarget desiredPlatform)
-        {
-            switch (desiredPlatform)
-            {
-                case BuildTarget.StandaloneWindows:
-                {
-                    return "win";
-                }
-                case BuildTarget.Android:
-                {
-                    return "and";
-                }
-                case BuildTarget.WebPlayer:
-                {
-                    return "webp";
-                }
-                case BuildTarget.WebGL:
-                {
-                    return "webgl";
-                }
-                case BuildTarget.StandaloneOSXUniversal:
-                {
-                    return "osx";
-                }
-                case BuildTarget.iOS:
-                {
-                    return "ios";
-                }
-                case BuildTarget.StandaloneLinux:
-                {
-                    return "lin";
-                }
-            }
-
-            throw new NotImplementedException();
-        }
-
-        static void RunUpmWithCurrentProjectAndPlatform(string args)
-        {
-            RunUpmWithCurrentProject(
-                "--platform {0} {1}".Fmt(ToPlatformArgStr(GetPlatformFromDirectoryName()), args));
-        }
-
         static BuildTarget GetPlatformFromDirectoryName()
         {
             return FromPlatformDirStr(GetCurrentPlatformDirName());
         }
 
-        static void RunUpmWithCurrentProject(string args)
+        static void RunUpm(string requestId)
         {
-            RunUpm("--project {0} {1}".Fmt(GetCurrentProjectName(), args));
+            RunUpm(requestId, GetCurrentProjectName());
         }
 
-        static void RunUpm(string args)
+        static void RunUpm(string requestId, string projectName)
+        {
+            RunUpm(requestId, projectName, GetPlatformFromDirectoryName());
+        }
+
+        static void RunUpm(string requestId, BuildTarget platform)
+        {
+            RunUpm(requestId, GetCurrentProjectName(), platform);
+        }
+
+        static void RunUpm(string requestId, string projectName, BuildTarget platform)
+        {
+            RunUpm(requestId, projectName, platform, FindUpmConfigPath());
+        }
+
+        static void RunUpm(string requestId, string projectName, BuildTarget platform, string configPath)
         {
             var startInfo = new ProcessStartInfo();
 
-            // TODO - replace with lookup into PATH env var
             startInfo.FileName = FindUpmExePath();
-
-            startInfo.Arguments = "--configPath \"{0}\" {1}".Fmt(FindUpmConfigPath(), args);
+            startInfo.Arguments = "\"{0}\" \"{1}\" {2} {3}".Fmt(configPath, projectName, ToPlatformDirStr(platform), requestId);
 
             startInfo.CreateNoWindow = true;
             startInfo.UseShellExecute = false;
             startInfo.RedirectStandardOutput = true;
             startInfo.RedirectStandardError = true;
 
-            //UnityEngine.Debug.Log("Running command '{0} {1}'".Fmt(proc.StartInfo.FileName, args));
+            //UnityEngine.Debug.Log("Running command '{0} {1}'".Fmt(startInfo.FileName, startInfo.Arguments));
 
             Process proc = new Process();
             proc.StartInfo = startInfo;
 
-            //var stdOut = new StringBuilder();
-            var stdErr = new StringBuilder();
-
-            //proc.OutputDataReceived += (sender, outputArgs) => stdOut.Append(outputArgs.Data);
-            proc.ErrorDataReceived += (sender, outputArgs) => stdErr.Append(outputArgs.Data);
+            var allOutput = new StringBuilder();
+            proc.OutputDataReceived += (sender, outputArgs) => allOutput.Append(outputArgs.Data);
+            proc.ErrorDataReceived += (sender, outputArgs) => allOutput.Append(outputArgs.Data);
 
             proc.Start();
 
             proc.BeginOutputReadLine();
             proc.BeginErrorReadLine();
-
             proc.WaitForExit();
-
-            //UnityEngine.Debug.Log(stdOut.ToString());
 
             bool succeeded = proc.ExitCode == 0;
 
             if (!succeeded)
             {
-                throw new UpmException(stdErr.ToString());
+                throw new UpmException(allOutput.ToString());
             }
         }
 
@@ -390,7 +392,7 @@ namespace Projeny
         {
             try
             {
-                return PathUtil.FindExePath("Upm.bat");
+                return PathUtil.FindExePath("UpmEditorApi.bat");
             }
             catch (FileNotFoundException)
             {

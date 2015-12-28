@@ -48,7 +48,7 @@ class PackageManager:
         return self._sys.directoryExists('[UnityProjectsDir]/{0}'.format(projectName)) or self._sys.fileExists('[UnityProjectsDir]/{0}.ini'.format(projectName))
 
     def listAllProjects(self):
-        projectNames = self.getAllProjects()
+        projectNames = self.getAllProjectNames()
         self._log.info("Found {0} Projects:".format(len(projectNames)))
         for proj in projectNames:
             alias = self.tryGetAliasFromFullName(proj)
@@ -105,7 +105,7 @@ class PackageManager:
                 results.append(name)
         return results
 
-    def getAllProjects(self):
+    def getAllProjectNames(self):
         assertThat(self._varMgr.hasKey('UnityProjectsDir'), "Could not find 'UnityProjectsDir' in PathVars.  Have you set up your {0} file?", ConfigFileName)
 
         results = []
@@ -116,7 +116,7 @@ class PackageManager:
 
     # This will set up all the directory junctions for all projects for all platforms
     def updateLinksForAllProjects(self):
-        for projectName in self.getAllProjects():
+        for projectName in self.getAllProjectNames():
             self._log.heading('Initializing project "{0}"'.format(projectName))
 
             try:
@@ -230,7 +230,7 @@ class PackageManager:
         self._removePackageJunctions()
 
     def clearAllProjectGeneratedFiles(self, addHeadings = True):
-        for projName in self.getAllProjects():
+        for projName in self.getAllProjectNames():
             self.clearProjectGeneratedFiles(projName, addHeadings)
 
     def clearProjectGeneratedFiles(self, projectName, addHeading = True):
