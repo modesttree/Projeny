@@ -1,3 +1,4 @@
+using System;
 using Projeny.Internal;
 using UnityEngine;
 using UnityEditor;
@@ -6,6 +7,7 @@ using System.Collections.Generic;
 
 namespace Projeny
 {
+    [Serializable]
     public class DraggableList
     {
         static readonly Color BackgroundColor = Color.white;
@@ -14,7 +16,11 @@ namespace Projeny
         static readonly string DragId = "DraggableListData";
 
         readonly DraggableListSkin _skin;
-        readonly List<Entry> _entryList = new List<Entry>();
+
+        [SerializeField]
+        List<Entry> _entryList = new List<Entry>();
+
+        [SerializeField]
         Vector2 _scrollPos;
 
         public DraggableList()
@@ -27,33 +33,19 @@ namespace Projeny
             _entryList.Add(new Entry(name));
         }
 
-        public void ListField(params GUILayoutOption[] opts)
+        public void Draw(Rect listRect)
         {
-            _scrollPos = EditorGUILayout.BeginScrollView(_scrollPos, false, true, opts);
+            // Can this be calculated instead?
+            var widthOfScrollBar = 50.0f;
+
+            var viewRect = new Rect(0, 0, listRect.width - widthOfScrollBar, _entryList.Count * _skin.ItemHeight);
+
+            DrawColor(listRect, _skin.ListColor);
+
+            var isListUnderMouse = listRect.Contains(Event.current.mousePosition);
+
+            switch (Event.current.type)
             {
-                ListFieldInternal();
-            }
-            EditorGUILayout.EndScrollView();
-        }
-
-        void ListFieldInternal()
-        {
-            Rect totalArea = GUILayoutUtility.GetRect(GUIContent.none, _skin.ListStyle, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
-
-            int controlID = GUIUtility.GetControlID(FocusType.Passive);
-            var eventType = Event.current.GetTypeForControl(controlID);
-
-            bool isUnderMouse = totalArea.Contains(Event.current.mousePosition);
-
-            switch (eventType)
-            {
-                case EventType.Repaint:
-                {
-                    GUI.color = isUnderMouse ? _skin.ListHoverColor : _skin.ListColor;
-                    GUI.DrawTexture(totalArea, Texture2D.whiteTexture);
-                    GUI.color = Color.white;
-                    break;
-                }
                 case EventType.MouseUp:
                 {
                     // Clear our drag info in DragAndDrop so that we know that we are not dragging
@@ -62,7 +54,7 @@ namespace Projeny
                 }
                 case EventType.DragPerform:
                 {
-                    if (isUnderMouse)
+                    if (isListUnderMouse)
                     {
                         DragAndDrop.AcceptDrag();
 
@@ -82,7 +74,7 @@ namespace Projeny
 
                     if (existingDragData != null)
                     {
-                        DragAndDrop.StartDrag("Dragging List ELement");
+                        DragAndDrop.StartDrag("Dragging List Element");
                         Event.current.Use();
                     }
 
@@ -96,14 +88,42 @@ namespace Projeny
                 }
             }
 
-            float yPos = totalArea.y;
-
-            foreach (var entry in _entryList)
+            float yPos = 0;
+            _scrollPos = GUI.BeginScrollView(listRect, _scrollPos, viewRect);
             {
-                var itemRect = new Rect(totalArea.x, yPos, totalArea.width, _skin.ItemHeight);
-                ItemField(entry, itemRect);
-                yPos += _skin.ItemHeight;
+                foreach (var entry in _entryList)
+                {
+                    var labelRect = new Rect(0, yPos, listRect.width, _skin.ItemHeight);
+
+                    bool isItemUnderMouse = labelRect.Contains(Event.current.mousePosition);
+
+                    DrawColor(labelRect, isItemUnderMouse ? _skin.ListItemHoverColor : _skin.ListItemColor);
+
+                    switch (Event.current.type)
+                    {
+                        case EventType.MouseDown:
+                        {
+                            if (Event.current.button == 0 && isItemUnderMouse)
+                            {
+                                DragAndDrop.PrepareStartDrag();
+
+                                object dragData;
+                                OnDragStart(entry, out dragData);
+
+                                DragAndDrop.SetGenericData(DragId, dragData);
+                                DragAndDrop.objectReferences = new UnityEngine.Object[0];
+                                Event.current.Use();
+                            }
+                            break;
+                        }
+                    }
+
+                    GUI.Label(labelRect, entry.Name, _skin.ItemTextStyle);
+
+                    yPos += _skin.ItemHeight;
+                }
             }
+            GUI.EndScrollView();
         }
 
         void OnDragDrop(DragData data)
@@ -127,38 +147,11 @@ namespace Projeny
             };
         }
 
-        void ItemField(Entry entry, Rect totalArea)
+        void DrawColor(Rect rect, Color color)
         {
-            int controlID = GUIUtility.GetControlID(FocusType.Passive);
-            var eventType = Event.current.GetTypeForControl(controlID);
-
-            bool isUnderMouse = totalArea.Contains(Event.current.mousePosition);
-
-            switch (eventType)
-            {
-                case EventType.Repaint:
-                {
-                    GUI.color = isUnderMouse ? _skin.ListItemHoverColor : _skin.ListItemColor;
-                    GUI.DrawTexture(totalArea, Texture2D.whiteTexture);
-                    GUI.color = Color.white;
-
-                    _skin.ItemTextStyle.Draw(totalArea, entry.Name, isUnderMouse, true, true, false);
-                    break;
-                }
-                case EventType.MouseDown:
-                {
-                    if (Event.current.button == 0 && isUnderMouse)
-                    {
-                        DragAndDrop.PrepareStartDrag();
-                        object dragData;
-                        OnDragStart(entry, out dragData);
-                        DragAndDrop.SetGenericData(DragId, dragData);
-                        DragAndDrop.objectReferences = new Object[0];
-                        Event.current.Use();
-                    }
-                    break;
-                }
-            }
+            GUI.color = color;
+            GUI.DrawTexture(rect, Texture2D.whiteTexture);
+            GUI.color = Color.white;
         }
 
         public class DragData
@@ -167,6 +160,7 @@ namespace Projeny
             public DraggableList SourceList;
         }
 
+        [Serializable]
         public class Entry
         {
             public string Name = "";
