@@ -519,19 +519,19 @@ namespace Projeny
             {
                 case ProjectConfigTypes.LocalProject:
                 {
-                    return Path.Combine(projectRootDir, UpmInterface.ProjectConfigFileName);
+                    return Path.Combine(projectRootDir, ProjenyEditorUtil.ProjectConfigFileName);
                 }
                 case ProjectConfigTypes.LocalProjectUser:
                 {
-                    return Path.Combine(projectRootDir, UpmInterface.ProjectConfigUserFileName);
+                    return Path.Combine(projectRootDir, ProjenyEditorUtil.ProjectConfigUserFileName);
                 }
                 case ProjectConfigTypes.AllProjects:
                 {
-                    return Path.Combine(unityProjectsDir, UpmInterface.ProjectConfigFileName);
+                    return Path.Combine(unityProjectsDir, ProjenyEditorUtil.ProjectConfigFileName);
                 }
                 case ProjectConfigTypes.AllProjectsUser:
                 {
-                    return Path.Combine(unityProjectsDir, UpmInterface.ProjectConfigUserFileName);
+                    return Path.Combine(unityProjectsDir, ProjenyEditorUtil.ProjectConfigUserFileName);
                 }
             }
 
@@ -704,10 +704,10 @@ namespace Projeny
         {
             return new[]
             {
-                UpmInterface.ProjectConfigFileName,
-                UpmInterface.ProjectConfigUserFileName,
-                UpmInterface.ProjectConfigFileName + " (global)",
-                UpmInterface.ProjectConfigUserFileName + " (global)",
+                ProjenyEditorUtil.ProjectConfigFileName,
+                ProjenyEditorUtil.ProjectConfigUserFileName,
+                ProjenyEditorUtil.ProjectConfigFileName + " (global)",
+                ProjenyEditorUtil.ProjectConfigUserFileName + " (global)",
             };
         }
 

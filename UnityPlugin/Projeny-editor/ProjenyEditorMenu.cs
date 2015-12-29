@@ -21,6 +21,12 @@ namespace Projeny
             Application.OpenURL("https://github.com/modesttree/projeny");
         }
 
+        [MenuItem("Projeny/Update Links", false, 1)]
+        public static void UpdateLinks()
+        {
+            UpmInterface.UpdateLinks();
+        }
+
         [MenuItem("Projeny/Package Manager...", false, 1)]
         public static void OpenPackageManager()
         {
