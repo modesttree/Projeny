@@ -407,7 +407,7 @@ namespace Projeny
             return RunUpm(requestId, projectName, platform, FindUpmConfigPath());
         }
 
-        public static string RunUpm(string requestId, string projectName, BuildTarget platform, string configPath)
+        static Process RunUpmCreateProcess(string requestId, string projectName, BuildTarget platform, string configPath)
         {
             var startInfo = new ProcessStartInfo();
 
@@ -423,6 +423,12 @@ namespace Projeny
 
             Process proc = new Process();
             proc.StartInfo = startInfo;
+            return proc;
+        }
+
+        public static string RunUpm(string requestId, string projectName, BuildTarget platform, string configPath)
+        {
+            var proc = RunUpmCreateProcess(requestId, projectName, platform, configPath);
 
             var allOutput = new StringBuilder();
             proc.OutputDataReceived += (sender, outputArgs) => allOutput.AppendLine(outputArgs.Data);
@@ -432,6 +438,7 @@ namespace Projeny
 
             proc.BeginOutputReadLine();
             proc.BeginErrorReadLine();
+
             proc.WaitForExit();
 
             bool succeeded = proc.ExitCode == 0;
@@ -442,6 +449,40 @@ namespace Projeny
             }
 
             return allOutput.ToString();
+        }
+
+        public static IEnumerator<string> RunUpmAsync(string requestId, string projectName, BuildTarget platform, string configPath)
+        {
+            var proc = RunUpmCreateProcess(requestId, projectName, platform, configPath);
+
+            var allOutput = new StringBuilder();
+            proc.OutputDataReceived += (sender, outputArgs) => allOutput.AppendLine(outputArgs.Data);
+            proc.ErrorDataReceived += (sender, outputArgs) => allOutput.AppendLine(outputArgs.Data);
+
+            proc.Start();
+
+            proc.BeginOutputReadLine();
+            proc.BeginErrorReadLine();
+
+            bool hasExited = false;
+            proc.Exited += delegate
+            {
+                hasExited = true;
+            };
+
+            while (!hasExited)
+            {
+                yield return null;
+            }
+
+            bool succeeded = proc.ExitCode == 0;
+
+            if (!succeeded)
+            {
+                throw new UpmException(allOutput.ToString().Trim());
+            }
+
+            yield return allOutput.ToString();
         }
 
         static string FindUpmExePath()

@@ -30,6 +30,8 @@ namespace Projeny
         float _split1 = 0;
         float _split2 = 0.5f;
 
+        CoRoutine _backgroundTask;
+
         PackageManagerWindowSkin Skin
         {
             get
@@ -146,6 +148,14 @@ namespace Projeny
 
         void Update()
         {
+            if (_backgroundTask != null)
+            {
+                if (!_backgroundTask.Pump())
+                {
+                    _backgroundTask = null;
+                }
+            }
+
             _split1 = Mathf.Lerp(_split1, GetDesiredSplit1(), Skin.InterpSpeed);
             _split2 = Mathf.Lerp(_split2, GetDesiredSplit2(), Skin.InterpSpeed);
 
@@ -213,7 +223,7 @@ namespace Projeny
                         {
                             var info = (ReleaseInfo)data.Entry.Tag;
                             ProjenyEditorUtil.InstallRelease(info.Title, info.Version);
-                            RefreshPackages();
+                            StartPackageRefresh();
                             break;
                         }
                         default:
@@ -362,7 +372,7 @@ namespace Projeny
 
             if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh", ButtonStyle))
             {
-                RefreshPackages();
+                StartPackageRefresh();
             }
         }
 
@@ -435,11 +445,26 @@ namespace Projeny
                 _allReleases.Select(x => new DraggableList.Entry("{0} v{1}".Fmt(x.Title, x.Version ?? "?"), x)));
         }
 
-        void RefreshPackages()
+        void StartPackageRefresh()
         {
-            _allPackages = ProjenyEditorUtil.LookupPackagesList();
+            StartBackgroundTask(RefreshPackagesAsync());
+        }
 
-            UpdateAvailablePackagesList();
+        void StartBackgroundTask(IEnumerator task)
+        {
+            Assert.IsNull(_backgroundTask);
+            _backgroundTask = new CoRoutine(task);
+        }
+
+        IEnumerator RefreshPackagesAsync()
+        {
+            Log.Trace("TODO");
+            yield break;
+            //var allPackages = ProjenyEditorUtil.LookupPackagesListAsync();
+            //yield return allPackages;
+
+            //_allPackages = allPackages.Current;
+            //UpdateAvailablePackagesList();
         }
 
         void UpdateAvailablePackagesList()

@@ -18,6 +18,27 @@ namespace Projeny.Internal
             return !enumerable.Any();
         }
 
+        public static bool DerivesFrom<T>(this Type a)
+        {
+            return DerivesFrom(a, typeof(T));
+        }
+
+        // This seems easier to think about than IsAssignableFrom
+        public static bool DerivesFrom(this Type a, Type b)
+        {
+            return b != a && b.IsAssignableFrom(a);
+        }
+
+        public static bool DerivesFromOrEqual<T>(this Type a)
+        {
+            return DerivesFromOrEqual(a, typeof(T));
+        }
+
+        public static bool DerivesFromOrEqual(this Type a, Type b)
+        {
+            return b == a || b.IsAssignableFrom(a);
+        }
+
         // This is like string.Format except it will print NULL instead of just
         // a blank character when a parameter is null
         public static string FmtSafe(this string format, params object[] args)
