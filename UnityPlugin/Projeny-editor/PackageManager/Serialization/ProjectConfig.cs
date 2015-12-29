@@ -11,7 +11,7 @@ namespace Projeny
         public ProjectConfig()
         {
             Packages = new List<string>();
-            PluginPackages = new List<string>();
+            PackagesPlugins = new List<string>();
         }
 
         public List<string> Packages
@@ -20,7 +20,7 @@ namespace Projeny
             set;
         }
 
-        public List<string> PluginPackages
+        public List<string> PackagesPlugins
         {
             get;
             set;

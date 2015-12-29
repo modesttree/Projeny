@@ -98,9 +98,9 @@ namespace Projeny
 
             var viewRect = new Rect(0, 0, listRect.width - widthOfScrollBar, _entryList.Count * Skin.ItemHeight);
 
-            ImguiUtil.DrawColoredQuad(listRect, Skin.ListColor);
-
             var isListUnderMouse = listRect.Contains(Event.current.mousePosition);
+
+            ImguiUtil.DrawColoredQuad(listRect, GUI.enabled && isListUnderMouse ? Skin.ListHoverColor : Skin.ListColor);
 
             switch (Event.current.type)
             {
@@ -178,7 +178,7 @@ namespace Projeny
 
                     bool isItemUnderMouse = labelRect.Contains(Event.current.mousePosition);
 
-                    ImguiUtil.DrawColoredQuad(labelRect, isItemUnderMouse ? Skin.ListItemHoverColor : Skin.ListItemColor);
+                    ImguiUtil.DrawColoredQuad(labelRect, GUI.enabled && isItemUnderMouse ? Skin.ListItemHoverColor : Skin.ListItemColor);
 
                     switch (Event.current.type)
                     {

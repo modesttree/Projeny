@@ -49,21 +49,6 @@ namespace Projeny
             }
         }
 
-        public GUIStyle ButtonStyle
-        {
-            get
-            {
-                if (_buttonStyle == null)
-                {
-                    _buttonStyle = new GUIStyle(EditorStyles.miniButtonMid);
-                }
-
-                _buttonStyle.fontSize = Skin.ButtonFontSize;
-
-                return _buttonStyle;
-            }
-        }
-
         public GUIStyle ToggleStyle
         {
             get
@@ -87,6 +72,11 @@ namespace Projeny
             if (Skin.ProcessingPopupTextStyle == null)
             {
                 Skin.ProcessingPopupTextStyle = new GUIStyle();
+            }
+
+            if (Skin.ButtonStyle == null)
+            {
+                Skin.ButtonStyle = new GUIStyle();
             }
 
             if (Skin.DropdownTextStyle == null)
@@ -374,7 +364,7 @@ namespace Projeny
             startY = endY + Skin.ApplyButtonTopPadding;
             endY = rect.yMax;
 
-            if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh", ButtonStyle))
+            if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh", Skin.ButtonStyle))
             {
                 StartBackgroundTask(RefreshPackagesAsync());
             }
@@ -428,7 +418,7 @@ namespace Projeny
             var halfWidth = rect.width * 0.5f;
             var padding = 0.5f * Skin.ProjectButtonsPadding;
 
-            if (GUI.Button(Rect.MinMaxRect(rect.x + halfWidth + padding, rect.y, rect.xMax, rect.yMax), "Apply", ButtonStyle))
+            if (GUI.Button(Rect.MinMaxRect(rect.x + halfWidth + padding, rect.y, rect.xMax, rect.yMax), "Apply", Skin.ButtonStyle))
             {
                 OverwriteConfig();
                 StartBackgroundTask(UpmInterface.UpdateLinksAsync());
@@ -546,7 +536,7 @@ namespace Projeny
             _assetsList.Clear();
 
             _assetsList.AddRange(config.Packages);
-            _pluginsList.AddRange(config.PluginPackages);
+            _pluginsList.AddRange(config.PackagesPlugins);
 
             UpdateAvailablePackagesList();
         }
@@ -564,18 +554,18 @@ namespace Projeny
 
             if (!File.Exists(configPath))
             {
-                return !currentConfig.Packages.IsEmpty() || !currentConfig.PluginPackages.IsEmpty();
+                return !currentConfig.Packages.IsEmpty() || !currentConfig.PackagesPlugins.IsEmpty();
             }
 
             var savedConfig = DeserializeProjectConfig(configPath);
 
             if (savedConfig == null)
             {
-                return !currentConfig.Packages.IsEmpty() || !currentConfig.PluginPackages.IsEmpty();
+                return !currentConfig.Packages.IsEmpty() || !currentConfig.PackagesPlugins.IsEmpty();
             }
 
             return !Enumerable.SequenceEqual(currentConfig.Packages.OrderBy(t => t), savedConfig.Packages.OrderBy(t => t))
-                || !Enumerable.SequenceEqual(currentConfig.PluginPackages.OrderBy(t => t), savedConfig.PluginPackages.OrderBy(t => t));
+                || !Enumerable.SequenceEqual(currentConfig.PackagesPlugins.OrderBy(t => t), savedConfig.PackagesPlugins.OrderBy(t => t));
         }
 
         ProjectConfig DeserializeProjectConfig(string configPath)
@@ -588,7 +578,7 @@ namespace Projeny
             var config = new ProjectConfig();
 
             config.Packages = _assetsList.DisplayValues.ToList();
-            config.PluginPackages = _pluginsList.DisplayValues.ToList();
+            config.PackagesPlugins = _pluginsList.DisplayValues.ToList();
 
             return config;
         }
@@ -671,21 +661,21 @@ namespace Projeny
 
             startX = startX + buttonPadding;
 
-            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "Reload", ButtonStyle))
+            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "Reload", Skin.ButtonStyle))
             {
                 RefreshProject();
             }
 
             startX = startX + buttonWidth + buttonPadding;
 
-            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "Save", ButtonStyle))
+            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "Save", Skin.ButtonStyle))
             {
                 OverwriteConfig();
             }
 
             startX = startX + buttonWidth + buttonPadding;
 
-            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "Open", ButtonStyle))
+            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "Open", Skin.ButtonStyle))
             {
                 var configPath = GetProjectConfigPath();
                 InternalEditorUtility.OpenFileAtLineExternal(configPath, 1);
@@ -711,7 +701,7 @@ namespace Projeny
 
             if ((int)_viewState > 0)
             {
-                if (GUI.Button(rect1, ""))
+                if (GUI.Button(rect1, "", Skin.ButtonStyle))
                 {
                     _viewState = (ViewStates)((int)_viewState - 1);
                 }
@@ -728,7 +718,7 @@ namespace Projeny
 
             if ((int)_viewState < numValues-1)
             {
-                if (GUI.Button(rect2, ""))
+                if (GUI.Button(rect2, "", Skin.ButtonStyle))
                 {
                     _viewState = (ViewStates)((int)_viewState + 1);
                 }
@@ -812,7 +802,7 @@ namespace Projeny
             startY = endY + Skin.ApplyButtonTopPadding;
             endY = rect.yMax;
 
-            if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh", ButtonStyle))
+            if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh", Skin.ButtonStyle))
             {
                 StartBackgroundTask(RefreshReleasesAsync());
             }

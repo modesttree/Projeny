@@ -70,5 +70,6 @@ namespace Projeny
         public GUIStyle HeaderTextStyle;
         public GUIStyle DropdownTextStyle;
         public GUIStyle ProcessingPopupTextStyle;
+        public GUIStyle ButtonStyle;
     }
 }
