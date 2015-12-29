@@ -96,6 +96,16 @@ class PackageManager:
 
         self._log.good('Finished updating packages for project "{0}"'.format(schema.name))
 
+    def getAllPackageInfos(self):
+        result = []
+        for name in self.getAllPackageNames():
+            info = {}
+            info['Path'] = self._varMgr.expandPath('[UnityPackagesDir]/{0}'.format(name))
+            info['Name'] = name
+            result.append(info)
+
+        return result
+
     def getAllPackageNames(self):
         assertThat(self._varMgr.hasKey('UnityPackagesDir'), "Could not find 'UnityPackagesDir' in PathVars.  Have you set up your {0} file?", ConfigFileName)
 

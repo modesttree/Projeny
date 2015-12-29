@@ -13,6 +13,21 @@ using Projeny.Internal;
 
 namespace Projeny
 {
+    public class PackageInfo
+    {
+        public string Name
+        {
+            get;
+            set;
+        }
+
+        public string Path
+        {
+            get;
+            set;
+        }
+    }
+
     public static class ProjenyEditorUtil
     {
         public const string ConfigFileName = "upm.yaml";
@@ -333,14 +348,17 @@ namespace Projeny
             return FromPlatformDirStr(GetCurrentPlatformDirName());
         }
 
-        public static List<string> LookupPackagesList()
+        public static List<PackageInfo> LookupPackagesList()
         {
             try
             {
-                var allPackagesStr = RunUpm("listPackages").Trim();
-                return allPackagesStr
-                    .Split(new string[] { Environment.NewLine }, StringSplitOptions.None)
-                    .Select(x => x.Trim()).ToList();
+                var allPackagesStr = RunUpm("listPackages");
+
+                var docs = allPackagesStr
+                    .Split(new string[] { "---" }, StringSplitOptions.None);
+
+                return docs
+                    .Select(x => YamlSerializer.Deserialize<PackageInfo>(x)).Where(x => x != null).ToList();
             }
             catch (UpmException e)
             {

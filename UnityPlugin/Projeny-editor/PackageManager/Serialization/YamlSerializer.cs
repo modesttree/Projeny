@@ -6,24 +6,9 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace Projeny
 {
-    public class ProjectConfig
+    public static class YamlSerializer
     {
-        public List<string> Packages
-        {
-            get;
-            set;
-        }
-
-        public List<string> PluginPackages
-        {
-            get;
-            set;
-        }
-    }
-
-    public static class ProjectConfigSerializer
-    {
-        public static string Serialize(ProjectConfig config)
+        public static string Serialize<T>(T config)
         {
             var serializer = new Serializer();
             var stringBuilder = new StringBuilder();
@@ -32,11 +17,11 @@ namespace Projeny
             return stringBuilder.ToString();
         }
 
-        public static ProjectConfig Deserialize(string yamlStr)
+        public static T Deserialize<T>(string yamlStr)
         {
             var input = new StringReader(yamlStr);
             var deserializer = new Deserializer();
-            return deserializer.Deserialize<ProjectConfig>(input);
+            return deserializer.Deserialize<T>(input);
         }
     }
 }

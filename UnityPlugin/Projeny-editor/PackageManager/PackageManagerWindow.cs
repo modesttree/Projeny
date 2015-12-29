@@ -17,7 +17,7 @@ namespace Projeny
         DraggableList _assetsList;
         DraggableList _pluginsList;
 
-        List<string> _allPackages;
+        List<PackageInfo> _allPackages;
         List<string> _allReleases;
 
         PackageManagerWindowSkin _skin;
@@ -89,7 +89,7 @@ namespace Projeny
 
             if (_allPackages == null)
             {
-                _allPackages = new List<string>();
+                _allPackages = new List<PackageInfo>();
             }
 
             if (_installedList == null)
@@ -257,7 +257,7 @@ namespace Projeny
         void UpdateAvailablePackagesList()
         {
             _installedList.Clear();
-            _installedList.AddRange(_allPackages.Where(x => !_assetsList.Values.Contains(x) && !_pluginsList.Values.Contains(x)));
+            _installedList.AddRange(_allPackages.Select(x => x.Name).Where(x => !_assetsList.Values.Contains(x) && !_pluginsList.Values.Contains(x)));
         }
 
         void RefreshProject()
@@ -266,7 +266,7 @@ namespace Projeny
 
             if (File.Exists(configPath))
             {
-                var project = ProjectConfigSerializer.Deserialize(File.ReadAllText(configPath));
+                var project = YamlSerializer.Deserialize<ProjectConfig>(File.ReadAllText(configPath));
 
                 // Null when file is empty
                 if (project == null)
@@ -359,7 +359,7 @@ namespace Projeny
             config.Packages = _assetsList.Values.ToList();
             config.PluginPackages = _pluginsList.Values.ToList();
 
-            return ProjectConfigSerializer.Serialize(config);
+            return YamlSerializer.Serialize<ProjectConfig>(config);
         }
 
         void TryChangeProjectType(ProjectConfigTypes configType)

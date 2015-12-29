@@ -10,7 +10,25 @@ namespace Projeny.Internal
         // the existing string.Format method
         public static string Fmt(this string s, params object[] args)
         {
-            return String.Format(s, args);
+            return string.Format(s, args);
+        }
+
+        // This is like string.Format except it will print NULL instead of just
+        // a blank character when a parameter is null
+        public static string FmtSafe(this string format, params object[] args)
+        {
+            var fixedArgs = args.Select(x => x == null ? "NULL" : x).ToArray();
+
+            try
+            {
+                format = string.Format(format, fixedArgs);
+            }
+            catch (FormatException)
+            {
+                // Ignore, just don't do format
+            }
+
+            return format;
         }
 
         public static string Join(this IEnumerable<string> values, string separator)

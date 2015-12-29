@@ -2,6 +2,7 @@
 from upm.log.LogStreamFile import LogStreamFile
 import upm.main.Upm as Upm
 
+import yaml
 from upm.log.LogStreamConsoleErrorsOnly import LogStreamConsoleErrorsOnly
 import os
 import upm.ioc.Container as Container
@@ -49,9 +50,10 @@ class Runner:
             self._vsSolutionHelper.openCustomSolution(self._project, self._platform)
 
         elif self._requestId == 'listPackages':
-            packagesNames = self._packageMgr.getAllPackageNames()
-            for packageName in packagesNames:
-                print(packageName)
+            infos = self._packageMgr.getAllPackageInfos()
+            for packageInfo in infos:
+                print('---')
+                print(yaml.dump(packageInfo, default_flow_style=False))
 
         elif self._requestId == 'listProjects':
             projectNames = self._packageMgr.getAllProjectNames()
