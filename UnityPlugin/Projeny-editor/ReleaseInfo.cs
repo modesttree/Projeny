@@ -13,6 +13,7 @@ using Projeny.Internal;
 
 namespace Projeny
 {
+    [Serializable]
     public class ReleaseInfo
     {
         public string Title

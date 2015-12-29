@@ -103,9 +103,23 @@ namespace Projeny
             var startInfo = new ProcessStartInfo();
 
             startInfo.FileName = FindUpmExePath();
-            startInfo.Arguments = "\"{0}\" \"{1}\" {2} {3} {4} {5}"
-                .Fmt(request.ConfigPath, request.ProjectName, ToPlatformDirStr(request.Platform), request.RequestId, request.Param1 ?? "", request.Param2 ?? "");
 
+            var argStr = "\"{0}\" \"{1}\" {2} {3}"
+                .Fmt(
+                    request.ConfigPath, request.ProjectName,
+                    ToPlatformDirStr(request.Platform), request.RequestId);
+
+            if (request.Param1 != null)
+            {
+                argStr += " \"{0}\"".Fmt(request.Param1);
+            }
+
+            if (request.Param2 != null)
+            {
+                argStr += " \"{0}\"".Fmt(request.Param2);
+            }
+
+            startInfo.Arguments = argStr;
             startInfo.CreateNoWindow = true;
             startInfo.UseShellExecute = false;
             startInfo.RedirectStandardOutput = true;
@@ -264,15 +278,17 @@ namespace Projeny
             var result = RunUpmAsync(req);
             yield return result;
 
-            if (!result.Current.Succeeded)
+            if (result.Current.Succeeded)
+            {
+                AssetDatabase.Refresh();
+                Log.Info("Projeny: Updated directory links");
+                yield return true;
+            }
+            else
             {
                 DisplayUpmError("Updating Directory Links", result.Current.ErrorMessage);
                 yield return false;
             }
-
-            AssetDatabase.Refresh();
-            Log.Info("Projeny: Updated directory links");
-            yield return true;
         }
 
         public static IEnumerator<Boolean> InstallReleaseAsync(string name, string version)
@@ -290,14 +306,16 @@ namespace Projeny
             var result = RunUpmAsync(req);
             yield return result;
 
-            if (!result.Current.Succeeded)
+            if (result.Current.Succeeded)
+            {
+                Log.Info("Installed new release '{0}' ({1})".Fmt(name, version));
+                yield return true;
+            }
+            else
             {
                 DisplayUpmError("Installing Release '{0}' ({1})".Fmt(name, version), result.Current.ErrorMessage);
                 yield return false;
             }
-
-            Log.Info("Installed new release '{0}' ({1})".Fmt(name, version));
-            yield return true;
         }
 
         // NOTE: Returns null on failure

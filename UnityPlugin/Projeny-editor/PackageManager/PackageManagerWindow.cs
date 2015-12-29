@@ -99,6 +99,11 @@ namespace Projeny
                 _allPackages = new List<PackageInfo>();
             }
 
+            if (_allReleases == null)
+            {
+                _allReleases = new List<ReleaseInfo>();
+            }
+
             if (_installedList == null)
             {
                 _installedList = new DraggableList();

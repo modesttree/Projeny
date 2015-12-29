@@ -65,9 +65,6 @@ class UnityPackageExtractor:
             if not self._sys.fileExists(assetSourcePath):
                 continue
 
-            assetMetaFilePath = os.path.join(assetDirPath, 'asset.meta')
-            assertThat(self._sys.fileExists(assetMetaFilePath))
-
             pathNameFilePath = os.path.join(assetDirPath, 'pathname')
 
             assertThat(self._sys.fileExists(pathNameFilePath))
@@ -85,7 +82,11 @@ class UnityPackageExtractor:
             metaDestPath = destPath + ".meta"
 
             self._sys.copyFile(assetSourcePath, destPath)
-            self._sys.copyFile(assetMetaFilePath, metaDestPath)
+
+            assetMetaFilePath = os.path.join(assetDirPath, 'asset.meta')
+
+            if self._sys.fileExists(assetMetaFilePath):
+                self._sys.copyFile(assetMetaFilePath, metaDestPath)
 
 if __name__ == '__main__':
     Container.bind('Logger').toSingle(Logger)
