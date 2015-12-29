@@ -13,12 +13,14 @@ import upm.ioc.IocAssertions as Assertions
 import stat
 from upm.util.ScriptRunner import ScriptRunner
 from upm.util.VarManager import VarManager
+from upm.config.Config import Config
 
 import shutil
 
 import tarfile
 import os
 
+from upm.util.ProcessRunner import ProcessRunner
 from upm.util.Assert import *
 
 class UnityPackageExtractor:
@@ -30,76 +32,34 @@ class UnityPackageExtractor:
         fileName = os.path.basename(unityPackagePath)
         packageName = os.path.splitext(fileName)[0]
 
-        self._log.heading("Extracting '{0}' to '{1}'", fileName, outputDir)
-
+        self._log.heading("Running unity to extract '{0}' to directory '{1}'", fileName, outputDir)
         tempDir = tempfile.mkdtemp()
+        self._log.info("Using temp directory '{0}'", tempDir)
 
         try:
-            self._log.info("Extracting tar file for '{0}'...", fileName)
-            self._extractTar(unityPackagePath, tempDir)
+            self._sys.createDirectory(os.path.join(tempDir, 'ProjectSettings'))
+            self._sys.createDirectory(os.path.join(tempDir, 'Assets'))
 
-            self._log.info("Processing contents of '{0}'...", packageName)
-            self._processExtractedDir(tempDir, outputDir)
+            self._sys.executeAndWait('"[UnityExePath]" -batchmode -nographics -quit -projectPath "{0}" -importPackage "{1}"'.format(tempDir, unityPackagePath))
+
+            self._log.heading("Unity finished.  Copying results to output directory")
+            self._sys.copyDirectory(os.path.join(tempDir, 'Assets'), outputDir)
         finally:
-            self._log.debug("Deleting temp directory '{0}'...", tempDir)
+            self._log.heading("Deleting temp directory '{0}'", tempDir)
             shutil.rmtree(tempDir)
 
-    def _extractTar(self, unityPackagePath, tempDir):
-        tar = tarfile.open(unityPackagePath, 'r:gz')
-        tar.extractall(tempDir)
-        tar.close()
-        self._log.info("Finished extracting '{0}'", os.path.basename(unityPackagePath))
-
-    def _processExtractedDir(self, tempDir, outputDir):
-
-        self._sys.makeMissingDirectoriesInPath(outputDir)
-
-        for assetId in os.listdir(tempDir):
-            assetDirPath = os.path.join(tempDir, assetId)
-
-            if not os.path.isdir(assetDirPath):
-                continue
-
-            assetSourcePath = os.path.join(assetDirPath, 'asset')
-
-            if not self._sys.fileExists(assetSourcePath):
-                continue
-
-            pathNameFilePath = os.path.join(assetDirPath, 'pathname')
-
-            assertThat(self._sys.fileExists(pathNameFilePath))
-
-            with self._sys.openInputFile(pathNameFilePath) as f:
-                outputRelativePath = f.readline().strip()
-
-            assertThat(outputRelativePath.startswith("Assets/"))
-
-            outputRelativePath = outputRelativePath[len("Assets/"):]
-
-            self._log.debug("Processing asset '{0}'", outputRelativePath)
-
-            destPath = os.path.join(outputDir, outputRelativePath)
-            metaDestPath = destPath + ".meta"
-
-            self._sys.copyFile(assetSourcePath, destPath)
-
-            assetMetaFilePath = os.path.join(assetDirPath, 'asset.meta')
-
-            if self._sys.fileExists(assetMetaFilePath):
-                self._sys.copyFile(assetMetaFilePath, metaDestPath)
-
 if __name__ == '__main__':
+    Container.bind('Config').toSingle(Config, [])
     Container.bind('Logger').toSingle(Logger)
-    Container.bind('VarManager').toSingle(VarManager)
+    Container.bind('VarManager').toSingle(VarManager, { 'UnityExePath': "C:/Program Files/Unity/Editor/Unity.exe" })
     Container.bind('LogStream').toSingle(LogStreamConsole, True, True)
     Container.bind('SystemHelper').toSingle(SystemHelper)
-    assertThat(False, "TODO")
-    #Container.bind('Config').toSingle(ConfigYaml)
+    Container.bind('ProcessRunner').toSingle(ProcessRunner)
 
     def main():
         runner = UnityPackageExtractor()
 
-        outDir = "F:/Temp/UnityPackages/ExtractedFiles"
+        outDir = "F:/Temp/outputtest/output"
 
         if os.path.exists(outDir):
             shutil.rmtree(outDir)
