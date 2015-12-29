@@ -8,7 +8,7 @@ from upm.util.Assert import *
 class RemoteServerRegistry:
     _log = Inject('Logger')
 
-    def __init__(self, settings):
+    def __init__(self):
         pass
 
     @property

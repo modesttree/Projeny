@@ -17,11 +17,10 @@ class FileInfo:
 class LocalFolderRegistry:
     _log = Inject('Logger')
     _sys = Inject('SystemHelper')
-    _varMgr = Inject('VarManager')
     _extractor = Inject('UnityPackageExtractor')
 
-    def __init__(self, settings):
-        self._folderPath = self._varMgr.expand(settings['Path']).replace("\\", "/")
+    def __init__(self, folderPath):
+        self._folderPath = folderPath
         self._files = []
 
     @property

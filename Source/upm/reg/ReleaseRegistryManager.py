@@ -16,6 +16,7 @@ import yaml
 ReleaseInfoFileName = 'Release.yaml'
 
 class ReleaseRegistryManager:
+    _varMgr = Inject('VarManager')
     _log = Inject('Logger')
     _config = Inject('Config')
     _sys = Inject('SystemHelper')
@@ -45,13 +46,14 @@ class ReleaseRegistryManager:
 
     def _createRegistry(self, regType, settings):
         if regType == 'LocalFolder':
-            return LocalFolderRegistry(settings)
+            folderPath = self._varMgr.expand(settings['Path']).replace("\\", "/")
+            return LocalFolderRegistry(folderPath)
 
         if regType == 'AssetStoreCache':
-            return AssetStoreCacheRegistry(settings)
+            return AssetStoreCacheRegistry()
 
         if regType == 'Remote':
-            return RemoteServerRegistry(settings)
+            return RemoteServerRegistry()
 
         assertThat(False, "Could not find registry with type '{0}'", regType)
 

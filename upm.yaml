@@ -8,8 +8,9 @@ MaxProjectNameLength: 10
 LinkToProjenyEditorDir: False
 
 Registries:
+    - AssetStoreCache:
     - LocalFolder:
-        Path: 'C:\Users\Steve\AppData\Roaming\Unity'
+        Path: 'F:\Temp\UnityPackages'
     - Remote:
         ConfigUrl: 'http://internal.modest3d.com/UnityReleases/releaseRegistry.yaml'
 

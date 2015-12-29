@@ -11,12 +11,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2612b37eea3a9b24694554ab3c19bda5, type: 3}
   m_Name: PackageManagerSkin
   m_EditorClassIdentifier: Assembly-CSharp-Editor-firstpass:Projeny:DraggableListSkin
-  InterpSpeed: 0.1
+  InterpSpeed: 24.46
   ViewToggleHeight: 38.21
-  HeaderHeight: 41.66
+  HeaderHeight: 34
   ListVerticalSpacing: 11.06
   ListHorizontalSpacing: 37.28
-  MarginTop: 10.61
+  MarginTop: 0
   MarginRight: 16.14
   MarginLeft: 15.91
   MarginBottom: 20.29

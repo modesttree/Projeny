@@ -167,7 +167,7 @@ namespace Projeny
             float yPos = 0;
             _scrollPos = GUI.BeginScrollView(listRect, _scrollPos, viewRect);
             {
-                foreach (var entry in _entryList)
+                foreach (var entry in _entryList.OrderBy(x => x.Name))
                 {
                     if (!entry.IsVisible)
                     {
