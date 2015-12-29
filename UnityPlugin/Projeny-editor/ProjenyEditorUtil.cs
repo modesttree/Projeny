@@ -13,21 +13,6 @@ using Projeny.Internal;
 
 namespace Projeny
 {
-    public class PackageInfo
-    {
-        public string Name
-        {
-            get;
-            set;
-        }
-
-        public string Path
-        {
-            get;
-            set;
-        }
-    }
-
     public static class ProjenyEditorUtil
     {
         public const string ConfigFileName = "upm.yaml";

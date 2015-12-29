@@ -8,6 +8,12 @@ namespace Projeny
 {
     public class ProjectConfig
     {
+        public ProjectConfig()
+        {
+            Packages = new List<string>();
+            PluginPackages = new List<string>();
+        }
+
         public List<string> Packages
         {
             get;

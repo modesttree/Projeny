@@ -24,4 +24,3 @@ class RemoteServerRegistry:
     def installRelease(self, releaseName):
         assertThat(False, 'TODO')
 
-
