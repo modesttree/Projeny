@@ -36,6 +36,9 @@ namespace Projeny
         float _split2 = 0.5f;
 
         [NonSerialized]
+        float _lastTime = 0.5f;
+
+        [NonSerialized]
         CoRoutine _backgroundTask;
 
         PackageManagerWindowSkin Skin
@@ -151,14 +154,20 @@ namespace Projeny
         {
             if (_backgroundTask != null)
             {
+                // NOTE: If the tab isn't focused this task will take awhile
                 if (!_backgroundTask.Pump())
                 {
                     _backgroundTask = null;
                 }
             }
 
-            _split1 = Mathf.Lerp(_split1, GetDesiredSplit1(), Skin.InterpSpeed);
-            _split2 = Mathf.Lerp(_split2, GetDesiredSplit2(), Skin.InterpSpeed);
+            var deltaTime = Time.realtimeSinceStartup - _lastTime;
+            _lastTime = Time.realtimeSinceStartup;
+
+            var px = Mathf.Clamp(deltaTime * Skin.InterpSpeed, 0, 1);
+
+            _split1 = Mathf.Lerp(_split1, GetDesiredSplit1(), px);
+            _split2 = Mathf.Lerp(_split2, GetDesiredSplit2(), px);
 
             // Doesn't seem worth trying to detect changes, just redraw every frame
             Repaint();
