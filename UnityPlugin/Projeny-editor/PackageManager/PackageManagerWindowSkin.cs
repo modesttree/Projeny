@@ -52,9 +52,10 @@ namespace Projeny
 
         public float ViewSelectSpacing;
 
+        public Color LoadingOverlayColor;
+
         public GUIStyle HeaderTextStyle;
         public GUIStyle DropdownTextStyle;
-        public GUIStyle FileDropdownLabelTextStyle;
-        public GUIStyle FileDropdownEditFileButtonTextStyle;
+        public GUIStyle ProcessingPopupTextStyle;
     }
 }

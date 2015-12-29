@@ -20,16 +20,22 @@ namespace Projeny
         List<PackageInfo> _allPackages;
         List<ReleaseInfo> _allReleases;
 
-        PackageManagerWindowSkin _skin;
         ProjectConfigTypes _projectConfigType;
 
         ViewStates _viewState = ViewStates.PackagesAndProject;
+
         GUIStyle _buttonStyle;
         GUIStyle _toggleStyle;
 
+        PackageManagerWindowSkin _skin;
+
+        [NonSerialized]
         float _split1 = 0;
+
+        [NonSerialized]
         float _split2 = 0.5f;
 
+        [NonSerialized]
         CoRoutine _backgroundTask;
 
         PackageManagerWindowSkin Skin
@@ -75,19 +81,14 @@ namespace Projeny
             _buttonStyle = null;
             _toggleStyle = null;
 
+            if (Skin.ProcessingPopupTextStyle == null)
+            {
+                Skin.ProcessingPopupTextStyle = new GUIStyle();
+            }
+
             if (Skin.DropdownTextStyle == null)
             {
                 Skin.DropdownTextStyle = new GUIStyle();
-            }
-
-            if (Skin.FileDropdownLabelTextStyle == null)
-            {
-                Skin.FileDropdownLabelTextStyle = new GUIStyle();
-            }
-
-            if (Skin.FileDropdownEditFileButtonTextStyle == null)
-            {
-                Skin.FileDropdownEditFileButtonTextStyle = new GUIStyle();
             }
 
             if (_allPackages == null)
@@ -221,9 +222,7 @@ namespace Projeny
                         }
                         case ListTypes.Release:
                         {
-                            var info = (ReleaseInfo)data.Entry.Tag;
-                            ProjenyEditorUtil.InstallRelease(info.Title, info.Version);
-                            StartPackageRefresh();
+                            StartBackgroundTask(InstallReleaseAsync((ReleaseInfo)data.Entry.Tag));
                             break;
                         }
                         default:
@@ -294,6 +293,17 @@ namespace Projeny
                     Assert.Throw();
                     break;
                 }
+            }
+        }
+
+        IEnumerator InstallReleaseAsync(ReleaseInfo info)
+        {
+            var result = ProjenyEditorUtil.InstallReleaseAsync(info.Title, info.Version);
+            yield return result;
+
+            if (result.Current)
+            {
+                yield return RefreshPackagesAsync();
             }
         }
 
@@ -372,7 +382,7 @@ namespace Projeny
 
             if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh", ButtonStyle))
             {
-                StartPackageRefresh();
+                StartBackgroundTask(RefreshPackagesAsync());
             }
         }
 
@@ -427,15 +437,21 @@ namespace Projeny
             if (GUI.Button(Rect.MinMaxRect(rect.x + halfWidth + padding, rect.y, rect.xMax, rect.yMax), "Apply", ButtonStyle))
             {
                 OverwriteConfig();
-                ProjenyEditorUtil.UpdateLinks();
+                StartBackgroundTask(ProjenyEditorUtil.UpdateLinksAsync());
             }
         }
 
-        void RefreshReleases()
+        IEnumerator RefreshReleasesAsync()
         {
-            _allReleases = ProjenyEditorUtil.LookupReleaseList();
+            var result = ProjenyEditorUtil.LookupReleaseListAsync();
+            yield return result;
 
-            UpdateAvailableReleasesList();
+            // Null indicates failure
+            if (result.Current != null)
+            {
+                _allReleases = result.Current;
+                UpdateAvailableReleasesList();
+            }
         }
 
         void UpdateAvailableReleasesList()
@@ -443,11 +459,6 @@ namespace Projeny
             _releasesList.Clear();
             _releasesList.AddRange(
                 _allReleases.Select(x => new DraggableList.Entry("{0} v{1}".Fmt(x.Title, x.Version ?? "?"), x)));
-        }
-
-        void StartPackageRefresh()
-        {
-            StartBackgroundTask(RefreshPackagesAsync());
         }
 
         void StartBackgroundTask(IEnumerator task)
@@ -458,13 +469,15 @@ namespace Projeny
 
         IEnumerator RefreshPackagesAsync()
         {
-            Log.Trace("TODO");
-            yield break;
-            //var allPackages = ProjenyEditorUtil.LookupPackagesListAsync();
-            //yield return allPackages;
+            var allPackages = ProjenyEditorUtil.LookupPackagesListAsync();
+            yield return allPackages;
 
-            //_allPackages = allPackages.Current;
-            //UpdateAvailablePackagesList();
+            if (allPackages.Current != null)
+            // Returns null on failure
+            {
+                _allPackages = allPackages.Current;
+                UpdateAvailablePackagesList();
+            }
         }
 
         void UpdateAvailablePackagesList()
@@ -678,12 +691,13 @@ namespace Projeny
             var openButtonRect = Rect.MinMaxRect(rect.xMax - Skin.FileDropdownOpenFileButtonWidth, rect.yMin, rect.xMax, rect.yMax);
 
             var configPath = GetProjectConfigPath();
-            GUI.enabled = File.Exists(configPath);
+            bool wasEnabled = GUI.enabled;
+            GUI.enabled = GUI.enabled && File.Exists(configPath);
             if (GUI.Button(openButtonRect, "Open", ButtonStyle))
             {
                 InternalEditorUtility.OpenFileAtLineExternal(configPath, 1);
             }
-            GUI.enabled = true;
+            GUI.enabled = wasEnabled;
         }
 
         string[] GetConfigTypesDisplayValues()
@@ -740,6 +754,12 @@ namespace Projeny
 
             var windowRect = Rect.MinMaxRect(Skin.MarginLeft, Skin.MarginTop, this.position.width - Skin.MarginRight, this.position.height - Skin.MarginBottom);
 
+            if (_backgroundTask != null)
+            {
+                // Do not allow any input processing when running an async task
+                GUI.enabled = false;
+            }
+
             var viewSelectRect = new Rect(windowRect.xMin, windowRect.yMin, windowRect.width, Skin.ViewToggleHeight);
             DrawViewSelect(viewSelectRect);
 
@@ -757,6 +777,15 @@ namespace Projeny
             {
                 DrawReleasePane(windowRect);
             }
+
+            if (_backgroundTask != null)
+            {
+                var fullRect = new Rect(0, 0, this.position.width, this.position.height);
+                ImguiUtil.DrawColoredQuad(fullRect, Skin.LoadingOverlayColor);
+                GUI.Label(fullRect, "Processing...", Skin.ProcessingPopupTextStyle);
+            }
+
+            GUI.enabled = true;
         }
 
         void DrawReleasePane(Rect windowRect)
@@ -788,7 +817,7 @@ namespace Projeny
 
             if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh", ButtonStyle))
             {
-                RefreshReleases();
+                StartBackgroundTask(RefreshReleasesAsync());
             }
         }
 

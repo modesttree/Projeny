@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -6,7 +7,6 @@ using System.Linq;
 using System.Text;
 using UnityEditor;
 using UnityEditor.Callbacks;
-using UnityEditor.SceneManagement;
 using UnityEditorInternal;
 using UnityEngine;
 using Projeny.Internal;
@@ -40,68 +40,131 @@ namespace Projeny
             window.titleContent = new GUIContent("  Projeny", Resources.Load<Texture2D>("Projeny/Icon"));
         }
 
-        public static void InstallRelease(string name, string version)
+        public static IEnumerator<Boolean> UpdateLinksAsync()
         {
-            try
-            {
-                RunUpm("installRelease \"{0}\" \"{1}\"".Fmt(name, version));
-            }
-            catch (UpmException e)
-            {
-                EditorUtility.DisplayDialog("Error", "Install release failed with errors: \n\n" + e.Message, "Ok");
-                throw e;
-            }
-
-            UnityEngine.Debug.Log("Projeny: Installed {0} (version {1})".Fmt(name, version));
+            return CoRoutine.Wrap<Boolean>(UpdateLinksAsyncInternal());
         }
 
-        [MenuItem("Projeny/Update Links", false, 1)]
-        public static void UpdateLinks()
+        static IEnumerator UpdateLinksAsyncInternal()
         {
-            try
+            var req = CreateUpmRequest("updateLinks");
+
+            var result = RunUpmAsync(req);
+            yield return result;
+
+            if (!result.Current.Succeeded)
             {
-                RunUpm("updateLinks");
-            }
-            catch (UpmException e)
-            {
-                EditorUtility.DisplayDialog("Error", "Update directory links failed with errors: \n\n" + e.Message, "Ok");
-                throw e;
+                DisplayUpmError("Updating Directory Links", result.Current.ErrorMessage);
+                yield return false;
             }
 
             AssetDatabase.Refresh();
-            UnityEngine.Debug.Log("Projeny: Directory links have been updated");
+            Log.Info("Projeny: Updated directory links");
+            yield return true;
+        }
+
+        public static IEnumerator<Boolean> InstallReleaseAsync(string name, string version)
+        {
+            return CoRoutine.Wrap<Boolean>(InstallReleaseAsyncInternal(name, version));
+        }
+
+        static IEnumerator InstallReleaseAsyncInternal(string name, string version)
+        {
+            var req = CreateUpmRequest("installRelease");
+
+            req.Param1 = name;
+            req.Param2 = version;
+
+            var result = RunUpmAsync(req);
+            yield return result;
+
+            if (!result.Current.Succeeded)
+            {
+                DisplayUpmError("Installing Release '{0}' ({1})".Fmt(name, version), result.Current.ErrorMessage);
+                yield return false;
+            }
+
+            Log.Info("Installed new release '{0}' ({1})".Fmt(name, version));
+            yield return true;
+        }
+
+        // NOTE: Returns null on failure
+        public static IEnumerator<List<ReleaseInfo>> LookupReleaseListAsync()
+        {
+            return CoRoutine.Wrap<List<ReleaseInfo>>(LookupReleaseListAsyncInternal());
+        }
+
+        static IEnumerator LookupReleaseListAsyncInternal()
+        {
+            var req = CreateUpmRequest("listReleases");
+
+            var result = RunUpmAsync(req);
+            yield return result;
+
+            if (result.Current.Succeeded)
+            {
+                var docs = result.Current.Output
+                    .Split(new string[] { "---" }, StringSplitOptions.None);
+
+                yield return docs
+                    .Select(x => YamlSerializer.Deserialize<ReleaseInfo>(x))
+                    .Where(x => x != null).ToList();
+            }
+            else
+            {
+                DisplayUpmError("Looking up all releases", result.Current.ErrorMessage);
+                yield return null;
+            }
         }
 
         [MenuItem("Projeny/Update C# Project", false, 6)]
         public static void UpdateCustomSolution()
         {
-            try
-            {
-                RunUpm("updateCustomSolution");
-            }
-            catch (UpmException e)
-            {
-                EditorUtility.DisplayDialog("Error", "Update custom solution failed with errors: \n\n" + e.Message, "Ok");
-                throw e;
-            }
+            Assert.Throw("TODO");
+            //try
+            //{
+                //var req = new UpmRequest()
+                //{
+                    //RequestId = "updateCustomSolution",
+                    //ProjectName = GetCurrentProjectName(),
+                    //Platform = GetPlatformFromDirectoryName(),
+                    //ConfigPath = FindUpmConfigPath()
+                //};
 
-            UnityEngine.Debug.Log("Projeny: Custom solution has been updated");
+                //RunUpm(req);
+            //}
+            //catch (UpmException e)
+            //{
+                //EditorUtility.DisplayDialog("Error", "Update custom solution failed with errors: \n\n" + e.Message, "Ok");
+                //throw e;
+            //}
+
+            //UnityEngine.Debug.Log("Projeny: Custom solution has been updated");
         }
 
         //[MenuItem("Projeny/Custom Solution/Open", false, 6)]
         public static void OpenCustomSolution()
         {
-            try
-            {
-                RunUpm("openCustomSolution");
-            }
-            catch (UpmException e)
-            {
-                EditorUtility.DisplayDialog("Error", "Opening custom solution failed with errors: \n\n" + e.Message, "Ok");
-                throw e;
-            }
+            Assert.Throw("TODO");
+            //try
+            //{
+                //var req = new UpmRequest()
+                //{
+                    //RequestId = "openCustomSolution",
+                    //ProjectName = GetCurrentProjectName(),
+                    //Platform = GetPlatformFromDirectoryName(),
+                    //ConfigPath = FindUpmConfigPath()
+                //};
 
-            UnityEngine.Debug.Log("Projeny: Opened custom solution");
+                //RunUpm(req);
+            //}
+            //catch (UpmException e)
+            //{
+                //EditorUtility.DisplayDialog("Error", "Opening custom solution failed with errors: \n\n" + e.Message, "Ok");
+                //throw e;
+            //}
+
+            //UnityEngine.Debug.Log("Projeny: Opened custom solution");
         }
 
         [MenuItem("Projeny/Change Platform/Windows", false, 7)]
@@ -216,30 +279,41 @@ namespace Projeny
 
         static void ChangePlatform(BuildTarget desiredPlatform)
         {
-            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
-            {
-                // They hit cancel in the save dialog
-                return;
-            }
+            Assert.Throw("TODO");
+            //if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            //{
+                //// They hit cancel in the save dialog
+                //return;
+            //}
 
-            if (GetPlatformFromDirectoryName() == desiredPlatform)
-            {
-                UnityEngine.Debug.Log("Projeny: Already at the desired platform, no need to change project.");
-                return;
-            }
+            //if (GetPlatformFromDirectoryName() == desiredPlatform)
+            //{
+                //UnityEngine.Debug.Log("Projeny: Already at the desired platform, no need to change project.");
+                //return;
+            //}
 
-            try
-            {
-                RunUpm("updateLinks", desiredPlatform);
-                RunUpm("openUnity", desiredPlatform);
-            }
-            catch (UpmException e)
-            {
-                EditorUtility.DisplayDialog("Error", "Change platform failed with erros: \n" + e.Message, "Ok");
-                throw e;
-            }
+            //try
+            //{
+                //var req = new UpmRequest()
+                //{
+                    //RequestId = "updateLinks",
+                    //ProjectName = GetCurrentProjectName(),
+                    //Platform = desiredPlatform,
+                    //ConfigPath = FindUpmConfigPath()
+                //};
 
-            EditorApplication.Exit(0);
+                //RunUpm(req);
+
+                //req.RequestId = "openUnity";
+                //RunUpm(req);
+            //}
+            //catch (UpmException e)
+            //{
+                //EditorUtility.DisplayDialog("Error", "Change platform failed with erros: \n" + e.Message, "Ok");
+                //throw e;
+            //}
+
+            //EditorApplication.Exit(0);
         }
 
         static string GetCurrentProjectName()
@@ -348,71 +422,56 @@ namespace Projeny
             return FromPlatformDirStr(GetCurrentPlatformDirName());
         }
 
-        public static List<PackageInfo> LookupPackagesList()
+        static UpmRequest CreateUpmRequest(string requestId)
         {
-            try
+            return new UpmRequest()
             {
-                var allPackagesStr = RunUpm("listPackages");
+                RequestId = requestId,
+                ProjectName = GetCurrentProjectName(),
+                Platform = GetPlatformFromDirectoryName(),
+                ConfigPath = FindUpmConfigPath()
+            };
+        }
 
-                var docs = allPackagesStr
-                    .Split(new string[] { "---" }, StringSplitOptions.None);
+        // NOTE: Returns null on failure
+        public static IEnumerator<List<PackageInfo>> LookupPackagesListAsync()
+        {
+            return CoRoutine.Wrap<List<PackageInfo>>(LookupPackagesListAsyncInternal());
+        }
 
-                return docs
-                    .Select(x => YamlSerializer.Deserialize<PackageInfo>(x)).Where(x => x != null).ToList();
-            }
-            catch (UpmException e)
+        static IEnumerator LookupPackagesListAsyncInternal()
+        {
+            var result = RunUpmAsync(CreateUpmRequest("listPackages"));
+            yield return result;
+
+            if (!result.Current.Succeeded)
             {
-                EditorUtility.DisplayDialog("Error", "Lookup packages failed with errors: \n\n" + e.Message, "Ok");
-                throw e;
+                DisplayUpmError("Package lookup", result.Current.ErrorMessage);
+                yield return null;
+                yield break;
             }
+
+            var docs = result.Current.Output
+                .Split(new string[] { "---" }, StringSplitOptions.None);
+
+            yield return docs
+                .Select(x => YamlSerializer.Deserialize<PackageInfo>(x)).Where(x => x != null).ToList();
         }
 
-        public static List<ReleaseInfo> LookupReleaseList()
+        static void DisplayUpmError(string operationDescription, string errors)
         {
-            try
-            {
-                var allReleasesStr = RunUpm("listReleases");
-
-                var docs = allReleasesStr
-                    .Split(new string[] { "---" }, StringSplitOptions.None);
-
-                return docs
-                    .Select(x => YamlSerializer.Deserialize<ReleaseInfo>(x))
-                    .Where(x => x != null).ToList();
-            }
-            catch (UpmException e)
-            {
-                EditorUtility.DisplayDialog("Error", "Lookup releases failed with errors: \n\n" + e.Message, "Ok");
-                throw e;
-            }
+            var errorMessage = "UPM encountered errors when running '{0}'. Details: \n\n{1}".Fmt(operationDescription, errors);
+            Log.Error("Projeny: {0}", errorMessage);
+            EditorUtility.DisplayDialog("Error", errorMessage, "Ok");
         }
 
-        public static string RunUpm(string requestId)
-        {
-            return RunUpm(requestId, GetCurrentProjectName());
-        }
-
-        public static string RunUpm(string requestId, string projectName)
-        {
-            return RunUpm(requestId, projectName, GetPlatformFromDirectoryName());
-        }
-
-        public static string RunUpm(string requestId, BuildTarget platform)
-        {
-            return RunUpm(requestId, GetCurrentProjectName(), platform);
-        }
-
-        public static string RunUpm(string requestId, string projectName, BuildTarget platform)
-        {
-            return RunUpm(requestId, projectName, platform, FindUpmConfigPath());
-        }
-
-        static Process RunUpmCreateProcess(string requestId, string projectName, BuildTarget platform, string configPath)
+        static Process RunUpmCommonStart(UpmRequest request, out StringBuilder allOutputOutValue)
         {
             var startInfo = new ProcessStartInfo();
 
             startInfo.FileName = FindUpmExePath();
-            startInfo.Arguments = "\"{0}\" \"{1}\" {2} {3}".Fmt(configPath, projectName, ToPlatformDirStr(platform), requestId);
+            startInfo.Arguments = "\"{0}\" \"{1}\" {2} {3} {4} {5}"
+                .Fmt(request.ConfigPath, request.ProjectName, ToPlatformDirStr(request.Platform), request.RequestId, request.Param1 ?? "", request.Param2 ?? "");
 
             startInfo.CreateNoWindow = true;
             startInfo.UseShellExecute = false;
@@ -423,16 +482,19 @@ namespace Projeny
 
             Process proc = new Process();
             proc.StartInfo = startInfo;
-            return proc;
-        }
-
-        public static string RunUpm(string requestId, string projectName, BuildTarget platform, string configPath)
-        {
-            var proc = RunUpmCreateProcess(requestId, projectName, platform, configPath);
 
             var allOutput = new StringBuilder();
             proc.OutputDataReceived += (sender, outputArgs) => allOutput.AppendLine(outputArgs.Data);
             proc.ErrorDataReceived += (sender, outputArgs) => allOutput.AppendLine(outputArgs.Data);
+
+            allOutputOutValue = allOutput;
+            return proc;
+        }
+
+        public static UpmResponse RunUpm(UpmRequest request)
+        {
+            StringBuilder allOutput;
+            var proc = RunUpmCommonStart(request, out allOutput);
 
             proc.Start();
 
@@ -441,28 +503,15 @@ namespace Projeny
 
             proc.WaitForExit();
 
-            bool succeeded = proc.ExitCode == 0;
-
-            if (!succeeded)
-            {
-                throw new UpmException(allOutput.ToString().Trim());
-            }
-
-            return allOutput.ToString();
+            return RunUpmCommonEnd(proc, allOutput);
         }
 
-        public static IEnumerator<string> RunUpmAsync(string requestId, string projectName, BuildTarget platform, string configPath)
+        public static IEnumerator<UpmResponse> RunUpmAsync(UpmRequest request)
         {
-            var proc = RunUpmCreateProcess(requestId, projectName, platform, configPath);
+            StringBuilder allOutput;
+            var proc = RunUpmCommonStart(request, out allOutput);
 
-            var allOutput = new StringBuilder();
-            proc.OutputDataReceived += (sender, outputArgs) => allOutput.AppendLine(outputArgs.Data);
-            proc.ErrorDataReceived += (sender, outputArgs) => allOutput.AppendLine(outputArgs.Data);
-
-            proc.Start();
-
-            proc.BeginOutputReadLine();
-            proc.BeginErrorReadLine();
+            proc.EnableRaisingEvents = true;
 
             bool hasExited = false;
             proc.Exited += delegate
@@ -470,19 +519,37 @@ namespace Projeny
                 hasExited = true;
             };
 
+            proc.Start();
+
+            proc.BeginOutputReadLine();
+            proc.BeginErrorReadLine();
+
             while (!hasExited)
             {
                 yield return null;
             }
 
-            bool succeeded = proc.ExitCode == 0;
+            yield return RunUpmCommonEnd(proc, allOutput);
+        }
 
-            if (!succeeded)
+        static UpmResponse RunUpmCommonEnd(Process proc, StringBuilder allOutput)
+        {
+            var finalOutput = allOutput.ToString().Trim();
+
+            if (proc.ExitCode != 0)
             {
-                throw new UpmException(allOutput.ToString().Trim());
+                return new UpmResponse()
+                {
+                    Succeeded = false,
+                    ErrorMessage = finalOutput,
+                };
             }
 
-            yield return allOutput.ToString();
+            return new UpmResponse()
+            {
+                Succeeded = true,
+                Output = finalOutput,
+            };
         }
 
         static string FindUpmExePath()
@@ -526,6 +593,23 @@ namespace Projeny
                 : base(errorMessage)
             {
             }
+        }
+
+        public class UpmResponse
+        {
+            public bool Succeeded;
+            public string ErrorMessage;
+            public string Output;
+        }
+
+        public class UpmRequest
+        {
+            public string RequestId;
+            public string ProjectName;
+            public BuildTarget Platform;
+            public string ConfigPath;
+            public string Param1;
+            public string Param2;
         }
     }
 }
