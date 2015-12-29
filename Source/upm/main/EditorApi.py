@@ -20,6 +20,7 @@ class Runner:
     _packageMgr = Inject('PackageManager')
     _unityHelper = Inject('UnityHelper')
     _vsSolutionHelper = Inject('VisualStudioHelper')
+    _releaseRegistryManager = Inject('ReleaseRegistryManager')
 
     def run(self, project, platform, requestId):
         self._project = project
@@ -57,6 +58,10 @@ class Runner:
             for projName in projectNames:
                 print(projName)
 
+        elif self._requestId == 'listReleases':
+            for release in self._releaseRegistryManager.lookupAllReleases():
+                print("{0} ({1})".format(release.Title, release.Version))
+
         else:
             assertThat(False, "Invalid request id '{0}'", self._requestId)
 
@@ -72,7 +77,7 @@ def main():
     parser.add_argument("configPath", help="")
     parser.add_argument("project", help="")
     parser.add_argument('platform', type=str, choices=[x.lower() for x in Platforms.All], help='')
-    parser.add_argument('requestId', type=str, choices=['listProjects', 'listPackages', 'updateLinks', 'updateCustomSolution', 'openCustomSolution', 'openUnity'], help='')
+    parser.add_argument('requestId', type=str, choices=['listReleases', 'listProjects', 'listPackages', 'updateLinks', 'updateCustomSolution', 'openCustomSolution', 'openUnity'], help='')
 
     args = parser.parse_args(sys.argv[1:])
 

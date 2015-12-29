@@ -52,9 +52,14 @@ class ReleaseRegistryManager:
         self._lazyInit()
         self._log.heading('Found {0} Releases', self._getTotalReleaseCount())
 
+        for release in self.lookupAllReleases():
+            self._log.info("{0} ({1})", release.Title, release.Version)
+
+    def lookupAllReleases(self):
+        self._lazyInit()
         for registry in self._releaseRegistries:
             for release in registry.releases:
-                self._log.info("{0} ({1})", release.Title, release.Version)
+                yield release
 
     def installRelease(self, releaseName):
         self._lazyInit()

@@ -18,6 +18,7 @@ namespace Projeny
         DraggableList _pluginsList;
 
         List<string> _allPackages;
+        List<string> _allReleases;
 
         PackageManagerWindowSkin _skin;
         ProjectConfigTypes _projectConfigType;
@@ -197,12 +198,12 @@ namespace Projeny
             GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Assets Folder", _skin.HeaderTextStyle);
 
             startY = endY;
-            endY = rect.yMax - _skin.MarginBottom - _skin.ApplyButtonHeight - _skin.ApplyButtonTopPadding;
+            endY = rect.yMax - _skin.ApplyButtonHeight - _skin.ApplyButtonTopPadding;
 
             DrawProjectPane3(Rect.MinMaxRect(startX, startY, endX, endY));
 
             startY = endY + _skin.ApplyButtonTopPadding;
-            endY = rect.yMax - _skin.MarginBottom;
+            endY = rect.yMax;
 
             DrawButtons(Rect.MinMaxRect(startX, startY, endX, endY));
         }
@@ -234,14 +235,21 @@ namespace Projeny
 
         void RefreshReleases()
         {
-            Log.Trace("TODO");
+            _allReleases = ProjenyEditorUtil.LookupReleaseList();
+
+            UpdateAvailableReleasesList();
+        }
+
+        void UpdateAvailableReleasesList()
+        {
+            _releasesList.Clear();
+            _releasesList.AddRange(
+                _allReleases.Where(x => !_installedList.Values.Contains(x)));
         }
 
         void RefreshPackages()
         {
-            var allPackagesStr = ProjenyEditorUtil.RunUpm("listPackages").Trim();
-
-            _allPackages = allPackagesStr.Split(new string[] { Environment.NewLine }, StringSplitOptions.None).Select(x => x.Trim()).ToList();
+            _allPackages = ProjenyEditorUtil.LookupPackagesList();
 
             UpdateAvailablePackagesList();
         }

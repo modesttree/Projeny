@@ -50,7 +50,7 @@ namespace Projeny
             catch (UpmException e)
             {
                 EditorUtility.DisplayDialog("Error", "Update directory links failed with errors: \n\n" + e.Message, "Ok");
-                return;
+                throw e;
             }
 
             AssetDatabase.Refresh();
@@ -67,7 +67,7 @@ namespace Projeny
             catch (UpmException e)
             {
                 EditorUtility.DisplayDialog("Error", "Update custom solution failed with errors: \n\n" + e.Message, "Ok");
-                return;
+                throw e;
             }
 
             UnityEngine.Debug.Log("Projeny: Custom solution has been updated");
@@ -83,7 +83,7 @@ namespace Projeny
             catch (UpmException e)
             {
                 EditorUtility.DisplayDialog("Error", "Opening custom solution failed with errors: \n\n" + e.Message, "Ok");
-                return;
+                throw e;
             }
 
             UnityEngine.Debug.Log("Projeny: Opened custom solution");
@@ -221,7 +221,7 @@ namespace Projeny
             catch (UpmException e)
             {
                 EditorUtility.DisplayDialog("Error", "Change platform failed with erros: \n" + e.Message, "Ok");
-                return;
+                throw e;
             }
 
             EditorApplication.Exit(0);
@@ -331,6 +331,39 @@ namespace Projeny
         static BuildTarget GetPlatformFromDirectoryName()
         {
             return FromPlatformDirStr(GetCurrentPlatformDirName());
+        }
+
+        public static List<string> LookupPackagesList()
+        {
+            try
+            {
+                var allPackagesStr = RunUpm("listPackages").Trim();
+                return allPackagesStr
+                    .Split(new string[] { Environment.NewLine }, StringSplitOptions.None)
+                    .Select(x => x.Trim()).ToList();
+            }
+            catch (UpmException e)
+            {
+                EditorUtility.DisplayDialog("Error", "Lookup packages failed with errors: \n\n" + e.Message, "Ok");
+                throw e;
+            }
+        }
+
+        public static List<string> LookupReleaseList()
+        {
+            try
+            {
+                var allReleasesStr = RunUpm("listReleases").Trim();
+
+                return allReleasesStr
+                    .Split(new string[] { Environment.NewLine }, StringSplitOptions.None)
+                    .Select(x => x.Trim()).ToList();
+            }
+            catch (UpmException e)
+            {
+                EditorUtility.DisplayDialog("Error", "Lookup releases failed with errors: \n\n" + e.Message, "Ok");
+                throw e;
+            }
         }
 
         public static string RunUpm(string requestId)
