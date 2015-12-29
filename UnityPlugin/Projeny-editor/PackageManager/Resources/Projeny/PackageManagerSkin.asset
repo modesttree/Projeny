@@ -14,13 +14,18 @@ MonoBehaviour:
   InterpSpeed: 0.1
   ViewToggleHeight: 38.21
   HeaderHeight: 41.66
-  ListVerticalSpacing: 16.99
+  ListVerticalSpacing: 11.06
   ListHorizontalSpacing: 37.28
   MarginTop: 10.61
   MarginRight: 16.14
   MarginLeft: 15.91
   MarginBottom: 20.29
-  ApplyButtonHeight: 31.67
+  ArrowWidth: 32.3
+  ArrowHeight: 242.3
+  ArrowColumnPadding: 0
+  FileButtonsPadding: 7.36
+  FileButtonsPercentWidth: 0.5
+  ApplyButtonHeight: 44.2
   ApplyButtonTopPadding: 22.61
   ProjectButtonsPadding: 17.65
   FileSelectLabelWidth: 58.49
@@ -37,7 +42,11 @@ MonoBehaviour:
   FileDropdownArrow: {fileID: 2800000, guid: 107f1605cdeb67a409ee52cdf6517189, type: 3}
   FileDropdownBackground: {fileID: 2800000, guid: 1f89814d77faa314f99f7982e46fca3f,
     type: 3}
-  ArrowSize: {x: 31.28, y: 20.4}
+  ArrowButtonIconWidth: 20.42
+  ArrowButtonIconHeight: 28.4
+  ArrowLeftTexture: {fileID: 2800000, guid: 05f863a6ca5ccc44b810a0c218e8b0df, type: 3}
+  ArrowRightTexture: {fileID: 2800000, guid: 68ec9c739eb9b5c4998f5971ae03e85f, type: 3}
+  ArrowSize: {x: 31.3, y: 20.4}
   ArrowOffset: {x: -12.88, y: 7.3}
   FileDropdownBorder: 7
   ViewSelectSpacing: 43.34

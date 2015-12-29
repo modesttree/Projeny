@@ -22,6 +22,14 @@ namespace Projeny
         public float MarginLeft;
         public float MarginBottom;
 
+        public float ArrowWidth;
+        public float ArrowHeight;
+
+        public float ArrowColumnPadding;
+
+        public float FileButtonsPadding;
+        public float FileButtonsPercentWidth;
+
         public float ApplyButtonHeight;
         public float ApplyButtonTopPadding;
         public float ProjectButtonsPadding;
@@ -44,6 +52,11 @@ namespace Projeny
         public Color FileDropdownBackgroundColor;
         public Texture2D FileDropdownArrow;
         public Texture2D FileDropdownBackground;
+
+        public float ArrowButtonIconWidth;
+        public float ArrowButtonIconHeight;
+        public Texture2D ArrowLeftTexture;
+        public Texture2D ArrowRightTexture;
 
         public Vector2 ArrowSize;
         public Vector2 ArrowOffset;

@@ -144,7 +144,7 @@ namespace Projeny
                 return 0;
             }
 
-            return 0.5f;
+            return 0.4f;
         }
 
         void Update()
@@ -333,31 +333,11 @@ namespace Projeny
             return ListTypes.AssetItem;
         }
 
-        Rect GetRightSideRect(Rect windowRect, float split)
-        {
-            var startX = split * windowRect.width + 0.5f * Skin.ListVerticalSpacing;
-            var endX = windowRect.width;
-            var startY = Skin.ViewToggleHeight;
-            var endY = windowRect.height;
-
-            return Rect.MinMaxRect(startX, startY, endX, endY);
-        }
-
-        Rect GetLeftSideRect(Rect windowRect, float split)
-        {
-            var startX = 0;
-            var endX = split * windowRect.width - 0.5f * Skin.ListVerticalSpacing;
-            var startY = Skin.ViewToggleHeight;
-            var endY = windowRect.yMax;
-
-            return Rect.MinMaxRect(startX, startY, endX, endY);
-        }
-
         void DrawPackagesPane(Rect windowRect)
         {
-            var startX = windowRect.xMin + _split1 * windowRect.width + 0.5f * Skin.ListVerticalSpacing;
-            var endX = windowRect.xMin + _split2 * windowRect.width - 0.5f * Skin.ListVerticalSpacing;
-            var startY = windowRect.yMin + Skin.ViewToggleHeight;
+            var startX = windowRect.xMin + _split1 * windowRect.width + Skin.ListVerticalSpacing;
+            var endX = windowRect.xMin + _split2 * windowRect.width - Skin.ListVerticalSpacing;
+            var startY = windowRect.yMin;
             var endY = windowRect.yMax;
 
             DrawPackagesPane2(Rect.MinMaxRect(startX, startY, endX, endY));
@@ -646,7 +626,7 @@ namespace Projeny
             var dropDownRect = Rect.MinMaxRect(
                 rect.xMin,
                 rect.yMin,
-                rect.xMax - Skin.FileDropdownOpenFileButtonWidth - Skin.FileDropdownOpenFileButtonLeftPadding - Skin.FileDropdownSaveFileButtonLeftPadding - Skin.FileDropdownSaveFileButtonWidth - Skin.FileDropdownReloadFileButtonWidth - Skin.FileDropdownSaveFileButtonLeftPadding,
+                rect.xMax - Skin.FileButtonsPercentWidth * rect.width,
                 rect.yMax);
 
             ImguiUtil.DrawColoredQuad(dropDownRect, Skin.FileDropdownBackgroundColor);
@@ -666,38 +646,36 @@ namespace Projeny
                 Skin.FileDropdownBorder, Skin.FileDropdownBorder, Skin.FileDropdownBorder);
             }
 
-            var reloadButtonRect = new Rect(
-                dropDownRect.xMax + Skin.FileDropdownSaveFileButtonLeftPadding,
-                dropDownRect.yMin,
-                Skin.FileDropdownReloadFileButtonWidth,
-                dropDownRect.height);
+            var startX = rect.xMax - Skin.FileButtonsPercentWidth * rect.width;
+            var startY = rect.yMin;
+            var endX = rect.xMax;
+            var endY = rect.yMax;
 
-            if (GUI.Button(reloadButtonRect, "Reload", ButtonStyle))
+            var buttonPadding = Skin.FileButtonsPadding;
+            var buttonWidth = ((endX - startX) - 3 * buttonPadding) / 3.0f;
+            var buttonHeight = endY - startY;
+
+            startX = startX + buttonPadding;
+
+            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "Reload", ButtonStyle))
             {
                 RefreshProject();
             }
 
-            var saveButtonRect = new Rect(
-                dropDownRect.xMax + 2 * Skin.FileDropdownSaveFileButtonLeftPadding + Skin.FileDropdownReloadFileButtonWidth,
-                dropDownRect.yMin,
-                Skin.FileDropdownSaveFileButtonWidth,
-                dropDownRect.height);
+            startX = startX + buttonWidth + buttonPadding;
 
-            if (GUI.Button(saveButtonRect, "Save", ButtonStyle))
+            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "Save", ButtonStyle))
             {
                 OverwriteConfig();
             }
 
-            var openButtonRect = Rect.MinMaxRect(rect.xMax - Skin.FileDropdownOpenFileButtonWidth, rect.yMin, rect.xMax, rect.yMax);
+            startX = startX + buttonWidth + buttonPadding;
 
-            var configPath = GetProjectConfigPath();
-            bool wasEnabled = GUI.enabled;
-            GUI.enabled = GUI.enabled && File.Exists(configPath);
-            if (GUI.Button(openButtonRect, "Open", ButtonStyle))
+            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "Open", ButtonStyle))
             {
+                var configPath = GetProjectConfigPath();
                 InternalEditorUtility.OpenFileAtLineExternal(configPath, 1);
             }
-            GUI.enabled = wasEnabled;
         }
 
         string[] GetConfigTypesDisplayValues()
@@ -711,40 +689,41 @@ namespace Projeny
             };
         }
 
-        void DrawViewSelect(Rect rect)
+        void DrawArrowColumns(Rect fullRect)
         {
-            var split1 = rect.width / 3.0f;
-            var split2 = rect.width * 2.0f / 3.0f;
+            var halfHeight = 0.5f * fullRect.height;
 
-            var rect1 = Rect.MinMaxRect(rect.xMin + Skin.ViewSelectSpacing, rect.yMin, split1 - Skin.ViewSelectSpacing, rect.yMax);
-            var rect2 = Rect.MinMaxRect(split1 + Skin.ViewSelectSpacing, rect.yMin, split2 - Skin.ViewSelectSpacing, rect.yMax);
-            var rect3 = Rect.MinMaxRect(split2 + Skin.ViewSelectSpacing, rect.yMin, rect.xMax - Skin.ViewSelectSpacing, rect.yMax);
+            var rect1 = new Rect(Skin.ListVerticalSpacing, halfHeight - 0.5f * Skin.ArrowHeight, Skin.ArrowWidth, Skin.ArrowHeight);
 
-            bool isOn;
-
-            isOn = _viewState == ViewStates.ReleasesAndPackages;
-            GUI.contentColor = isOn ? Color.black : Color.white;
-            if (GUI.Toggle(rect1, isOn, "Releases", ToggleStyle))
+            if ((int)_viewState > 0)
             {
-                _viewState = ViewStates.ReleasesAndPackages;
-            }
-            GUI.contentColor = Color.white;
+                if (GUI.Button(rect1, ""))
+                {
+                    _viewState = (ViewStates)((int)_viewState - 1);
+                }
 
-            isOn = _viewState == ViewStates.PackagesAndProject;
-            GUI.contentColor = isOn ? Color.black : Color.white;
-            if (GUI.Toggle(rect2, isOn, "Packages", ToggleStyle))
-            {
-                _viewState = ViewStates.PackagesAndProject;
+                if (Skin.ArrowLeftTexture != null)
+                {
+                    GUI.DrawTexture(new Rect(rect1.xMin + 0.5f * rect1.width - 0.5f * Skin.ArrowButtonIconWidth, rect1.yMin + 0.5f * rect1.height - 0.5f * Skin.ArrowButtonIconHeight, Skin.ArrowButtonIconWidth, Skin.ArrowButtonIconHeight), Skin.ArrowLeftTexture);
+                }
             }
-            GUI.contentColor = Color.white;
 
-            isOn = _viewState == ViewStates.Project;
-            GUI.contentColor = isOn ? Color.black : Color.white;
-            if (GUI.Toggle(rect3, isOn, "Project", ToggleStyle))
+            var rect2 = new Rect(fullRect.xMax - Skin.ListVerticalSpacing - Skin.ArrowWidth, halfHeight - 0.5f * Skin.ArrowHeight, Skin.ArrowWidth, Skin.ArrowHeight);
+
+            var numValues = Enum.GetValues(typeof(ViewStates)).Length;
+
+            if ((int)_viewState < numValues-1)
             {
-                _viewState = ViewStates.Project;
+                if (GUI.Button(rect2, ""))
+                {
+                    _viewState = (ViewStates)((int)_viewState + 1);
+                }
+
+                if (Skin.ArrowRightTexture != null)
+                {
+                    GUI.DrawTexture(new Rect(rect2.xMin + 0.5f * rect2.width - 0.5f * Skin.ArrowButtonIconWidth, rect2.yMin + 0.5f * rect2.height - 0.5f * Skin.ArrowButtonIconHeight, Skin.ArrowButtonIconWidth, Skin.ArrowButtonIconHeight), Skin.ArrowRightTexture);
+                }
             }
-            GUI.contentColor = Color.white;
         }
 
         public void OnGUI()
@@ -752,7 +731,7 @@ namespace Projeny
             // I tried using the GUILayout / EditorGUILayout but found it incredibly frustrating
             // and confusing, so I decided to just draw using raw rect coordinates instead
 
-            var windowRect = Rect.MinMaxRect(Skin.MarginLeft, Skin.MarginTop, this.position.width - Skin.MarginRight, this.position.height - Skin.MarginBottom);
+            var fullRect = new Rect(0, 0, this.position.width, this.position.height);
 
             if (_backgroundTask != null)
             {
@@ -760,8 +739,13 @@ namespace Projeny
                 GUI.enabled = false;
             }
 
-            var viewSelectRect = new Rect(windowRect.xMin, windowRect.yMin, windowRect.width, Skin.ViewToggleHeight);
-            DrawViewSelect(viewSelectRect);
+            DrawArrowColumns(fullRect);
+
+            var windowRect = Rect.MinMaxRect(
+                Skin.ListVerticalSpacing + Skin.ArrowWidth,
+                Skin.MarginTop,
+                this.position.width - Skin.ListVerticalSpacing - Skin.ArrowWidth,
+                this.position.height - Skin.MarginBottom);
 
             if (_split2 >= 0.1f)
             {
@@ -780,7 +764,6 @@ namespace Projeny
 
             if (_backgroundTask != null)
             {
-                var fullRect = new Rect(0, 0, this.position.width, this.position.height);
                 ImguiUtil.DrawColoredQuad(fullRect, Skin.LoadingOverlayColor);
                 GUI.Label(fullRect, "Processing...", Skin.ProcessingPopupTextStyle);
             }
@@ -791,8 +774,8 @@ namespace Projeny
         void DrawReleasePane(Rect windowRect)
         {
             var startX = windowRect.xMin;
-            var endX = windowRect.xMin + _split1 * windowRect.width - 0.5f * Skin.ListVerticalSpacing;
-            var startY = windowRect.yMin + Skin.ViewToggleHeight;
+            var endX = windowRect.xMin + _split1 * windowRect.width - Skin.ListVerticalSpacing;
+            var startY = windowRect.yMin;
             var endY = windowRect.yMax;
 
             DrawReleasePane2(Rect.MinMaxRect(startX, startY, endX, endY));
@@ -823,9 +806,9 @@ namespace Projeny
 
         void DrawProjectPane(Rect windowRect)
         {
-            var startX = windowRect.xMin + _split2 * windowRect.width + 0.5f * Skin.ListVerticalSpacing;
-            var endX = windowRect.xMax;
-            var startY = windowRect.yMin + Skin.HeaderHeight;
+            var startX = windowRect.xMin + _split2 * windowRect.width + Skin.ListVerticalSpacing;
+            var endX = windowRect.xMax - Skin.ListVerticalSpacing;
+            var startY = windowRect.yMin;
             var endY = windowRect.yMax;
 
             var rect = Rect.MinMaxRect(startX, startY, endX, endY);
@@ -843,9 +826,9 @@ namespace Projeny
 
         enum ViewStates
         {
-            Project,
-            PackagesAndProject,
             ReleasesAndPackages,
+            PackagesAndProject,
+            Project,
         }
 
         enum ListTypes
