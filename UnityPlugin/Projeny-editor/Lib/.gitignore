@@ -1,8 +1,4 @@
-/SharpYaml.dll
-/SharpYaml.pdb
-/SharpYaml.pdb.meta
-/SharpYaml.dll.meta
-/SharpYaml.Tests.dll
-/SharpYaml.Tests.pdb
-/SharpYaml.Tests.pdb.meta
-/SharpYaml.Tests.dll.meta
+/YamlDotNet.dll
+/YamlDotNet.dll.meta
+/YamlDotNet.pdb
+/YamlDotNet.pdb.meta

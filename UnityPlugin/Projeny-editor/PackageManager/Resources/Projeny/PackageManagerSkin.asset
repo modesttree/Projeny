@@ -11,22 +11,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2612b37eea3a9b24694554ab3c19bda5, type: 3}
   m_Name: PackageManagerSkin
   m_EditorClassIdentifier: Assembly-CSharp-Editor-firstpass:Projeny:DraggableListSkin
-  HeaderHeight: 36.6
+  ViewToggleHeight: 38.21
+  HeaderHeight: 41.66
   ListVerticalSpacing: 16.99
   ListHorizontalSpacing: 37.28
+  MarginTop: 10.61
   MarginRight: 16.14
   MarginLeft: 15.91
   MarginBottom: 20.29
   ApplyButtonHeight: 31.67
   ApplyButtonTopPadding: 22.61
   ProjectButtonsPadding: 17.65
-  AvailablePercentWidth: 0.4
   FileSelectLabelWidth: 58.49
-  FileDropdownHeight: 35.67
+  FileDropdownHeight: 36.45
   FileDropdownTopPadding: 13.65
-  FilePopupFontSize: 30
+  ButtonFontSize: 17
+  FilePopupFontSize: 45
+  FileDropdownSaveFileButtonWidth: 68.5
+  FileDropdownSaveFileButtonLeftPadding: 10.9
+  FileDropdownOpenFileButtonWidth: 66.23
+  FileDropdownOpenFileButtonLeftPadding: 6.4
   FileDropdownBackgroundColor: {r: 0.30147058, g: 0.30147058, b: 0.30147058, a: 1}
-  FileDropdownArrow: {fileID: 2800000, guid: 67ffae88ce8370b4599e48a41f80e758, type: 3}
+  FileDropdownArrow: {fileID: 2800000, guid: 107f1605cdeb67a409ee52cdf6517189, type: 3}
+  FileDropdownBackground: {fileID: 2800000, guid: 1f89814d77faa314f99f7982e46fca3f,
+    type: 3}
+  ArrowSize: {x: 31.28, y: 20.4}
+  ArrowOffset: {x: -12.88, y: 7.3}
+  FileDropdownBorder: 7
+  ViewSelectSpacing: 43.34
   HeaderTextStyle:
     m_Name: 
     m_Normal:
@@ -193,6 +205,65 @@ MonoBehaviour:
       m_Bottom: 0
     m_Font: {fileID: 0}
     m_FontSize: 18
+    m_FontStyle: 0
+    m_Alignment: 0
+    m_WordWrap: 0
+    m_RichText: 1
+    m_TextClipping: 0
+    m_ImagePosition: 0
+    m_ContentOffset: {x: 0, y: 0}
+    m_FixedWidth: 0
+    m_FixedHeight: 0
+    m_StretchWidth: 1
+    m_StretchHeight: 0
+  FileDropdownEditFileButtonTextStyle:
+    m_Name: 
+    m_Normal:
+      m_Background: {fileID: 0}
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+    m_Hover:
+      m_Background: {fileID: 0}
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+    m_Active:
+      m_Background: {fileID: 0}
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+    m_Focused:
+      m_Background: {fileID: 0}
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+    m_OnNormal:
+      m_Background: {fileID: 0}
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+    m_OnHover:
+      m_Background: {fileID: 0}
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+    m_OnActive:
+      m_Background: {fileID: 0}
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+    m_OnFocused:
+      m_Background: {fileID: 0}
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+    m_Border:
+      m_Left: 0
+      m_Right: 0
+      m_Top: 0
+      m_Bottom: 0
+    m_Margin:
+      m_Left: 0
+      m_Right: 0
+      m_Top: 0
+      m_Bottom: 0
+    m_Padding:
+      m_Left: 0
+      m_Right: 0
+      m_Top: 0
+      m_Bottom: 0
+    m_Overflow:
+      m_Left: 0
+      m_Right: 0
+      m_Top: 0
+      m_Bottom: 0
+    m_Font: {fileID: 0}
+    m_FontSize: 0
     m_FontStyle: 0
     m_Alignment: 0
     m_WordWrap: 0

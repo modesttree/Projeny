@@ -356,8 +356,8 @@ namespace Projeny
         {
             var config = new ProjectConfig();
 
-            config.Packages.AddRange(_assetsList.Values);
-            config.PluginPackages.AddRange(_pluginsList.Values);
+            config.Packages = _assetsList.Values.ToList();
+            config.PluginPackages = _pluginsList.Values.ToList();
 
             return ProjectConfigSerializer.Serialize(config);
         }
