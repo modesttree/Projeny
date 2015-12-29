@@ -13,32 +13,12 @@ using Projeny.Internal;
 
 namespace Projeny
 {
-    public static class ProjenyEditorUtil
+    public static class UpmInterface
     {
         public const string ConfigFileName = "upm.yaml";
 
         public const string ProjectConfigFileName = "project.yaml";
         public const string ProjectConfigUserFileName = "projectUser.yaml";
-
-        [MenuItem("Projeny/Help...", false, 9)]
-        public static void OpenHelp()
-        {
-            Application.OpenURL("https://github.com/modesttree/projeny");
-        }
-
-        //[MenuItem("Projeny/Open project.yaml", false, 1)]
-        public static void OpenProjectFile()
-        {
-            var configPath = Path.Combine(Application.dataPath, "../../project.yaml");
-            InternalEditorUtility.OpenFileAtLineExternal(configPath, 1);
-        }
-
-        [MenuItem("Projeny/Package Manager...", false, 1)]
-        public static void OpenPackageManager()
-        {
-            var window = EditorWindow.GetWindow<PackageManagerWindow>();
-            window.titleContent = new GUIContent("  Projeny", Resources.Load<Texture2D>("Projeny/Icon"));
-        }
 
         public static IEnumerator<Boolean> UpdateLinksAsync()
         {
@@ -117,98 +97,6 @@ namespace Projeny
             }
         }
 
-        [MenuItem("Projeny/Update C# Project", false, 6)]
-        public static void UpdateCustomSolution()
-        {
-            Assert.Throw("TODO");
-            //try
-            //{
-                //var req = new UpmRequest()
-                //{
-                    //RequestId = "updateCustomSolution",
-                    //ProjectName = GetCurrentProjectName(),
-                    //Platform = GetPlatformFromDirectoryName(),
-                    //ConfigPath = FindUpmConfigPath()
-                //};
-
-                //RunUpm(req);
-            //}
-            //catch (UpmException e)
-            //{
-                //EditorUtility.DisplayDialog("Error", "Update custom solution failed with errors: \n\n" + e.Message, "Ok");
-                //throw e;
-            //}
-
-            //UnityEngine.Debug.Log("Projeny: Custom solution has been updated");
-        }
-
-        //[MenuItem("Projeny/Custom Solution/Open", false, 6)]
-        public static void OpenCustomSolution()
-        {
-            Assert.Throw("TODO");
-            //try
-            //{
-                //var req = new UpmRequest()
-                //{
-                    //RequestId = "openCustomSolution",
-                    //ProjectName = GetCurrentProjectName(),
-                    //Platform = GetPlatformFromDirectoryName(),
-                    //ConfigPath = FindUpmConfigPath()
-                //};
-
-                //RunUpm(req);
-            //}
-            //catch (UpmException e)
-            //{
-                //EditorUtility.DisplayDialog("Error", "Opening custom solution failed with errors: \n\n" + e.Message, "Ok");
-                //throw e;
-            //}
-
-            //UnityEngine.Debug.Log("Projeny: Opened custom solution");
-        }
-
-        [MenuItem("Projeny/Change Platform/Windows", false, 7)]
-        public static void ChangePlatformWin()
-        {
-            ChangePlatform(BuildTarget.StandaloneWindows);
-        }
-
-        [MenuItem("Projeny/Change Platform/Webplayer", false, 7)]
-        public static void ChangePlatformWebplayer()
-        {
-            ChangePlatform(BuildTarget.WebPlayer);
-        }
-
-        [MenuItem("Projeny/Change Platform/Android", false, 7)]
-        public static void ChangePlatformAndroid()
-        {
-            ChangePlatform(BuildTarget.Android);
-        }
-
-        [MenuItem("Projeny/Change Platform/Web GL", false, 7)]
-        public static void ChangePlatformWebGL()
-        {
-            ChangePlatform(BuildTarget.WebGL);
-        }
-
-        [MenuItem("Projeny/Change Platform/OsX", false, 7)]
-        public static void ChangePlatformOsX()
-        {
-            ChangePlatform(BuildTarget.StandaloneOSXUniversal);
-        }
-
-        [MenuItem("Projeny/Change Platform/Linux", false, 7)]
-        public static void ChangePlatformLinux()
-        {
-            ChangePlatform(BuildTarget.StandaloneLinux);
-        }
-
-        [MenuItem("Projeny/Change Platform/iOS", false, 7)]
-        public static void ChangePlatformIos()
-        {
-            ChangePlatform(BuildTarget.iOS);
-        }
-
         // This is called by the build script to generate the monodevelop solution
         // because it uses that when generating its own custom solution
         public static void UpdateMonodevelopProject()
@@ -277,7 +165,7 @@ namespace Projeny
             }
         }
 
-        static void ChangePlatform(BuildTarget desiredPlatform)
+        public static void ChangePlatform(BuildTarget desiredPlatform)
         {
             Assert.Throw("TODO");
             //if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
@@ -422,7 +310,7 @@ namespace Projeny
             return FromPlatformDirStr(GetCurrentPlatformDirName());
         }
 
-        static UpmRequest CreateUpmRequest(string requestId)
+        public static UpmRequest CreateUpmRequest(string requestId)
         {
             return new UpmRequest()
             {
@@ -458,7 +346,7 @@ namespace Projeny
                 .Select(x => YamlSerializer.Deserialize<PackageInfo>(x)).Where(x => x != null).ToList();
         }
 
-        static void DisplayUpmError(string operationDescription, string errors)
+        public static void DisplayUpmError(string operationDescription, string errors)
         {
             var errorMessage = "UPM encountered errors when running '{0}'. Details: \n\n{1}".Fmt(operationDescription, errors);
             Log.Error("Projeny: {0}", errorMessage);
