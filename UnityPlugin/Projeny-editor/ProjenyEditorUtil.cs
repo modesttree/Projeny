@@ -40,6 +40,21 @@ namespace Projeny
             window.titleContent = new GUIContent("  Projeny", Resources.Load<Texture2D>("Projeny/Icon"));
         }
 
+        public static void InstallRelease(string name, string version)
+        {
+            try
+            {
+                RunUpm("installRelease \"{0}\" \"{1}\"".Fmt(name, version));
+            }
+            catch (UpmException e)
+            {
+                EditorUtility.DisplayDialog("Error", "Install release failed with errors: \n\n" + e.Message, "Ok");
+                throw e;
+            }
+
+            UnityEngine.Debug.Log("Projeny: Installed {0} (version {1})".Fmt(name, version));
+        }
+
         [MenuItem("Projeny/Update Links", false, 1)]
         public static void UpdateLinks()
         {

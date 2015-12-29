@@ -158,6 +158,11 @@ namespace Projeny
             var sourceListType = ClassifyList(data.SourceList);
             var dropListType = ClassifyList(list);
 
+            if (sourceListType == dropListType)
+            {
+                return true;
+            }
+
             switch (dropListType)
             {
                 case ListTypes.Package:
@@ -166,7 +171,7 @@ namespace Projeny
                 }
                 case ListTypes.Release:
                 {
-                    return sourceListType == ListTypes.Package;
+                    return false;
                 }
                 case ListTypes.AssetItem:
                 {
@@ -206,7 +211,9 @@ namespace Projeny
                         }
                         case ListTypes.Release:
                         {
-                            Log.Trace("TODO - install package");
+                            var info = (ReleaseInfo)data.Entry.Tag;
+                            ProjenyEditorUtil.InstallRelease(info.Title, info.Version);
+                            RefreshPackages();
                             break;
                         }
                         default:
@@ -425,10 +432,7 @@ namespace Projeny
         {
             _releasesList.Clear();
             _releasesList.AddRange(
-                _allReleases.Select(x => new DraggableList.Entry(x.Title, x)));
-
-            // TODO
-            // .Where(x => !_installedList.Values.Contains(x)));
+                _allReleases.Select(x => new DraggableList.Entry("{0} v{1}".Fmt(x.Title, x.Version ?? "?"), x)));
         }
 
         void RefreshPackages()
@@ -442,9 +446,6 @@ namespace Projeny
         {
             _installedList.Clear();
             _installedList.AddRange(_allPackages.Select(x => new DraggableList.Entry(x.Name, x)));
-
-            // TODO
-            //.Where(x => !_assetsList.Values.Contains(x) && !_pluginsList.Values.Contains(x))
         }
 
         void RefreshProject()

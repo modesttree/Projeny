@@ -68,7 +68,7 @@ class ReleaseRegistryManager:
             for release in registry.releases:
                 yield release
 
-    def installRelease(self, releaseName):
+    def installRelease(self, releaseName, releaseVersion):
         self._lazyInit()
         self._log.heading("Attempting to install release '{0}'", releaseName)
 
@@ -78,13 +78,15 @@ class ReleaseRegistryManager:
 
         for registry in self._releaseRegistries:
             for release in registry.releases:
-                if release.Title == releaseName:
+                if release.Title == releaseName and release.Version == releaseVersion:
                     registry.installRelease(release, destDir)
 
                     outInfo = release.__dict__
                     outInfo['InstallDate'] = datetime.now()
                     yamlStr = yaml.dump(outInfo, default_flow_style=False)
                     self._sys.writeFileAsText(os.path.join(destDir, ReleaseInfoFileName), yamlStr)
+
+                    self._log.info("Successfully installed '{0}' (version {1})", releaseName, releaseVersion)
                     return
 
         assertThat(False, "Failed to install release '{0}' - could not find it in any of the release registries.\nRegistries checked: \n  {1}\nTry listing all available release with the -lr command"

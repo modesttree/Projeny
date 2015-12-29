@@ -23,10 +23,12 @@ class Runner:
     _vsSolutionHelper = Inject('VisualStudioHelper')
     _releaseRegistryManager = Inject('ReleaseRegistryManager')
 
-    def run(self, project, platform, requestId):
+    def run(self, project, platform, requestId, param1, param2):
         self._project = project
         self._platform = platform
         self._requestId = requestId
+        self._param1 = param1
+        self._param2 = param2
 
         success = self._scriptRunner.runWrapper(self._runInternal)
 
@@ -65,6 +67,10 @@ class Runner:
                 print('---')
                 print(yaml.dump(release.__dict__, default_flow_style=False))
 
+        elif self._requestId == 'installRelease':
+            self._log.info("Installing release '{0}' version '{1}'", self._param1, self._param2)
+            self._releaseRegistryManager.installRelease(self._param1, self._param2)
+
         else:
             assertThat(False, "Invalid request id '{0}'", self._requestId)
 
@@ -80,13 +86,15 @@ def main():
     parser.add_argument("configPath", help="")
     parser.add_argument("project", help="")
     parser.add_argument('platform', type=str, choices=[x.lower() for x in Platforms.All], help='')
-    parser.add_argument('requestId', type=str, choices=['listReleases', 'listProjects', 'listPackages', 'updateLinks', 'updateCustomSolution', 'openCustomSolution', 'openUnity'], help='')
+    parser.add_argument('requestId', type=str, choices=['installRelease', 'listReleases', 'listProjects', 'listPackages', 'updateLinks', 'updateCustomSolution', 'openCustomSolution', 'openUnity'], help='')
+    parser.add_argument("param1", nargs='?', help="")
+    parser.add_argument("param2", nargs='?', help="")
 
     args = parser.parse_args(sys.argv[1:])
 
     installBindings(args.configPath)
 
-    Runner().run(args.project, PlatformUtil.fromPlatformFolderName(args.platform), args.requestId)
+    Runner().run(args.project, PlatformUtil.fromPlatformFolderName(args.platform), args.requestId, args.param1, args.param2)
 
 if __name__ == '__main__':
     if (sys.version_info < (3, 0)):
