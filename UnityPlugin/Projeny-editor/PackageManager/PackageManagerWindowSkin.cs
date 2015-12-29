@@ -9,6 +9,8 @@ namespace Projeny
     [CreateAssetMenu]
     public class PackageManagerWindowSkin : ScriptableObject
     {
+        public float InterpSpeed;
+
         public float ViewToggleHeight;
 
         public float HeaderHeight;

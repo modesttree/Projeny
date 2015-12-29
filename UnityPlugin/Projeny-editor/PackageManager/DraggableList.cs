@@ -61,6 +61,11 @@ namespace Projeny
             _entryList.RemoveWithConfirm(entry);
         }
 
+        public void Remove(string name)
+        {
+            _entryList.RemoveWithConfirm(_entryList.Where(x => x.Name == name).Single());
+        }
+
         public void Add(Entry entry)
         {
             _entryList.Add(entry);

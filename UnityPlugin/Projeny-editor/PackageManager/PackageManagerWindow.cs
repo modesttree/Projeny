@@ -27,11 +27,14 @@ namespace Projeny
         GUIStyle _buttonStyle;
         GUIStyle _toggleStyle;
 
-        float PaneSplitPercent
+        float _split1 = 0;
+        float _split2 = 0.5f;
+
+        PackageManagerWindowSkin Skin
         {
             get
             {
-                return 0.5f;
+                return _skin ?? (_skin = Resources.Load<PackageManagerWindowSkin>("Projeny/PackageManagerSkin"));
             }
         }
 
@@ -44,7 +47,7 @@ namespace Projeny
                     _buttonStyle = new GUIStyle(EditorStyles.miniButtonMid);
                 }
 
-                _buttonStyle.fontSize = _skin.ButtonFontSize;
+                _buttonStyle.fontSize = Skin.ButtonFontSize;
 
                 return _buttonStyle;
             }
@@ -59,7 +62,7 @@ namespace Projeny
                     _toggleStyle = new GUIStyle(EditorStyles.miniButtonMid);
                 }
 
-                _toggleStyle.fontSize = _skin.ButtonFontSize;
+                _toggleStyle.fontSize = Skin.ButtonFontSize;
 
                 return _toggleStyle;
             }
@@ -70,21 +73,19 @@ namespace Projeny
             _buttonStyle = null;
             _toggleStyle = null;
 
-            _skin = Resources.Load<PackageManagerWindowSkin>("Projeny/PackageManagerSkin");
-
-            if (_skin.DropdownTextStyle == null)
+            if (Skin.DropdownTextStyle == null)
             {
-                _skin.DropdownTextStyle = new GUIStyle();
+                Skin.DropdownTextStyle = new GUIStyle();
             }
 
-            if (_skin.FileDropdownLabelTextStyle == null)
+            if (Skin.FileDropdownLabelTextStyle == null)
             {
-                _skin.FileDropdownLabelTextStyle = new GUIStyle();
+                Skin.FileDropdownLabelTextStyle = new GUIStyle();
             }
 
-            if (_skin.FileDropdownEditFileButtonTextStyle == null)
+            if (Skin.FileDropdownEditFileButtonTextStyle == null)
             {
-                _skin.FileDropdownEditFileButtonTextStyle = new GUIStyle();
+                Skin.FileDropdownEditFileButtonTextStyle = new GUIStyle();
             }
 
             if (_allPackages == null)
@@ -118,8 +119,36 @@ namespace Projeny
             }
         }
 
+        float GetDesiredSplit1()
+        {
+            if (_viewState == ViewStates.ReleasesAndPackages)
+            {
+                return 0.5f;
+            }
+
+            return 0;
+        }
+
+        float GetDesiredSplit2()
+        {
+            if (_viewState == ViewStates.ReleasesAndPackages)
+            {
+                return 1.0f;
+            }
+
+            if (_viewState == ViewStates.Project)
+            {
+                return 0;
+            }
+
+            return 0.5f;
+        }
+
         void Update()
         {
+            _split1 = Mathf.Lerp(_split1, GetDesiredSplit1(), Skin.InterpSpeed);
+            _split2 = Mathf.Lerp(_split2, GetDesiredSplit2(), Skin.InterpSpeed);
+
             // Doesn't seem worth trying to detect changes, just redraw every frame
             Repaint();
         }
@@ -203,7 +232,17 @@ namespace Projeny
                         }
                         case ListTypes.Package:
                         {
-                            dropList.Add(data.Entry.Name);
+                            if (!dropList.DisplayValues.Contains(data.Entry.Name))
+                            {
+                                var otherList = dropListType == ListTypes.PluginItem ? _assetsList : _pluginsList;
+
+                                if (otherList.DisplayValues.Contains(data.Entry.Name))
+                                {
+                                    otherList.Remove(data.Entry.Name);
+                                }
+
+                                dropList.Add(data.Entry.Name);
+                            }
                             break;
                         }
                         default:
@@ -267,40 +306,34 @@ namespace Projeny
             return ListTypes.AssetItem;
         }
 
-        Rect GetRightSideRect(Rect windowRect)
+        Rect GetRightSideRect(Rect windowRect, float split)
         {
-            var startX = PaneSplitPercent * windowRect.width + 0.5f * _skin.ListVerticalSpacing;
-            var endX = windowRect.width - _skin.MarginRight;
-            var startY = _skin.ViewToggleHeight + _skin.MarginTop;
-            var endY = windowRect.height - _skin.MarginBottom;
+            var startX = split * windowRect.width + 0.5f * Skin.ListVerticalSpacing;
+            var endX = windowRect.width;
+            var startY = Skin.ViewToggleHeight;
+            var endY = windowRect.height;
 
             return Rect.MinMaxRect(startX, startY, endX, endY);
         }
 
-        Rect GetLeftSideRect(Rect windowRect)
+        Rect GetLeftSideRect(Rect windowRect, float split)
         {
-            var startX = _skin.MarginLeft;
-            var endX = PaneSplitPercent * windowRect.width - 0.5f * _skin.ListVerticalSpacing;
-            var startY = _skin.ViewToggleHeight + _skin.MarginTop;
-            var endY = windowRect.yMax - _skin.MarginBottom;
+            var startX = 0;
+            var endX = split * windowRect.width - 0.5f * Skin.ListVerticalSpacing;
+            var startY = Skin.ViewToggleHeight;
+            var endY = windowRect.yMax;
 
             return Rect.MinMaxRect(startX, startY, endX, endY);
         }
 
         void DrawPackagesPane(Rect windowRect)
         {
-            Rect rect;
-            if (_viewState == ViewStates.PackagesAndProject)
-            {
-                rect = GetLeftSideRect(windowRect);
-            }
-            else
-            {
-                Assert.IsEqual(_viewState, ViewStates.ReleasesAndPackages);
-                rect = GetRightSideRect(windowRect);
-            }
+            var startX = windowRect.xMin + _split1 * windowRect.width + 0.5f * Skin.ListVerticalSpacing;
+            var endX = windowRect.xMin + _split2 * windowRect.width - 0.5f * Skin.ListVerticalSpacing;
+            var startY = windowRect.yMin + Skin.ViewToggleHeight;
+            var endY = windowRect.yMax;
 
-            DrawPackagesPane2(rect);
+            DrawPackagesPane2(Rect.MinMaxRect(startX, startY, endX, endY));
         }
 
         void DrawPackagesPane2(Rect rect)
@@ -308,16 +341,16 @@ namespace Projeny
             var startX = rect.xMin;
             var endX = rect.xMax;
             var startY = rect.yMin;
-            var endY = startY + _skin.HeaderHeight;
+            var endY = startY + Skin.HeaderHeight;
 
-            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Packages", _skin.HeaderTextStyle);
+            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Packages", Skin.HeaderTextStyle);
 
             startY = endY;
-            endY = rect.yMax - _skin.ApplyButtonHeight - _skin.ApplyButtonTopPadding;
+            endY = rect.yMax - Skin.ApplyButtonHeight - Skin.ApplyButtonTopPadding;
 
             _installedList.Draw(Rect.MinMaxRect(startX, startY, endX, endY));
 
-            startY = endY + _skin.ApplyButtonTopPadding;
+            startY = endY + Skin.ApplyButtonTopPadding;
             endY = rect.yMax;
 
             if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh", ButtonStyle))
@@ -331,26 +364,26 @@ namespace Projeny
             var startX = rect.xMin;
             var endX = rect.xMax;
             var startY = rect.yMin;
-            var endY = startY + _skin.HeaderHeight;
+            var endY = startY + Skin.HeaderHeight;
 
-            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Project Settings", _skin.HeaderTextStyle);
+            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Project Settings", Skin.HeaderTextStyle);
 
             startY = endY;
-            endY = startY + _skin.FileDropdownHeight;
+            endY = startY + Skin.FileDropdownHeight;
 
             DrawFileDropdown(Rect.MinMaxRect(startX, startY, endX, endY));
 
             startY = endY;
-            endY = startY + _skin.HeaderHeight;
+            endY = startY + Skin.HeaderHeight;
 
-            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Assets Folder", _skin.HeaderTextStyle);
+            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Assets Folder", Skin.HeaderTextStyle);
 
             startY = endY;
-            endY = rect.yMax - _skin.ApplyButtonHeight - _skin.ApplyButtonTopPadding;
+            endY = rect.yMax - Skin.ApplyButtonHeight - Skin.ApplyButtonTopPadding;
 
             DrawProjectPane3(Rect.MinMaxRect(startX, startY, endX, endY));
 
-            startY = endY + _skin.ApplyButtonTopPadding;
+            startY = endY + Skin.ApplyButtonTopPadding;
             endY = rect.yMax;
 
             DrawButtons(Rect.MinMaxRect(startX, startY, endX, endY));
@@ -360,19 +393,19 @@ namespace Projeny
         {
             var halfHeight = 0.5f * listRect.height;
 
-            var rect1 = new Rect(listRect.x, listRect.y, listRect.width, halfHeight - 0.5f * _skin.ListHorizontalSpacing);
-            var rect2 = new Rect(listRect.x, listRect.y + halfHeight + 0.5f * _skin.ListHorizontalSpacing, listRect.width, listRect.height - halfHeight - 0.5f * _skin.ListHorizontalSpacing);
+            var rect1 = new Rect(listRect.x, listRect.y, listRect.width, halfHeight - 0.5f * Skin.ListHorizontalSpacing);
+            var rect2 = new Rect(listRect.x, listRect.y + halfHeight + 0.5f * Skin.ListHorizontalSpacing, listRect.width, listRect.height - halfHeight - 0.5f * Skin.ListHorizontalSpacing);
 
             _assetsList.Draw(rect1);
             _pluginsList.Draw(rect2);
 
-            GUI.Label(Rect.MinMaxRect(rect1.xMin, rect1.yMax, rect1.xMax, rect2.yMin), "Plugins Folder", _skin.HeaderTextStyle);
+            GUI.Label(Rect.MinMaxRect(rect1.xMin, rect1.yMax, rect1.xMax, rect2.yMin), "Plugins Folder", Skin.HeaderTextStyle);
         }
 
         void DrawButtons(Rect rect)
         {
             var halfWidth = rect.width * 0.5f;
-            var padding = 0.5f * _skin.ProjectButtonsPadding;
+            var padding = 0.5f * Skin.ProjectButtonsPadding;
 
             if (GUI.Button(Rect.MinMaxRect(rect.x + halfWidth + padding, rect.y, rect.xMax, rect.yMax), "Apply", ButtonStyle))
             {
@@ -556,19 +589,19 @@ namespace Projeny
         void DrawFileDropdown(Rect rect)
         {
             var dropDownRect = Rect.MinMaxRect(
-                rect.xMin + _skin.FileSelectLabelWidth,
+                rect.xMin + Skin.FileSelectLabelWidth,
                 rect.yMin,
-                rect.xMax - _skin.FileDropdownOpenFileButtonWidth - _skin.FileDropdownOpenFileButtonLeftPadding - _skin.FileDropdownSaveFileButtonLeftPadding - _skin.FileDropdownSaveFileButtonWidth,
+                rect.xMax - Skin.FileDropdownOpenFileButtonWidth - Skin.FileDropdownOpenFileButtonLeftPadding - Skin.FileDropdownSaveFileButtonLeftPadding - Skin.FileDropdownSaveFileButtonWidth,
                 rect.yMax);
 
-            ImguiUtil.DrawColoredQuad(dropDownRect, _skin.FileDropdownBackgroundColor);
+            ImguiUtil.DrawColoredQuad(dropDownRect, Skin.FileDropdownBackgroundColor);
 
-            GUI.DrawTexture(new Rect(dropDownRect.xMax - _skin.ArrowSize.x + _skin.ArrowOffset.x, dropDownRect.yMin + _skin.ArrowOffset.y, _skin.ArrowSize.x, _skin.ArrowSize.y), _skin.FileDropdownArrow);
+            GUI.DrawTexture(new Rect(dropDownRect.xMax - Skin.ArrowSize.x + Skin.ArrowOffset.x, dropDownRect.yMin + Skin.ArrowOffset.y, Skin.ArrowSize.x, Skin.ArrowSize.y), Skin.FileDropdownArrow);
 
-            var desiredConfigType = (ProjectConfigTypes)EditorGUI.Popup(dropDownRect, (int)_projectConfigType, GetConfigTypesDisplayValues(), _skin.DropdownTextStyle);
+            var desiredConfigType = (ProjectConfigTypes)EditorGUI.Popup(dropDownRect, (int)_projectConfigType, GetConfigTypesDisplayValues(), Skin.DropdownTextStyle);
 
-            var labelRect = Rect.MinMaxRect(rect.xMin, rect.yMin, _skin.FileSelectLabelWidth, rect.yMax);
-            GUI.Label(labelRect, "File:", _skin.FileDropdownLabelTextStyle);
+            var labelRect = Rect.MinMaxRect(rect.xMin, rect.yMin, Skin.FileSelectLabelWidth, rect.yMax);
+            GUI.Label(labelRect, "File:", Skin.FileDropdownLabelTextStyle);
 
             if (desiredConfigType != _projectConfigType)
             {
@@ -577,14 +610,14 @@ namespace Projeny
 
             if (Event.current.type == EventType.Repaint)
             {
-                Graphics.DrawTexture(dropDownRect, _skin.FileDropdownBackground, _skin.FileDropdownBorder,
-                _skin.FileDropdownBorder, _skin.FileDropdownBorder, _skin.FileDropdownBorder);
+                Graphics.DrawTexture(dropDownRect, Skin.FileDropdownBackground, Skin.FileDropdownBorder,
+                Skin.FileDropdownBorder, Skin.FileDropdownBorder, Skin.FileDropdownBorder);
             }
 
             var saveButtonRect = new Rect(
-                dropDownRect.xMax + _skin.FileDropdownSaveFileButtonLeftPadding,
+                dropDownRect.xMax + Skin.FileDropdownSaveFileButtonLeftPadding,
                 dropDownRect.yMin,
-                _skin.FileDropdownSaveFileButtonWidth,
+                Skin.FileDropdownSaveFileButtonWidth,
                 dropDownRect.height);
 
             if (GUI.Button(saveButtonRect, "Save", ButtonStyle))
@@ -592,7 +625,7 @@ namespace Projeny
                 OverwriteConfig();
             }
 
-            var openButtonRect = Rect.MinMaxRect(rect.xMax - _skin.FileDropdownOpenFileButtonWidth, rect.yMin, rect.xMax, rect.yMax);
+            var openButtonRect = Rect.MinMaxRect(rect.xMax - Skin.FileDropdownOpenFileButtonWidth, rect.yMin, rect.xMax, rect.yMax);
 
             var configPath = GetProjectConfigPath();
             GUI.enabled = File.Exists(configPath);
@@ -619,9 +652,9 @@ namespace Projeny
             var split1 = rect.width / 3.0f;
             var split2 = rect.width * 2.0f / 3.0f;
 
-            var rect1 = Rect.MinMaxRect(rect.xMin + _skin.ViewSelectSpacing, rect.yMin, split1 - _skin.ViewSelectSpacing, rect.yMax);
-            var rect2 = Rect.MinMaxRect(split1 + _skin.ViewSelectSpacing, rect.yMin, split2 - _skin.ViewSelectSpacing, rect.yMax);
-            var rect3 = Rect.MinMaxRect(split2 + _skin.ViewSelectSpacing, rect.yMin, rect.xMax - _skin.ViewSelectSpacing, rect.yMax);
+            var rect1 = Rect.MinMaxRect(rect.xMin + Skin.ViewSelectSpacing, rect.yMin, split1 - Skin.ViewSelectSpacing, rect.yMax);
+            var rect2 = Rect.MinMaxRect(split1 + Skin.ViewSelectSpacing, rect.yMin, split2 - Skin.ViewSelectSpacing, rect.yMax);
+            var rect3 = Rect.MinMaxRect(split2 + Skin.ViewSelectSpacing, rect.yMin, rect.xMax - Skin.ViewSelectSpacing, rect.yMax);
 
             bool isOn;
 
@@ -655,22 +688,22 @@ namespace Projeny
             // I tried using the GUILayout / EditorGUILayout but found it incredibly frustrating
             // and confusing, so I decided to just draw using raw rect coordinates instead
 
-            var windowRect = new Rect(0, 0, this.position.width, this.position.height);
+            var windowRect = Rect.MinMaxRect(Skin.MarginLeft, Skin.MarginTop, this.position.width - Skin.MarginRight, this.position.height - Skin.MarginBottom);
 
-            var viewSelectRect = new Rect(0, _skin.MarginTop, windowRect.width, _skin.ViewToggleHeight);
+            var viewSelectRect = new Rect(windowRect.xMin, windowRect.yMin, windowRect.width, Skin.ViewToggleHeight);
             DrawViewSelect(viewSelectRect);
 
-            if (_viewState == ViewStates.PackagesAndProject || _viewState == ViewStates.ReleasesAndPackages)
+            if (_split2 >= 0.1f)
             {
                 DrawPackagesPane(windowRect);
             }
 
-            if (_viewState == ViewStates.PackagesAndProject || _viewState == ViewStates.Project)
+            if (_split2 <= 0.92f)
             {
                 DrawProjectPane(windowRect);
             }
 
-            if (_viewState == ViewStates.ReleasesAndPackages)
+            if (_split1 >= 0.1f)
             {
                 DrawReleasePane(windowRect);
             }
@@ -678,9 +711,12 @@ namespace Projeny
 
         void DrawReleasePane(Rect windowRect)
         {
-            var rect = GetLeftSideRect(windowRect);
+            var startX = windowRect.xMin;
+            var endX = windowRect.xMin + _split1 * windowRect.width - 0.5f * Skin.ListVerticalSpacing;
+            var startY = windowRect.yMin + Skin.ViewToggleHeight;
+            var endY = windowRect.yMax;
 
-            DrawReleasePane2(rect);
+            DrawReleasePane2(Rect.MinMaxRect(startX, startY, endX, endY));
         }
 
         void DrawReleasePane2(Rect rect)
@@ -688,16 +724,16 @@ namespace Projeny
             var startX = rect.xMin;
             var endX = rect.xMax;
             var startY = rect.yMin;
-            var endY = startY + _skin.HeaderHeight;
+            var endY = startY + Skin.HeaderHeight;
 
-            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Releases", _skin.HeaderTextStyle);
+            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Releases", Skin.HeaderTextStyle);
 
             startY = endY;
-            endY = rect.yMax - _skin.ApplyButtonHeight - _skin.ApplyButtonTopPadding;
+            endY = rect.yMax - Skin.ApplyButtonHeight - Skin.ApplyButtonTopPadding;
 
             _releasesList.Draw(Rect.MinMaxRect(startX, startY, endX, endY));
 
-            startY = endY + _skin.ApplyButtonTopPadding;
+            startY = endY + Skin.ApplyButtonTopPadding;
             endY = rect.yMax;
 
             if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh", ButtonStyle))
@@ -708,12 +744,12 @@ namespace Projeny
 
         void DrawProjectPane(Rect windowRect)
         {
-            var rect = GetRightSideRect(windowRect);
+            var startX = windowRect.xMin + _split2 * windowRect.width + 0.5f * Skin.ListVerticalSpacing;
+            var endX = windowRect.xMax;
+            var startY = windowRect.yMin + Skin.HeaderHeight;
+            var endY = windowRect.yMax;
 
-            if (_viewState == ViewStates.Project)
-            {
-                rect = Rect.MinMaxRect(_skin.MarginLeft, rect.yMin, rect.xMax, rect.yMax);
-            }
+            var rect = Rect.MinMaxRect(startX, startY, endX, endY);
 
             DrawProjectPane2(rect);
         }
