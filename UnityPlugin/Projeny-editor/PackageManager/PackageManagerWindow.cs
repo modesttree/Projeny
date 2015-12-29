@@ -95,21 +95,26 @@ namespace Projeny
             if (_installedList == null)
             {
                 _installedList = new DraggableList();
+                _installedList.Handler = this;
             }
 
             if (_releasesList == null)
             {
                 _releasesList = new DraggableList();
+                _releasesList.Handler = this;
             }
+
 
             if (_assetsList == null)
             {
                 _assetsList = new DraggableList();
+                _assetsList.Handler = this;
             }
 
             if (_pluginsList == null)
             {
                 _pluginsList = new DraggableList();
+                _pluginsList.Handler = this;
             }
         }
 
@@ -117,6 +122,149 @@ namespace Projeny
         {
             // Doesn't seem worth trying to detect changes, just redraw every frame
             Repaint();
+        }
+
+        public bool IsDragAllowed(DraggableList.DragData data, DraggableList list)
+        {
+            var sourceListType = ClassifyList(data.SourceList);
+            var dropListType = ClassifyList(list);
+
+            switch (dropListType)
+            {
+                case ListTypes.Package:
+                {
+                    return sourceListType == ListTypes.Release || sourceListType == ListTypes.AssetItem || sourceListType == ListTypes.PluginItem;
+                }
+                case ListTypes.Release:
+                {
+                    return sourceListType == ListTypes.Package;
+                }
+                case ListTypes.AssetItem:
+                {
+                    return sourceListType == ListTypes.Package || sourceListType == ListTypes.PluginItem;
+                }
+                case ListTypes.PluginItem:
+                {
+                    return sourceListType == ListTypes.Package || sourceListType == ListTypes.AssetItem;
+                }
+            }
+
+            Assert.Throw();
+            return true;
+        }
+
+        public void OnDragDrop(DraggableList.DragData data, DraggableList dropList)
+        {
+            if (data.SourceList == dropList || !IsDragAllowed(data, dropList))
+            {
+                return;
+            }
+
+            var sourceListType = ClassifyList(data.SourceList);
+            var dropListType = ClassifyList(dropList);
+
+            switch (dropListType)
+            {
+                case ListTypes.Package:
+                {
+                    switch (sourceListType)
+                    {
+                        case ListTypes.PluginItem:
+                        case ListTypes.AssetItem:
+                        {
+                            data.SourceList.Remove(data.Entry);
+                            break;
+                        }
+                        case ListTypes.Release:
+                        {
+                            Log.Trace("TODO - install package");
+                            break;
+                        }
+                        default:
+                        {
+                            Assert.Throw();
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+                case ListTypes.PluginItem:
+                case ListTypes.AssetItem:
+                {
+                    switch (sourceListType)
+                    {
+                        case ListTypes.AssetItem:
+                        case ListTypes.PluginItem:
+                        {
+                            data.SourceList.Remove(data.Entry);
+                            dropList.Add(data.Entry);
+                            break;
+                        }
+                        case ListTypes.Package:
+                        {
+                            dropList.Add(data.Entry.Name);
+                            break;
+                        }
+                        default:
+                        {
+                            Assert.Throw();
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+                case ListTypes.Release:
+                {
+                    switch (sourceListType)
+                    {
+                        case ListTypes.Package:
+                        {
+                            Log.Trace("TODO - uninstall package");
+                            break;
+                        }
+                        default:
+                        {
+                            Assert.Throw();
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+                default:
+                {
+                    Assert.Throw();
+                    break;
+                }
+            }
+        }
+
+        ListTypes ClassifyList(DraggableList list)
+        {
+            if (list == _installedList)
+            {
+                return ListTypes.Package;
+            }
+
+            if (list == _releasesList)
+            {
+                return ListTypes.Release;
+            }
+
+            if (list == _assetsList)
+            {
+                return ListTypes.AssetItem;
+            }
+
+            if (list == _pluginsList)
+            {
+                return ListTypes.PluginItem;
+            }
+
+            Assert.Throw();
+            return ListTypes.AssetItem;
         }
 
         Rect GetRightSideRect(Rect windowRect)
@@ -244,7 +392,10 @@ namespace Projeny
         {
             _releasesList.Clear();
             _releasesList.AddRange(
-                _allReleases.Select(x => x.Title).Where(x => !_installedList.Values.Contains(x)));
+                _allReleases.Select(x => new DraggableList.Entry(x.Title, x)));
+
+            // TODO
+            // .Where(x => !_installedList.Values.Contains(x)));
         }
 
         void RefreshPackages()
@@ -257,8 +408,10 @@ namespace Projeny
         void UpdateAvailablePackagesList()
         {
             _installedList.Clear();
-            _installedList.AddRange(_allPackages
-                .Select(x => x.Name).Where(x => !_assetsList.Values.Contains(x) && !_pluginsList.Values.Contains(x)));
+            _installedList.AddRange(_allPackages.Select(x => new DraggableList.Entry(x.Name, x)));
+
+            // TODO
+            //.Where(x => !_assetsList.Values.Contains(x) && !_pluginsList.Values.Contains(x))
         }
 
         void RefreshProject()
@@ -357,8 +510,8 @@ namespace Projeny
         {
             var config = new ProjectConfig();
 
-            config.Packages = _assetsList.Values.ToList();
-            config.PluginPackages = _pluginsList.Values.ToList();
+            config.Packages = _assetsList.DisplayValues.ToList();
+            config.PluginPackages = _pluginsList.DisplayValues.ToList();
 
             return YamlSerializer.Serialize<ProjectConfig>(config);
         }
@@ -410,7 +563,7 @@ namespace Projeny
 
             ImguiUtil.DrawColoredQuad(dropDownRect, _skin.FileDropdownBackgroundColor);
 
-            GUI.DrawTexture(new Rect(dropDownRect.right - _skin.ArrowSize.x + _skin.ArrowOffset.x, dropDownRect.top + _skin.ArrowOffset.y, _skin.ArrowSize.x, _skin.ArrowSize.y), _skin.FileDropdownArrow);
+            GUI.DrawTexture(new Rect(dropDownRect.xMax - _skin.ArrowSize.x + _skin.ArrowOffset.x, dropDownRect.yMin + _skin.ArrowOffset.y, _skin.ArrowSize.x, _skin.ArrowSize.y), _skin.FileDropdownArrow);
 
             var desiredConfigType = (ProjectConfigTypes)EditorGUI.Popup(dropDownRect, (int)_projectConfigType, GetConfigTypesDisplayValues(), _skin.DropdownTextStyle);
 
@@ -500,7 +653,7 @@ namespace Projeny
         public void OnGUI()
         {
             // I tried using the GUILayout / EditorGUILayout but found it incredibly frustrating
-            // and confusing, so I decided to just draw using raw rect coordinates instead :|
+            // and confusing, so I decided to just draw using raw rect coordinates instead
 
             var windowRect = new Rect(0, 0, this.position.width, this.position.height);
 
@@ -578,6 +731,14 @@ namespace Projeny
             Project,
             PackagesAndProject,
             ReleasesAndPackages,
+        }
+
+        enum ListTypes
+        {
+            Package,
+            Release,
+            AssetItem,
+            PluginItem
         }
     }
 }

@@ -13,20 +13,42 @@ namespace Projeny
     {
         static readonly string DragId = "DraggableListData";
 
-        readonly DraggableListSkin _skin;
-
         [SerializeField]
         List<Entry> _entryList = new List<Entry>();
 
         [SerializeField]
         Vector2 _scrollPos;
 
-        public DraggableList()
+        [SerializeField]
+        PackageManagerWindow _owner;
+
+        static DraggableListSkin _skin;
+
+        DraggableListSkin Skin
         {
-            _skin = Resources.Load<DraggableListSkin>("Projeny/DraggableListSkin");
+            get
+            {
+                return _skin ?? (_skin = Resources.Load<DraggableListSkin>("Projeny/DraggableListSkin"));
+            }
         }
 
-        public IEnumerable<string> Values
+        public PackageManagerWindow Handler
+        {
+            set
+            {
+                _owner = value;
+            }
+        }
+
+        public IEnumerable<Entry> Values
+        {
+            get
+            {
+                return _entryList;
+            }
+        }
+
+        public IEnumerable<string> DisplayValues
         {
             get
             {
@@ -34,20 +56,29 @@ namespace Projeny
             }
         }
 
-        public void Add(string name)
+        public void Remove(Entry entry)
         {
-            Assert.That(!name.Contains("\n"));
-            Assert.That(!name.Contains("\r"));
-
-            _entryList.Add(new Entry(name));
+            _entryList.RemoveWithConfirm(entry);
         }
 
-        public void AddRange(IEnumerable<string> names)
+        public void Add(Entry entry)
         {
-            foreach (var name in names)
-            {
-                Add(name);
-            }
+            _entryList.Add(entry);
+        }
+
+        public void Add(string entry)
+        {
+            _entryList.Add(new Entry(entry, null));
+        }
+
+        public void AddRange(IEnumerable<Entry> entries)
+        {
+            _entryList.AddRange(entries);
+        }
+
+        public void AddRange(IEnumerable<string> entries)
+        {
+            _entryList.AddRange(entries.Select(x => new Entry(x, null)));
         }
 
         public void Clear()
@@ -60,9 +91,9 @@ namespace Projeny
             // Can this be calculated instead?
             var widthOfScrollBar = 50.0f;
 
-            var viewRect = new Rect(0, 0, listRect.width - widthOfScrollBar, _entryList.Count * _skin.ItemHeight);
+            var viewRect = new Rect(0, 0, listRect.width - widthOfScrollBar, _entryList.Count * Skin.ItemHeight);
 
-            ImguiUtil.DrawColoredQuad(listRect, _skin.ListColor);
+            ImguiUtil.DrawColoredQuad(listRect, Skin.ListColor);
 
             var isListUnderMouse = listRect.Contains(Event.current.mousePosition);
 
@@ -75,6 +106,7 @@ namespace Projeny
                     break;
                 }
                 case EventType.DragPerform:
+                // Drag has completed
                 {
                     if (isListUnderMouse)
                     {
@@ -84,7 +116,8 @@ namespace Projeny
 
                         if (receivedDragData != null)
                         {
-                            OnDragDrop(receivedDragData);
+                            DragAndDrop.PrepareStartDrag();
+                            _owner.OnDragDrop(receivedDragData, this);
                         }
                     }
 
@@ -92,20 +125,36 @@ namespace Projeny
                 }
                 case EventType.MouseDrag:
                 {
-                    var existingDragData = DragAndDrop.GetGenericData(DragId) as DragData;
-
-                    if (existingDragData != null)
+                    if (isListUnderMouse)
                     {
-                        DragAndDrop.StartDrag("Dragging List Element");
-                        Event.current.Use();
+                        var existingDragData = DragAndDrop.GetGenericData(DragId) as DragData;
+
+                        if (existingDragData != null)
+                        {
+                            DragAndDrop.StartDrag("Dragging List Element");
+                            Event.current.Use();
+                        }
                     }
 
                     break;
                 }
                 case EventType.DragUpdated:
                 {
-                    DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
-                    Event.current.Use();
+                    if (isListUnderMouse)
+                    {
+                        var existingDragData = DragAndDrop.GetGenericData(DragId) as DragData;
+
+                        if (existingDragData != null && (_owner != null && _owner.IsDragAllowed(existingDragData, this)))
+                        {
+                            DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+                            Event.current.Use();
+                        }
+                        else
+                        {
+                            DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
+                        }
+                    }
+
                     break;
                 }
             }
@@ -115,11 +164,16 @@ namespace Projeny
             {
                 foreach (var entry in _entryList)
                 {
-                    var labelRect = new Rect(0, yPos, listRect.width, _skin.ItemHeight);
+                    if (!entry.IsVisible)
+                    {
+                        continue;
+                    }
+
+                    var labelRect = new Rect(0, yPos, listRect.width, Skin.ItemHeight);
 
                     bool isItemUnderMouse = labelRect.Contains(Event.current.mousePosition);
 
-                    ImguiUtil.DrawColoredQuad(labelRect, isItemUnderMouse ? _skin.ListItemHoverColor : _skin.ListItemColor);
+                    ImguiUtil.DrawColoredQuad(labelRect, isItemUnderMouse ? Skin.ListItemHoverColor : Skin.ListItemColor);
 
                     switch (Event.current.type)
                     {
@@ -129,8 +183,11 @@ namespace Projeny
                             {
                                 DragAndDrop.PrepareStartDrag();
 
-                                object dragData;
-                                OnDragStart(entry, out dragData);
+                                var dragData = new DragData()
+                                {
+                                    Entry = entry,
+                                    SourceList = this,
+                                };
 
                                 DragAndDrop.SetGenericData(DragId, dragData);
                                 DragAndDrop.objectReferences = new UnityEngine.Object[0];
@@ -140,33 +197,12 @@ namespace Projeny
                         }
                     }
 
-                    GUI.Label(labelRect, entry.Name, _skin.ItemTextStyle);
+                    GUI.Label(labelRect, entry.Name, Skin.ItemTextStyle);
 
-                    yPos += _skin.ItemHeight;
+                    yPos += Skin.ItemHeight;
                 }
             }
             GUI.EndScrollView();
-        }
-
-        void OnDragDrop(DragData data)
-        {
-            if (data.SourceList == this)
-            {
-                return;
-            }
-
-            Assert.That(!_entryList.Contains(data.Entry));
-            data.SourceList._entryList.RemoveWithConfirm(data.Entry);
-            _entryList.Add(data.Entry);
-        }
-
-        void OnDragStart(Entry entry, out object dragData)
-        {
-            dragData = new DragData()
-            {
-                Entry = entry,
-                SourceList = this,
-            };
         }
 
         public class DragData
@@ -178,11 +214,14 @@ namespace Projeny
         [Serializable]
         public class Entry
         {
-            public string Name = "";
+            public string Name;
+            public object Tag;
+            public bool IsVisible = true;
 
-            public Entry(string name)
+            public Entry(string name, object tag)
             {
                 Name = name;
+                Tag = tag;
             }
         }
     }
