@@ -62,7 +62,8 @@ class Runner:
 
         elif self._requestId == 'listReleases':
             for release in self._releaseRegistryManager.lookupAllReleases():
-                print("{0} ({1})".format(release.Title, release.Version))
+                print('---')
+                print(yaml.dump(release.__dict__, default_flow_style=False))
 
         else:
             assertThat(False, "Invalid request id '{0}'", self._requestId)

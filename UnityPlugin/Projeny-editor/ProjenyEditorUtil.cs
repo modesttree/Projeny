@@ -352,15 +352,18 @@ namespace Projeny
             }
         }
 
-        public static List<string> LookupReleaseList()
+        public static List<ReleaseInfo> LookupReleaseList()
         {
             try
             {
-                var allReleasesStr = RunUpm("listReleases").Trim();
+                var allReleasesStr = RunUpm("listReleases");
 
-                return allReleasesStr
-                    .Split(new string[] { Environment.NewLine }, StringSplitOptions.None)
-                    .Select(x => x.Trim()).ToList();
+                var docs = allReleasesStr
+                    .Split(new string[] { "---" }, StringSplitOptions.None);
+
+                return docs
+                    .Select(x => YamlSerializer.Deserialize<ReleaseInfo>(x))
+                    .Where(x => x != null).ToList();
             }
             catch (UpmException e)
             {

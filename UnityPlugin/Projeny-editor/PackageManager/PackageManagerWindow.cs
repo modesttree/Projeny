@@ -18,7 +18,7 @@ namespace Projeny
         DraggableList _pluginsList;
 
         List<PackageInfo> _allPackages;
-        List<string> _allReleases;
+        List<ReleaseInfo> _allReleases;
 
         PackageManagerWindowSkin _skin;
         ProjectConfigTypes _projectConfigType;
@@ -244,7 +244,7 @@ namespace Projeny
         {
             _releasesList.Clear();
             _releasesList.AddRange(
-                _allReleases.Where(x => !_installedList.Values.Contains(x)));
+                _allReleases.Select(x => x.Title).Where(x => !_installedList.Values.Contains(x)));
         }
 
         void RefreshPackages()
