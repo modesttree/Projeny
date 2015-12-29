@@ -34,6 +34,7 @@ namespace Projeny
         public int ButtonFontSize;
         public int FilePopupFontSize;
 
+        public float FileDropdownReloadFileButtonWidth;
         public float FileDropdownSaveFileButtonWidth;
         public float FileDropdownSaveFileButtonLeftPadding;
 

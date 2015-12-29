@@ -454,16 +454,16 @@ namespace Projeny
 
             if (File.Exists(configPath))
             {
-                var project = YamlSerializer.Deserialize<ProjectConfig>(File.ReadAllText(configPath));
+                var savedConfig = DeserializeProjectConfig(configPath);
 
                 // Null when file is empty
-                if (project == null)
+                if (savedConfig == null)
                 {
                     ClearProjectLists();
                 }
                 else
                 {
-                    PopulateListsFromConfig(project);
+                    PopulateListsFromConfig(savedConfig);
                 }
             }
             else
@@ -521,33 +521,49 @@ namespace Projeny
 
         void OverwriteConfig()
         {
-            File.WriteAllText(GetProjectConfigPath(), SerializeProjectConfig());
+            File.WriteAllText(GetProjectConfigPath(), GetSerializedProjectConfigFromLists());
         }
 
         bool HasProjectConfigChanged()
         {
             var configPath = GetProjectConfigPath();
 
-            var newYamlStr = SerializeProjectConfig();
+            var currentConfig = GetProjectConfigFromLists();
 
             if (!File.Exists(configPath))
             {
-                return newYamlStr.Trim().Length > 0;
+                return !currentConfig.Packages.IsEmpty() || !currentConfig.PluginPackages.IsEmpty();
             }
 
-            var currentYamlStr = File.ReadAllText(configPath);
+            var savedConfig = DeserializeProjectConfig(configPath);
 
-            return newYamlStr != currentYamlStr;
+            if (savedConfig == null)
+            {
+                return !currentConfig.Packages.IsEmpty() || !currentConfig.PluginPackages.IsEmpty();
+            }
+
+            return !Enumerable.SequenceEqual(currentConfig.Packages.OrderBy(t => t), savedConfig.Packages.OrderBy(t => t))
+                || !Enumerable.SequenceEqual(currentConfig.PluginPackages.OrderBy(t => t), savedConfig.PluginPackages.OrderBy(t => t));
         }
 
-        string SerializeProjectConfig()
+        ProjectConfig DeserializeProjectConfig(string configPath)
+        {
+            return YamlSerializer.Deserialize<ProjectConfig>(File.ReadAllText(configPath));
+        }
+
+        ProjectConfig GetProjectConfigFromLists()
         {
             var config = new ProjectConfig();
 
             config.Packages = _assetsList.DisplayValues.ToList();
             config.PluginPackages = _pluginsList.DisplayValues.ToList();
 
-            return YamlSerializer.Serialize<ProjectConfig>(config);
+            return config;
+        }
+
+        string GetSerializedProjectConfigFromLists()
+        {
+            return YamlSerializer.Serialize<ProjectConfig>(GetProjectConfigFromLists());
         }
 
         void TryChangeProjectType(ProjectConfigTypes configType)
@@ -590,9 +606,9 @@ namespace Projeny
         void DrawFileDropdown(Rect rect)
         {
             var dropDownRect = Rect.MinMaxRect(
-                rect.xMin + Skin.FileSelectLabelWidth,
+                rect.xMin,
                 rect.yMin,
-                rect.xMax - Skin.FileDropdownOpenFileButtonWidth - Skin.FileDropdownOpenFileButtonLeftPadding - Skin.FileDropdownSaveFileButtonLeftPadding - Skin.FileDropdownSaveFileButtonWidth,
+                rect.xMax - Skin.FileDropdownOpenFileButtonWidth - Skin.FileDropdownOpenFileButtonLeftPadding - Skin.FileDropdownSaveFileButtonLeftPadding - Skin.FileDropdownSaveFileButtonWidth - Skin.FileDropdownReloadFileButtonWidth - Skin.FileDropdownSaveFileButtonLeftPadding,
                 rect.yMax);
 
             ImguiUtil.DrawColoredQuad(dropDownRect, Skin.FileDropdownBackgroundColor);
@@ -600,9 +616,6 @@ namespace Projeny
             GUI.DrawTexture(new Rect(dropDownRect.xMax - Skin.ArrowSize.x + Skin.ArrowOffset.x, dropDownRect.yMin + Skin.ArrowOffset.y, Skin.ArrowSize.x, Skin.ArrowSize.y), Skin.FileDropdownArrow);
 
             var desiredConfigType = (ProjectConfigTypes)EditorGUI.Popup(dropDownRect, (int)_projectConfigType, GetConfigTypesDisplayValues(), Skin.DropdownTextStyle);
-
-            var labelRect = Rect.MinMaxRect(rect.xMin, rect.yMin, Skin.FileSelectLabelWidth, rect.yMax);
-            GUI.Label(labelRect, "File:", Skin.FileDropdownLabelTextStyle);
 
             if (desiredConfigType != _projectConfigType)
             {
@@ -615,8 +628,19 @@ namespace Projeny
                 Skin.FileDropdownBorder, Skin.FileDropdownBorder, Skin.FileDropdownBorder);
             }
 
-            var saveButtonRect = new Rect(
+            var reloadButtonRect = new Rect(
                 dropDownRect.xMax + Skin.FileDropdownSaveFileButtonLeftPadding,
+                dropDownRect.yMin,
+                Skin.FileDropdownReloadFileButtonWidth,
+                dropDownRect.height);
+
+            if (GUI.Button(reloadButtonRect, "Reload", ButtonStyle))
+            {
+                RefreshProject();
+            }
+
+            var saveButtonRect = new Rect(
+                dropDownRect.xMax + 2 * Skin.FileDropdownSaveFileButtonLeftPadding + Skin.FileDropdownReloadFileButtonWidth,
                 dropDownRect.yMin,
                 Skin.FileDropdownSaveFileButtonWidth,
                 dropDownRect.height);

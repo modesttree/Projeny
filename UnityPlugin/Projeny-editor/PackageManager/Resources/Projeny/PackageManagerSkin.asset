@@ -11,6 +11,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2612b37eea3a9b24694554ab3c19bda5, type: 3}
   m_Name: PackageManagerSkin
   m_EditorClassIdentifier: Assembly-CSharp-Editor-firstpass:Projeny:DraggableListSkin
+  InterpSpeed: 0.1
   ViewToggleHeight: 38.21
   HeaderHeight: 41.66
   ListVerticalSpacing: 16.99

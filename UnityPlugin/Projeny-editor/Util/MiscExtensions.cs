@@ -13,6 +13,11 @@ namespace Projeny.Internal
             return string.Format(s, args);
         }
 
+        public static bool IsEmpty<T>(this IEnumerable<T> enumerable)
+        {
+            return !enumerable.Any();
+        }
+
         // This is like string.Format except it will print NULL instead of just
         // a blank character when a parameter is null
         public static string FmtSafe(this string format, params object[] args)
