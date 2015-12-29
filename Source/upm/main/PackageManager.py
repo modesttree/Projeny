@@ -21,6 +21,7 @@ import upm.util.MiscUtil as MiscUtil
 import upm.util.PlatformUtil as PlatformUtil
 
 from upm.util.Assert import *
+import yaml
 
 import upm.ioc.Container as Container
 from upm.ioc.Inject import Inject
@@ -99,9 +100,21 @@ class PackageManager:
     def getAllPackageInfos(self):
         result = []
         for name in self.getAllPackageNames():
+
+            path = self._varMgr.expandPath('[UnityPackagesDir]/{0}'.format(name))
+
+            releaseInfoPath = os.path.join(path, 'Release.yaml')
+
+            version = None
+
+            if self._sys.fileExists(releaseInfoPath):
+                fileInfo = yaml.load(self._sys.readFileAsText(releaseInfoPath))
+                version = fileInfo['Version']
+
             info = {}
-            info['Path'] = self._varMgr.expandPath('[UnityPackagesDir]/{0}'.format(name))
+            info['Path'] = path
             info['Name'] = name
+            info['Version'] = version
             result.append(info)
 
         return result

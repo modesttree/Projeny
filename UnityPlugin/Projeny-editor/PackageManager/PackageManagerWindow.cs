@@ -257,7 +257,8 @@ namespace Projeny
         void UpdateAvailablePackagesList()
         {
             _installedList.Clear();
-            _installedList.AddRange(_allPackages.Select(x => x.Name).Where(x => !_assetsList.Values.Contains(x) && !_pluginsList.Values.Contains(x)));
+            _installedList.AddRange(_allPackages
+                .Select(x => x.Name).Where(x => !_assetsList.Values.Contains(x) && !_pluginsList.Values.Contains(x)));
         }
 
         void RefreshProject()
