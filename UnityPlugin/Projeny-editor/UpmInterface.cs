@@ -328,6 +328,15 @@ namespace Projeny
 
         static IEnumerator DeletePackagesAsyncInternal(List<PackageInfo> infos)
         {
+            if (!EditorUtility.DisplayDialog(
+                "Delete Packages",
+                "Are you sure you wish to delete packages '{0}'?  Please note the following:\n\n - This change is not undoable\n\n- If this package was installed from a release such as the asset store, note that any changes that you've made since installing it will be irrevocably lost (unless you're using source control).\n\n - There may be projects or other packages that depend on this package that may be put in an invalid state by deleting it.".Fmt(infos.Select(x => x.Name).Join(", ")),
+                "Delete", "Cancel"))
+            {
+                yield return false;
+                yield break;
+            }
+
             foreach (var info in infos)
             {
                 var req = CreateUpmRequest("deletePackage");

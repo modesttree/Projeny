@@ -29,9 +29,6 @@ namespace Projeny
         List<DraggableListEntry> _selected;
 
         [NonSerialized]
-        List<DraggableListEntry> _contextMenuSelectedSnapshot;
-
-        [NonSerialized]
         float _split1 = 0;
 
         [NonSerialized]
@@ -282,8 +279,6 @@ namespace Projeny
 
             GenericMenu contextMenu = new GenericMenu();
 
-            _contextMenuSelectedSnapshot = _selected.ToList();
-
             switch (listType)
             {
                 case ListTypes.Release:
@@ -294,6 +289,16 @@ namespace Projeny
                 case ListTypes.Package:
                 {
                     contextMenu.AddItem(new GUIContent("Delete"), false, DeleteSelectedPackages);
+
+                    if (_selected.Count == 1)
+                    {
+                        contextMenu.AddItem(new GUIContent("Open Folder"), false, OpenPackageFolderForSelected);
+                    }
+                    else
+                    {
+                        contextMenu.AddDisabledItem(new GUIContent("Open Folder"));
+                    }
+
                     break;
                 }
                 case ListTypes.AssetItem:
@@ -312,6 +317,17 @@ namespace Projeny
             contextMenu.ShowAsContext();
         }
 
+        void OpenPackageFolderForSelected()
+        {
+            Assert.IsEqual(_selected.Count, 1);
+
+            var info = (PackageInfo)_selected.Single().Tag;
+
+            Assert.That(Directory.Exists(info.Path));
+
+            System.Diagnostics.Process.Start(info.Path);
+        }
+
         void DeleteSelectedPackages()
         {
             StartBackgroundTask(DeleteSelectedPackagesAsync());
@@ -319,16 +335,9 @@ namespace Projeny
 
         IEnumerator DeleteSelectedPackagesAsync()
         {
-            var selected = _contextMenuSelectedSnapshot;
+            Assert.That(_selected.All(x => ClassifyList(x.ListOwner) == ListTypes.Package));
 
-            foreach (var sel in selected)
-            {
-                UnityEngine.Debug.Log("Deleting package " + sel.Name);
-            }
-
-            Assert.That(selected.All(x => ClassifyList(x.ListOwner) == ListTypes.Package));
-
-            var result = UpmInterface.DeletePackagesAsync(selected.Select(x => (PackageInfo)x.Tag).ToList());
+            var result = UpmInterface.DeletePackagesAsync(_selected.Select(x => (PackageInfo)x.Tag).ToList());
             yield return result;
 
             // Do this regardless of whether result.Current is true since
