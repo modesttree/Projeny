@@ -80,8 +80,6 @@ namespace Projeny
             public Color LoadingOverlapPopupColor;
             public GUIStyle DropdownTextStyle;
             public GUIStyle HeaderTextStyle;
-            public GUIStyle ButtonStyle;
-            public GUIStyle ArrowButtonStyle;
         }
     }
 }

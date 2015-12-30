@@ -14,34 +14,21 @@ MonoBehaviour:
   GUISkinDark: {fileID: 11400000, guid: 85dcafaa6e0300f4aa41e173500b6536, type: 2}
   GUISkinLight: {fileID: 11400000, guid: bb6bdd539afbc5943a2696150cffa4ee, type: 2}
   InterpSpeed: 24.46
-  ViewToggleHeight: 38.21
   HeaderHeight: 34
   ListVerticalSpacing: 11.06
   ListHorizontalSpacing: 37.28
   MarginTop: 0
-  MarginRight: 16.14
-  MarginLeft: 15.91
   MarginBottom: 20.29
   ArrowWidth: 32.3
   ArrowHeight: 242.3
-  ArrowColumnPadding: 0
   FileButtonsPadding: 7.36
   FileButtonsPercentWidth: 0.5
   ApplyButtonHeight: 44.2
   ApplyButtonTopPadding: 22.61
   ProjectButtonsPadding: 17.65
   ProcessingDotRepeatRate: 2
-  FileSelectLabelWidth: 58.49
   FileDropdownHeight: 36.45
-  FileDropdownTopPadding: 13.65
   ButtonFontSize: 17
-  FilePopupFontSize: 45
-  FileDropdownReloadFileButtonWidth: 82.13
-  FileDropdownSaveFileButtonWidth: 68.5
-  FileDropdownSaveFileButtonLeftPadding: 10.9
-  FileDropdownOpenFileButtonWidth: 66.23
-  FileDropdownOpenFileButtonLeftPadding: 6.4
-  FileDropdownBackgroundColor: {r: 0.30147058, g: 0.30147058, b: 0.30147058, a: 1}
   FileDropdownArrow: {fileID: 2800000, guid: 107f1605cdeb67a409ee52cdf6517189, type: 3}
   FileDropdownBackground: {fileID: 2800000, guid: 1f89814d77faa314f99f7982e46fca3f,
     type: 3}
@@ -51,8 +38,6 @@ MonoBehaviour:
   ArrowRightTexture: {fileID: 2800000, guid: 68ec9c739eb9b5c4998f5971ae03e85f, type: 3}
   ArrowSize: {x: 31.3, y: 20.4}
   ArrowOffset: {x: -12.88, y: 7.3}
-  FileDropdownBorder: 7
-  ViewSelectSpacing: 43.34
   ProcessingPopupSize: {x: 300, y: 100}
   ProcessingPopupTextStyle:
     m_Name: 
@@ -114,7 +99,6 @@ MonoBehaviour:
     m_StretchWidth: 1
     m_StretchHeight: 0
   Light:
-    ButtonImage: {fileID: 2800000, guid: c7810f5522f8d7842af15b202bb55bee, type: 3}
     LoadingOverlayColor: {r: 0.5294118, g: 0.5294118, b: 0.5294118, a: 0.166}
     LoadingOverlapPopupColor: {r: 0.83823526, g: 0.83823526, b: 0.83823526, a: 1}
     DropdownTextStyle:
@@ -235,128 +219,9 @@ MonoBehaviour:
       m_FixedHeight: 0
       m_StretchWidth: 1
       m_StretchHeight: 0
-    ButtonStyle:
-      m_Name: 
-      m_Normal:
-        m_Background: {fileID: 2800000, guid: c7810f5522f8d7842af15b202bb55bee, type: 3}
-        m_TextColor: {r: 1, g: 1, b: 1, a: 1}
-      m_Hover:
-        m_Background: {fileID: 2800000, guid: c5960a9495c135146a545fb532e20f77, type: 3}
-        m_TextColor: {r: 1, g: 1, b: 1, a: 1}
-      m_Active:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_Focused:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_OnNormal:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_OnHover:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_OnActive:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_OnFocused:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_Border:
-        m_Left: 0
-        m_Right: 0
-        m_Top: 0
-        m_Bottom: 0
-      m_Margin:
-        m_Left: 0
-        m_Right: 0
-        m_Top: 0
-        m_Bottom: 0
-      m_Padding:
-        m_Left: 0
-        m_Right: 0
-        m_Top: 0
-        m_Bottom: 0
-      m_Overflow:
-        m_Left: 0
-        m_Right: 0
-        m_Top: 0
-        m_Bottom: 0
-      m_Font: {fileID: 12800000, guid: 8c9401a2ae480a8458c58756b86dcc75, type: 3}
-      m_FontSize: 19
-      m_FontStyle: 0
-      m_Alignment: 4
-      m_WordWrap: 0
-      m_RichText: 1
-      m_TextClipping: 0
-      m_ImagePosition: 0
-      m_ContentOffset: {x: 0, y: 0}
-      m_FixedWidth: 0
-      m_FixedHeight: 0
-      m_StretchWidth: 0
-      m_StretchHeight: 0
-    ArrowButtonStyle:
-      m_Name: 
-      m_Normal:
-        m_Background: {fileID: 2800000, guid: ee29cef13e3ebe549b8acb0aba91f9cc, type: 3}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_Hover:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_Active:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_Focused:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_OnNormal:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_OnHover:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_OnActive:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_OnFocused:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_Border:
-        m_Left: 0
-        m_Right: 0
-        m_Top: 0
-        m_Bottom: 0
-      m_Margin:
-        m_Left: 0
-        m_Right: 0
-        m_Top: 0
-        m_Bottom: 0
-      m_Padding:
-        m_Left: 0
-        m_Right: 0
-        m_Top: 0
-        m_Bottom: 0
-      m_Overflow:
-        m_Left: 0
-        m_Right: 0
-        m_Top: 0
-        m_Bottom: 0
-      m_Font: {fileID: 0}
-      m_FontSize: 0
-      m_FontStyle: 0
-      m_Alignment: 0
-      m_WordWrap: 0
-      m_RichText: 1
-      m_TextClipping: 0
-      m_ImagePosition: 0
-      m_ContentOffset: {x: 0, y: 0}
-      m_FixedWidth: 0
-      m_FixedHeight: 0
-      m_StretchWidth: 1
-      m_StretchHeight: 0
   Dark:
-    ButtonImage: {fileID: 0}
-    LoadingOverlayColor: {r: 0.5294118, g: 0.5294118, b: 0.5294118, a: 0.166}
-    LoadingOverlapPopupColor: {r: 0.85294116, g: 0.85294116, b: 0.85294116, a: 0.709}
+    LoadingOverlayColor: {r: 0.2647059, g: 0.2647059, b: 0.2647059, a: 0.166}
+    LoadingOverlapPopupColor: {r: 0.17647058, g: 0.17647058, b: 0.17647058, a: 1}
     DropdownTextStyle:
       m_Name: 
       m_Normal:
@@ -466,124 +331,6 @@ MonoBehaviour:
       m_FontSize: 17
       m_FontStyle: 0
       m_Alignment: 4
-      m_WordWrap: 0
-      m_RichText: 1
-      m_TextClipping: 0
-      m_ImagePosition: 0
-      m_ContentOffset: {x: 0, y: 0}
-      m_FixedWidth: 0
-      m_FixedHeight: 0
-      m_StretchWidth: 1
-      m_StretchHeight: 0
-    ButtonStyle:
-      m_Name: 
-      m_Normal:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_Hover:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_Active:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_Focused:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_OnNormal:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_OnHover:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_OnActive:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_OnFocused:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_Border:
-        m_Left: 0
-        m_Right: 0
-        m_Top: 0
-        m_Bottom: 0
-      m_Margin:
-        m_Left: 0
-        m_Right: 0
-        m_Top: 0
-        m_Bottom: 0
-      m_Padding:
-        m_Left: 0
-        m_Right: 0
-        m_Top: 0
-        m_Bottom: 0
-      m_Overflow:
-        m_Left: 0
-        m_Right: 0
-        m_Top: 0
-        m_Bottom: 0
-      m_Font: {fileID: 0}
-      m_FontSize: 0
-      m_FontStyle: 0
-      m_Alignment: 0
-      m_WordWrap: 0
-      m_RichText: 1
-      m_TextClipping: 0
-      m_ImagePosition: 0
-      m_ContentOffset: {x: 0, y: 0}
-      m_FixedWidth: 0
-      m_FixedHeight: 0
-      m_StretchWidth: 1
-      m_StretchHeight: 0
-    ArrowButtonStyle:
-      m_Name: 
-      m_Normal:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_Hover:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_Active:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_Focused:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_OnNormal:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_OnHover:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_OnActive:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_OnFocused:
-        m_Background: {fileID: 0}
-        m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-      m_Border:
-        m_Left: 0
-        m_Right: 0
-        m_Top: 0
-        m_Bottom: 0
-      m_Margin:
-        m_Left: 0
-        m_Right: 0
-        m_Top: 0
-        m_Bottom: 0
-      m_Padding:
-        m_Left: 0
-        m_Right: 0
-        m_Top: 0
-        m_Bottom: 0
-      m_Overflow:
-        m_Left: 0
-        m_Right: 0
-        m_Top: 0
-        m_Bottom: 0
-      m_Font: {fileID: 0}
-      m_FontSize: 0
-      m_FontStyle: 0
-      m_Alignment: 0
       m_WordWrap: 0
       m_RichText: 1
       m_TextClipping: 0

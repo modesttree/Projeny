@@ -291,31 +291,34 @@ namespace Projeny
             }
         }
 
-        public static IEnumerator<Boolean> InstallReleaseAsync(string name, string version)
+        public static IEnumerator<Boolean> InstallReleasesAsync(List<ReleaseInfo> infos)
         {
-            return CoRoutine.Wrap<Boolean>(InstallReleaseAsyncInternal(name, version));
+            return CoRoutine.Wrap<Boolean>(InstallReleaseAsyncInternal(infos));
         }
 
-        static IEnumerator InstallReleaseAsyncInternal(string name, string version)
+        static IEnumerator InstallReleaseAsyncInternal(List<ReleaseInfo> infos)
         {
-            var req = CreateUpmRequest("installRelease");
-
-            req.Param1 = name;
-            req.Param2 = version;
-
-            var result = RunUpmAsync(req);
-            yield return result;
-
-            if (result.Current.Succeeded)
+            foreach (var info in infos)
             {
-                Log.Info("Installed new release '{0}' ({1})".Fmt(name, version));
-                yield return true;
+                var req = CreateUpmRequest("installRelease");
+
+                req.Param1 = info.Title;
+                req.Param2 = info.Version;
+
+                var result = RunUpmAsync(req);
+                yield return result;
+
+                if (!result.Current.Succeeded)
+                {
+                    DisplayUpmError("Installing Release '{0}' ({1})".Fmt(info.Title, info.Version), result.Current.ErrorMessage);
+                    yield return false;
+                    yield break;
+                }
+
+                Log.Info("Installed new release '{0}' ({1})".Fmt(info.Title, info.Version));
             }
-            else
-            {
-                DisplayUpmError("Installing Release '{0}' ({1})".Fmt(name, version), result.Current.ErrorMessage);
-                yield return false;
-            }
+
+            yield return true;
         }
 
         // NOTE: Returns null on failure

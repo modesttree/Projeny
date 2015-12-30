@@ -31,6 +31,7 @@ namespace Projeny
 
             public Color ListItemColor;
             public Color ListItemHoverColor;
+            public Color ListItemSelectedColor;
         }
     }
 }

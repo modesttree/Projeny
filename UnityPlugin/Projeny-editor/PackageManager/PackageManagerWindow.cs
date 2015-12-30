@@ -24,10 +24,9 @@ namespace Projeny
 
         ViewStates _viewState = ViewStates.PackagesAndProject;
 
-        GUIStyle _buttonStyle;
-        GUIStyle _toggleStyle;
-
         PackageManagerWindowSkin _skin;
+
+        List<DraggableListEntry> _selected;
 
         [NonSerialized]
         float _split1 = 0;
@@ -73,34 +72,82 @@ namespace Projeny
             }
         }
 
-        public GUIStyle ToggleStyle
+        public IEnumerable<DraggableListEntry> Selected
         {
             get
             {
-                if (_toggleStyle == null)
+                return _selected;
+            }
+        }
+
+        public void ClearSelected()
+        {
+            _selected.Clear();
+        }
+
+        public void Select(DraggableListEntry newEntry)
+        {
+            if (_selected.Contains(newEntry))
+            {
+                if (Event.current.control)
                 {
-                    _toggleStyle = new GUIStyle(EditorStyles.miniButtonMid);
+                    _selected.RemoveWithConfirm(newEntry);
                 }
 
-                _toggleStyle.fontSize = Skin.ButtonFontSize;
-
-                return _toggleStyle;
+                return;
             }
+
+            if (!Event.current.control && !Event.current.shift)
+            {
+                _selected.Clear();
+            }
+
+            // The selection entry list should all be from the same list
+            foreach (var existingEntry in _selected.ToList())
+            {
+                if (existingEntry.ListOwner != newEntry.ListOwner)
+                {
+                    _selected.Remove(existingEntry);
+                }
+            }
+
+            if (Event.current.shift && !_selected.IsEmpty())
+            {
+                var closestEntry = _selected.Select(x => new { Distance = Mathf.Abs(x.Index - newEntry.Index), Entry = x }).OrderBy(x => x.Distance).Select(x => x.Entry).First();
+
+                int startIndex;
+                int endIndex;
+
+                if (closestEntry.Index > newEntry.Index)
+                {
+                    startIndex = newEntry.Index + 1;
+                    endIndex = closestEntry.Index - 1;
+                }
+                else
+                {
+                    startIndex = closestEntry.Index + 1;
+                    endIndex = newEntry.Index - 1;
+                }
+
+                for (int i = startIndex; i <= endIndex; i++)
+                {
+                    var inBetweenEntry = closestEntry.ListOwner.GetAtIndex(i);
+
+                    if (!_selected.Contains(inBetweenEntry))
+                    {
+                        _selected.Add(inBetweenEntry);
+                    }
+                }
+            }
+
+            _selected.Add(newEntry);
         }
 
         void OnEnable()
         {
-            _buttonStyle = null;
-            _toggleStyle = null;
-
-            if (Skin.Theme.ArrowButtonStyle == null)
+            if (_selected == null)
             {
-                Skin.Theme.ArrowButtonStyle = new GUIStyle();
-            }
-
-            if (Skin.Theme.ButtonStyle == null)
-            {
-                Skin.Theme.ButtonStyle = new GUIStyle();
+                _selected = new List<DraggableListEntry>();
             }
 
             if (Skin.Theme.DropdownTextStyle == null)
@@ -120,27 +167,27 @@ namespace Projeny
 
             if (_installedList == null)
             {
-                _installedList = new DraggableList();
-                _installedList.Handler = this;
+                _installedList = ScriptableObject.CreateInstance<DraggableList>();
+                _installedList.Manager = this;
             }
 
             if (_releasesList == null)
             {
-                _releasesList = new DraggableList();
-                _releasesList.Handler = this;
+                _releasesList = ScriptableObject.CreateInstance<DraggableList>();
+                _releasesList.Manager = this;
             }
 
 
             if (_assetsList == null)
             {
-                _assetsList = new DraggableList();
-                _assetsList.Handler = this;
+                _assetsList = ScriptableObject.CreateInstance<DraggableList>();
+                _assetsList.Manager = this;
             }
 
             if (_pluginsList == null)
             {
-                _pluginsList = new DraggableList();
-                _pluginsList.Handler = this;
+                _pluginsList = ScriptableObject.CreateInstance<DraggableList>();
+                _pluginsList.Manager = this;
             }
         }
 
@@ -245,12 +292,15 @@ namespace Projeny
                         case ListTypes.PluginItem:
                         case ListTypes.AssetItem:
                         {
-                            data.SourceList.Remove(data.Entry);
+                            foreach (var entry in data.Entries)
+                            {
+                                data.SourceList.Remove(entry);
+                            }
                             break;
                         }
                         case ListTypes.Release:
                         {
-                            StartBackgroundTask(InstallReleaseAsync((ReleaseInfo)data.Entry.Tag));
+                            StartBackgroundTask(InstallReleasesAsync(data.Entries.Select(x => (ReleaseInfo)x.Tag).ToList()));
                             break;
                         }
                         default:
@@ -270,22 +320,28 @@ namespace Projeny
                         case ListTypes.AssetItem:
                         case ListTypes.PluginItem:
                         {
-                            data.SourceList.Remove(data.Entry);
-                            dropList.Add(data.Entry);
+                            foreach (var entry in data.Entries)
+                            {
+                                data.SourceList.Remove(entry);
+                                dropList.Add(entry.Name, entry.Tag);
+                            }
                             break;
                         }
                         case ListTypes.Package:
                         {
-                            if (!dropList.DisplayValues.Contains(data.Entry.Name))
+                            foreach (var entry in data.Entries)
                             {
-                                var otherList = dropListType == ListTypes.PluginItem ? _assetsList : _pluginsList;
-
-                                if (otherList.DisplayValues.Contains(data.Entry.Name))
+                                if (!dropList.DisplayValues.Contains(entry.Name))
                                 {
-                                    otherList.Remove(data.Entry.Name);
-                                }
+                                    var otherList = dropListType == ListTypes.PluginItem ? _assetsList : _pluginsList;
 
-                                dropList.Add(data.Entry.Name);
+                                    if (otherList.DisplayValues.Contains(entry.Name))
+                                    {
+                                        otherList.Remove(entry.Name);
+                                    }
+
+                                    dropList.Add(entry.Name);
+                                }
                             }
                             break;
                         }
@@ -324,9 +380,9 @@ namespace Projeny
             }
         }
 
-        IEnumerator InstallReleaseAsync(ReleaseInfo info)
+        IEnumerator InstallReleasesAsync(List<ReleaseInfo> infos)
         {
-            var result = UpmInterface.InstallReleaseAsync(info.Title, info.Version);
+            var result = UpmInterface.InstallReleasesAsync(infos);
             yield return result;
 
             if (result.Current)
@@ -467,8 +523,12 @@ namespace Projeny
         void UpdateAvailableReleasesList()
         {
             _releasesList.Clear();
-            _releasesList.AddRange(
-                _allReleases.Select(x => new DraggableList.Entry("{0} v{1}".Fmt(x.Title, x.Version ?? "?"), x)));
+
+            foreach (var info in _allReleases)
+            {
+                _releasesList.Add(
+                    "{0} v{1}".Fmt(info.Title, info.Version ?? "?"), info);
+            }
         }
 
         void StartBackgroundTask(IEnumerator task)
@@ -493,7 +553,11 @@ namespace Projeny
         void UpdateAvailablePackagesList()
         {
             _installedList.Clear();
-            _installedList.AddRange(_allPackages.Select(x => new DraggableList.Entry(x.Name, x)));
+
+            foreach (var info in _allPackages)
+            {
+                _installedList.Add(info.Name, info);
+            }
         }
 
         void RefreshProject()
@@ -561,8 +625,15 @@ namespace Projeny
             _pluginsList.Clear();
             _assetsList.Clear();
 
-            _assetsList.AddRange(config.Packages);
-            _pluginsList.AddRange(config.PackagesPlugins);
+            foreach (var name in config.Packages)
+            {
+                _assetsList.Add(name);
+            }
+
+            foreach (var name in config.PackagesPlugins)
+            {
+                _pluginsList.Add(name);
+            }
 
             UpdateAvailablePackagesList();
         }
@@ -682,7 +753,7 @@ namespace Projeny
 
             startX = startX + buttonPadding;
 
-            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "Reload"))
+            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "Revert"))
             {
                 RefreshProject();
             }

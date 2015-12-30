@@ -5,21 +5,31 @@ using UnityEditor;
 using UnityEngine;
 using Projeny.Internal;
 
-namespace Projeny
+namespace Projeny.Internal
 {
     [Serializable]
-    public class DraggableList
+    public class DraggableListEntry : ScriptableObject
+    {
+        public DraggableList ListOwner;
+        public string Name;
+        public object Tag ;
+        public bool IsVisible = true;
+        public int Index;
+    }
+
+    [Serializable]
+    public class DraggableList : ScriptableObject
     {
         static readonly string DragId = "DraggableListData";
 
         [SerializeField]
-        List<Entry> _entryList = new List<Entry>();
+        List<DraggableListEntry> _entryList = new List<DraggableListEntry>();
 
         [SerializeField]
         Vector2 _scrollPos;
 
         [SerializeField]
-        PackageManagerWindow _owner;
+        PackageManagerWindow _manager;
 
         static DraggableListSkin _skin;
 
@@ -39,15 +49,15 @@ namespace Projeny
             }
         }
 
-        public PackageManagerWindow Handler
+        public PackageManagerWindow Manager
         {
             set
             {
-                _owner = value;
+                _manager = value;
             }
         }
 
-        public IEnumerable<Entry> Values
+        public IEnumerable<DraggableListEntry> Values
         {
             get
             {
@@ -63,39 +73,53 @@ namespace Projeny
             }
         }
 
-        public void Remove(Entry entry)
+        public void Remove(DraggableListEntry entry)
         {
             _entryList.RemoveWithConfirm(entry);
+            SortList();
+        }
+
+        public DraggableListEntry GetAtIndex(int index)
+        {
+            return _entryList[index];
         }
 
         public void Remove(string name)
         {
             _entryList.RemoveWithConfirm(_entryList.Where(x => x.Name == name).Single());
+            SortList();
         }
 
-        public void Add(Entry entry)
+        public void Add(string name, object tag)
         {
+            var entry = ScriptableObject.CreateInstance<DraggableListEntry>();
+
+            entry.Name = name;
+            entry.Tag = tag;
+            entry.ListOwner = this;
+
             _entryList.Add(entry);
+            SortList();
         }
 
         public void Add(string entry)
         {
-            _entryList.Add(new Entry(entry, null));
-        }
-
-        public void AddRange(IEnumerable<Entry> entries)
-        {
-            _entryList.AddRange(entries);
-        }
-
-        public void AddRange(IEnumerable<string> entries)
-        {
-            _entryList.AddRange(entries.Select(x => new Entry(x, null)));
+            Add(entry, null);
         }
 
         public void Clear()
         {
             _entryList.Clear();
+        }
+
+        void SortList()
+        {
+            _entryList = _entryList.OrderBy(x => x.Name).ToList();
+
+            for (int i = 0; i < _entryList.Count; i++)
+            {
+                _entryList[i].Index = i;
+            }
         }
 
         public void Draw(Rect listRect)
@@ -129,7 +153,7 @@ namespace Projeny
                         if (receivedDragData != null)
                         {
                             DragAndDrop.PrepareStartDrag();
-                            _owner.OnDragDrop(receivedDragData, this);
+                            _manager.OnDragDrop(receivedDragData, this);
                         }
                     }
 
@@ -156,7 +180,7 @@ namespace Projeny
                     {
                         var existingDragData = DragAndDrop.GetGenericData(DragId) as DragData;
 
-                        if (existingDragData != null && (_owner != null && _owner.IsDragAllowed(existingDragData, this)))
+                        if (existingDragData != null && (_manager != null && _manager.IsDragAllowed(existingDragData, this)))
                         {
                             DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
                             Event.current.Use();
@@ -174,7 +198,7 @@ namespace Projeny
             float yPos = 0;
             _scrollPos = GUI.BeginScrollView(listRect, _scrollPos, viewRect);
             {
-                foreach (var entry in _entryList.OrderBy(x => x.Name))
+                foreach (var entry in _entryList)
                 {
                     if (!entry.IsVisible)
                     {
@@ -185,7 +209,18 @@ namespace Projeny
 
                     bool isItemUnderMouse = labelRect.Contains(Event.current.mousePosition);
 
-                    ImguiUtil.DrawColoredQuad(labelRect, GUI.enabled && isItemUnderMouse ? Skin.Theme.ListItemHoverColor : Skin.Theme.ListItemColor);
+                    Color itemColor;
+
+                    if (_manager.Selected.Contains(entry))
+                    {
+                        itemColor = Skin.Theme.ListItemSelectedColor;
+                    }
+                    else
+                    {
+                        itemColor = GUI.enabled && isItemUnderMouse ? Skin.Theme.ListItemHoverColor : Skin.Theme.ListItemColor;
+                    }
+
+                    ImguiUtil.DrawColoredQuad(labelRect, itemColor);
 
                     switch (Event.current.type)
                     {
@@ -193,11 +228,13 @@ namespace Projeny
                         {
                             if (Event.current.button == 0 && isItemUnderMouse)
                             {
+                                _manager.Select(entry);
+
                                 DragAndDrop.PrepareStartDrag();
 
                                 var dragData = new DragData()
                                 {
-                                    Entry = entry,
+                                    Entries = _manager.Selected.ToList(),
                                     SourceList = this,
                                 };
 
@@ -219,22 +256,8 @@ namespace Projeny
 
         public class DragData
         {
-            public Entry Entry;
+            public List<DraggableListEntry> Entries;
             public DraggableList SourceList;
-        }
-
-        [Serializable]
-        public class Entry
-        {
-            public string Name;
-            public object Tag;
-            public bool IsVisible = true;
-
-            public Entry(string name, object tag)
-            {
-                Name = name;
-                Tag = tag;
-            }
         }
     }
 }
