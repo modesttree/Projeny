@@ -262,29 +262,13 @@ namespace Projeny
                 case ListTypes.Package:
                 {
                     contextMenu.AddItem(new GUIContent("Delete"), false, DeleteSelectedPackages);
-
-                    if (_selected.Count == 1)
-                    {
-                        contextMenu.AddItem(new GUIContent("Open Folder"), false, OpenPackageFolderForSelected);
-                    }
-                    else
-                    {
-                        contextMenu.AddDisabledItem(new GUIContent("Open Folder"));
-                    }
-
+                    contextMenu.AddOptionalItem(_selected.Count == 1, new GUIContent("Open Folder"), false, OpenPackageFolderForSelected);
                     break;
                 }
                 case ListTypes.AssetItem:
                 case ListTypes.PluginItem:
                 {
-                    //if (_selected.Count == 1)
-                    //{
-                        //contextMenu.AddItem(new GUIContent("Select in Project Tab"));
-                    //}
-                    //else
-                    //{
-                        //contextMenu.AddDisabledItem(new GUIContent("Select in Project Tab"));
-                    //}
+                    contextMenu.AddOptionalItem(_selected.Count == 1, new GUIContent("Select in Project Tab"), false, ShowSelectedInProjectTab);
                     break;
                 }
                 default:
@@ -295,6 +279,25 @@ namespace Projeny
             }
 
             contextMenu.ShowAsContext();
+        }
+
+        void ShowSelectedInProjectTab()
+        {
+            Assert.That(_selected.Select(x => ClassifyList(x.ListOwner)).All(x => x == ListTypes.PluginItem || x == ListTypes.AssetItem));
+            Assert.IsEqual(_selected.Count, 1);
+
+            var name = _selected.Single().Name;
+
+            var asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>("Assets/" + name);
+
+            if (asset == null)
+            {
+                asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>("Assets/Plugins/" + name);
+            }
+
+            Assert.IsNotNull(asset, "Could not find package '{0}' in project", name);
+
+            Selection.activeObject = asset;
         }
 
         void OpenPackageFolderForSelected()
