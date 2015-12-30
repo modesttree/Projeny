@@ -13,13 +13,14 @@ using Projeny.Internal;
 
 namespace Projeny
 {
-    public static class ProjenyConfigValidator
+    public class ProjenyConfigValidator : AssetPostprocessor
     {
-        [DidReloadScripts]
-        static void VerifyConfig()
+        static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
             VerifyThatAllDirectoriesAreJunctions();
             VerifyPlatformIsCorrect();
+
+            UnityEngine.Debug.Log("Verifying Projeny");
         }
 
         static void VerifyPlatformIsCorrect()
@@ -77,4 +78,3 @@ namespace Projeny
         }
     }
 }
-

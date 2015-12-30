@@ -12,72 +12,15 @@ MonoBehaviour:
   m_Name: DraggableListSkin
   m_EditorClassIdentifier: Assembly-CSharp-Editor-firstpass:Projeny:DraggableListSkin
   ItemHeight: 25.48
-  ItemTextStyle:
-    m_Name: 
-    m_Normal:
-      m_Background: {fileID: 0}
-      m_TextColor: {r: 0.72794116, g: 0.72794116, b: 0.72794116, a: 1}
-    m_Hover:
-      m_Background: {fileID: 2800000, guid: 22d428b3ccaaf9a4998a371bf44b082d, type: 3}
-      m_TextColor: {r: 1, g: 0, b: 0, a: 1}
-    m_Active:
-      m_Background: {fileID: 0}
-      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-    m_Focused:
-      m_Background: {fileID: 0}
-      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-    m_OnNormal:
-      m_Background: {fileID: 0}
-      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-    m_OnHover:
-      m_Background: {fileID: 2800000, guid: eeb4a528711f0c44b96688ddb4a87301, type: 3}
-      m_TextColor: {r: 1, g: 1, b: 1, a: 1}
-    m_OnActive:
-      m_Background: {fileID: 0}
-      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-    m_OnFocused:
-      m_Background: {fileID: 0}
-      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
-    m_Border:
-      m_Left: 0
-      m_Right: 0
-      m_Top: 0
-      m_Bottom: 0
-    m_Margin:
-      m_Left: 0
-      m_Right: 0
-      m_Top: 0
-      m_Bottom: 0
-    m_Padding:
-      m_Left: 11
-      m_Right: 0
-      m_Top: 2
-      m_Bottom: 0
-    m_Overflow:
-      m_Left: 0
-      m_Right: 0
-      m_Top: 0
-      m_Bottom: 0
-    m_Font: {fileID: 0}
-    m_FontSize: 17
-    m_FontStyle: 0
-    m_Alignment: 3
-    m_WordWrap: 0
-    m_RichText: 1
-    m_TextClipping: 0
-    m_ImagePosition: 0
-    m_ContentOffset: {x: 0, y: 0}
-    m_FixedWidth: 0
-    m_FixedHeight: 0
-    m_StretchWidth: 1
-    m_StretchHeight: 0
   Light:
     ListColor: {r: 0.5441177, g: 0.5441177, b: 0.5441177, a: 1}
     ListHoverColor: {r: 0.5588235, g: 0.5588235, b: 0.5588235, a: 1}
     ListItemColor: {r: 0.44852942, g: 0.44852942, b: 0.44852942, a: 0}
     ListItemHoverColor: {r: 0.44705886, g: 0.44705886, b: 0.44705886, a: 1}
+    ListItemSelectedColor: {r: 0.2509804, g: 0.3529412, b: 0.29411766, a: 1}
   Dark:
     ListColor: {r: 0.28627452, g: 0.28627452, b: 0.28627452, a: 1}
     ListHoverColor: {r: 0.31764707, g: 0.31764707, b: 0.31764707, a: 1}
     ListItemColor: {r: 0.26666668, g: 0.26666668, b: 0.26666668, a: 0}
     ListItemHoverColor: {r: 0.36862746, g: 0.36862746, b: 0.36862746, a: 1}
+    ListItemSelectedColor: {r: 0.24913493, g: 0.35294116, b: 0.29280514, a: 1}

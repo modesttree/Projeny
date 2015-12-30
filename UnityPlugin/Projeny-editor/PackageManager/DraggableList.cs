@@ -224,9 +224,37 @@ namespace Projeny.Internal
 
                     switch (Event.current.type)
                     {
+                        case EventType.ContextClick:
+                        {
+                            if (isListUnderMouse)
+                            {
+                                GenericMenu contextMenu = new GenericMenu();
+                                contextMenu.AddDisabledItem(new GUIContent("THING 1"));
+                                contextMenu.AddSeparator("");
+                                contextMenu.AddItem(new GUIContent("THING 2"), true, OnThing2);
+
+                                contextMenu.ShowAsContext();
+                                Event.current.Use();
+                            }
+
+                            break;
+                        }
+                        case EventType.MouseUp:
+                        {
+                            if (isItemUnderMouse)
+                            {
+                                if (!Event.current.shift && !Event.current.control)
+                                {
+                                    _manager.ClearSelected();
+                                    _manager.Select(entry);
+                                }
+                            }
+
+                            break;
+                        }
                         case EventType.MouseDown:
                         {
-                            if (Event.current.button == 0 && isItemUnderMouse)
+                            if (isItemUnderMouse)
                             {
                                 _manager.Select(entry);
 
@@ -252,6 +280,11 @@ namespace Projeny.Internal
                 }
             }
             GUI.EndScrollView();
+        }
+
+        void OnThing2()
+        {
+            Debug.Log("TODO - thing2");
         }
 
         public class DragData
