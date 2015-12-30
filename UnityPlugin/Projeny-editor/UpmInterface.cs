@@ -321,6 +321,31 @@ namespace Projeny
             yield return true;
         }
 
+        public static IEnumerator<Boolean> CreatePackageAsync(string name)
+        {
+            return CoRoutine.Wrap<Boolean>(CreatePackageAsyncInternal(name));
+        }
+
+        static IEnumerator CreatePackageAsyncInternal(string name)
+        {
+            var req = CreateUpmRequest("createPackage");
+
+            req.Param1 = name;
+
+            var result = RunUpmAsync(req);
+            yield return result;
+
+            if (!result.Current.Succeeded)
+            {
+                DisplayUpmError("Creating Package '{0}'".Fmt(name), result.Current.ErrorMessage);
+                yield return false;
+                yield break;
+            }
+
+            Log.Info("Created package '{0}'".Fmt(name));
+            yield return true;
+        }
+
         public static IEnumerator<Boolean> DeletePackagesAsync(List<PackageInfo> infos)
         {
             return CoRoutine.Wrap<Boolean>(DeletePackagesAsyncInternal(infos));

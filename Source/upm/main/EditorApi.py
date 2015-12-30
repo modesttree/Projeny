@@ -72,6 +72,10 @@ class Runner:
             self._log.info("Deleting package '{0}'", self._param1)
             self._packageMgr.deletePackage(self._param1)
 
+        elif self._requestId == 'createPackage':
+            self._log.info("Creating package '{0}'", self._param1)
+            self._packageMgr.createPackage(self._param1)
+
         elif self._requestId == 'installRelease':
             self._log.info("Installing release '{0}' version '{1}'", self._param1, self._param2)
             self._releaseRegistryManager.installRelease(self._param1, self._param2)
@@ -91,7 +95,7 @@ def main():
     parser.add_argument("configPath", help="")
     parser.add_argument("project", help="")
     parser.add_argument('platform', type=str, choices=[x.lower() for x in Platforms.All], help='')
-    parser.add_argument('requestId', type=str, choices=['deletePackage', 'installRelease', 'listReleases', 'listProjects', 'listPackages', 'updateLinks', 'updateCustomSolution', 'openCustomSolution', 'openUnity'], help='')
+    parser.add_argument('requestId', type=str, choices=['createPackage', 'deletePackage', 'installRelease', 'listReleases', 'listProjects', 'listPackages', 'updateLinks', 'updateCustomSolution', 'openCustomSolution', 'openUnity'], help='')
     parser.add_argument("param1", nargs='?', help="")
     parser.add_argument("param2", nargs='?', help="")
 

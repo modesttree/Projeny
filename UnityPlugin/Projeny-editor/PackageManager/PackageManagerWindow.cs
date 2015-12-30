@@ -28,6 +28,8 @@ namespace Projeny
 
         List<DraggableListEntry> _selected;
 
+        Action<Rect> _popupHandler;
+
         [NonSerialized]
         float _split1 = 0;
 
@@ -45,30 +47,6 @@ namespace Projeny
             get
             {
                 return _skin ?? (_skin = Resources.Load<PackageManagerWindowSkin>("Projeny/PackageManagerSkin"));
-            }
-        }
-
-        GUIStyle HeaderTextStyle
-        {
-            get
-            {
-                return Skin.GUISkin.GetStyle("HeaderTextStyle");
-            }
-        }
-
-        GUIStyle ProcessingPopupTextStyle
-        {
-            get
-            {
-                return Skin.GUISkin.GetStyle("ProcessingPopupTextStyle");
-            }
-        }
-
-        GUIStyle DropdownTextStyle
-        {
-            get
-            {
-                return Skin.GUISkin.GetStyle("DropdownTextStyle");
             }
         }
 
@@ -148,11 +126,6 @@ namespace Projeny
             if (_selected == null)
             {
                 _selected = new List<DraggableListEntry>();
-            }
-
-            if (Skin.Theme.DropdownTextStyle == null)
-            {
-                Skin.Theme.DropdownTextStyle = new GUIStyle();
             }
 
             if (_allPackages == null)
@@ -304,14 +277,14 @@ namespace Projeny
                 case ListTypes.AssetItem:
                 case ListTypes.PluginItem:
                 {
-                    if (_selected.Count == 1)
-                    {
-                        contextMenu.AddItem(new GUIContent("Select in Project Tab"));
-                    }
-                    else
-                    {
-                        contextMenu.AddDisabledItem(new GUIContent("Select in Project Tab"));
-                    }
+                    //if (_selected.Count == 1)
+                    //{
+                        //contextMenu.AddItem(new GUIContent("Select in Project Tab"));
+                    //}
+                    //else
+                    //{
+                        //contextMenu.AddDisabledItem(new GUIContent("Select in Project Tab"));
+                    //}
                     break;
                 }
                 default:
@@ -500,7 +473,7 @@ namespace Projeny
             var startY = rect.yMin;
             var endY = startY + Skin.HeaderHeight;
 
-            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Packages", HeaderTextStyle);
+            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Packages", Skin.HeaderTextStyle);
 
             startY = endY;
             endY = rect.yMax - Skin.ApplyButtonHeight - Skin.ApplyButtonTopPadding;
@@ -510,12 +483,27 @@ namespace Projeny
             startY = endY + Skin.ApplyButtonTopPadding;
             endY = rect.yMax;
 
-            var refreshButtonRect = Rect.MinMaxRect(startX, startY, endX, endY);
+            var horizMiddle = 0.5f * (rect.xMax + rect.xMin);
 
-            if (GUI.Button(refreshButtonRect, "Refresh"))
+            endX = horizMiddle - 0.5f * Skin.PackagesPane.ButtonPadding;
+
+            if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh"))
             {
                 StartBackgroundTask(RefreshPackagesAsync());
             }
+
+            startX = endX + Skin.PackagesPane.ButtonPadding;
+            endX = rect.xMax;
+
+            if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "New"))
+            {
+                StartBackgroundTask(CreateNewPackageAsync());
+            }
+        }
+
+        void DoMyWindow(int id)
+        {
+            ImguiUtil.DrawColoredQuad(new Rect(0, 0, 1000, 1000), Color.red);
         }
 
         void DrawProjectPane2(Rect rect)
@@ -525,7 +513,7 @@ namespace Projeny
             var startY = rect.yMin;
             var endY = startY + Skin.HeaderHeight;
 
-            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Project", HeaderTextStyle);
+            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Project", Skin.HeaderTextStyle);
 
             startY = endY;
             endY = startY + Skin.FileDropdownHeight;
@@ -535,7 +523,7 @@ namespace Projeny
             startY = endY;
             endY = startY + Skin.HeaderHeight;
 
-            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Assets Folder", HeaderTextStyle);
+            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Assets Folder", Skin.HeaderTextStyle);
 
             startY = endY;
             endY = rect.yMax - Skin.ApplyButtonHeight - Skin.ApplyButtonTopPadding;
@@ -558,7 +546,7 @@ namespace Projeny
             _assetsList.Draw(rect1);
             _pluginsList.Draw(rect2);
 
-            GUI.Label(Rect.MinMaxRect(rect1.xMin, rect1.yMax, rect1.xMax, rect2.yMin), "Plugins Folder", HeaderTextStyle);
+            GUI.Label(Rect.MinMaxRect(rect1.xMin, rect1.yMax, rect1.xMax, rect2.yMin), "Plugins Folder", Skin.HeaderTextStyle);
         }
 
         void DrawButtons(Rect rect)
@@ -601,6 +589,90 @@ namespace Projeny
         {
             Assert.IsNull(_backgroundTask);
             _backgroundTask = new CoRoutine(task);
+        }
+
+        IEnumerator CreateNewPackageAsync()
+        {
+            var userInput = PromptForInput("Enter new package name:", "Untitled");
+
+            yield return userInput;
+
+            if (userInput.Current == null)
+            {
+                // User Cancelled
+                yield break;
+            }
+
+            var succeeded = UpmInterface.CreatePackageAsync(userInput.Current);
+            yield return succeeded;
+
+            if (succeeded.Current)
+            {
+                yield return RefreshPackagesAsync();
+            }
+        }
+
+        IEnumerator<string> PromptForInput(string label, string defaultValue)
+        {
+            Assert.IsNull(_popupHandler);
+
+            string userInput = defaultValue;
+            InputDialogStates state = InputDialogStates.None;
+
+            _popupHandler = delegate(Rect fullRect)
+            {
+                ImguiUtil.DrawColoredQuad(fullRect, Skin.Theme.LoadingOverlayColor);
+
+                var size = Skin.InputDialog.PopupSize;
+                var popupRect = new Rect(fullRect.width * 0.5f - 0.5f * size.x, 0.5f * fullRect.height - 0.5f * size.y, size.x, size.y);
+
+                ImguiUtil.DrawColoredQuad(popupRect, Skin.Theme.LoadingOverlapPopupColor);
+
+                var contentRect = ImguiUtil.CreateContentRectWithPadding(
+                    popupRect, Skin.InputDialog.PanelPadding);
+
+                GUILayout.BeginArea(contentRect);
+                {
+                    GUILayout.Label(label, Skin.InputDialog.LabelStyle);
+
+                    userInput = GUILayout.TextField(userInput, 100);
+
+                    GUILayout.Space(5);
+
+                    GUILayout.BeginHorizontal();
+                    {
+                        GUILayout.FlexibleSpace();
+
+                        if (GUILayout.Button("Cancel", GUILayout.MaxWidth(100)))
+                        {
+                            state = InputDialogStates.Cancelled;
+                        }
+
+                        if (GUILayout.Button("Submit", GUILayout.MaxWidth(100)))
+                        {
+                            state = InputDialogStates.Submitted;
+                        }
+                    }
+                    GUILayout.EndHorizontal();
+                }
+                GUILayout.EndArea();
+            };
+
+            while (state == InputDialogStates.None)
+            {
+                yield return null;
+            }
+
+            _popupHandler = null;
+
+            if (state == InputDialogStates.Submitted)
+            {
+                yield return userInput;
+            }
+            else
+            {
+                // Just return null
+            }
         }
 
         IEnumerator RefreshPackagesAsync()
@@ -797,7 +869,7 @@ namespace Projeny
                 rect.yMax);
 
             var displayValues = GetConfigTypesDisplayValues();
-            var desiredConfigType = (ProjectConfigTypes)EditorGUI.Popup(dropDownRect, (int)_projectConfigType, displayValues, DropdownTextStyle);
+            var desiredConfigType = (ProjectConfigTypes)EditorGUI.Popup(dropDownRect, (int)_projectConfigType, displayValues, Skin.DropdownTextStyle);
 
             GUI.Button(dropDownRect, displayValues[(int)desiredConfigType]);
 
@@ -888,11 +960,54 @@ namespace Projeny
             }
         }
 
+        void DrawReleasePane(Rect windowRect)
+        {
+            var startX = windowRect.xMin;
+            var endX = windowRect.xMin + _split1 * windowRect.width - Skin.ListVerticalSpacing;
+            var startY = windowRect.yMin;
+            var endY = windowRect.yMax;
+
+            DrawReleasePane2(Rect.MinMaxRect(startX, startY, endX, endY));
+        }
+
+        void DrawReleasePane2(Rect rect)
+        {
+            var startX = rect.xMin;
+            var endX = rect.xMax;
+            var startY = rect.yMin;
+            var endY = startY + Skin.HeaderHeight;
+
+            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Releases", Skin.HeaderTextStyle);
+
+            startY = endY;
+            endY = rect.yMax - Skin.ApplyButtonHeight - Skin.ApplyButtonTopPadding;
+
+            _releasesList.Draw(Rect.MinMaxRect(startX, startY, endX, endY));
+
+            startY = endY + Skin.ApplyButtonTopPadding;
+            endY = rect.yMax;
+
+            if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh"))
+            {
+                StartBackgroundTask(RefreshReleasesAsync());
+            }
+        }
+
+        void DrawProjectPane(Rect windowRect)
+        {
+            var startX = windowRect.xMin + _split2 * windowRect.width + Skin.ListVerticalSpacing;
+            var endX = windowRect.xMax - Skin.ListVerticalSpacing;
+            var startY = windowRect.yMin;
+            var endY = windowRect.yMax;
+
+            var rect = Rect.MinMaxRect(startX, startY, endX, endY);
+
+            DrawProjectPane2(rect);
+        }
+
         public void OnGUI()
         {
             GUI.skin = Skin.GUISkin;
-            // I tried using the GUILayout / EditorGUILayout but found it incredibly frustrating
-            // and confusing, so I decided to just draw using raw rect coordinates instead
 
             var fullRect = new Rect(0, 0, this.position.width, this.position.height);
 
@@ -927,71 +1042,42 @@ namespace Projeny
 
             GUI.enabled = true;
 
-            if (_backgroundTask != null)
+            if (_backgroundTask == null)
             {
-                ImguiUtil.DrawColoredQuad(fullRect, Skin.Theme.LoadingOverlayColor);
-
-                var size = Skin.ProcessingPopupSize;
-                var popupRect = new Rect(fullRect.width * 0.5f - 0.5f * size.x, 0.5f * fullRect.height - 0.5f * size.y, size.x, size.y);
-
-                ImguiUtil.DrawColoredQuad(popupRect, Skin.Theme.LoadingOverlapPopupColor);
-
-                var message = "Processing";
-
-                int numExtraDots = (int)(Time.realtimeSinceStartup * Skin.ProcessingDotRepeatRate) % 5;
-
-                for (int i = 0; i < numExtraDots; i++)
+                Assert.IsNull(_popupHandler);
+            }
+            else
+            {
+                if (_popupHandler != null)
                 {
-                    message += ".";
+                    _popupHandler(fullRect);
                 }
-
-                GUI.Label(popupRect, message, ProcessingPopupTextStyle);
+                else
+                {
+                    DisplayGenericProcessingDialog(fullRect);
+                }
             }
         }
 
-        void DrawReleasePane(Rect windowRect)
+        void DisplayGenericProcessingDialog(Rect fullRect)
         {
-            var startX = windowRect.xMin;
-            var endX = windowRect.xMin + _split1 * windowRect.width - Skin.ListVerticalSpacing;
-            var startY = windowRect.yMin;
-            var endY = windowRect.yMax;
+            ImguiUtil.DrawColoredQuad(fullRect, Skin.Theme.LoadingOverlayColor);
 
-            DrawReleasePane2(Rect.MinMaxRect(startX, startY, endX, endY));
-        }
+            var size = Skin.ProcessingPopupSize;
+            var popupRect = new Rect(fullRect.width * 0.5f - 0.5f * size.x, 0.5f * fullRect.height - 0.5f * size.y, size.x, size.y);
 
-        void DrawReleasePane2(Rect rect)
-        {
-            var startX = rect.xMin;
-            var endX = rect.xMax;
-            var startY = rect.yMin;
-            var endY = startY + Skin.HeaderHeight;
+            ImguiUtil.DrawColoredQuad(popupRect, Skin.Theme.LoadingOverlapPopupColor);
 
-            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Releases", HeaderTextStyle);
+            var message = "Processing";
 
-            startY = endY;
-            endY = rect.yMax - Skin.ApplyButtonHeight - Skin.ApplyButtonTopPadding;
+            int numExtraDots = (int)(Time.realtimeSinceStartup * Skin.ProcessingDotRepeatRate) % 5;
 
-            _releasesList.Draw(Rect.MinMaxRect(startX, startY, endX, endY));
-
-            startY = endY + Skin.ApplyButtonTopPadding;
-            endY = rect.yMax;
-
-            if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh"))
+            for (int i = 0; i < numExtraDots; i++)
             {
-                StartBackgroundTask(RefreshReleasesAsync());
+                message += ".";
             }
-        }
 
-        void DrawProjectPane(Rect windowRect)
-        {
-            var startX = windowRect.xMin + _split2 * windowRect.width + Skin.ListVerticalSpacing;
-            var endX = windowRect.xMax - Skin.ListVerticalSpacing;
-            var startY = windowRect.yMin;
-            var endY = windowRect.yMax;
-
-            var rect = Rect.MinMaxRect(startX, startY, endX, endY);
-
-            DrawProjectPane2(rect);
+            GUI.Label(popupRect, message, Skin.ProcessingPopupTextStyle);
         }
 
         enum ProjectConfigTypes
@@ -1007,6 +1093,13 @@ namespace Projeny
             ReleasesAndPackages,
             PackagesAndProject,
             Project,
+        }
+
+        enum InputDialogStates
+        {
+            None,
+            Cancelled,
+            Submitted
         }
 
         enum ListTypes

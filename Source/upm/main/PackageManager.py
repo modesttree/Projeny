@@ -130,6 +130,12 @@ class PackageManager:
         self.clearProjectGeneratedFiles(projName, True)
         self._sys.deleteDirectory(fullPath)
 
+    def createPackage(self, packageName):
+        assertThat(self._varMgr.hasKey('UnityPackagesDir'), "Could not find 'UnityPackagesDir' in PathVars.  Have you set up your {0} file?", ConfigFileName)
+
+        self._log.heading('Creating new package "{0}"', packageName)
+        self._sys.createDirectory('[UnityPackagesDir]/{0}'.format(packageName))
+
     def deletePackage(self, name):
         self._log.heading("Deleting package '{0}'", name)
         assertThat(self._varMgr.hasKey('UnityPackagesDir'), "Could not find 'UnityPackagesDir' in PathVars.  Have you set up your {0} file?", ConfigFileName)

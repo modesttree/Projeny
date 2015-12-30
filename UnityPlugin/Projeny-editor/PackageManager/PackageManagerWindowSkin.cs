@@ -60,10 +60,56 @@ namespace Projeny
 
         public Vector2 ProcessingPopupSize;
 
-        public GUIStyle ProcessingPopupTextStyle;
-
         public ThemeProperties Light;
         public ThemeProperties Dark;
+
+        public PackagesPaneProperties PackagesPane;
+        public InputDialogProperties InputDialog;
+
+        public GUIStyle HeaderTextStyle
+        {
+            get
+            {
+                return GUI.skin.GetStyle("HeaderTextStyle");
+            }
+        }
+
+        public GUIStyle ProcessingPopupTextStyle
+        {
+            get
+            {
+                return GUI.skin.GetStyle("ProcessingPopupTextStyle");
+            }
+        }
+
+        public GUIStyle DropdownTextStyle
+        {
+            get
+            {
+                return GUI.skin.GetStyle("DropdownTextStyle");
+            }
+        }
+
+        [Serializable]
+        public class InputDialogProperties
+        {
+            public float PanelPadding;
+            public Vector2 PopupSize;
+
+            public GUIStyle LabelStyle
+            {
+                get
+                {
+                    return GUI.skin.GetStyle("InputDialogLabelStyle");
+                }
+            }
+        }
+
+        [Serializable]
+        public class PackagesPaneProperties
+        {
+            public float ButtonPadding;
+        }
 
         public ThemeProperties Theme
         {

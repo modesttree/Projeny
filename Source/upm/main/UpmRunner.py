@@ -129,15 +129,11 @@ class UpmRunner:
             self._createProject(self._args.createProject)
 
         if self._args.createPackage:
-            self._createPackage(self._args.createPackage)
+            self._packageMgr.createPackage(self._args.createPackage)
 
         self._runPreBuild()
         self._runBuild()
         self._runPostBuild()
-
-    def _createPackage(self, packageName):
-        self._log.heading('Creating new package "{0}"', packageName)
-        self._sys.createDirectory('[UnityPackagesDir]/{0}'.format(packageName))
 
     def _createProject(self, projName):
         self._log.heading('Initializing new project "{0}"', projName)

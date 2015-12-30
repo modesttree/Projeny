@@ -10,5 +10,10 @@ namespace Projeny.Internal
             GUI.DrawTexture(rect, Texture2D.whiteTexture);
             GUI.color = Color.white;
         }
+
+        public static Rect CreateContentRectWithPadding(Rect rect, float padding)
+        {
+            return Rect.MinMaxRect(rect.xMin + padding, rect.yMin + padding, rect.xMax - padding, rect.yMax - padding);
+        }
     }
 }
