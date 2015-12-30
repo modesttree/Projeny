@@ -195,6 +195,8 @@ namespace Projeny.Internal
                 }
             }
 
+            bool clickedItem = false;
+
             float yPos = 0;
             _scrollPos = GUI.BeginScrollView(listRect, _scrollPos, viewRect);
             {
@@ -228,12 +230,7 @@ namespace Projeny.Internal
                         {
                             if (isListUnderMouse)
                             {
-                                GenericMenu contextMenu = new GenericMenu();
-                                contextMenu.AddDisabledItem(new GUIContent("THING 1"));
-                                contextMenu.AddSeparator("");
-                                contextMenu.AddItem(new GUIContent("THING 2"), true, OnThing2);
-
-                                contextMenu.ShowAsContext();
+                                _manager.OpenContextMenu(this);
                                 Event.current.Use();
                             }
 
@@ -241,7 +238,7 @@ namespace Projeny.Internal
                         }
                         case EventType.MouseUp:
                         {
-                            if (isItemUnderMouse)
+                            if (isItemUnderMouse && Event.current.button == 0)
                             {
                                 if (!Event.current.shift && !Event.current.control)
                                 {
@@ -256,18 +253,23 @@ namespace Projeny.Internal
                         {
                             if (isItemUnderMouse)
                             {
+                                clickedItem = true;
                                 _manager.Select(entry);
 
-                                DragAndDrop.PrepareStartDrag();
-
-                                var dragData = new DragData()
+                                if (Event.current.button == 0)
                                 {
-                                    Entries = _manager.Selected.ToList(),
-                                    SourceList = this,
-                                };
+                                    DragAndDrop.PrepareStartDrag();
 
-                                DragAndDrop.SetGenericData(DragId, dragData);
-                                DragAndDrop.objectReferences = new UnityEngine.Object[0];
+                                    var dragData = new DragData()
+                                    {
+                                        Entries = _manager.Selected.ToList(),
+                                        SourceList = this,
+                                    };
+
+                                    DragAndDrop.SetGenericData(DragId, dragData);
+                                    DragAndDrop.objectReferences = new UnityEngine.Object[0];
+                                }
+
                                 Event.current.Use();
                             }
                             break;
@@ -280,6 +282,11 @@ namespace Projeny.Internal
                 }
             }
             GUI.EndScrollView();
+
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && !clickedItem &&  isListUnderMouse)
+            {
+                _manager.ClearSelected();
+            }
         }
 
         void OnThing2()

@@ -29,6 +29,9 @@ namespace Projeny
         List<DraggableListEntry> _selected;
 
         [NonSerialized]
+        List<DraggableListEntry> _contextMenuSelectedSnapshot;
+
+        [NonSerialized]
         float _split1 = 0;
 
         [NonSerialized]
@@ -273,6 +276,66 @@ namespace Projeny
             return true;
         }
 
+        public void OpenContextMenu(DraggableList sourceList)
+        {
+            var listType = ClassifyList(sourceList);
+
+            GenericMenu contextMenu = new GenericMenu();
+
+            _contextMenuSelectedSnapshot = _selected.ToList();
+
+            switch (listType)
+            {
+                case ListTypes.Release:
+                {
+                    contextMenu.AddDisabledItem(new GUIContent("TODO"));
+                    break;
+                }
+                case ListTypes.Package:
+                {
+                    contextMenu.AddItem(new GUIContent("Delete"), false, DeleteSelectedPackages);
+                    break;
+                }
+                case ListTypes.AssetItem:
+                case ListTypes.PluginItem:
+                {
+                    contextMenu.AddDisabledItem(new GUIContent("TODO"));
+                    break;
+                }
+                default:
+                {
+                    Assert.Throw();
+                    break;
+                }
+            }
+
+            contextMenu.ShowAsContext();
+        }
+
+        void DeleteSelectedPackages()
+        {
+            StartBackgroundTask(DeleteSelectedPackagesAsync());
+        }
+
+        IEnumerator DeleteSelectedPackagesAsync()
+        {
+            var selected = _contextMenuSelectedSnapshot;
+
+            foreach (var sel in selected)
+            {
+                UnityEngine.Debug.Log("Deleting package " + sel.Name);
+            }
+
+            Assert.That(selected.All(x => ClassifyList(x.ListOwner) == ListTypes.Package));
+
+            var result = UpmInterface.DeletePackagesAsync(selected.Select(x => (PackageInfo)x.Tag).ToList());
+            yield return result;
+
+            // Do this regardless of whether result.Current is true since
+            // some packages might have been deleted
+            yield return RefreshPackagesAsync();
+        }
+
         public void OnDragDrop(DraggableList.DragData data, DraggableList dropList)
         {
             if (data.SourceList == dropList || !IsDragAllowed(data, dropList))
@@ -356,20 +419,7 @@ namespace Projeny
                 }
                 case ListTypes.Release:
                 {
-                    switch (sourceListType)
-                    {
-                        case ListTypes.Package:
-                        {
-                            Log.Trace("TODO - uninstall package");
-                            break;
-                        }
-                        default:
-                        {
-                            Assert.Throw();
-                            break;
-                        }
-                    }
-
+                    // Nothing can drag here
                     break;
                 }
                 default:

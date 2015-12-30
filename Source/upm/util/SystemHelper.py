@@ -182,6 +182,10 @@ class SystemHelper:
                 continue
             break
 
+    def deleteDirectory(self, dirPath):
+        dirPath = self._varManager.expand(dirPath)
+        shutil.rmtree(dirPath)
+
     def deleteDirectoryIfExists(self, dirPath):
         dirPath = self._varManager.expand(dirPath)
 

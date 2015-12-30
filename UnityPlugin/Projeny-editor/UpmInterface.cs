@@ -321,6 +321,35 @@ namespace Projeny
             yield return true;
         }
 
+        public static IEnumerator<Boolean> DeletePackagesAsync(List<PackageInfo> infos)
+        {
+            return CoRoutine.Wrap<Boolean>(DeletePackagesAsyncInternal(infos));
+        }
+
+        static IEnumerator DeletePackagesAsyncInternal(List<PackageInfo> infos)
+        {
+            foreach (var info in infos)
+            {
+                var req = CreateUpmRequest("deletePackage");
+
+                req.Param1 = info.Name;
+
+                var result = RunUpmAsync(req);
+                yield return result;
+
+                if (!result.Current.Succeeded)
+                {
+                    DisplayUpmError("Deleting Package '{0}'".Fmt(info.Name), result.Current.ErrorMessage);
+                    yield return false;
+                    yield break;
+                }
+
+                Log.Info("Deleted package '{0}'".Fmt(info.Name));
+            }
+
+            yield return true;
+        }
+
         // NOTE: Returns null on failure
         public static IEnumerator<List<ReleaseInfo>> LookupReleaseListAsync()
         {

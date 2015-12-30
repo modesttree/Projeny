@@ -119,6 +119,16 @@ class PackageManager:
 
         return result
 
+    def deletePackage(self, name):
+        self._log.heading("Deleting package '{0}'", name)
+        assertThat(self._varMgr.hasKey('UnityPackagesDir'), "Could not find 'UnityPackagesDir' in PathVars.  Have you set up your {0} file?", ConfigFileName)
+
+        fullPath = '[UnityPackagesDir]/{0}'.format(name)
+
+        assertThat(self._sys.directoryExists(fullPath), "Could not find package with name '{0}' - delete failed", name)
+
+        self._sys.deleteDirectory(fullPath)
+
     def getAllPackageNames(self):
         assertThat(self._varMgr.hasKey('UnityPackagesDir'), "Could not find 'UnityPackagesDir' in PathVars.  Have you set up your {0} file?", ConfigFileName)
 
