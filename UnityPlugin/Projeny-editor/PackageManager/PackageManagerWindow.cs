@@ -656,22 +656,17 @@ namespace Projeny
                 rect.xMax - Skin.FileButtonsPercentWidth * rect.width,
                 rect.yMax);
 
-            ImguiUtil.DrawColoredQuad(dropDownRect, Skin.FileDropdownBackgroundColor);
+            var displayValues = GetConfigTypesDisplayValues();
+            var desiredConfigType = (ProjectConfigTypes)EditorGUI.Popup(dropDownRect, (int)_projectConfigType, displayValues, DropdownTextStyle);
 
-            GUI.DrawTexture(new Rect(dropDownRect.xMax - Skin.ArrowSize.x + Skin.ArrowOffset.x, dropDownRect.yMin + Skin.ArrowOffset.y, Skin.ArrowSize.x, Skin.ArrowSize.y), Skin.FileDropdownArrow);
-
-            var desiredConfigType = (ProjectConfigTypes)EditorGUI.Popup(dropDownRect, (int)_projectConfigType, GetConfigTypesDisplayValues(), DropdownTextStyle);
+            GUI.Button(dropDownRect, displayValues[(int)desiredConfigType]);
 
             if (desiredConfigType != _projectConfigType)
             {
                 TryChangeProjectType(desiredConfigType);
             }
 
-            if (Event.current.type == EventType.Repaint)
-            {
-                Graphics.DrawTexture(dropDownRect, Skin.FileDropdownBackground, Skin.FileDropdownBorder,
-                Skin.FileDropdownBorder, Skin.FileDropdownBorder, Skin.FileDropdownBorder);
-            }
+            GUI.DrawTexture(new Rect(dropDownRect.xMax - Skin.ArrowSize.x + Skin.ArrowOffset.x, dropDownRect.yMin + Skin.ArrowOffset.y, Skin.ArrowSize.x, Skin.ArrowSize.y), Skin.FileDropdownArrow);
 
             var startX = rect.xMax - Skin.FileButtonsPercentWidth * rect.width;
             var startY = rect.yMin;

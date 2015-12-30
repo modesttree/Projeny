@@ -1,10 +1,9 @@
 using System;
-using Projeny.Internal;
-using UnityEngine;
-using UnityEditor;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
+using UnityEngine;
+using Projeny.Internal;
 
 namespace Projeny
 {
@@ -23,6 +22,14 @@ namespace Projeny
         PackageManagerWindow _owner;
 
         static DraggableListSkin _skin;
+
+        GUIStyle ItemTextStyle
+        {
+            get
+            {
+                return GUI.skin.GetStyle("DraggableListItemStyle");
+            }
+        }
 
         DraggableListSkin Skin
         {
@@ -94,13 +101,13 @@ namespace Projeny
         public void Draw(Rect listRect)
         {
             // Can this be calculated instead?
-            var widthOfScrollBar = 50.0f;
+            var widthOfScrollBar = 15.0f;
 
-            var viewRect = new Rect(0, 0, listRect.width - widthOfScrollBar, _entryList.Count * Skin.ItemHeight);
+            var viewRect = new Rect(0, 0, listRect.width - 30.0f, _entryList.Count * Skin.ItemHeight);
 
             var isListUnderMouse = listRect.Contains(Event.current.mousePosition);
 
-            ImguiUtil.DrawColoredQuad(listRect, GUI.enabled && isListUnderMouse ? Skin.ListHoverColor : Skin.ListColor);
+            ImguiUtil.DrawColoredQuad(listRect, GUI.enabled && isListUnderMouse ? Skin.Theme.ListHoverColor : Skin.Theme.ListColor);
 
             switch (Event.current.type)
             {
@@ -178,7 +185,7 @@ namespace Projeny
 
                     bool isItemUnderMouse = labelRect.Contains(Event.current.mousePosition);
 
-                    ImguiUtil.DrawColoredQuad(labelRect, GUI.enabled && isItemUnderMouse ? Skin.ListItemHoverColor : Skin.ListItemColor);
+                    ImguiUtil.DrawColoredQuad(labelRect, GUI.enabled && isItemUnderMouse ? Skin.Theme.ListItemHoverColor : Skin.Theme.ListItemColor);
 
                     switch (Event.current.type)
                     {
@@ -202,7 +209,7 @@ namespace Projeny
                         }
                     }
 
-                    GUI.Label(labelRect, entry.Name, Skin.ItemTextStyle);
+                    GUI.Label(labelRect, entry.Name, ItemTextStyle);
 
                     yPos += Skin.ItemHeight;
                 }

@@ -1,3 +1,4 @@
+using System;
 using Projeny.Internal;
 using UnityEngine;
 using UnityEditor;
@@ -11,16 +12,27 @@ namespace Projeny
     {
         public float ItemHeight;
 
-        public Color ListColor;
-        public Color ListHoverColor;
-
-        public Color ListItemColor;
-        public Color ListItemHoverColor;
-
         public GUIStyle ItemTextStyle;
-        public GUIStyle ListStyle;
 
-        public GUIStyle Scrollbar;
+        public ThemeProperties Light;
+        public ThemeProperties Dark;
+
+        public ThemeProperties Theme
+        {
+            get
+            {
+                return EditorGUIUtility.isProSkin ? Dark : Light;
+            }
+        }
+
+        [Serializable]
+        public class ThemeProperties
+        {
+            public Color ListColor;
+            public Color ListHoverColor;
+
+            public Color ListItemColor;
+            public Color ListItemHoverColor;
+        }
     }
 }
-
