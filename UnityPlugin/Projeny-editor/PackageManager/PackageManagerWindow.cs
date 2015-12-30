@@ -304,7 +304,14 @@ namespace Projeny
                 case ListTypes.AssetItem:
                 case ListTypes.PluginItem:
                 {
-                    contextMenu.AddDisabledItem(new GUIContent("TODO"));
+                    if (_selected.Count == 1)
+                    {
+                        contextMenu.AddItem(new GUIContent("Select in Project Tab"));
+                    }
+                    else
+                    {
+                        contextMenu.AddDisabledItem(new GUIContent("Select in Project Tab"));
+                    }
                     break;
                 }
                 default:

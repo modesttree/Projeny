@@ -119,6 +119,17 @@ class PackageManager:
 
         return result
 
+    def deleteProject(self, projName):
+        self._log.heading("Deleting project '{0}'", projName)
+        assertThat(self._varMgr.hasKey('UnityProjectsDir'), "Could not find 'UnityProjectsDir' in PathVars.  Have you set up your {0} file?", ConfigFileName)
+
+        fullPath = '[UnityProjectsDir]/{0}'.format(projName)
+
+        assertThat(self._sys.directoryExists(fullPath), "Could not find project with name '{0}' - delete failed", projName)
+
+        self.clearProjectGeneratedFiles(projName, True)
+        self._sys.deleteDirectory(fullPath)
+
     def deletePackage(self, name):
         self._log.heading("Deleting package '{0}'", name)
         assertThat(self._varMgr.hasKey('UnityPackagesDir'), "Could not find 'UnityPackagesDir' in PathVars.  Have you set up your {0} file?", ConfigFileName)

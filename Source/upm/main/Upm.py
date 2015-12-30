@@ -42,6 +42,8 @@ from upm.util.UnityHelper import UnityHelper
 def addArguments(parser):
     parser.add_argument('-cfg', '--configPath', metavar='CONFIG_PATH', type=str, help="TBD")
 
+    parser.add_argument('-sp', '--suppressPrompts', action='store_true', help='If unset, confirmation prompts will be displayed for important operations.')
+
     parser.add_argument('-p', '--project', metavar='PROJECT_NAME', type=str, help="The project to apply changes to.")
     parser.add_argument('-pl', '--platform', type=str, default='win', choices=['win', 'webp', 'webgl', 'and', 'osx', 'ios', 'lin'], help='The platform to use.  If unspecified, windows is assumed.')
 
@@ -63,7 +65,10 @@ def addArguments(parser):
 
     parser.add_argument('-clp', '--clearProjectGeneratedFiles', action='store_true', help='Remove the generated files for the given project')
     parser.add_argument('-cla', '--clearAllProjectGeneratedFiles', action='store_true', help='Remove all the generated files for all projects')
+
     parser.add_argument('-dal', '--deleteAllLinks', action='store_true', help='Delete all directory links for all projects')
+    parser.add_argument('-dpr', '--deleteProject', metavar='PROJECT_NAME', type=str, help="")
+    parser.add_argument('-dpa', '--deletePackage', metavar='PACKAGE_NAME', type=str, help="")
 
     parser.add_argument('-ula', '--updateLinksAllProjects', action='store_true', help='Updates the directory links for all projects')
 

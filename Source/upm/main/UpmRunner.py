@@ -55,6 +55,19 @@ class UpmRunner:
         if self._args.deleteAllLinks:
             self._packageMgr.deleteAllLinks()
 
+        if self._args.deletePackage:
+            if not self._args.suppressPrompts:
+                if not MiscUtil.confirmChoice("Are you sure you want to delete package '{0}'? (y/n)  \nNote that this change is non-recoverable!  (unless you are using source control)  ".format(self._args.deletePackage)):
+                    assertThat(False, "User aborted operation")
+
+            self._packageMgr.deletePackage(self._args.deletePackage)
+
+        if self._args.deleteProject:
+            if not self._args.suppressPrompts:
+                if not MiscUtil.confirmChoice("Are you sure you want to delete project '{0}'? (y/n)  \nNote that this will only delete your unity project settings and the {1} for this project.  \nThe rest of the content for your project will remain in the UnityPackages folder  ".format(self._args.deleteProject, ProjectConfigFileName)):
+                    assertThat(False, "User aborted operation")
+            self._packageMgr.deleteProject(self._args.deleteProject)
+
         if self._args.installRelease:
             self._releaseRegistryManager.installRelease(self._args.installRelease)
 
