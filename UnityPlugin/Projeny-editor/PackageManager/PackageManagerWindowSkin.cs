@@ -24,21 +24,15 @@ namespace Projeny
 
         public float InterpSpeed;
 
-        public float ViewToggleHeight;
-
         public float HeaderHeight;
         public float ListVerticalSpacing;
         public float ListHorizontalSpacing;
 
         public float MarginTop;
-        public float MarginRight;
-        public float MarginLeft;
         public float MarginBottom;
 
         public float ArrowWidth;
         public float ArrowHeight;
-
-        public float ArrowColumnPadding;
 
         public float FileButtonsPadding;
         public float FileButtonsPercentWidth;
@@ -49,22 +43,10 @@ namespace Projeny
 
         public float ProcessingDotRepeatRate;
 
-        public float FileSelectLabelWidth;
-
         public float FileDropdownHeight;
-        public float FileDropdownTopPadding;
 
         public int ButtonFontSize;
-        public int FilePopupFontSize;
 
-        public float FileDropdownReloadFileButtonWidth;
-        public float FileDropdownSaveFileButtonWidth;
-        public float FileDropdownSaveFileButtonLeftPadding;
-
-        public float FileDropdownOpenFileButtonWidth;
-        public float FileDropdownOpenFileButtonLeftPadding;
-
-        public Color FileDropdownBackgroundColor;
         public Texture2D FileDropdownArrow;
         public Texture2D FileDropdownBackground;
 
@@ -75,10 +57,6 @@ namespace Projeny
 
         public Vector2 ArrowSize;
         public Vector2 ArrowOffset;
-
-        public int FileDropdownBorder;
-
-        public float ViewSelectSpacing;
 
         public Vector2 ProcessingPopupSize;
 
@@ -98,7 +76,6 @@ namespace Projeny
         [Serializable]
         public class ThemeProperties
         {
-            public Texture2D ButtonImage;
             public Color LoadingOverlayColor;
             public Color LoadingOverlapPopupColor;
             public GUIStyle DropdownTextStyle;

@@ -12,8 +12,6 @@ namespace Projeny
     {
         public float ItemHeight;
 
-        public GUIStyle ItemTextStyle;
-
         public ThemeProperties Light;
         public ThemeProperties Dark;
 
