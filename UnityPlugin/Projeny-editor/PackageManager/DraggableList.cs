@@ -12,7 +12,7 @@ namespace Projeny.Internal
     {
         public DraggableList ListOwner;
         public string Name;
-        public object Tag ;
+        public UnityEngine.Object Tag;
         public bool IsVisible = true;
         public int Index;
     }
@@ -90,7 +90,7 @@ namespace Projeny.Internal
             SortList();
         }
 
-        public void Add(string name, object tag)
+        public void Add(string name, UnityEngine.Object tag)
         {
             var entry = ScriptableObject.CreateInstance<DraggableListEntry>();
 

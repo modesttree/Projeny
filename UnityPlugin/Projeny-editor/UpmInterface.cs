@@ -378,7 +378,7 @@ namespace Projeny
                     .Split(new string[] { "---" }, StringSplitOptions.None);
 
                 yield return docs
-                    .Select(x => YamlSerializer.Deserialize<ReleaseInfo>(x))
+                    .Select(x => UpmSerializer.DeserializeReleaseInfo(x))
                     .Where(x => x != null).ToList();
             }
             else
@@ -410,7 +410,7 @@ namespace Projeny
                 .Split(new string[] { "---" }, StringSplitOptions.None);
 
             yield return docs
-                .Select(x => YamlSerializer.Deserialize<PackageInfo>(x)).Where(x => x != null).ToList();
+                .Select(x => UpmSerializer.DeserializePackageInfo(x)).Where(x => x != null).ToList();
         }
 
         public class UpmException : Exception

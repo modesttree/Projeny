@@ -726,7 +726,7 @@ namespace Projeny
 
         ProjectConfig DeserializeProjectConfig(string configPath)
         {
-            return YamlSerializer.Deserialize<ProjectConfig>(File.ReadAllText(configPath));
+            return UpmSerializer.DeserializeProjectConfig(File.ReadAllText(configPath));
         }
 
         ProjectConfig GetProjectConfigFromLists()
@@ -741,7 +741,7 @@ namespace Projeny
 
         string GetSerializedProjectConfigFromLists()
         {
-            return YamlSerializer.Serialize<ProjectConfig>(GetProjectConfigFromLists());
+            return UpmSerializer.SerializeProjectConfig(GetProjectConfigFromLists());
         }
 
         void TryChangeProjectType(ProjectConfigTypes configType)
