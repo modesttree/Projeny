@@ -11,7 +11,7 @@ from upm.reg.AssetStoreCacheRegistry import AssetStoreCacheRegistry
 from upm.reg.RemoteServerRegistry import RemoteServerRegistry
 
 import os
-import yaml
+import upm.util.YamlSerializer as YamlSerializer
 
 ReleaseInfoFileName = 'Release.yaml'
 
@@ -71,6 +71,10 @@ class ReleaseRegistryManager:
                 yield release
 
     def installRelease(self, releaseName, releaseVersion):
+
+        # TODO: - when not provided just install the newest
+        assertThat(releaseVersion)
+
         self._lazyInit()
         self._log.heading("Attempting to install release '{0}'", releaseName)
 
@@ -80,12 +84,11 @@ class ReleaseRegistryManager:
 
         for registry in self._releaseRegistries:
             for release in registry.releases:
-                if release.Title == releaseName and release.Version == releaseVersion:
+                if release.name == releaseName and release.versionCode == releaseVersion:
                     registry.installRelease(release, destDir)
 
-                    outInfo = release.__dict__
-                    outInfo['InstallDate'] = datetime.now()
-                    yamlStr = yaml.dump(outInfo, default_flow_style=False)
+                    release.installDate = datetime.utcnow()
+                    yamlStr = YamlSerializer.serialize(release)
                     self._sys.writeFileAsText(os.path.join(destDir, ReleaseInfoFileName), yamlStr)
 
                     self._log.info("Successfully installed '{0}' (version {1})", releaseName, releaseVersion)

@@ -21,8 +21,8 @@ import upm.util.MiscUtil as MiscUtil
 import upm.util.PlatformUtil as PlatformUtil
 
 from upm.util.Assert import *
-import yaml
 
+import upm.util.YamlSerializer as YamlSerializer
 import upm.ioc.Container as Container
 from upm.ioc.Inject import Inject
 from upm.ioc.Inject import InjectMany
@@ -108,7 +108,7 @@ class PackageManager:
             version = None
 
             if self._sys.fileExists(releaseInfoPath):
-                fileInfo = yaml.load(self._sys.readFileAsText(releaseInfoPath))
+                fileInfo = YamlSerializer.deserialize(self._sys.readFileAsText(releaseInfoPath))
                 version = fileInfo['Version']
 
             info = {}

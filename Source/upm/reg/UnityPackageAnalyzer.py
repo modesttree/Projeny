@@ -50,7 +50,10 @@ class UnityPackageAnalyzer:
         info.categoryLabel = allInfo['category']['label']
         info.uploadId = allInfo.get('upload_id', None)
         info.description = allInfo.get('description', '')
-        info.publishDate = allInfo['pubdate']
+
+        pubDate = allInfo['pubdate']
+        info.publishDate = datetime.strptime(pubDate, "%d %b %Y")
+
         info.unityVersion = allInfo.get('unity_version', None)
         info.linkId = allInfo['link']['id']
         info.linkType = allInfo['link']['type']
@@ -102,7 +105,7 @@ if __name__ == '__main__':
     Container.bind('Config').toSingle(Config, [])
     Container.bind('Logger').toSingle(Logger)
     Container.bind('VarManager').toSingle(VarManager, { 'UnityExePath': "C:/Program Files/Unity/Editor/Unity.exe" })
-    Container.bind('LogStream').toSingle(LogStreamConsole, True, True)
+    #Container.bind('LogStream').toSingle(LogStreamConsole, True, True)
     Container.bind('SystemHelper').toSingle(SystemHelper)
     Container.bind('ProcessRunner').toSingle(ProcessRunner)
 

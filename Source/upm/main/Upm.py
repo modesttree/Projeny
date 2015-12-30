@@ -7,7 +7,7 @@ import argparse
 import upm.util.MiscUtil as MiscUtil
 import upm.util.PlatformUtil as PlatformUtil
 
-from upm.config.YamlLoader import loadYamlFilesThatExist
+from upm.config.YamlConfigLoader import loadYamlFilesThatExist
 from upm.config.Config import Config
 from upm.util.VarManager import VarManager
 from upm.util.ZipHelper import ZipHelper

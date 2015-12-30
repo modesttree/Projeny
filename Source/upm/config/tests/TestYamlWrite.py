@@ -11,7 +11,7 @@ import upm.ioc.IocAssertions as Assertions
 
 from upm.util.VarManager import VarManager
 from upm.config.Config import Config
-from upm.config.YamlLoader import loadYamlFilesThatExist
+from upm.config.YamlConfigLoader import loadYamlFilesThatExist
 
 ScriptDir = os.path.dirname(os.path.realpath(__file__))
 

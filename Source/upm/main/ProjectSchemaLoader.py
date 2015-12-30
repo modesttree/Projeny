@@ -10,7 +10,7 @@ from upm.ioc.Inject import Inject
 import upm.ioc.IocAssertions as Assertions
 import upm.util.JunctionUtil as JunctionUtil
 from upm.config.Config import Config
-from upm.config.YamlLoader import loadYamlFilesThatExist
+from upm.config.YamlConfigLoader import loadYamlFilesThatExist
 
 ProjectConfigFileName = 'project.yaml'
 ProjectUserConfigFileName = 'projectUser.yaml'

@@ -2,7 +2,7 @@
 from upm.log.LogStreamFile import LogStreamFile
 import upm.main.Upm as Upm
 
-import yaml
+import upm.util.YamlSerializer as YamlSerializer
 from upm.log.LogStreamConsoleErrorsOnly import LogStreamConsoleErrorsOnly
 import os
 import upm.ioc.Container as Container
@@ -56,7 +56,7 @@ class Runner:
             infos = self._packageMgr.getAllPackageInfos()
             for packageInfo in infos:
                 print('---')
-                print(yaml.dump(packageInfo, default_flow_style=False))
+                print(YamlSerializer.serialize(packageInfo))
 
         elif self._requestId == 'listProjects':
             projectNames = self._packageMgr.getAllProjectNames()
@@ -66,11 +66,7 @@ class Runner:
         elif self._requestId == 'listReleases':
             for release in self._releaseRegistryManager.lookupAllReleases():
                 print('---')
-                releaseDict = release.__dict__
-                if release.assetStoreInfo:
-                    releaseDict['assetStoreInfo'] = release.assetStoreInfo.__dict__
-                # width is necessary otherwise it inserts newlines that are picked up as part of the string by the unity side
-                print(yaml.dump(releaseDict, width=9999999, default_flow_style=False))
+                print(YamlSerializer.serialize(release))
 
         elif self._requestId == 'deletePackage':
             self._log.info("Deleting package '{0}'", self._param1)
