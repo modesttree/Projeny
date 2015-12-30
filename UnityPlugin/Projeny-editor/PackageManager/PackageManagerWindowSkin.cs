@@ -66,6 +66,14 @@ namespace Projeny
         public PackagesPaneProperties PackagesPane;
         public InputDialogProperties InputDialog;
 
+        public GUIStyle ItemTextStyle
+        {
+            get
+            {
+                return GUI.skin.GetStyle("DraggableListItemStyle");
+            }
+        }
+
         public GUIStyle HeaderTextStyle
         {
             get
@@ -122,6 +130,7 @@ namespace Projeny
         [Serializable]
         public class ThemeProperties
         {
+            public Color VersionColor;
             public Color LoadingOverlayColor;
             public Color LoadingOverlapPopupColor;
             public GUIStyle DropdownTextStyle;

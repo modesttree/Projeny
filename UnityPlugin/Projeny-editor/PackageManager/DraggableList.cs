@@ -33,14 +33,6 @@ namespace Projeny.Internal
 
         static DraggableListSkin _skin;
 
-        GUIStyle ItemTextStyle
-        {
-            get
-            {
-                return GUI.skin.GetStyle("DraggableListItemStyle");
-            }
-        }
-
         DraggableListSkin Skin
         {
             get
@@ -276,7 +268,7 @@ namespace Projeny.Internal
                         }
                     }
 
-                    GUI.Label(labelRect, entry.Name, ItemTextStyle);
+                    _manager.DrawItemLabel(labelRect, entry);
 
                     yPos += Skin.ItemHeight;
                 }

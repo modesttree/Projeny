@@ -58,6 +58,62 @@ namespace Projeny
             }
         }
 
+        public void DrawItemLabel(Rect rect, DraggableListEntry entry)
+        {
+            switch (ClassifyList(entry.ListOwner))
+            {
+                case ListTypes.Release:
+                {
+                    var info = (ReleaseInfo)(entry.Tag);
+                    DrawItemLabelWithVersion(rect, info.Name, info.Version);
+                    break;
+                }
+                case ListTypes.Package:
+                {
+                    var info = (PackageInfo)(entry.Tag);
+
+                    if (_viewState == ViewStates.ReleasesAndPackages)
+                    {
+                        DrawItemLabelWithVersion(rect, info.Name, info.Version);
+                    }
+                    else
+                    {
+                        DrawListItem(rect, info.Name);
+                    }
+
+                    break;
+                }
+                case ListTypes.AssetItem:
+                case ListTypes.PluginItem:
+                {
+                    DrawListItem(rect, entry.Name);
+                    break;
+                }
+                default:
+                {
+                    Assert.Throw();
+                    break;
+                }
+            }
+        }
+
+        string ColorToHex(Color32 color)
+        {
+            string hex = color.r.ToString("X2") + color.g.ToString("X2") + color.b.ToString("X2");
+            return hex;
+        }
+
+        void DrawListItem(Rect rect, string name)
+        {
+            GUI.Label(rect, name, Skin.ItemTextStyle);
+        }
+
+        void DrawItemLabelWithVersion(Rect rect, string name, string version)
+        {
+            var labelStr = string.IsNullOrEmpty(version) ? name : "{0} <color=#{1}>v{2}</color>".Fmt(name, ColorToHex(Skin.Theme.VersionColor), version);
+            GUI.Label(rect, labelStr, Skin.ItemTextStyle);
+        }
+
         public void ClearSelected()
         {
             _selected.Clear();
@@ -604,8 +660,7 @@ namespace Projeny
 
             foreach (var info in _allReleases)
             {
-                _releasesList.Add(
-                    info.Name + (info.Version == null ? "" : " (version {0})".Fmt(info.Version)), info);
+                _releasesList.Add(info.Name, info);
             }
         }
 
