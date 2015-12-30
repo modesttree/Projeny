@@ -49,6 +49,22 @@ namespace Projeny
             }
         }
 
+        GUIStyle HeaderTextStyle
+        {
+            get
+            {
+                return Skin.GUISkin.GetStyle("HeaderTextStyle");
+            }
+        }
+
+        GUIStyle DropdownTextStyle
+        {
+            get
+            {
+                return Skin.GUISkin.GetStyle("DropdownTextStyle");
+            }
+        }
+
         public GUIStyle ToggleStyle
         {
             get
@@ -74,14 +90,19 @@ namespace Projeny
                 Skin.ProcessingPopupTextStyle = new GUIStyle();
             }
 
-            if (Skin.ButtonStyle == null)
+            if (Skin.Theme.ArrowButtonStyle == null)
             {
-                Skin.ButtonStyle = new GUIStyle();
+                Skin.Theme.ArrowButtonStyle = new GUIStyle();
             }
 
-            if (Skin.DropdownTextStyle == null)
+            if (Skin.Theme.ButtonStyle == null)
             {
-                Skin.DropdownTextStyle = new GUIStyle();
+                Skin.Theme.ButtonStyle = new GUIStyle();
+            }
+
+            if (Skin.Theme.DropdownTextStyle == null)
+            {
+                Skin.Theme.DropdownTextStyle = new GUIStyle();
             }
 
             if (_allPackages == null)
@@ -354,7 +375,7 @@ namespace Projeny
             var startY = rect.yMin;
             var endY = startY + Skin.HeaderHeight;
 
-            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Packages", Skin.HeaderTextStyle);
+            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Packages", HeaderTextStyle);
 
             startY = endY;
             endY = rect.yMax - Skin.ApplyButtonHeight - Skin.ApplyButtonTopPadding;
@@ -364,7 +385,9 @@ namespace Projeny
             startY = endY + Skin.ApplyButtonTopPadding;
             endY = rect.yMax;
 
-            if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh", Skin.ButtonStyle))
+            var refreshButtonRect = Rect.MinMaxRect(startX, startY, endX, endY);
+
+            if (GUI.Button(refreshButtonRect, "Refresh"))
             {
                 StartBackgroundTask(RefreshPackagesAsync());
             }
@@ -377,7 +400,7 @@ namespace Projeny
             var startY = rect.yMin;
             var endY = startY + Skin.HeaderHeight;
 
-            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Project Settings", Skin.HeaderTextStyle);
+            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Project Settings", HeaderTextStyle);
 
             startY = endY;
             endY = startY + Skin.FileDropdownHeight;
@@ -387,7 +410,7 @@ namespace Projeny
             startY = endY;
             endY = startY + Skin.HeaderHeight;
 
-            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Assets Folder", Skin.HeaderTextStyle);
+            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Assets Folder", HeaderTextStyle);
 
             startY = endY;
             endY = rect.yMax - Skin.ApplyButtonHeight - Skin.ApplyButtonTopPadding;
@@ -410,7 +433,7 @@ namespace Projeny
             _assetsList.Draw(rect1);
             _pluginsList.Draw(rect2);
 
-            GUI.Label(Rect.MinMaxRect(rect1.xMin, rect1.yMax, rect1.xMax, rect2.yMin), "Plugins Folder", Skin.HeaderTextStyle);
+            GUI.Label(Rect.MinMaxRect(rect1.xMin, rect1.yMax, rect1.xMax, rect2.yMin), "Plugins Folder", HeaderTextStyle);
         }
 
         void DrawButtons(Rect rect)
@@ -418,7 +441,7 @@ namespace Projeny
             var halfWidth = rect.width * 0.5f;
             var padding = 0.5f * Skin.ProjectButtonsPadding;
 
-            if (GUI.Button(Rect.MinMaxRect(rect.x + halfWidth + padding, rect.y, rect.xMax, rect.yMax), "Apply", Skin.ButtonStyle))
+            if (GUI.Button(Rect.MinMaxRect(rect.x + halfWidth + padding, rect.y, rect.xMax, rect.yMax), "Apply"))
             {
                 OverwriteConfig();
                 StartBackgroundTask(UpmInterface.UpdateLinksAsync());
@@ -637,7 +660,7 @@ namespace Projeny
 
             GUI.DrawTexture(new Rect(dropDownRect.xMax - Skin.ArrowSize.x + Skin.ArrowOffset.x, dropDownRect.yMin + Skin.ArrowOffset.y, Skin.ArrowSize.x, Skin.ArrowSize.y), Skin.FileDropdownArrow);
 
-            var desiredConfigType = (ProjectConfigTypes)EditorGUI.Popup(dropDownRect, (int)_projectConfigType, GetConfigTypesDisplayValues(), Skin.DropdownTextStyle);
+            var desiredConfigType = (ProjectConfigTypes)EditorGUI.Popup(dropDownRect, (int)_projectConfigType, GetConfigTypesDisplayValues(), DropdownTextStyle);
 
             if (desiredConfigType != _projectConfigType)
             {
@@ -661,21 +684,21 @@ namespace Projeny
 
             startX = startX + buttonPadding;
 
-            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "Reload", Skin.ButtonStyle))
+            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "Reload"))
             {
                 RefreshProject();
             }
 
             startX = startX + buttonWidth + buttonPadding;
 
-            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "Save", Skin.ButtonStyle))
+            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "Save"))
             {
                 OverwriteConfig();
             }
 
             startX = startX + buttonWidth + buttonPadding;
 
-            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "Open", Skin.ButtonStyle))
+            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "Open"))
             {
                 var configPath = GetProjectConfigPath();
                 InternalEditorUtility.OpenFileAtLineExternal(configPath, 1);
@@ -701,7 +724,7 @@ namespace Projeny
 
             if ((int)_viewState > 0)
             {
-                if (GUI.Button(rect1, "", Skin.ButtonStyle))
+                if (GUI.Button(rect1, ""))
                 {
                     _viewState = (ViewStates)((int)_viewState - 1);
                 }
@@ -718,7 +741,7 @@ namespace Projeny
 
             if ((int)_viewState < numValues-1)
             {
-                if (GUI.Button(rect2, "", Skin.ButtonStyle))
+                if (GUI.Button(rect2, ""))
                 {
                     _viewState = (ViewStates)((int)_viewState + 1);
                 }
@@ -732,6 +755,7 @@ namespace Projeny
 
         public void OnGUI()
         {
+            GUI.skin = Skin.GUISkin;
             // I tried using the GUILayout / EditorGUILayout but found it incredibly frustrating
             // and confusing, so I decided to just draw using raw rect coordinates instead
 
@@ -768,8 +792,8 @@ namespace Projeny
 
             if (_backgroundTask != null)
             {
-                ImguiUtil.DrawColoredQuad(fullRect, Skin.LoadingOverlayColor);
-                GUI.Label(fullRect, "Processing...", Skin.ProcessingPopupTextStyle);
+                ImguiUtil.DrawColoredQuad(fullRect, Skin.Theme.LoadingOverlayColor);
+                GUI.Label(fullRect, "Processing...");
             }
 
             GUI.enabled = true;
@@ -792,7 +816,7 @@ namespace Projeny
             var startY = rect.yMin;
             var endY = startY + Skin.HeaderHeight;
 
-            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Releases", Skin.HeaderTextStyle);
+            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Releases", HeaderTextStyle);
 
             startY = endY;
             endY = rect.yMax - Skin.ApplyButtonHeight - Skin.ApplyButtonTopPadding;
@@ -802,7 +826,7 @@ namespace Projeny
             startY = endY + Skin.ApplyButtonTopPadding;
             endY = rect.yMax;
 
-            if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh", Skin.ButtonStyle))
+            if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh"))
             {
                 StartBackgroundTask(RefreshReleasesAsync());
             }

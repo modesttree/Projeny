@@ -13,9 +13,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp-Editor-firstpass:Projeny:DraggableListSkin
   ItemHeight: 25.48
   ListColor: {r: 0.28676468, g: 0.28676468, b: 0.28676468, a: 1}
-  ListHoverColor: {r: 0.32352942, g: 0.32352942, b: 0.32352942, a: 1}
+  ListHoverColor: {r: 0.31617647, g: 0.31617647, b: 0.31617647, a: 1}
   ListItemColor: {r: 0.2647059, g: 0.2647059, b: 0.2647059, a: 0}
-  ListItemHoverColor: {r: 0.32352942, g: 0.32352942, b: 0.32352942, a: 1}
+  ListItemHoverColor: {r: 0.36764705, g: 0.36764705, b: 0.36764705, a: 1}
   ItemTextStyle:
     m_Name: 
     m_Normal:

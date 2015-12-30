@@ -1,3 +1,5 @@
+
+using System;
 using Projeny.Internal;
 using UnityEngine;
 using UnityEditor;
@@ -9,6 +11,17 @@ namespace Projeny
     [CreateAssetMenu]
     public class PackageManagerWindowSkin : ScriptableObject
     {
+        public GUISkin GUISkinDark;
+        public GUISkin GUISkinLight;
+
+        public GUISkin GUISkin
+        {
+            get
+            {
+                return EditorGUIUtility.isProSkin ? GUISkinDark : GUISkinLight;
+            }
+        }
+
         public float InterpSpeed;
 
         public float ViewToggleHeight;
@@ -65,11 +78,29 @@ namespace Projeny
 
         public float ViewSelectSpacing;
 
-        public Color LoadingOverlayColor;
-
-        public GUIStyle HeaderTextStyle;
-        public GUIStyle DropdownTextStyle;
         public GUIStyle ProcessingPopupTextStyle;
-        public GUIStyle ButtonStyle;
+
+        public ThemeProperties Light;
+        public ThemeProperties Dark;
+
+        public ThemeProperties Theme
+        {
+            get
+            {
+                return EditorGUIUtility.isProSkin ? Dark : Light;
+            }
+        }
+
+        [Serializable]
+        public class ThemeProperties
+        {
+            public Texture2D ButtonImage;
+            public Color LoadingOverlayColor;
+            public GUIStyle DropdownTextStyle;
+            public GUIStyle HeaderTextStyle;
+            public GUIStyle ButtonStyle;
+            public GUIStyle ArrowButtonStyle;
+        }
     }
 }
+
