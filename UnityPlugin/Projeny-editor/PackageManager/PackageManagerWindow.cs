@@ -256,7 +256,15 @@ namespace Projeny
             {
                 case ListTypes.Release:
                 {
-                    contextMenu.AddDisabledItem(new GUIContent("TODO"));
+                    bool hasLocalPath = false;
+
+                    if (_selected.Count == 1)
+                    {
+                        var localPath = ((ReleaseInfo)(_selected.Single().Tag)).LocalPath;
+                        hasLocalPath = localPath != null && File.Exists(localPath);
+                    }
+
+                    contextMenu.AddOptionalItem(hasLocalPath, new GUIContent("Open Folder"), false, OpenReleaseFolderForSelected);
                     break;
                 }
                 case ListTypes.Package:
@@ -298,6 +306,19 @@ namespace Projeny
             Assert.IsNotNull(asset, "Could not find package '{0}' in project", name);
 
             Selection.activeObject = asset;
+        }
+
+        void OpenReleaseFolderForSelected()
+        {
+            Assert.IsEqual(_selected.Count, 1);
+
+            var info = (ReleaseInfo)_selected.Single().Tag;
+
+            Assert.IsNotNull(info.LocalPath);
+            PathUtil.AssertPathIsValid(info.LocalPath);
+
+            var args = @"/select, " + info.LocalPath;
+            System.Diagnostics.Process.Start("explorer.exe", args);
         }
 
         void OpenPackageFolderForSelected()

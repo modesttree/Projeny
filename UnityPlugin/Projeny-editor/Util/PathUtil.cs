@@ -52,5 +52,18 @@ namespace Projeny.Internal
 
             return Path.GetFullPath(exe);
         }
+
+        public static void AssertPathIsValid(string path)
+        {
+            try
+            {
+                Path.GetDirectoryName(path);
+            }
+            catch (Exception e)
+            {
+                throw new ArgumentException(
+                    "Invalid path '{0}'".Fmt(path, e));
+            }
+        }
     }
 }

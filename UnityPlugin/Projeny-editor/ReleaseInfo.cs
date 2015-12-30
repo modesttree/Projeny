@@ -21,6 +21,7 @@ namespace Projeny
     {
         public string Title;
         public string Version;
+        public string LocalPath;
     }
 }
 

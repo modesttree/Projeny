@@ -37,7 +37,7 @@ class Runner:
             sys.exit(1)
 
     def _runInternal(self):
-        self._log.debug("Started EditorApi for project '{0}' and platform '{1}' with request ID: {2}".format(self._project, self._platform, self._requestId))
+        self._log.debug("Started EditorApi with arguments: {0}".format(" ".join(sys.argv[1:])))
 
         if self._requestId == 'updateLinks':
             self._packageMgr.updateProjectJunctions(self._project, self._platform)
@@ -66,7 +66,8 @@ class Runner:
         elif self._requestId == 'listReleases':
             for release in self._releaseRegistryManager.lookupAllReleases():
                 print('---')
-                print(yaml.dump(release.__dict__, default_flow_style=False))
+                # width is necessary otherwise it inserts newlines that are picked up as part of the string by the unity side
+                print(yaml.dump(release.__dict__, width=9999999, default_flow_style=False))
 
         elif self._requestId == 'deletePackage':
             self._log.info("Deleting package '{0}'", self._param1)

@@ -52,6 +52,7 @@ namespace Projeny.Internal
             {
                 Title = info.Title,
                 Version = info.Version,
+                LocalPath = info.LocalPath,
             };
         }
 
@@ -108,6 +109,7 @@ namespace Projeny.Internal
 
             newInfo.Title = info.Title;
             newInfo.Version = info.Version;
+            newInfo.LocalPath = info.LocalPath;
 
             return newInfo;
         }
@@ -123,6 +125,12 @@ namespace Projeny.Internal
             }
 
             public string Version
+            {
+                get;
+                set;
+            }
+
+            public string LocalPath
             {
                 get;
                 set;
