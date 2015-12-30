@@ -244,11 +244,6 @@ class SystemHelper:
 
         distutils.dir_util.copy_tree(fromPath, toPath)
 
-    def openOutputFile(self, path):
-        path = self._varManager.expand(path)
-        self.makeMissingDirectoriesInPath(path)
-        return open(path, 'w', encoding='utf-8', errors='ignore')
-
     def readFileAsText(self, path):
         with self.openInputFile(path) as f:
             return f.read()
@@ -256,6 +251,11 @@ class SystemHelper:
     def writeFileAsText(self, path, text):
         with self.openOutputFile(path) as f:
             f.write(text)
+
+    def openOutputFile(self, path):
+        path = self._varManager.expand(path)
+        self.makeMissingDirectoriesInPath(path)
+        return open(path, 'w', encoding='utf-8', errors='ignore')
 
     def openInputFile(self, path):
         return open(self._varManager.expand(path), 'r', encoding='utf-8', errors='ignore')

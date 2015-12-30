@@ -10,7 +10,7 @@ namespace Projeny
     {
         public static string Serialize<T>(T config)
         {
-            var serializer = new Serializer();
+            var serializer = new Serializer(namingConvention: NamingConvention);
             var stringBuilder = new StringBuilder();
             var stringWriter = new StringWriter(stringBuilder);
             serializer.Serialize(stringWriter, config);
@@ -20,8 +20,17 @@ namespace Projeny
         public static T Deserialize<T>(string yamlStr)
         {
             var input = new StringReader(yamlStr);
-            var deserializer = new Deserializer();
+            var deserializer = new Deserializer(
+                namingConvention: NamingConvention);
             return deserializer.Deserialize<T>(input);
+        }
+
+        static INamingConvention NamingConvention
+        {
+            get
+            {
+                return new CamelCaseNamingConvention();
+            }
         }
     }
 }

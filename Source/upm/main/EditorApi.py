@@ -66,8 +66,11 @@ class Runner:
         elif self._requestId == 'listReleases':
             for release in self._releaseRegistryManager.lookupAllReleases():
                 print('---')
+                releaseDict = release.__dict__
+                if release.assetStoreInfo:
+                    releaseDict['assetStoreInfo'] = release.assetStoreInfo.__dict__
                 # width is necessary otherwise it inserts newlines that are picked up as part of the string by the unity side
-                print(yaml.dump(release.__dict__, width=9999999, default_flow_style=False))
+                print(yaml.dump(releaseDict, width=9999999, default_flow_style=False))
 
         elif self._requestId == 'deletePackage':
             self._log.info("Deleting package '{0}'", self._param1)

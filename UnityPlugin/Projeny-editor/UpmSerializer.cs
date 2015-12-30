@@ -50,9 +50,30 @@ namespace Projeny.Internal
         {
             return new ReleaseInfoInternal()
             {
-                Title = info.Title,
+                Name = info.Name,
+                VersionCode = info.VersionCode,
                 Version = info.Version,
                 LocalPath = info.LocalPath,
+                AssetStoreInfo = ConvertToInternal(info.AssetStoreInfo),
+            };
+        }
+
+        static AssetStoreInfoInternal ConvertToInternal(AssetStoreInfo info)
+        {
+            return new AssetStoreInfoInternal()
+            {
+                PublisherId = info.PublisherId,
+                PublisherLabel = info.PublisherLabel,
+                PackageId = info.PackageId,
+                PublishNotes = info.PublishNotes,
+                CategoryId = info.CategoryId,
+                CategoryLabel = info.CategoryLabel,
+                UploadId = info.UploadId,
+                Description = info.Description,
+                PublishDate = info.PublishDate,
+                UnityVersion = info.UnityVersion,
+                LinkId = info.LinkId,
+                LinkType = info.LinkType,
             };
         }
 
@@ -107,9 +128,36 @@ namespace Projeny.Internal
 
             var newInfo = ScriptableObject.CreateInstance<ReleaseInfo>();
 
-            newInfo.Title = info.Title;
+            newInfo.Name = info.Name;
+            newInfo.VersionCode = info.VersionCode;
             newInfo.Version = info.Version;
             newInfo.LocalPath = info.LocalPath;
+            newInfo.AssetStoreInfo = ConvertToPublic(info.AssetStoreInfo);
+
+            return newInfo;
+        }
+
+        static AssetStoreInfo ConvertToPublic(AssetStoreInfoInternal info)
+        {
+            if (info == null)
+            {
+                return null;
+            }
+
+            var newInfo = ScriptableObject.CreateInstance<AssetStoreInfo>();
+
+            newInfo.PublisherId = info.PublisherId;
+            newInfo.PublisherLabel = info.PublisherLabel;
+            newInfo.PackageId = info.PackageId;
+            newInfo.PublishNotes = info.PublishNotes;
+            newInfo.CategoryId = info.CategoryId;
+            newInfo.CategoryLabel = info.CategoryLabel;
+            newInfo.UploadId = info.UploadId;
+            newInfo.Description = info.Description;
+            newInfo.PublishDate = info.PublishDate;
+            newInfo.UnityVersion = info.UnityVersion;
+            newInfo.LinkId = info.LinkId;
+            newInfo.LinkType = info.LinkType;
 
             return newInfo;
         }
@@ -118,7 +166,13 @@ namespace Projeny.Internal
         // the opposite - that we use fields
         class ReleaseInfoInternal
         {
-            public string Title
+            public string Name
+            {
+                get;
+                set;
+            }
+
+            public int? VersionCode
             {
                 get;
                 set;
@@ -131,6 +185,12 @@ namespace Projeny.Internal
             }
 
             public string LocalPath
+            {
+                get;
+                set;
+            }
+
+            public AssetStoreInfoInternal AssetStoreInfo
             {
                 get;
                 set;
@@ -173,6 +233,81 @@ namespace Projeny.Internal
             }
 
             public DateTime InstallDate
+            {
+                get;
+                set;
+            }
+        }
+
+        class AssetStoreInfoInternal
+        {
+            public string PublisherId
+            {
+                get;
+                set;
+            }
+
+            public string PublisherLabel
+            {
+                get;
+                set;
+            }
+
+            public string PackageId
+            {
+                get;
+                set;
+            }
+
+            public string PublishNotes
+            {
+                get;
+                set;
+            }
+
+            public string CategoryId
+            {
+                get;
+                set;
+            }
+
+            public string CategoryLabel
+            {
+                get;
+                set;
+            }
+
+            public string UploadId
+            {
+                get;
+                set;
+            }
+
+            public string Description
+            {
+                get;
+                set;
+            }
+
+            public string PublishDate
+            {
+                get;
+                set;
+            }
+
+            public string UnityVersion
+            {
+                get;
+                set;
+            }
+
+            public string LinkId
+            {
+                get;
+                set;
+            }
+
+            public string LinkType
             {
                 get;
                 set;

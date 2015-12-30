@@ -19,9 +19,35 @@ namespace Projeny
     [Serializable]
     public class ReleaseInfo : ScriptableObject
     {
-        public string Title;
+        public string Name;
+
+        // Can be null if package is not versioned
+        public int? VersionCode;
+        // Can be null if package is not versioned
         public string Version;
+
+        // This will be null if the package was not pulled from a unity package on the local machine
         public string LocalPath;
+
+        // Only non-null if this release is pulled from the asset store
+        public AssetStoreInfo AssetStoreInfo;
+    }
+
+    [Serializable]
+    public class AssetStoreInfo : ScriptableObject
+    {
+        public string PublisherId;
+        public string PublisherLabel;
+        public string PackageId;
+        public string PublishNotes;
+        public string CategoryId;
+        public string CategoryLabel;
+        public string UploadId;
+        public string Description;
+        public string PublishDate;
+        public string UnityVersion;
+        public string LinkId;
+        public string LinkType;
     }
 }
 

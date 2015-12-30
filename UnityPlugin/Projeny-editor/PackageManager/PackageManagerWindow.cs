@@ -605,7 +605,7 @@ namespace Projeny
             foreach (var info in _allReleases)
             {
                 _releasesList.Add(
-                    "{0} v{1}".Fmt(info.Title, info.Version ?? "?"), info);
+                    info.Name + (info.Version == null ? "" : " (version {0})".Fmt(info.Version)), info);
             }
         }
 

@@ -302,20 +302,24 @@ namespace Projeny
             {
                 var req = CreateUpmRequest("installRelease");
 
-                req.Param1 = info.Title;
-                req.Param2 = info.Version;
+                req.Param1 = info.Name;
+
+                if (info.VersionCode.HasValue)
+                {
+                    req.Param2 = info.VersionCode.Value.ToString();
+                }
 
                 var result = RunUpmAsync(req);
                 yield return result;
 
                 if (!result.Current.Succeeded)
                 {
-                    DisplayUpmError("Installing Release '{0}' ({1})".Fmt(info.Title, info.Version), result.Current.ErrorMessage);
+                    DisplayUpmError("Installing Release '{0}' ({1})".Fmt(info.Name, info.Version), result.Current.ErrorMessage);
                     yield return false;
                     yield break;
                 }
 
-                Log.Info("Installed new release '{0}' ({1})".Fmt(info.Title, info.Version));
+                Log.Info("Installed new release '{0}' ({1})".Fmt(info.Name, info.Version));
             }
 
             yield return true;

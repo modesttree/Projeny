@@ -19,6 +19,7 @@ class LocalFolderRegistry:
     _log = Inject('Logger')
     _sys = Inject('SystemHelper')
     _extractor = Inject('UnityPackageExtractor')
+    _packageAnalyzer = Inject('UnityPackageAnalyzer')
 
     def __init__(self, folderPath):
         self._folderPath = folderPath
@@ -32,7 +33,7 @@ class LocalFolderRegistry:
         self._log.heading('Initializing registry for local folder "{0}"', self._folderPath)
 
         for path in self._sys.findFilesByPattern(self._folderPath, '*.unitypackage'):
-            release = UnityPackageAnalyzer.calculateReleaseInfoForUnityPackage(path)
+            release = self._packageAnalyzer.getReleaseInfoFromUnityPackage(path)
 
             self._files.append(FileInfo(path, release))
 

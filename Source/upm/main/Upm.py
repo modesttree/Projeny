@@ -23,6 +23,7 @@ from upm.main.ProjectSchemaLoader import ProjectSchemaLoader
 from upm.util.ScriptRunner import ScriptRunner
 from upm.util.CommonSettings import CommonSettings
 from upm.reg.UnityPackageExtractor import UnityPackageExtractor
+from upm.reg.UnityPackageAnalyzer import UnityPackageAnalyzer
 
 from upm.util.CommonSettings import ConfigFileName
 from upm.reg.ReleaseRegistryManager import ReleaseRegistryManager
@@ -129,6 +130,7 @@ def installBindings(mainConfigPath):
     Container.bind('CommonSettings').toSingle(CommonSettings)
     Container.bind('UnityPackageExtractor').toSingle(UnityPackageExtractor)
     Container.bind('ZipHelper').toSingle(ZipHelper)
+    Container.bind('UnityPackageAnalyzer').toSingle(UnityPackageAnalyzer)
 
     Container.bind('ReleaseRegistryManager').toSingle(ReleaseRegistryManager)
 
