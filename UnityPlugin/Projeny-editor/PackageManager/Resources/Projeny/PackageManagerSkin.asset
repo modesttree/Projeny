@@ -30,6 +30,7 @@ MonoBehaviour:
   ApplyButtonHeight: 44.2
   ApplyButtonTopPadding: 22.61
   ProjectButtonsPadding: 17.65
+  ProcessingDotRepeatRate: 2
   FileSelectLabelWidth: 58.49
   FileDropdownHeight: 36.45
   FileDropdownTopPadding: 13.65
@@ -52,6 +53,7 @@ MonoBehaviour:
   ArrowOffset: {x: -12.88, y: 7.3}
   FileDropdownBorder: 7
   ViewSelectSpacing: 43.34
+  ProcessingPopupSize: {x: 300, y: 100}
   ProcessingPopupTextStyle:
     m_Name: 
     m_Normal:
@@ -114,6 +116,7 @@ MonoBehaviour:
   Light:
     ButtonImage: {fileID: 2800000, guid: c7810f5522f8d7842af15b202bb55bee, type: 3}
     LoadingOverlayColor: {r: 0.5294118, g: 0.5294118, b: 0.5294118, a: 0.166}
+    LoadingOverlapPopupColor: {r: 0.83823526, g: 0.83823526, b: 0.83823526, a: 1}
     DropdownTextStyle:
       m_Name: 
       m_Normal:
@@ -353,6 +356,7 @@ MonoBehaviour:
   Dark:
     ButtonImage: {fileID: 0}
     LoadingOverlayColor: {r: 0.5294118, g: 0.5294118, b: 0.5294118, a: 0.166}
+    LoadingOverlapPopupColor: {r: 0.85294116, g: 0.85294116, b: 0.85294116, a: 0.709}
     DropdownTextStyle:
       m_Name: 
       m_Normal:

@@ -14,6 +14,7 @@ import upm.util.MiscUtil as MiscUtil
 from upm.util.PlatformUtil import Platforms
 import upm.util.PlatformUtil as PlatformUtil
 from upm.util.Assert import *
+import time
 
 class Runner:
     _scriptRunner = Inject('ScriptRunner')

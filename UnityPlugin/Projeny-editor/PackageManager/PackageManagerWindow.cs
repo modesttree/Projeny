@@ -57,6 +57,14 @@ namespace Projeny
             }
         }
 
+        GUIStyle ProcessingPopupTextStyle
+        {
+            get
+            {
+                return Skin.GUISkin.GetStyle("ProcessingPopupTextStyle");
+            }
+        }
+
         GUIStyle DropdownTextStyle
         {
             get
@@ -84,11 +92,6 @@ namespace Projeny
         {
             _buttonStyle = null;
             _toggleStyle = null;
-
-            if (Skin.ProcessingPopupTextStyle == null)
-            {
-                Skin.ProcessingPopupTextStyle = new GUIStyle();
-            }
 
             if (Skin.Theme.ArrowButtonStyle == null)
             {
@@ -400,7 +403,7 @@ namespace Projeny
             var startY = rect.yMin;
             var endY = startY + Skin.HeaderHeight;
 
-            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Project Settings", HeaderTextStyle);
+            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Project", HeaderTextStyle);
 
             startY = endY;
             endY = startY + Skin.FileDropdownHeight;
@@ -785,13 +788,28 @@ namespace Projeny
                 DrawReleasePane(windowRect);
             }
 
+            GUI.enabled = true;
+
             if (_backgroundTask != null)
             {
                 ImguiUtil.DrawColoredQuad(fullRect, Skin.Theme.LoadingOverlayColor);
-                GUI.Label(fullRect, "Processing...");
-            }
 
-            GUI.enabled = true;
+                var size = Skin.ProcessingPopupSize;
+                var popupRect = new Rect(fullRect.width * 0.5f - 0.5f * size.x, 0.5f * fullRect.height - 0.5f * size.y, size.x, size.y);
+
+                ImguiUtil.DrawColoredQuad(popupRect, Skin.Theme.LoadingOverlapPopupColor);
+
+                var message = "Processing";
+
+                int numExtraDots = (int)(Time.realtimeSinceStartup * Skin.ProcessingDotRepeatRate) % 5;
+
+                for (int i = 0; i < numExtraDots; i++)
+                {
+                    message += ".";
+                }
+
+                GUI.Label(popupRect, message, ProcessingPopupTextStyle);
+            }
         }
 
         void DrawReleasePane(Rect windowRect)

@@ -47,6 +47,8 @@ namespace Projeny
         public float ApplyButtonTopPadding;
         public float ProjectButtonsPadding;
 
+        public float ProcessingDotRepeatRate;
+
         public float FileSelectLabelWidth;
 
         public float FileDropdownHeight;
@@ -78,6 +80,8 @@ namespace Projeny
 
         public float ViewSelectSpacing;
 
+        public Vector2 ProcessingPopupSize;
+
         public GUIStyle ProcessingPopupTextStyle;
 
         public ThemeProperties Light;
@@ -96,6 +100,7 @@ namespace Projeny
         {
             public Texture2D ButtonImage;
             public Color LoadingOverlayColor;
+            public Color LoadingOverlapPopupColor;
             public GUIStyle DropdownTextStyle;
             public GUIStyle HeaderTextStyle;
             public GUIStyle ButtonStyle;
