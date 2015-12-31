@@ -40,7 +40,7 @@ namespace Projeny
         float _lastTime = 0.5f;
 
         [NonSerialized]
-        CoRoutine _backgroundTask;
+        BackgroundTaskInfo _backgroundTaskInfo;
 
         const string NotAvailableLabel = "N/A";
 
@@ -249,12 +249,12 @@ namespace Projeny
 
         void Update()
         {
-            if (_backgroundTask != null)
+            if (_backgroundTaskInfo != null)
             {
                 // NOTE: If the tab isn't focused this task will take awhile
-                if (!_backgroundTask.Pump())
+                if (!_backgroundTaskInfo.CoRoutine.Pump())
                 {
-                    _backgroundTask = null;
+                    _backgroundTaskInfo = null;
                 }
             }
 
@@ -403,12 +403,12 @@ namespace Projeny
             {
                 case ListTypes.Package:
                 {
-                    StartBackgroundTask(OpenMoreInfoPopup((PackageInfo)entry.Tag));
+                    StartBackgroundTask(OpenMoreInfoPopup((PackageInfo)entry.Tag), false);
                     break;
                 }
                 case ListTypes.Release:
                 {
-                    StartBackgroundTask(OpenMoreInfoPopup((ReleaseInfo)entry.Tag));
+                    StartBackgroundTask(OpenMoreInfoPopup((ReleaseInfo)entry.Tag), false);
                     break;
                 }
                 default:
@@ -538,7 +538,7 @@ namespace Projeny
 
         void DeleteSelectedPackages()
         {
-            StartBackgroundTask(DeleteSelectedPackagesAsync());
+            StartBackgroundTask(DeleteSelectedPackagesAsync(), true);
         }
 
         IEnumerator DeleteSelectedPackagesAsync()
@@ -672,7 +672,7 @@ namespace Projeny
                         }
                         case ListTypes.Release:
                         {
-                            StartBackgroundTask(InstallReleasesAsync(data.Entries.Select(x => (ReleaseInfo)x.Tag).ToList()));
+                            StartBackgroundTask(InstallReleasesAsync(data.Entries.Select(x => (ReleaseInfo)x.Tag).ToList()), true);
                             break;
                         }
                         default:
@@ -809,7 +809,7 @@ namespace Projeny
 
             if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh"))
             {
-                StartBackgroundTask(RefreshPackagesAsync());
+                StartBackgroundTask(RefreshPackagesAsync(), true);
             }
 
             startX = endX + Skin.PackagesPane.ButtonPadding;
@@ -817,7 +817,7 @@ namespace Projeny
 
             if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "New"))
             {
-                StartBackgroundTask(CreateNewPackageAsync());
+                StartBackgroundTask(CreateNewPackageAsync(), false);
             }
         }
 
@@ -877,7 +877,7 @@ namespace Projeny
             if (GUI.Button(Rect.MinMaxRect(rect.x + halfWidth + padding, rect.y, rect.xMax, rect.yMax), "Apply"))
             {
                 OverwriteConfig();
-                StartBackgroundTask(UpmInterface.UpdateLinksAsync());
+                StartBackgroundTask(UpmInterface.UpdateLinksAsync(), true);
             }
         }
 
@@ -904,10 +904,14 @@ namespace Projeny
             }
         }
 
-        void StartBackgroundTask(IEnumerator task)
+        void StartBackgroundTask(IEnumerator task, bool showProcessingLabel)
         {
-            Assert.IsNull(_backgroundTask);
-            _backgroundTask = new CoRoutine(task);
+            Assert.IsNull(_backgroundTaskInfo);
+            _backgroundTaskInfo = new BackgroundTaskInfo()
+            {
+                CoRoutine = new CoRoutine(task),
+                ShowProcessingLabel = showProcessingLabel
+            };
         }
 
         IEnumerator CreateNewPackageAsync()
@@ -1260,7 +1264,7 @@ namespace Projeny
 
             if (desiredConfigType != _projectConfigType)
             {
-                StartBackgroundTask(TryChangeProjectType(desiredConfigType));
+                StartBackgroundTask(TryChangeProjectType(desiredConfigType), true);
             }
 
             GUI.DrawTexture(new Rect(dropDownRect.xMax - Skin.ArrowSize.x + Skin.ArrowOffset.x, dropDownRect.yMin + Skin.ArrowOffset.y, Skin.ArrowSize.x, Skin.ArrowSize.y), Skin.FileDropdownArrow);
@@ -1374,7 +1378,7 @@ namespace Projeny
 
             if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh"))
             {
-                StartBackgroundTask(RefreshReleasesAsync());
+                StartBackgroundTask(RefreshReleasesAsync(), true);
             }
         }
 
@@ -1396,7 +1400,7 @@ namespace Projeny
 
             var fullRect = new Rect(0, 0, this.position.width, this.position.height);
 
-            if (_backgroundTask != null)
+            if (_backgroundTaskInfo != null)
             {
                 // Do not allow any input processing when running an async task
                 GUI.enabled = false;
@@ -1427,7 +1431,7 @@ namespace Projeny
 
             GUI.enabled = true;
 
-            if (_backgroundTask == null)
+            if (_backgroundTaskInfo == null)
             {
                 Assert.IsNull(_popupHandler);
             }
@@ -1437,7 +1441,7 @@ namespace Projeny
                 {
                     _popupHandler(fullRect);
                 }
-                else
+                else if (_backgroundTaskInfo.ShowProcessingLabel)
                 {
                     DisplayGenericProcessingDialog(fullRect);
                 }
@@ -1463,6 +1467,12 @@ namespace Projeny
             }
 
             GUI.Label(popupRect, message, Skin.ProcessingPopupTextStyle);
+        }
+
+        public class BackgroundTaskInfo
+        {
+            public CoRoutine CoRoutine;
+            public bool ShowProcessingLabel;
         }
 
         enum SavePromptChoices
