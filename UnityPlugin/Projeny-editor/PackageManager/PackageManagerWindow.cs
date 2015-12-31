@@ -42,6 +42,8 @@ namespace Projeny
         [NonSerialized]
         CoRoutine _backgroundTask;
 
+        const string NotAvailableLabel = "N/A";
+
         PackageManagerWindowSkin Skin
         {
             get
@@ -218,8 +220,6 @@ namespace Projeny
                 _pluginsList = ScriptableObject.CreateInstance<DraggableList>();
                 _pluginsList.Manager = this;
             }
-
-            StartBackgroundTask(PromptForSaveInternal());
         }
 
         float GetDesiredSplit1()
@@ -323,6 +323,8 @@ namespace Projeny
                     }
 
                     contextMenu.AddOptionalItem(hasLocalPath, new GUIContent("Open Folder"), false, OpenReleaseFolderForSelected);
+
+                    contextMenu.AddOptionalItem(_selected.Count == 1, new GUIContent("More Info..."), false, OpenMoreInfoPopupForSelected);
                     break;
                 }
                 case ListTypes.Package:
@@ -364,6 +366,125 @@ namespace Projeny
             Assert.IsNotNull(asset, "Could not find package '{0}' in project", name);
 
             Selection.activeObject = asset;
+        }
+
+        void OpenMoreInfoPopupForSelected()
+        {
+            Assert.IsEqual(_selected.Count, 1);
+
+            var entry = _selected.Single();
+
+            switch (ClassifyList(entry.ListOwner))
+            {
+                case ListTypes.Package:
+                {
+                    StartBackgroundTask(OpenMoreInfoPopup((PackageInfo)entry.Tag));
+                    break;
+                }
+                case ListTypes.Release:
+                {
+                    StartBackgroundTask(OpenMoreInfoPopup((ReleaseInfo)entry.Tag));
+                    break;
+                }
+                default:
+                {
+                    Assert.Throw();
+                    break;
+                }
+            }
+        }
+
+        IEnumerator OpenMoreInfoPopup(PackageInfo info)
+        {
+            Assert.Throw("TODO");
+            yield break;
+        }
+
+        IEnumerator OpenMoreInfoPopup(ReleaseInfo info)
+        {
+            Assert.IsNull(_popupHandler);
+
+            bool isDone = false;
+
+            var skin = Skin.ReleaseMoreInfoDialog;
+            Vector2 scrollPos = Vector2.zero;
+
+            _popupHandler = delegate(Rect fullRect)
+            {
+                var popupRect = ImguiUtil.CenterRectInRect(fullRect, skin.PopupSize);
+
+                DrawPopupCommon(fullRect, popupRect);
+
+                var contentRect = ImguiUtil.CreateContentRectWithPadding(
+                    popupRect, skin.PanelPadding);
+
+                GUILayout.BeginArea(contentRect);
+                {
+                    GUILayout.Label("Release Info", skin.HeadingStyle);
+
+                    GUILayout.Space(skin.HeadingBottomPadding);
+
+                    scrollPos = GUILayout.BeginScrollView(scrollPos, false, true, GUI.skin.horizontalScrollbar, GUI.skin.verticalScrollbar, skin.ScrollViewStyle, GUILayout.Height(skin.ListHeight));
+                    {
+                        GUILayout.Space(skin.ListPaddingTop);
+
+                        DrawMoreInfoRow(skin, "Name", info.Name);
+                        GUILayout.Space(skin.RowSpacing);
+                        DrawMoreInfoRow(skin, "Version", string.IsNullOrEmpty(info.Version) ? NotAvailableLabel : info.Version);
+                        GUILayout.Space(skin.RowSpacing);
+                        DrawMoreInfoRow(skin, "Publish Date", info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.PublishDate) ? info.AssetStoreInfo.PublishDate : NotAvailableLabel);
+                        GUILayout.Space(skin.RowSpacing);
+                        DrawMoreInfoRow(skin, "Publisher", info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.PublisherLabel) ? info.AssetStoreInfo.PublisherLabel : NotAvailableLabel);
+                        GUILayout.Space(skin.RowSpacing);
+                        DrawMoreInfoRow(skin, "Category", info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.CategoryLabel) ? info.AssetStoreInfo.CategoryLabel : NotAvailableLabel);
+                        GUILayout.Space(skin.RowSpacing);
+                        DrawMoreInfoRow(skin, "Description", info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.Description) ? info.AssetStoreInfo.Description : NotAvailableLabel);
+                        GUILayout.Space(skin.RowSpacing);
+                        DrawMoreInfoRow(skin, "Unity Version", info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.UnityVersion) ? info.AssetStoreInfo.UnityVersion : NotAvailableLabel);
+                        GUILayout.Space(skin.RowSpacing);
+                        DrawMoreInfoRow(skin, "Publish Notes", info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.PublishNotes) ? info.AssetStoreInfo.PublishNotes : NotAvailableLabel);
+                        GUILayout.Space(skin.RowSpacing);
+                        DrawMoreInfoRow(skin, "Version Code", info.VersionCode.HasValue ? info.VersionCode.Value.ToString() : NotAvailableLabel);
+                        GUILayout.Space(skin.RowSpacing);
+                    }
+                    GUI.EndScrollView();
+                }
+                GUILayout.EndArea();
+
+                var okButtonRect = new Rect(
+                    contentRect.xMin + 0.5f * contentRect.width - 0.5f * skin.OkButtonWidth,
+                    contentRect.yMax - skin.MarginBottom - skin.OkButtonHeight,
+                    skin.OkButtonWidth,
+                    skin.OkButtonHeight);
+
+                if (GUI.Button(okButtonRect, "Ok") || Event.current.keyCode == KeyCode.Escape)
+                {
+                    isDone = true;
+                }
+            };
+
+            while (!isDone)
+            {
+                yield return null;
+            }
+
+            _popupHandler = null;
+        }
+
+        void DrawMoreInfoRow(PackageManagerWindowSkin.ReleaseInfoMoreInfoDialogProperties skin, string label, string value)
+        {
+            GUILayout.BeginHorizontal();
+            {
+                if (value == NotAvailableLabel)
+                {
+                    GUI.color = skin.NotAvailableColor;
+                }
+                GUILayout.Label(label + ":", skin.LabelStyle, GUILayout.Width(skin.LabelColumnWidth));
+                GUILayout.Space(skin.ColumnSpacing);
+                GUILayout.Label(value, skin.ValueStyle, GUILayout.Width(skin.ValueColumnWidth));
+                GUI.color = Color.white;
+            }
+            GUILayout.EndHorizontal();
         }
 
         void OpenReleaseFolderForSelected()

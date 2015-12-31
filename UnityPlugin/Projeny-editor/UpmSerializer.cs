@@ -17,11 +17,6 @@ namespace Projeny.Internal
             return ConvertToPublic(YamlSerializer.Deserialize<ProjectConfigInternal>(yamlStr));
         }
 
-        public static string SerializeReleaseInfo(ReleaseInfo info)
-        {
-            return YamlSerializer.Serialize<ReleaseInfoInternal>(ConvertToInternal(info));
-        }
-
         public static ReleaseInfo DeserializeReleaseInfo(string yamlStr)
         {
             return ConvertToPublic(YamlSerializer.Deserialize<ReleaseInfoInternal>(yamlStr));
@@ -43,37 +38,6 @@ namespace Projeny.Internal
             {
                 Packages = info.Packages.ToList(),
                 PackagesPlugins = info.PackagesPlugins.ToList(),
-            };
-        }
-
-        static ReleaseInfoInternal ConvertToInternal(ReleaseInfo info)
-        {
-            return new ReleaseInfoInternal()
-            {
-                Name = info.Name,
-                VersionCode = info.VersionCode,
-                Version = info.Version,
-                LocalPath = info.LocalPath,
-                AssetStoreInfo = ConvertToInternal(info.AssetStoreInfo),
-            };
-        }
-
-        static AssetStoreInfoInternal ConvertToInternal(AssetStoreInfo info)
-        {
-            return new AssetStoreInfoInternal()
-            {
-                PublisherId = info.PublisherId,
-                PublisherLabel = info.PublisherLabel,
-                PackageId = info.PackageId,
-                PublishNotes = info.PublishNotes,
-                CategoryId = info.CategoryId,
-                CategoryLabel = info.CategoryLabel,
-                UploadId = info.UploadId,
-                Description = info.Description,
-                PublishDate = info.PublishDate,
-                UnityVersion = info.UnityVersion,
-                LinkId = info.LinkId,
-                LinkType = info.LinkType,
             };
         }
 
@@ -154,12 +118,17 @@ namespace Projeny.Internal
             newInfo.CategoryLabel = info.CategoryLabel;
             newInfo.UploadId = info.UploadId;
             newInfo.Description = info.Description;
-            newInfo.PublishDate = info.PublishDate;
+            newInfo.PublishDate = info.PublishDate.HasValue ? DateTimeToString(info.PublishDate.Value) : null;
             newInfo.UnityVersion = info.UnityVersion;
             newInfo.LinkId = info.LinkId;
             newInfo.LinkType = info.LinkType;
 
             return newInfo;
+        }
+
+        static string DateTimeToString(DateTime utcDate)
+        {
+            return "{0} ({1})".Fmt(DateTimeUtil.FormatPastDateAsRelative(utcDate), utcDate.ToLocalTime().ToString("d"));
         }
 
         // Yaml requires that we use properties, but Unity serialization requires
@@ -289,7 +258,7 @@ namespace Projeny.Internal
                 set;
             }
 
-            public string PublishDate
+            public DateTime? PublishDate
             {
                 get;
                 set;

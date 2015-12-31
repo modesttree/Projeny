@@ -66,6 +66,7 @@ namespace Projeny
         public PackagesPaneProperties PackagesPane;
         public InputDialogProperties InputDialog;
         public SavePromptDialogProperties SavePromptDialog;
+        public ReleaseInfoMoreInfoDialogProperties ReleaseMoreInfoDialog;
 
         public GUIStyle ItemTextStyle
         {
@@ -123,6 +124,58 @@ namespace Projeny
             public Vector2 PopupSize;
 
             public GUIStyle LabelStyle
+            {
+                get
+                {
+                    return GUI.skin.GetStyle("InputDialogLabelStyle");
+                }
+            }
+        }
+
+        [Serializable]
+        public class ReleaseInfoMoreInfoDialogProperties
+        {
+            public float PanelPadding;
+            public float LabelColumnWidth;
+            public float ValueColumnWidth;
+            public float ColumnSpacing;
+            public float HeadingBottomPadding;
+            public float ListPaddingTop;
+            public float RowSpacing;
+            public float ListHeight;
+
+            public float MarginBottom;
+            public float OkButtonWidth;
+            public float OkButtonHeight;
+            public Color NotAvailableColor;
+
+            public Vector2 PopupSize;
+
+            public GUIStyle ScrollViewStyle
+            {
+                get
+                {
+                    return GUI.skin.GetStyle("MoreInfoScrollViewStyle");
+                }
+            }
+
+            public GUIStyle LabelStyle
+            {
+                get
+                {
+                    return GUI.skin.GetStyle("MoreInfoDialogLabelStyle");
+                }
+            }
+
+            public GUIStyle ValueStyle
+            {
+                get
+                {
+                    return GUI.skin.GetStyle("MoreInfoDialogValueStyle");
+                }
+            }
+
+            public GUIStyle HeadingStyle
             {
                 get
                 {
