@@ -93,7 +93,14 @@ namespace Projeny.Internal
             var newInfo = ScriptableObject.CreateInstance<ReleaseInfo>();
 
             newInfo.Name = info.Name;
-            newInfo.VersionCode = info.VersionCode;
+
+            newInfo.HasVersionCode = info.VersionCode.HasValue;
+
+            if (info.VersionCode.HasValue)
+            {
+                newInfo.VersionCode = info.VersionCode.Value;
+            }
+
             newInfo.Version = info.Version;
             newInfo.LocalPath = info.LocalPath;
             newInfo.AssetStoreInfo = ConvertToPublic(info.AssetStoreInfo);

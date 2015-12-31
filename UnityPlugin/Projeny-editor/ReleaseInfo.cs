@@ -21,8 +21,10 @@ namespace Projeny
     {
         public string Name;
 
-        // Can be null if package is not versioned
-        public int? VersionCode;
+        // We'd prefer to use int? here but unity doesn't serialize nullables
+        public bool HasVersionCode;
+        public int VersionCode;
+
         // Can be null if package is not versioned
         public string Version;
 

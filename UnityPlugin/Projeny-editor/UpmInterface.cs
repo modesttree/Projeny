@@ -304,9 +304,9 @@ namespace Projeny
 
                 req.Param1 = info.Name;
 
-                if (info.VersionCode.HasValue)
+                if (info.HasVersionCode)
                 {
-                    req.Param2 = info.VersionCode.Value.ToString();
+                    req.Param2 = info.VersionCode.ToString();
                 }
 
                 var result = RunUpmAsync(req);
