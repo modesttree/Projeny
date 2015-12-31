@@ -21,7 +21,7 @@ class UnityPackageAnalyzer:
     def getReleaseInfoFromUnityPackage(self, unityPackagePath):
         fileName = os.path.basename(unityPackagePath)
 
-        self._log.heading("Analyzing unity package '{0}'", fileName)
+        #self._log.debug("Analyzing unity package '{0}'", fileName)
 
         assertThat(self._sys.fileExists(unityPackagePath))
 
@@ -36,9 +36,11 @@ class UnityPackageAnalyzer:
             info.name = headerInfo['title']
             info.versionCode = headerInfo['version_id']
             info.version = headerInfo['version']
+            info.id = headerInfo['id']
             info.assetStoreInfo = self._getAssetStoreInfo(headerInfo)
         else:
             info.name = os.path.splitext(fileName)[0]
+            info.id = info.name
 
         return info
 
@@ -46,7 +48,6 @@ class UnityPackageAnalyzer:
         info = AssetStoreInfo()
         info.publisherId = allInfo['publisher']['id']
         info.publisherLabel = allInfo['publisher']['label']
-        info.packageId = allInfo['id']
         info.publishNotes = allInfo.get('publishnotes', '')
         info.categoryId = allInfo['category']['id']
         info.categoryLabel = allInfo['category']['label']
@@ -69,21 +70,21 @@ class UnityPackageAnalyzer:
 
             headerString = headerHexValues.decode('utf8')
 
-            packageId = headerString[0:4]
+            flag1 = headerString[0:4]
 
             unixTimeStamp = (headerBytes[7] << 24) + (headerBytes[6] << 16) + (headerBytes[5] << 8) + headerBytes[4]
             timeStamp = datetime.utcfromtimestamp(unixTimeStamp)
 
-            flag1 = headerString[6:8]
-            flag2 = headerString[24:28]
+            flag2 = headerString[6:8]
+            flag3 = headerString[24:28]
 
             numBytes = int(headerString[22:24] + headerString[20:22], 16)
             numJsonBytes = int(headerString[30:32] + headerString[28:30], 16)
 
-            assertThat(packageId == "1f8b", "Invalid .unitypackage file")
+            assertThat(flag1 == "1f8b", "Invalid .unitypackage file")
 
             # These flags indicate that it is an asset store package
-            if flag1 == "04" and flag2 == "4124":
+            if flag2 == "04" and flag3 == "4124":
                 assertThat(numBytes == numJsonBytes + 4)
 
                 infoBytes = f.read(numJsonBytes)

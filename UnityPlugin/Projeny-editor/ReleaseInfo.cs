@@ -19,6 +19,7 @@ namespace Projeny
     [Serializable]
     public class ReleaseInfo : ScriptableObject
     {
+        public string Id;
         public string Name;
 
         // We'd prefer to use int? here but unity doesn't serialize nullables
@@ -43,7 +44,6 @@ namespace Projeny
     {
         public string PublisherId;
         public string PublisherLabel;
-        public string PackageId;
         public string PublishNotes;
         public string CategoryId;
         public string CategoryLabel;

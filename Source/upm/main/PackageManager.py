@@ -106,15 +106,18 @@ class PackageManager:
             releaseInfoPath = os.path.join(path, 'Release.yaml')
 
             version = None
+            versionCode = None
 
             if self._sys.fileExists(releaseInfoPath):
                 fileInfo = YamlSerializer.deserialize(self._sys.readFileAsText(releaseInfoPath))
                 version = fileInfo['Version']
+                versionCode = fileInfo['VersionCode']
 
             info = {}
             info['Path'] = path
             info['Name'] = name
             info['Version'] = version
+            info['VersionCode'] = versionCode
             result.append(info)
 
         return result

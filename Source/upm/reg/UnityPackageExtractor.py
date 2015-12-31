@@ -50,7 +50,7 @@ class UnityPackageExtractor:
 
             # If the unitypackage only contains a single directory, then extract that instead
             # To avoid ending up with PackageName/PackageName directories for everything
-            if len(rootPaths) == 1 and os.path.isdir(rootPaths[0]):
+            if len(rootPaths) == 1 and os.path.isdir(rootPaths[0]) and os.path.basename(rootPaths[0]).lower() != 'editor':
                 dirToCopy = rootPaths[0]
             else:
                 dirToCopy = assetsDir

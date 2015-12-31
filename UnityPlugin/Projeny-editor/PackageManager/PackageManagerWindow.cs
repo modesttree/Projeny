@@ -145,9 +145,6 @@ namespace Projeny
                     return entries.OrderBy(x => x.Name).ToList();
                 }
             }
-
-            Assert.Throw();
-            return null;
         }
 
         string ColorToHex(Color32 color)
@@ -507,6 +504,8 @@ namespace Projeny
                         DrawMoreInfoRow(skin, "Description", info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.Description) ? info.AssetStoreInfo.Description : NotAvailableLabel);
                         GUILayout.Space(skin.RowSpacing);
                         DrawMoreInfoRow(skin, "Unity Version", info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.UnityVersion) ? info.AssetStoreInfo.UnityVersion : NotAvailableLabel);
+                        GUILayout.Space(skin.RowSpacing);
+                        DrawMoreInfoRow(skin, "ID", info.Id);
                         GUILayout.Space(skin.RowSpacing);
                         DrawMoreInfoRow(skin, "Publish Notes", info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.PublishNotes) ? info.AssetStoreInfo.PublishNotes : NotAvailableLabel);
                         GUILayout.Space(skin.RowSpacing);

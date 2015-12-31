@@ -22,6 +22,11 @@ namespace Projeny
         public string Name;
         public string Path;
         public string Version;
+
+        // We'd prefer to use int? here but unity doesn't serialize nullables
+        public bool HasVersionCode;
+        public int VersionCode;
+
         public DateTime InstallDate;
     }
 }

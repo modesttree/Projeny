@@ -6,6 +6,7 @@ class ReleaseInfo:
     def __init__(self):
         # Should always be valid
         self.name = None
+        self.id = None
         # This is an int and should always increase with subsequent versions
         # Might be null if package is not versioned
         self.versionCode = None
@@ -23,7 +24,6 @@ class AssetStoreInfo:
     def __init__(self):
         self.publisherId = None
         self.publisherLabel = None
-        self.packageId = None
         self.publishNotes = None
         self.categoryId = None
         self.categoryLabel = None

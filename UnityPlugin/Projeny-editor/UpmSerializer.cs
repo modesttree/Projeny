@@ -62,6 +62,13 @@ namespace Projeny.Internal
             newInfo.Name = info.Name;
             newInfo.Path = info.Path;
             newInfo.Version = info.Version;
+
+            newInfo.HasVersionCode = info.VersionCode.HasValue;
+            if (info.VersionCode.HasValue)
+            {
+                newInfo.VersionCode = info.VersionCode.Value;
+            }
+
             newInfo.InstallDate = info.InstallDate;
 
             return newInfo;
@@ -79,7 +86,6 @@ namespace Projeny.Internal
             newInfo.Name = info.Name;
 
             newInfo.HasVersionCode = info.VersionCode.HasValue;
-
             if (info.VersionCode.HasValue)
             {
                 newInfo.VersionCode = info.VersionCode.Value;
@@ -94,6 +100,10 @@ namespace Projeny.Internal
 
             newInfo.Version = info.Version;
             newInfo.LocalPath = info.LocalPath;
+
+            Assert.That(!string.IsNullOrEmpty(info.Id));
+            newInfo.Id = info.Id;
+
             newInfo.AssetStoreInfo = ConvertToPublic(info.AssetStoreInfo);
 
             return newInfo;
@@ -110,7 +120,6 @@ namespace Projeny.Internal
 
             newInfo.PublisherId = info.PublisherId;
             newInfo.PublisherLabel = info.PublisherLabel;
-            newInfo.PackageId = info.PackageId;
             newInfo.PublishNotes = info.PublishNotes;
             newInfo.CategoryId = info.CategoryId;
             newInfo.CategoryLabel = info.CategoryLabel;
@@ -134,6 +143,12 @@ namespace Projeny.Internal
         // the opposite - that we use fields
         class ReleaseInfoInternal
         {
+            public string Id
+            {
+                get;
+                set;
+            }
+
             public string Name
             {
                 get;
@@ -200,6 +215,12 @@ namespace Projeny.Internal
                 set;
             }
 
+            public int? VersionCode
+            {
+                get;
+                set;
+            }
+
             public string Version
             {
                 get;
@@ -222,12 +243,6 @@ namespace Projeny.Internal
             }
 
             public string PublisherLabel
-            {
-                get;
-                set;
-            }
-
-            public string PackageId
             {
                 get;
                 set;
