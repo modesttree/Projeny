@@ -61,15 +61,23 @@ namespace Projeny.Internal
 
             newInfo.Name = info.Name;
             newInfo.Path = info.Path;
-            newInfo.Version = info.Version;
+            newInfo.InstallInfo = ConvertToPublic(info.InstallInfo);
 
-            newInfo.HasVersionCode = info.VersionCode.HasValue;
-            if (info.VersionCode.HasValue)
+            return newInfo;
+        }
+
+        static PackageInstallInfo ConvertToPublic(PackageInstallInfoInternal info)
+        {
+            if (info == null)
             {
-                newInfo.VersionCode = info.VersionCode.Value;
+                return null;
             }
 
-            newInfo.InstallDate = info.InstallDate;
+            var newInfo = ScriptableObject.CreateInstance<PackageInstallInfo>();
+
+            newInfo.InstallDate = DateTimeToString(info.InstallDate);
+            newInfo.InstallDateTicks = info.InstallDate.Ticks;
+            newInfo.ReleaseInfo = ConvertToPublic(info.ReleaseInfo);
 
             return newInfo;
         }
@@ -201,6 +209,21 @@ namespace Projeny.Internal
             }
         }
 
+        class PackageInstallInfoInternal
+        {
+            public DateTime InstallDate
+            {
+                get;
+                set;
+            }
+
+            public ReleaseInfoInternal ReleaseInfo
+            {
+                get;
+                set;
+            }
+        }
+
         class PackageInfoInternal
         {
             public string Name
@@ -215,19 +238,7 @@ namespace Projeny.Internal
                 set;
             }
 
-            public int? VersionCode
-            {
-                get;
-                set;
-            }
-
-            public string Version
-            {
-                get;
-                set;
-            }
-
-            public DateTime InstallDate
+            public PackageInstallInfoInternal InstallInfo
             {
                 get;
                 set;

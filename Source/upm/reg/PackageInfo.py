@@ -7,5 +7,9 @@ class PackageInfo:
         self.name = None
         self.path = None
         # Might be null
-        self.releaseInfo = None
+        self.installInfo = None
 
+class PackageInstallInfo:
+    def __init__(self):
+        self.installDate = None
+        self.releaseInfo = None

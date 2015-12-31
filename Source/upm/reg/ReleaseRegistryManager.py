@@ -12,10 +12,12 @@ from upm.reg.RemoteServerRegistry import RemoteServerRegistry
 
 import upm.util.MiscUtil as MiscUtil
 
+from upm.reg.PackageInfo import PackageInstallInfo
+
 import os
 import upm.util.YamlSerializer as YamlSerializer
 
-ReleaseInfoFileName = 'Release.yaml'
+from upm.main.PackageManager import InstallInfoFileName
 
 class ReleaseRegistryManager:
     _varMgr = Inject('VarManager')
@@ -103,7 +105,7 @@ class ReleaseRegistryManager:
 
         self._installReleaseInternal(releaseInfo, registry)
 
-    def installRelease(self, releaseId, releaseVersionCode, suppressPrompts = False):
+    def installReleaseById(self, releaseId, releaseVersionCode, suppressPrompts = False):
 
         assertThat(releaseVersionCode)
         assertThat(releaseId)
@@ -123,31 +125,34 @@ class ReleaseRegistryManager:
     def _installReleaseInternal(self, releaseInfo, registry, suppressPrompts = False):
 
         for packageInfo in self._packageManager.getAllPackageInfos():
-            installedInfo = packageInfo.releaseInfo
+            installInfo = packageInfo.installInfo
 
-            if installedInfo and installedInfo.id == releaseInfo.id:
-                if installedInfo.versionCode == releaseInfo.versionCode:
+            if installInfo and installInfo.releaseInfo and installInfo.releaseInfo.id == releaseInfo.id:
+                if installInfo.releaseInfo.versionCode == releaseInfo.versionCode:
                     self._log.info("Release '{0}' (version {1}) is already installed.  Installation aborted.", releaseInfo.name, releaseInfo.version)
                     return
 
                 print("\nFound release '{0}' already installed with version '{1}'".format(releaseInfo.name, releaseInfo.version), end='')
 
-                installDirection = 'UPGRADE' if releaseInfo.versionCode > installedInfo.versionCode else 'DOWNGRADE'
+                installDirection = 'UPGRADE' if releaseInfo.versionCode > installInfo.releaseInfo.versionCode else 'DOWNGRADE'
 
                 if not suppressPrompts:
-                    shouldContinue = MiscUtil.confirmChoice("Are you sure you want to {0} '{1}' from version '{2}' to version '{3}'? (y/n)".format(installDirection, releaseInfo.name, installedInfo.version, releaseInfo.version))
+                    shouldContinue = MiscUtil.confirmChoice("Are you sure you want to {0} '{1}' from version '{2}' to version '{3}'? (y/n)".format(installDirection, releaseInfo.name, installInfo.releaseInfo.version, releaseInfo.version))
                     assertThat(shouldContinue, 'User aborted')
 
                 self._packageManager.deletePackage(packageInfo.name)
 
         destDir = '[UnityPackagesDir]/{0}'.format(releaseInfo.name)
 
-        assertThat(not self._sys.directoryExists(destDir), "Found existing package with the same name '{0}'", releaseInfo.name)
+        assertThat(not self._sys.directoryExists(destDir), "Found existing folder with the same name '{0}'.  If this is the same package and you want to replace, uninstall this package first then try again.", releaseInfo.name)
 
         registry.installRelease(releaseInfo, destDir)
 
-        releaseInfo.installDate = datetime.utcnow()
-        yamlStr = YamlSerializer.serialize(releaseInfo)
-        self._sys.writeFileAsText(os.path.join(destDir, ReleaseInfoFileName), yamlStr)
+        newInstallInfo = PackageInstallInfo()
+        newInstallInfo.releaseInfo = releaseInfo
+        newInstallInfo.installDate = datetime.utcnow()
+
+        yamlStr = YamlSerializer.serialize(newInstallInfo)
+        self._sys.writeFileAsText(os.path.join(destDir, InstallInfoFileName), yamlStr)
 
         self._log.info("Successfully installed '{0}' (version {1})", releaseInfo.name, releaseInfo.version)

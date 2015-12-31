@@ -80,7 +80,7 @@ namespace Projeny
 
                     if (_viewState == ViewStates.ReleasesAndPackages)
                     {
-                        DrawItemLabelWithVersion(rect, info.Name, info.Version);
+                        DrawItemLabelWithVersion(rect, info.Name, TryGetVersion(info));
                     }
                     else
                     {
@@ -101,6 +101,16 @@ namespace Projeny
                     break;
                 }
             }
+        }
+
+        string TryGetVersion(PackageInfo info)
+        {
+            if (info.InstallInfo == null || info.InstallInfo.ReleaseInfo == null)
+            {
+                return null;
+            }
+
+            return info.InstallInfo.ReleaseInfo.Version;
         }
 
         object GetReleaseSortField(DraggableListEntry entry)

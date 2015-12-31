@@ -21,13 +21,19 @@ namespace Projeny
     {
         public string Name;
         public string Path;
-        public string Version;
 
-        // We'd prefer to use int? here but unity doesn't serialize nullables
-        public bool HasVersionCode;
-        public int VersionCode;
+        // May be null
+        public PackageInstallInfo InstallInfo;
+    }
 
-        public DateTime InstallDate;
+    [Serializable]
+    public class PackageInstallInfo : ScriptableObject
+    {
+        public string InstallDate;
+        public long InstallDateTicks;
+
+        // May be null
+        public ReleaseInfo ReleaseInfo;
     }
 }
 

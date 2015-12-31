@@ -29,6 +29,8 @@ from upm.ioc.Inject import Inject
 from upm.ioc.Inject import InjectMany
 import upm.ioc.IocAssertions as Assertions
 
+InstallInfoFileName = 'Install.yaml'
+
 class PackageManager:
     """
     Main interface for Modest Package Manager
@@ -105,15 +107,15 @@ class PackageManager:
             for name in self.getAllPackageNames():
                 path = self._varMgr.expandPath('[UnityPackagesDir]/{0}'.format(name))
 
-                releaseInfoPath = os.path.join(path, 'Release.yaml')
+                installInfoFilePath = os.path.join(path, InstallInfoFileName)
 
                 info = PackageInfo()
                 info.name = name
                 info.path = path
 
-                if self._sys.fileExists(releaseInfoPath):
-                    releaseInfo = YamlSerializer.deserialize(self._sys.readFileAsText(releaseInfoPath))
-                    info.releaseInfo = releaseInfo
+                if self._sys.fileExists(installInfoFilePath):
+                    installInfo = YamlSerializer.deserialize(self._sys.readFileAsText(installInfoFilePath))
+                    info.installInfo = installInfo
 
                 self._packageInfos.append(info)
 

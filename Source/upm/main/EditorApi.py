@@ -77,8 +77,8 @@ class Runner:
             self._packageMgr.createPackage(self._param1)
 
         elif self._requestId == 'installRelease':
-            self._log.info("Installing release '{0}' version '{1}'", self._param1, self._param2)
-            self._releaseRegistryManager.installRelease(self._param1, self._param2)
+            self._log.info("Installing release '{0}' version code '{1}'", self._param1, self._param2)
+            self._releaseRegistryManager.installReleaseById(self._param1, self._param2, True)
 
         else:
             assertThat(False, "Invalid request id '{0}'", self._requestId)

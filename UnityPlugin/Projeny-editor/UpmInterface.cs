@@ -302,7 +302,7 @@ namespace Projeny
             {
                 var req = CreateUpmRequest("installRelease");
 
-                req.Param1 = info.Name;
+                req.Param1 = info.Id;
 
                 if (info.HasVersionCode)
                 {
