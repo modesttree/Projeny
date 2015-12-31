@@ -44,6 +44,8 @@ namespace Projeny
         [NonSerialized]
         BackgroundTaskInfo _backgroundTaskInfo;
 
+        bool _releaseSortAscending;
+
         const string NotAvailableLabel = "N/A";
 
         PackageManagerWindowSkin Skin
@@ -131,7 +133,12 @@ namespace Projeny
             {
                 case ListTypes.Release:
                 {
-                    return entries.OrderBy(x => GetReleaseSortField(x)).ToList();
+                    if (_releaseSortAscending)
+                    {
+                        return entries.OrderBy(x => GetReleaseSortField(x)).ToList();
+                    }
+
+                    return entries.OrderByDescending(x => GetReleaseSortField(x)).ToList();
                 }
                 default:
                 {
@@ -1408,53 +1415,7 @@ namespace Projeny
             endY = startY + skin.IconRowHeight;
 
             var iconRowRect = Rect.MinMaxRect(startX, startY, endX, endY);
-
-            ImguiUtil.DrawColoredQuad(iconRowRect, skin.IconRowBackgroundColor);
-
-            GUI.Label(new Rect(iconRowRect.xMin + skin.SearchIconOffset.x, iconRowRect.yMin + skin.SearchIconOffset.y, skin.SearchIconSize.x, skin.SearchIconSize.y), skin.SearchIcon);
-
-            GUILayout.BeginArea(iconRowRect);
-            {
-                GUILayout.FlexibleSpace();
-
-                GUILayout.BeginHorizontal();
-                {
-                    GUILayout.Space(skin.TextFieldPaddingLeft);
-
-                    _releasesList.SearchFilter = GUILayout.TextField(_releasesList.SearchFilter, skin.SearchTextStyle, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
-
-                    GUILayout.Space(skin.TextFieldPaddingRight);
-
-                    if (GUILayout.Button("", skin.SortButtonStyle, GUILayout.Width(skin.IconSize.x), GUILayout.Height(skin.IconSize.y)))
-                    {
-                        GenericMenu contextMenu = new GenericMenu();
-
-                        contextMenu.AddItem(
-                            new GUIContent("Order By Name"),
-                            _releasesSortMethod == ReleasesSortMethod.Name,
-                            () => ChangeReleaseSortMethod(ReleasesSortMethod.Name));
-
-                        contextMenu.AddItem(
-                            new GUIContent("Order By Size"),
-                            _releasesSortMethod == ReleasesSortMethod.Size,
-                            () => ChangeReleaseSortMethod(ReleasesSortMethod.Size));
-
-                        contextMenu.AddItem(
-                            new GUIContent("Order By Publish Date"),
-                            _releasesSortMethod == ReleasesSortMethod.PublishDate,
-                            () => ChangeReleaseSortMethod(ReleasesSortMethod.PublishDate));
-
-                        var mousePos = Event.current.mousePosition;
-                        contextMenu.DropDown(new Rect(mousePos.x, mousePos.y, 0, 16));
-                    }
-
-                    GUILayout.Space(skin.IconRowLeftPadding);
-                }
-                GUILayout.EndHorizontal();
-
-                GUILayout.FlexibleSpace();
-            }
-            GUILayout.EndArea();
+            DrawSearchPane(iconRowRect);
 
             startY = endY;
             endY = rect.yMax - Skin.ApplyButtonHeight - Skin.ApplyButtonTopPadding;
@@ -1468,6 +1429,86 @@ namespace Projeny
             {
                 StartBackgroundTask(RefreshReleasesAsync(), true);
             }
+        }
+
+        void DrawSearchPane(Rect rect)
+        {
+            var startX = rect.xMin;
+            var endX = rect.xMax;
+            var startY = rect.yMin;
+            var endY = rect.yMax;
+
+            var skin = Skin.ReleasesPane;
+
+            ImguiUtil.DrawColoredQuad(rect, skin.IconRowBackgroundColor);
+
+            endX = rect.xMax - 2 * skin.ButtonWidth;
+
+            var searchBarRect = Rect.MinMaxRect(startX, startY, endX, endY);
+            if (searchBarRect.Contains(Event.current.mousePosition))
+            {
+                ImguiUtil.DrawColoredQuad(searchBarRect, skin.MouseOverBackgroundColor);
+            }
+
+            GUI.Label(new Rect(startX + skin.SearchIconOffset.x, startY + skin.SearchIconOffset.y, skin.SearchIconSize.x, skin.SearchIconSize.y), skin.SearchIcon);
+
+            _releasesList.SearchFilter = GUI.TextField(
+                searchBarRect, _releasesList.SearchFilter, skin.SearchTextStyle);
+
+            startX = endX;
+            endX = startX + skin.ButtonWidth;
+
+            Rect buttonRect;
+
+            buttonRect = Rect.MinMaxRect(startX, startY, endX, endY);
+            if (buttonRect.Contains(Event.current.mousePosition))
+            {
+                ImguiUtil.DrawColoredQuad(buttonRect, skin.MouseOverBackgroundColor);
+
+                if (Event.current.type == EventType.MouseDown)
+                {
+                    _releaseSortAscending = !_releaseSortAscending;
+                    _releasesList.ForceSort();
+                }
+            }
+            GUI.DrawTexture(buttonRect, _releaseSortAscending ? skin.SortDirDownIcon : skin.SortDirUpIcon);
+
+            startX = endX;
+            endX = startX + skin.ButtonWidth;
+
+            buttonRect = Rect.MinMaxRect(startX, startY, endX, endY);
+            if (buttonRect.Contains(Event.current.mousePosition))
+            {
+                ImguiUtil.DrawColoredQuad(buttonRect, skin.MouseOverBackgroundColor);
+
+                if (Event.current.type == EventType.MouseDown)
+                {
+                    ShowReleasesSortMenu(new Vector2(buttonRect.xMin, buttonRect.yMax));
+                }
+            }
+            GUI.DrawTexture(buttonRect, skin.SortIcon);
+        }
+
+        void ShowReleasesSortMenu(Vector2 startPos)
+        {
+            GenericMenu contextMenu = new GenericMenu();
+
+            contextMenu.AddItem(
+                new GUIContent("Order By Name"),
+                _releasesSortMethod == ReleasesSortMethod.Name,
+                () => ChangeReleaseSortMethod(ReleasesSortMethod.Name));
+
+            contextMenu.AddItem(
+                new GUIContent("Order By Size"),
+                _releasesSortMethod == ReleasesSortMethod.Size,
+                () => ChangeReleaseSortMethod(ReleasesSortMethod.Size));
+
+            contextMenu.AddItem(
+                new GUIContent("Order By Publish Date"),
+                _releasesSortMethod == ReleasesSortMethod.PublishDate,
+                () => ChangeReleaseSortMethod(ReleasesSortMethod.PublishDate));
+
+            contextMenu.DropDown(new Rect(startPos.x, startPos.y, 0, 0));
         }
 
         void ChangeReleaseSortMethod(ReleasesSortMethod sortMethod)

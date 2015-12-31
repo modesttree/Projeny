@@ -189,16 +189,28 @@ namespace Projeny
         [Serializable]
         public class ReleasesPaneProperties
         {
+            public float ButtonSpacing;
+            public float ButtonWidth;
+
+            public Color MouseOverBackgroundColor;
+            public Color IconRowBackgroundColor;
+
             public float IconRowHeight;
-            public float IconRowLeftPadding;
+            public float SortIconRightPadding;
+
             public float TextFieldPaddingLeft;
             public float TextFieldPaddingRight;
+
             public Vector2 IconSize;
             public Vector2 SearchIconOffset;
+
             public Texture2D SortIcon;
+            public Texture2D SortDirDownIcon;
+            public Texture2D SortDirUpIcon;
             public Texture2D SearchIcon;
+
             public Vector2 SearchIconSize;
-            public Color IconRowBackgroundColor;
+            public Color IconRowBackgroundColorHover;
 
             public GUIStyle SortButtonStyle
             {
