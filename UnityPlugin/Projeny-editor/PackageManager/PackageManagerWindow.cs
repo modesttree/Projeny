@@ -545,12 +545,104 @@ namespace Projeny
         {
             Assert.That(_selected.All(x => ClassifyList(x.ListOwner) == ListTypes.Package));
 
-            var result = UpmInterface.DeletePackagesAsync(_selected.Select(x => (PackageInfo)x.Tag).ToList());
-            yield return result;
+            var infos = _selected.Select(x => (PackageInfo)x.Tag).ToList();
 
-            // Do this regardless of whether result.Current is true since
-            // some packages might have been deleted
-            yield return RefreshPackagesAsync();
+            var choice = PromptUserForConfirm(
+                "<color=yellow>Are you sure you wish to delete the following packages?</color>\n\n{0}\n\n<color=yellow>Please note the following:</color>\n\n- This change is not undoable\n- Any changes that you've made since installing will be lost\n- Any projects or other packages that still depend on this package may be put in an invalid state by deleting it".Fmt(infos.Select(x => " - " + x.Name).Join("\n")),
+                "Delete", "Cancel");
+
+            yield return choice;
+
+            if (choice.Current == 0)
+            {
+                var result = UpmInterface.DeletePackagesAsync(infos);
+                yield return result;
+
+                // Do this regardless of whether result.Current is true since
+                // some packages might have been deleted
+                yield return RefreshPackagesAsync();
+            }
+        }
+
+        public IEnumerator<int> PromptUserForConfirm(string confirmMessage, string button1, string button2)
+        {
+            return CoRoutine.Wrap<int>(PromptUserForConfirmInternal(confirmMessage, button1, button2));
+        }
+
+        public IEnumerator PromptUserForConfirmInternal(
+            string confirmMessage, string button1, string button2)
+        {
+            Assert.IsNull(_popupHandler);
+
+            int choice = -1;
+
+            var skin = Skin.GenericPromptDialog;
+
+            _popupHandler = delegate(Rect fullRect)
+            {
+                GUILayout.BeginArea(fullRect);
+                {
+                    GUILayout.FlexibleSpace();
+                    GUILayout.BeginHorizontal();
+                    {
+                        GUILayout.FlexibleSpace();
+                        GUILayout.BeginVertical(skin.BackgroundStyle, GUILayout.Width(skin.PopupWidth));
+                        {
+                            GUILayout.Space(skin.PanelPadding);
+
+                            GUILayout.BeginHorizontal();
+                            {
+                                GUILayout.Space(skin.PanelPadding);
+
+                                GUILayout.BeginVertical();
+                                {
+                                    GUILayout.Label(confirmMessage, skin.LabelStyle);
+
+                                    GUILayout.Space(skin.ButtonTopPadding);
+
+                                    GUILayout.BeginHorizontal();
+                                    {
+                                        GUILayout.FlexibleSpace();
+
+                                        if (GUILayout.Button(button1, GUILayout.Width(skin.ButtonWidth)))
+                                        {
+                                            choice = 0;
+                                        }
+
+                                        GUILayout.Space(skin.ButtonSpacing);
+
+                                        if (GUILayout.Button(button2, GUILayout.Width(skin.ButtonWidth)))
+                                        {
+                                            choice = 1;
+                                        }
+
+                                        GUILayout.FlexibleSpace();
+                                    }
+                                    GUILayout.EndHorizontal();
+                                }
+                                GUILayout.EndVertical();
+                                GUILayout.Space(skin.PanelPadding);
+                            }
+                            GUILayout.EndHorizontal();
+                            GUILayout.Space(skin.PanelPadding);
+                        }
+                        GUILayout.EndVertical();
+                        GUILayout.FlexibleSpace();
+                    }
+                    GUILayout.EndHorizontal();
+                    GUILayout.FlexibleSpace();
+                }
+                GUILayout.EndArea();
+            };
+
+            while (choice == -1)
+            {
+                yield return null;
+            }
+
+            _popupHandler = null;
+
+            yield return choice;
         }
 
         public void OnDragDrop(DraggableList.DragData data, DraggableList dropList)

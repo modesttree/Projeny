@@ -67,6 +67,7 @@ namespace Projeny
         public InputDialogProperties InputDialog;
         public SavePromptDialogProperties SavePromptDialog;
         public ReleaseInfoMoreInfoDialogProperties ReleaseMoreInfoDialog;
+        public GenericPromptDialogProperties GenericPromptDialog;
 
         public GUIStyle ItemTextStyle
         {
@@ -180,6 +181,32 @@ namespace Projeny
                 get
                 {
                     return GUI.skin.GetStyle("InputDialogLabelStyle");
+                }
+            }
+        }
+
+        [Serializable]
+        public class GenericPromptDialogProperties
+        {
+            public float PanelPadding;
+            public float ButtonTopPadding;
+            public float ButtonWidth;
+            public float ButtonSpacing;
+            public float PopupWidth;
+
+            public GUIStyle LabelStyle
+            {
+                get
+                {
+                    return GUI.skin.GetStyle("GenericPromptLabelStyle");
+                }
+            }
+
+            public GUIStyle BackgroundStyle
+            {
+                get
+                {
+                    return GUI.skin.GetStyle("GenericPromptBackgroundStyle");
                 }
             }
         }
