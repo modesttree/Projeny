@@ -31,6 +31,9 @@ namespace Projeny
         // This will be null if the package was not pulled from a unity package on the local machine
         public string LocalPath;
 
+        public bool HasCompressedSize;
+        public int CompressedSize;
+
         // Only non-null if this release is pulled from the asset store
         public AssetStoreInfo AssetStoreInfo;
     }

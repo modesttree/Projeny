@@ -22,11 +22,6 @@ namespace Projeny.Internal
             return ConvertToPublic(YamlSerializer.Deserialize<ReleaseInfoInternal>(yamlStr));
         }
 
-        public static string SerializePackageInfo(PackageInfo info)
-        {
-            return YamlSerializer.Serialize<PackageInfoInternal>(ConvertToInternal(info));
-        }
-
         public static PackageInfo DeserializePackageInfo(string yamlStr)
         {
             return ConvertToPublic(YamlSerializer.Deserialize<PackageInfoInternal>(yamlStr));
@@ -38,17 +33,6 @@ namespace Projeny.Internal
             {
                 Packages = info.Packages.ToList(),
                 PackagesPlugins = info.PackagesPlugins.ToList(),
-            };
-        }
-
-        static PackageInfoInternal ConvertToInternal(PackageInfo info)
-        {
-            return new PackageInfoInternal()
-            {
-                Name = info.Name,
-                Path = info.Path,
-                Version = info.Version,
-                InstallDate = info.InstallDate,
             };
         }
 
@@ -101,6 +85,13 @@ namespace Projeny.Internal
                 newInfo.VersionCode = info.VersionCode.Value;
             }
 
+            newInfo.HasCompressedSize = info.CompressedSize.HasValue;
+
+            if (info.CompressedSize.HasValue)
+            {
+                newInfo.CompressedSize = info.CompressedSize.Value;
+            }
+
             newInfo.Version = info.Version;
             newInfo.LocalPath = info.LocalPath;
             newInfo.AssetStoreInfo = ConvertToPublic(info.AssetStoreInfo);
@@ -143,6 +134,12 @@ namespace Projeny.Internal
         class ReleaseInfoInternal
         {
             public string Name
+            {
+                get;
+                set;
+            }
+
+            public int? CompressedSize
             {
                 get;
                 set;

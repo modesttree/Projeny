@@ -30,6 +30,8 @@ class UnityPackageAnalyzer:
 
         headerInfo = self._tryGetAssetStoreInfoFromHeader(unityPackagePath)
 
+        info.compressedSize = os.path.getsize(unityPackagePath)
+
         if headerInfo:
             info.name = headerInfo['title']
             info.versionCode = headerInfo['version_id']

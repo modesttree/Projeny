@@ -21,7 +21,7 @@ def _convertToDict(obj):
         value = pair[1]
         valueType = type(value)
 
-        if value != None and inspect.isclass(valueType) and valueType is not str and valueType is not datetime:
+        if value != None and inspect.isclass(valueType) and valueType not in (int, float, bool, str, datetime):
             value = _convertToDict(value)
 
         newObj[key[0].upper() + key[1:]] = value

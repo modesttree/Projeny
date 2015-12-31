@@ -16,6 +16,9 @@ class ReleaseInfo:
         # This will be null if the package was not pulled from the asset store cache
         self.assetStoreInfo = None
 
+        # This is null if not known
+        self.compressedSize = None
+
 class AssetStoreInfo:
     def __init__(self):
         self.publisherId = None
