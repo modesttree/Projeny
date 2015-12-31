@@ -15,5 +15,10 @@ namespace Projeny.Internal
         {
             return Rect.MinMaxRect(rect.xMin + padding, rect.yMin + padding, rect.xMax - padding, rect.yMax - padding);
         }
+
+        public static Rect CenterRectInRect(Rect parentRect, Vector2 size)
+        {
+            return new Rect(parentRect.width * 0.5f - 0.5f * size.x, 0.5f * parentRect.height - 0.5f * size.y, size.x, size.y);
+        }
     }
 }

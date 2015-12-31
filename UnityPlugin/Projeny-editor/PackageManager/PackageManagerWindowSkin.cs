@@ -65,6 +65,7 @@ namespace Projeny
 
         public PackagesPaneProperties PackagesPane;
         public InputDialogProperties InputDialog;
+        public SavePromptDialogProperties SavePromptDialog;
 
         public GUIStyle ItemTextStyle
         {
@@ -102,6 +103,23 @@ namespace Projeny
         public class InputDialogProperties
         {
             public float PanelPadding;
+            public Vector2 PopupSize;
+
+            public GUIStyle LabelStyle
+            {
+                get
+                {
+                    return GUI.skin.GetStyle("InputDialogLabelStyle");
+                }
+            }
+        }
+
+        [Serializable]
+        public class SavePromptDialogProperties
+        {
+            public float PanelPadding;
+            public float ButtonPadding;
+            public float ButtonTopPadding;
             public Vector2 PopupSize;
 
             public GUIStyle LabelStyle

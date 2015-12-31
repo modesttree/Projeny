@@ -218,6 +218,8 @@ namespace Projeny
                 _pluginsList = ScriptableObject.CreateInstance<DraggableList>();
                 _pluginsList.Manager = this;
             }
+
+            StartBackgroundTask(PromptForSaveInternal());
         }
 
         float GetDesiredSplit1()
@@ -691,6 +693,76 @@ namespace Projeny
             }
         }
 
+        void DrawPopupCommon(Rect fullRect, Rect popupRect)
+        {
+            ImguiUtil.DrawColoredQuad(fullRect, Skin.Theme.LoadingOverlayColor);
+            ImguiUtil.DrawColoredQuad(popupRect, Skin.Theme.LoadingOverlapPopupColor);
+        }
+
+        IEnumerator<SavePromptChoices> PromptForSave()
+        {
+            return CoRoutine.Wrap<SavePromptChoices>(PromptForSaveInternal());
+        }
+
+        IEnumerator PromptForSaveInternal()
+        {
+            Assert.IsNull(_popupHandler);
+
+            SavePromptChoices? choice = null;
+
+            _popupHandler = delegate(Rect fullRect)
+            {
+                var popupRect = ImguiUtil.CenterRectInRect(fullRect, Skin.SavePromptDialog.PopupSize);
+
+                DrawPopupCommon(fullRect, popupRect);
+
+                var contentRect = ImguiUtil.CreateContentRectWithPadding(
+                    popupRect, Skin.SavePromptDialog.PanelPadding);
+
+                GUILayout.BeginArea(contentRect);
+                {
+                    GUILayout.Label("Do you want to save changes to your project?", Skin.SavePromptDialog.LabelStyle);
+
+                    GUILayout.Space(Skin.SavePromptDialog.ButtonTopPadding);
+
+                    GUILayout.BeginHorizontal();
+                    {
+                        GUILayout.FlexibleSpace();
+
+                        if (GUILayout.Button("Save"))
+                        {
+                            choice = SavePromptChoices.Save;
+                        }
+
+                        GUILayout.Space(Skin.SavePromptDialog.ButtonPadding);
+
+                        if (GUILayout.Button("Don't Save"))
+                        {
+                            choice = SavePromptChoices.DontSave;
+                        }
+
+                        GUILayout.Space(Skin.SavePromptDialog.ButtonPadding);
+
+                        if (GUILayout.Button("Cancel"))
+                        {
+                            choice = SavePromptChoices.Cancel;
+                        }
+                    }
+                    GUILayout.EndHorizontal();
+                }
+                GUILayout.EndArea();
+            };
+
+            while (!choice.HasValue)
+            {
+                yield return null;
+            }
+
+            _popupHandler = null;
+
+            yield return choice.Value;
+        }
+
         IEnumerator<string> PromptForInput(string label, string defaultValue)
         {
             Assert.IsNull(_popupHandler);
@@ -700,12 +772,9 @@ namespace Projeny
 
             _popupHandler = delegate(Rect fullRect)
             {
-                ImguiUtil.DrawColoredQuad(fullRect, Skin.Theme.LoadingOverlayColor);
+                var popupRect = ImguiUtil.CenterRectInRect(fullRect, Skin.InputDialog.PopupSize);
 
-                var size = Skin.InputDialog.PopupSize;
-                var popupRect = new Rect(fullRect.width * 0.5f - 0.5f * size.x, 0.5f * fullRect.height - 0.5f * size.y, size.x, size.y);
-
-                ImguiUtil.DrawColoredQuad(popupRect, Skin.Theme.LoadingOverlapPopupColor);
+                DrawPopupCommon(fullRect, popupRect);
 
                 var contentRect = ImguiUtil.CreateContentRectWithPadding(
                     popupRect, Skin.InputDialog.PanelPadding);
@@ -722,14 +791,14 @@ namespace Projeny
                     {
                         GUILayout.FlexibleSpace();
 
-                        if (GUILayout.Button("Cancel", GUILayout.MaxWidth(100)))
-                        {
-                            state = InputDialogStates.Cancelled;
-                        }
-
                         if (GUILayout.Button("Submit", GUILayout.MaxWidth(100)))
                         {
                             state = InputDialogStates.Submitted;
+                        }
+
+                        if (GUILayout.Button("Cancel", GUILayout.MaxWidth(100)))
+                        {
+                            state = InputDialogStates.Cancelled;
                         }
                     }
                     GUILayout.EndHorizontal();
@@ -902,30 +971,29 @@ namespace Projeny
             return UpmSerializer.SerializeProjectConfig(GetProjectConfigFromLists());
         }
 
-        void TryChangeProjectType(ProjectConfigTypes configType)
+        IEnumerator TryChangeProjectType(ProjectConfigTypes configType)
         {
             if (HasProjectConfigChanged())
             {
-                int choice = EditorUtility.DisplayDialogComplex(
-                    "Project Changes Detected",
-                    "Do you want to save config changes?",
-                    "Save", "Don't Save", "Cancel");
+                var choice = PromptForSave();
 
-                switch (choice)
+                yield return choice;
+
+                switch (choice.Current)
                 {
-                    case 0:
+                    case SavePromptChoices.Save:
                     {
                         OverwriteConfig();
                         break;
                     }
-                    case 1:
+                    case SavePromptChoices.DontSave:
                     {
                         // Do nothing
                         break;
                     }
-                    case 2:
+                    case SavePromptChoices.Cancel:
                     {
-                        return;
+                        yield break;
                     }
                     default:
                     {
@@ -954,7 +1022,7 @@ namespace Projeny
 
             if (desiredConfigType != _projectConfigType)
             {
-                TryChangeProjectType(desiredConfigType);
+                StartBackgroundTask(TryChangeProjectType(desiredConfigType));
             }
 
             GUI.DrawTexture(new Rect(dropDownRect.xMax - Skin.ArrowSize.x + Skin.ArrowOffset.x, dropDownRect.yMin + Skin.ArrowOffset.y, Skin.ArrowSize.x, Skin.ArrowSize.y), Skin.FileDropdownArrow);
@@ -1157,6 +1225,13 @@ namespace Projeny
             }
 
             GUI.Label(popupRect, message, Skin.ProcessingPopupTextStyle);
+        }
+
+        enum SavePromptChoices
+        {
+            Save,
+            DontSave,
+            Cancel
         }
 
         enum ProjectConfigTypes
