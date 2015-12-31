@@ -69,7 +69,8 @@ class UpmRunner:
             self._packageMgr.deleteProject(self._args.deleteProject)
 
         if self._args.installRelease:
-            self._releaseRegistryManager.installRelease(self._args.installRelease)
+            releaseName, releaseVersion = self._args.installRelease
+            self._releaseRegistryManager.installReleaseByName(releaseName, releaseVersion)
 
         if self._args.updateLinksAllProjects:
             self._packageMgr.updateLinksForAllProjects()

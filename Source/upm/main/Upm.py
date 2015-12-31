@@ -84,7 +84,7 @@ def addArguments(parser):
 
     parser.add_argument('-epy', '--editProjectYaml', action='store_true', help='')
 
-    parser.add_argument('-ins', '--installRelease', metavar='RELEASE_NAME', type=str, help="")
+    parser.add_argument('-ins', '--installRelease', type=str, nargs=2, metavar=('RELEASE_NAME', 'RELEASE_VERSION'), help="")
 
 def getProjenyDir():
     # This works for both exe builds (Bin/Upm/Data/Upm.exe) and running from source (Source/upm/main/Upm.py) by coincidence

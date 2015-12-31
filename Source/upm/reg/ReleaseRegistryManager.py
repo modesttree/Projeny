@@ -10,6 +10,8 @@ from upm.reg.LocalFolderRegistry import LocalFolderRegistry
 from upm.reg.AssetStoreCacheRegistry import AssetStoreCacheRegistry
 from upm.reg.RemoteServerRegistry import RemoteServerRegistry
 
+import upm.util.MiscUtil as MiscUtil
+
 import os
 import upm.util.YamlSerializer as YamlSerializer
 
@@ -25,7 +27,6 @@ class ReleaseRegistryManager:
     def __init__(self):
         self._hasInitialized = False
         self._releaseRegistries = []
-        self._installedReleaseInfos = []
 
     def _lazyInit(self):
         if self._hasInitialized:
@@ -38,19 +39,7 @@ class ReleaseRegistryManager:
                 reg.init()
                 self._releaseRegistries.append(reg)
 
-        self._findInstalledReleases()
-
         self._log.info("Finished initializing Release Registry Manager, found {0} releases in total", self._getTotalReleaseCount())
-
-    def _findInstalledReleases(self):
-        for name in self._packageManager.getAllPackageNames():
-            path = self._varMgr.expandPath('[UnityPackagesDir]/{0}'.format(name))
-
-            releaseInfoPath = os.path.join(path, 'Release.yaml')
-
-            if self._sys.fileExists(releaseInfoPath):
-                releaseInfo = YamlSerializer.deserialize(self._sys.readFileAsText(releaseInfoPath))
-                self._installedReleaseInfos.append(releaseInfo)
 
     def _getTotalReleaseCount(self):
         total = 0
@@ -84,28 +73,72 @@ class ReleaseRegistryManager:
             for release in registry.releases:
                 yield release
 
-    def _findReleaseInfoAndRegistry(self, releaseId, releaseVersionCode):
+    def _findReleaseInfoAndRegistryByIdAndVersionCode(self, releaseId, releaseVersionCode):
         for registry in self._releaseRegistries:
             for release in registry.releases:
                 if release.id == releaseId and release.versionCode == releaseVersionCode:
                     return (release, registry)
-
         return (None, None)
 
-    def installRelease(self, releaseId, releaseVersionCode):
+    def _findReleaseInfoAndRegistryByNameAndVersion(self, releaseName, releaseVersion):
+        for registry in self._releaseRegistries:
+            for release in registry.releases:
+                if release.name == releaseName and release.version == releaseVersion:
+                    return (release, registry)
+        return (None, None)
 
-        # TODO: - when not provided just install the newest
+    def installReleaseByName(self, releaseName, releaseVersion, suppressPrompts = False):
+        assertThat(releaseName)
+        assertThat(releaseVersion)
+
+        self._lazyInit()
+        self._log.heading("Attempting to install release '{0}' for version '{1}'", releaseName, releaseVersion)
+
+        assertThat(len(self._releaseRegistries) > 0, "Could not find any registries to search for the given release")
+
+        releaseInfo, registry = self._findReleaseInfoAndRegistryByNameAndVersion(releaseName, releaseVersion)
+
+        assertThat(releaseInfo, "Failed to install release '{0}' (version {1}) - could not find it in any of the release registries.\nRegistries checked: \n  {2}\nTry listing all available release with the -lr command"
+           .format(releaseName, releaseVersion, "\n  ".join([x.getName() for x in self._releaseRegistries])))
+
+        self._installReleaseInternal(releaseInfo, registry)
+
+    def installRelease(self, releaseId, releaseVersionCode, suppressPrompts = False):
+
         assertThat(releaseVersionCode)
+        assertThat(releaseId)
 
         self._lazyInit()
         self._log.heading("Attempting to install release with id '{0}'", releaseId)
 
-        assertThat(len(self._releaseRegistries) > 0, "Could not find any registries to search for the given release name")
+        assertThat(len(self._releaseRegistries) > 0, "Could not find any registries to search for the given release")
 
-        releaseInfo, registry = self._findReleaseInfoAndRegistry(releaseId, releaseVersionCode)
+        releaseInfo, registry = self._findReleaseInfoAndRegistryByIdAndVersionCode(releaseId, releaseVersionCode)
 
         assertThat(releaseInfo, "Failed to install release '{0}' - could not find it in any of the release registries.\nRegistries checked: \n  {1}\nTry listing all available release with the -lr command"
            .format(releaseId, "\n  ".join([x.getName() for x in self._releaseRegistries])))
+
+        self._installReleaseInternal(releaseInfo, registry)
+
+    def _installReleaseInternal(self, releaseInfo, registry, suppressPrompts = False):
+
+        for packageInfo in self._packageManager.getAllPackageInfos():
+            installedInfo = packageInfo.releaseInfo
+
+            if installedInfo and installedInfo.id == releaseInfo.id:
+                if installedInfo.versionCode == releaseInfo.versionCode:
+                    self._log.info("Release '{0}' (version {1}) is already installed.  Installation aborted.", releaseInfo.name, releaseInfo.version)
+                    return
+
+                print("\nFound release '{0}' already installed with version '{1}'".format(releaseInfo.name, releaseInfo.version), end='')
+
+                installDirection = 'UPGRADE' if releaseInfo.versionCode > installedInfo.versionCode else 'DOWNGRADE'
+
+                if not suppressPrompts:
+                    shouldContinue = MiscUtil.confirmChoice("Are you sure you want to {0} '{1}' from version '{2}' to version '{3}'? (y/n)".format(installDirection, releaseInfo.name, installedInfo.version, releaseInfo.version))
+                    assertThat(shouldContinue, 'User aborted')
+
+                self._packageManager.deletePackage(packageInfo.name)
 
         destDir = '[UnityPackagesDir]/{0}'.format(releaseInfo.name)
 
@@ -113,9 +146,8 @@ class ReleaseRegistryManager:
 
         registry.installRelease(releaseInfo, destDir)
 
-        yamlDict = releaseInfo.__dict__
-        yamlDict['installDate'] = datetime.utcnow()
-        yamlStr = YamlSerializer.serialize(yamlDict)
+        releaseInfo.installDate = datetime.utcnow()
+        yamlStr = YamlSerializer.serialize(releaseInfo)
         self._sys.writeFileAsText(os.path.join(destDir, ReleaseInfoFileName), yamlStr)
 
         self._log.info("Successfully installed '{0}' (version {1})", releaseInfo.name, releaseInfo.version)

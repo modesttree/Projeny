@@ -21,6 +21,7 @@ import upm.util.MiscUtil as MiscUtil
 import upm.util.PlatformUtil as PlatformUtil
 
 from upm.util.Assert import *
+from upm.reg.PackageInfo import PackageInfo
 
 import upm.util.YamlSerializer as YamlSerializer
 import upm.ioc.Container as Container
@@ -43,7 +44,7 @@ class PackageManager:
     _commonSettings = Inject('CommonSettings')
 
     def __init__(self):
-        pass
+        self._packageInfos = None
 
     def projectExists(self, projectName):
         return self._sys.directoryExists('[UnityProjectsDir]/{0}'.format(projectName)) or self._sys.fileExists('[UnityProjectsDir]/{0}.ini'.format(projectName))
@@ -98,29 +99,25 @@ class PackageManager:
         self._log.good('Finished updating packages for project "{0}"'.format(schema.name))
 
     def getAllPackageInfos(self):
-        result = []
-        for name in self.getAllPackageNames():
+        if not self._packageInfos:
+            self._packageInfos = []
 
-            path = self._varMgr.expandPath('[UnityPackagesDir]/{0}'.format(name))
+            for name in self.getAllPackageNames():
+                path = self._varMgr.expandPath('[UnityPackagesDir]/{0}'.format(name))
 
-            releaseInfoPath = os.path.join(path, 'Release.yaml')
+                releaseInfoPath = os.path.join(path, 'Release.yaml')
 
-            version = None
-            versionCode = None
+                info = PackageInfo()
+                info.name = name
+                info.path = path
 
-            if self._sys.fileExists(releaseInfoPath):
-                fileInfo = YamlSerializer.deserialize(self._sys.readFileAsText(releaseInfoPath))
-                version = fileInfo['Version']
-                versionCode = fileInfo['VersionCode']
+                if self._sys.fileExists(releaseInfoPath):
+                    releaseInfo = YamlSerializer.deserialize(self._sys.readFileAsText(releaseInfoPath))
+                    info.releaseInfo = releaseInfo
 
-            info = {}
-            info['Path'] = path
-            info['Name'] = name
-            info['Version'] = version
-            info['VersionCode'] = versionCode
-            result.append(info)
+                self._packageInfos.append(info)
 
-        return result
+        return self._packageInfos
 
     def deleteProject(self, projName):
         self._log.heading("Deleting project '{0}'", projName)
