@@ -7,6 +7,7 @@
 The purpose of Projeny is to allow your Unity3D project to easily scale in size without heavily impacting development time.  It offers the following features:
 
 * Allows you to split up your project into discrete packages
+* Easily upgrade or downgrade installed asset store packages
 * Adds ability to share any unity assets (code, scenes, prefabs, etc.) across multiple different unity projects
 * Adds ability to optimize compile time of your project by using Unity's Plugins folder
 * Near instant switching between platforms

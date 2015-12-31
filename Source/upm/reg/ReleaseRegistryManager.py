@@ -103,7 +103,7 @@ class ReleaseRegistryManager:
         assertThat(releaseInfo, "Failed to install release '{0}' (version {1}) - could not find it in any of the release registries.\nRegistries checked: \n  {2}\nTry listing all available release with the -lr command"
            .format(releaseName, releaseVersion, "\n  ".join([x.getName() for x in self._releaseRegistries])))
 
-        self._installReleaseInternal(releaseInfo, registry)
+        self._installReleaseInternal(releaseInfo, registry, suppressPrompts)
 
     def installReleaseById(self, releaseId, releaseVersionCode, suppressPrompts = False):
 
@@ -120,7 +120,7 @@ class ReleaseRegistryManager:
         assertThat(releaseInfo, "Failed to install release '{0}' - could not find it in any of the release registries.\nRegistries checked: \n  {1}\nTry listing all available release with the -lr command"
            .format(releaseId, "\n  ".join([x.getName() for x in self._releaseRegistries])))
 
-        self._installReleaseInternal(releaseInfo, registry)
+        self._installReleaseInternal(releaseInfo, registry, suppressPrompts)
 
     def _installReleaseInternal(self, releaseInfo, registry, suppressPrompts = False):
 

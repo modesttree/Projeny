@@ -789,15 +789,127 @@ namespace Projeny
             }
         }
 
-        IEnumerator InstallReleasesAsync(List<ReleaseInfo> infos)
+        IEnumerator InstallReleasesAsync(List<ReleaseInfo> releaseInfos)
         {
-            var result = UpmInterface.InstallReleasesAsync(infos);
-            yield return result;
+            // Need to make sure we have the most recent package list so we can determine whether this is
+            // an upgrade / downgrade / etc.
+            yield return RefreshPackagesAsync();
 
-            if (result.Current)
+            foreach (var releaseInfo in releaseInfos)
             {
-                yield return RefreshPackagesAsync();
+                switch (CheckShouldInstall(releaseInfo))
+                {
+                    case InstallReleaseUserChoices.Cancel:
+                    {
+                        yield break;
+                    }
+                    case InstallReleaseUserChoices.Install:
+                    {
+                        var result = UpmInterface.InstallReleaseAsync(releaseInfo);
+                        yield return result;
+
+                        if (!result.Current)
+                        {
+                            // Error occurred - just abort
+                            yield break;
+                        }
+                        break;
+                    }
+                    case InstallReleaseUserChoices.Skip:
+                    {
+                        // Do nothing
+                        break;
+                    }
+                    default:
+                    {
+                        Assert.Throw();
+                        break;
+                    }
+                }
             }
+
+            yield return RefreshPackagesAsync();
+        }
+
+        InstallReleaseUserChoices CheckShouldInstall(ReleaseInfo releaseInfo)
+        {
+            var packageInfo = TryFindPackageInfoForRelease(releaseInfo);
+
+            if (packageInfo == null)
+            {
+                return InstallReleaseUserChoices.Install;
+            }
+
+            Assert.IsNotNull(packageInfo.InstallInfo);
+            var packageReleaseInfo = packageInfo.InstallInfo.ReleaseInfo;
+
+            Assert.IsNotNull(packageReleaseInfo);
+
+            // TODO - how to handle?
+            Assert.That(packageReleaseInfo.HasVersionCode);
+            Assert.That(releaseInfo.HasVersionCode);
+
+            int choice = -1;
+
+            if (packageReleaseInfo.VersionCode == releaseInfo.VersionCode)
+            {
+                Assert.IsEqual(releaseInfo.Version, packageReleaseInfo.Version);
+
+                choice = EditorUtility.DisplayDialogComplex(
+                    "Package Already Installed",
+                    "Package '{0}' is already installed with version '{1}'.  Would you like to install anyway?  Note that any local changes you've made to the package will be reverted."
+                        .Fmt(packageReleaseInfo.Name, packageReleaseInfo.Version), "Overwrite", "Skip", "Cancel");
+            }
+            else if (releaseInfo.VersionCode > packageReleaseInfo.VersionCode)
+            {
+                choice = EditorUtility.DisplayDialogComplex(
+                    "Package Upgrade",
+                    "Package '{0}' is already installed with version '{1}'. Would you like to UPGRADE it to version '{2}'?  Note that any local changes you've made to the package will be lost."
+                    .Fmt(releaseInfo.Name, packageReleaseInfo.Version, releaseInfo.Version), "Upgrade", "Skip", "Cancel");
+            }
+            else
+            {
+                Assert.That(releaseInfo.VersionCode < packageReleaseInfo.VersionCode);
+
+                choice = EditorUtility.DisplayDialogComplex(
+                    "Package Downgrade",
+                    "Package '{0}' is already installed with version '{1}'. Would you like to DOWNGRADE it to version '{2}'?  Note that any local changes you've made to the package will be lost."
+                    .Fmt(releaseInfo.Name, packageReleaseInfo.Version, releaseInfo.Version), "Downgrade", "Skip", "Cancel");
+            }
+
+            switch (choice)
+            {
+                case 0:
+                {
+                    return InstallReleaseUserChoices.Install;
+                }
+                case 1:
+                {
+                    return InstallReleaseUserChoices.Skip;
+                }
+                case 2:
+                {
+                    return InstallReleaseUserChoices.Cancel;
+                }
+                default:
+                {
+                    Assert.Throw();
+                    return InstallReleaseUserChoices.Cancel;
+                }
+            }
+        }
+
+        PackageInfo TryFindPackageInfoForRelease(ReleaseInfo releaseInfo)
+        {
+            foreach (var packageInfo in _allPackages)
+            {
+                if (packageInfo.InstallInfo != null && packageInfo.InstallInfo.ReleaseInfo != null && packageInfo.InstallInfo.ReleaseInfo.Id == releaseInfo.Id)
+                {
+                    return packageInfo;
+                }
+            }
+
+            return null;
         }
 
         ListTypes ClassifyList(DraggableList list)
@@ -1639,6 +1751,13 @@ namespace Projeny
             LocalProjectUser,
             AllProjects,
             AllProjectsUser,
+        }
+
+        enum InstallReleaseUserChoices
+        {
+            Cancel,
+            Skip,
+            Install,
         }
 
         enum ViewStates

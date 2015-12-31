@@ -93,7 +93,7 @@ namespace Projeny
 
         public static void DisplayUpmError(string operationDescription, string errors)
         {
-            var errorMessage = "UPM encountered errors when running '{0}'. Details: \n\n{1}".Fmt(operationDescription, errors);
+            var errorMessage = "Operation aborted.  UPM encountered errors when running '{0}'. Details: \n\n{1}".Fmt(operationDescription, errors);
             Log.Error("Projeny: {0}", errorMessage);
             EditorUtility.DisplayDialog("Error", errorMessage, "Ok");
         }
@@ -291,38 +291,35 @@ namespace Projeny
             }
         }
 
-        public static IEnumerator<Boolean> InstallReleasesAsync(List<ReleaseInfo> infos)
+        public static IEnumerator<Boolean> InstallReleaseAsync(ReleaseInfo info)
         {
-            return CoRoutine.Wrap<Boolean>(InstallReleaseAsyncInternal(infos));
+            return CoRoutine.Wrap<Boolean>(InstallReleaseAsyncInternal(info));
         }
 
-        static IEnumerator InstallReleaseAsyncInternal(List<ReleaseInfo> infos)
+        static IEnumerator InstallReleaseAsyncInternal(ReleaseInfo info)
         {
-            foreach (var info in infos)
+            var req = CreateUpmRequest("installRelease");
+
+            req.Param1 = info.Id;
+
+            if (info.HasVersionCode)
             {
-                var req = CreateUpmRequest("installRelease");
-
-                req.Param1 = info.Id;
-
-                if (info.HasVersionCode)
-                {
-                    req.Param2 = info.VersionCode.ToString();
-                }
-
-                var result = RunUpmAsync(req);
-                yield return result;
-
-                if (!result.Current.Succeeded)
-                {
-                    DisplayUpmError("Installing Release '{0}' ({1})".Fmt(info.Name, info.Version), result.Current.ErrorMessage);
-                    yield return false;
-                    yield break;
-                }
-
-                Log.Info("Installed new release '{0}' ({1})".Fmt(info.Name, info.Version));
+                req.Param2 = info.VersionCode.ToString();
             }
 
-            yield return true;
+            var result = RunUpmAsync(req);
+            yield return result;
+
+            if (result.Current.Succeeded)
+            {
+                Log.Info("Installed new release '{0}' ({1})".Fmt(info.Name, info.Version));
+                yield return true;
+            }
+            else
+            {
+                DisplayUpmError("Installing Release '{0}' ({1})".Fmt(info.Name, info.Version), result.Current.ErrorMessage);
+                yield return false;
+            }
         }
 
         public static IEnumerator<Boolean> CreatePackageAsync(string name)
