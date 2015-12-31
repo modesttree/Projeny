@@ -23,6 +23,17 @@ namespace Projeny.Internal
             return DerivesFrom(a, typeof(T));
         }
 
+        public static TSource OnlyOrDefault<TSource>(this IEnumerable<TSource> source)
+        {
+            if (source == null)
+            {
+                throw new ArgumentNullException("source");
+            }
+
+            var results = source.Take(2).ToArray();
+            return results.Length == 1 ? results[0] : default(TSource);
+        }
+
         // This seems easier to think about than IsAssignableFrom
         public static bool DerivesFrom(this Type a, Type b)
         {

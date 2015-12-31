@@ -315,16 +315,24 @@ namespace Projeny
                 case ListTypes.Release:
                 {
                     bool hasLocalPath = false;
+                    bool hasAssetStoreLink = false;
 
-                    if (_selected.Count == 1)
+                    var singleInfo = _selected.OnlyOrDefault();
+
+                    if (singleInfo != null)
                     {
-                        var localPath = ((ReleaseInfo)(_selected.Single().Tag)).LocalPath;
-                        hasLocalPath = localPath != null && File.Exists(localPath);
+                        var info = (ReleaseInfo)singleInfo.Tag;
+
+                        hasLocalPath = info.LocalPath != null && File.Exists(info.LocalPath);
+
+                        hasAssetStoreLink = info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.LinkId);
                     }
 
                     contextMenu.AddOptionalItem(hasLocalPath, new GUIContent("Open Folder"), false, OpenReleaseFolderForSelected);
 
-                    contextMenu.AddOptionalItem(_selected.Count == 1, new GUIContent("More Info..."), false, OpenMoreInfoPopupForSelected);
+                    contextMenu.AddOptionalItem(singleInfo != null, new GUIContent("More Info..."), false, OpenMoreInfoPopupForSelected);
+
+                    contextMenu.AddOptionalItem(hasAssetStoreLink, new GUIContent("Open In Asset Store"), false, OpenSelectedInAssetStore);
                     break;
                 }
                 case ListTypes.Package:
@@ -366,6 +374,23 @@ namespace Projeny
             Assert.IsNotNull(asset, "Could not find package '{0}' in project", name);
 
             Selection.activeObject = asset;
+        }
+
+        void OpenSelectedInAssetStore()
+        {
+            Assert.IsEqual(_selected.Count, 1);
+
+            var entry = _selected.Single();
+
+            Assert.IsEqual(ClassifyList(entry.ListOwner), ListTypes.Release);
+
+            var info = (ReleaseInfo)entry.Tag;
+            var assetStoreInfo = info.AssetStoreInfo;
+
+            Assert.IsNotNull(assetStoreInfo);
+
+            var fullUrl = "https://www.assetstore.unity3d.com/#/{0}/{1}".Fmt(assetStoreInfo.LinkType, assetStoreInfo.LinkId);
+            Application.OpenURL(fullUrl);
         }
 
         void OpenMoreInfoPopupForSelected()
