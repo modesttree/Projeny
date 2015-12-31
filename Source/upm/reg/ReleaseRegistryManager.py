@@ -124,6 +124,8 @@ class ReleaseRegistryManager:
 
     def _installReleaseInternal(self, releaseInfo, registry, suppressPrompts = False):
 
+        installDirName = releaseInfo.name
+
         for packageInfo in self._packageManager.getAllPackageInfos():
             installInfo = packageInfo.installInfo
 
@@ -142,7 +144,10 @@ class ReleaseRegistryManager:
 
                 self._packageManager.deletePackage(packageInfo.name)
 
-        destDir = '[UnityPackagesDir]/{0}'.format(releaseInfo.name)
+                # Retain original directory name in case it is referenced by other packages
+                installDirName = packageInfo.name
+
+        destDir = '[UnityPackagesDir]/{0}'.format(installDirName)
 
         assertThat(not self._sys.directoryExists(destDir), "Found existing folder with the same name '{0}'.  If this is the same package and you want to replace, uninstall this package first then try again.", releaseInfo.name)
 

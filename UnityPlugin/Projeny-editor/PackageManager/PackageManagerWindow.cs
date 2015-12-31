@@ -32,6 +32,9 @@ namespace Projeny
 
         ReleasesSortMethod _releasesSortMethod;
 
+        bool _hasInitialized;
+        bool _releaseSortAscending;
+
         [NonSerialized]
         float _split1 = 0;
 
@@ -43,8 +46,6 @@ namespace Projeny
 
         [NonSerialized]
         BackgroundTaskInfo _backgroundTaskInfo;
-
-        bool _releaseSortAscending;
 
         const string NotAvailableLabel = "N/A";
 
@@ -239,33 +240,43 @@ namespace Projeny
 
         void OnEnable()
         {
-            _selected = _selected ?? new List<DraggableListEntry>();
-            _allPackages = _allPackages ?? new List<PackageInfo>();
-            _allReleases = _allReleases ?? new List<ReleaseInfo>();
-
-            if (_installedList == null)
+            if (!_hasInitialized)
             {
+                _hasInitialized = true;
+
+                Assert.IsNull(_selected);
+                Assert.IsNull(_allPackages);
+                Assert.IsNull(_allReleases);
+                Assert.IsNull(_installedList);
+                Assert.IsNull(_releasesList);
+                Assert.IsNull(_assetsList);
+                Assert.IsNull(_pluginsList);
+
+                _selected = new List<DraggableListEntry>();
+                _allPackages = new List<PackageInfo>();
+                _allReleases = new List<ReleaseInfo>();
+
                 _installedList = ScriptableObject.CreateInstance<DraggableList>();
                 _installedList.Manager = this;
-            }
 
-            if (_releasesList == null)
-            {
                 _releasesList = ScriptableObject.CreateInstance<DraggableList>();
                 _releasesList.Manager = this;
-            }
 
-            if (_assetsList == null)
-            {
                 _assetsList = ScriptableObject.CreateInstance<DraggableList>();
                 _assetsList.Manager = this;
-            }
 
-            if (_pluginsList == null)
-            {
                 _pluginsList = ScriptableObject.CreateInstance<DraggableList>();
                 _pluginsList.Manager = this;
+
+                StartBackgroundTask(RefreshAll(), true);
             }
+        }
+
+        IEnumerator RefreshAll()
+        {
+            RefreshProject();
+            yield return RefreshPackagesAsync();
+            yield return RefreshReleasesAsync();
         }
 
         float GetDesiredSplit1()
