@@ -43,7 +43,20 @@ class UnityPackageExtractor:
             self._sys.executeAndWait('"[UnityExePath]" -batchmode -nographics -quit -projectPath "{0}" -importPackage "{1}"'.format(tempDir, unityPackagePath))
 
             self._log.heading("Unity finished.  Copying results to output directory")
-            self._sys.copyDirectory(os.path.join(tempDir, 'Assets'), outputDir)
+
+            assetsDir = os.path.join(tempDir, 'Assets')
+
+            rootPaths = [os.path.join(assetsDir, x) for x in self._sys.walkDir(assetsDir) if not x.endswith('.meta')]
+
+            # If the unitypackage only contains a single directory, then extract that instead
+            # To avoid ending up with PackageName/PackageName directories for everything
+            if len(rootPaths) == 1 and os.path.isdir(rootPaths[0]):
+                dirToCopy = rootPaths[0]
+            else:
+                dirToCopy = assetsDir
+
+            self._sys.copyDirectory(dirToCopy, outputDir)
+
         finally:
             self._log.heading("Deleting temp directory '{0}'", tempDir)
             shutil.rmtree(tempDir)
@@ -64,7 +77,7 @@ if __name__ == '__main__':
         if os.path.exists(outDir):
             shutil.rmtree(outDir)
 
-        runner.extractUnityPackage("F:/Temp/UnityPackages/BobTest.unitypackage", outDir)
+        runner.extractUnityPackage("C:/Users/Steve/AppData/Roaming/Unity/Asset Store-5.x/Modest Tree Media/Scripting/Zenject Dependency Injection IOC.unitypackage", outDir)
 
     ScriptRunner().runWrapper(main)
 
