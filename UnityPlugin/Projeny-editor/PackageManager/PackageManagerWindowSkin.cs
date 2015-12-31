@@ -68,6 +68,7 @@ namespace Projeny
         public SavePromptDialogProperties SavePromptDialog;
         public ReleaseInfoMoreInfoDialogProperties ReleaseMoreInfoDialog;
         public GenericPromptDialogProperties GenericPromptDialog;
+        public ReleasesPaneProperties ReleasesPane;
 
         public GUIStyle ItemTextStyle
         {
@@ -181,6 +182,24 @@ namespace Projeny
                 get
                 {
                     return GUI.skin.GetStyle("InputDialogLabelStyle");
+                }
+            }
+        }
+
+        [Serializable]
+        public class ReleasesPaneProperties
+        {
+            public float IconRowHeight;
+            public float IconRowLeftPadding;
+            public Vector2 IconSize;
+            public Texture2D SortIcon;
+            public Color IconRowBackgroundColor;
+
+            public GUIStyle SortButtonStyle
+            {
+                get
+                {
+                    return GUI.skin.GetStyle("ReleasePaneSortButtonStyle");
                 }
             }
         }

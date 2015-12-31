@@ -30,6 +30,8 @@ namespace Projeny
 
         Action<Rect> _popupHandler;
 
+        ReleasesSortMethod _releasesSortMethod;
+
         [NonSerialized]
         float _split1 = 0;
 
@@ -97,6 +99,48 @@ namespace Projeny
                     break;
                 }
             }
+        }
+
+        object GetReleaseSortField(DraggableListEntry entry)
+        {
+            var info = (ReleaseInfo)entry.Tag;
+
+            switch (_releasesSortMethod)
+            {
+                case ReleasesSortMethod.Name:
+                {
+                    return info.Name;
+                }
+                case ReleasesSortMethod.Size:
+                {
+                    return info.CompressedSize;
+                }
+                case ReleasesSortMethod.PublishDate:
+                {
+                    return info.AssetStoreInfo == null ? 0 : info.AssetStoreInfo.PublishDateTicks;
+                }
+            }
+
+            Assert.Throw();
+            return null;
+        }
+
+        public List<DraggableListEntry> SortList(DraggableList list, List<DraggableListEntry> entries)
+        {
+            switch (ClassifyList(list))
+            {
+                case ListTypes.Release:
+                {
+                    return entries.OrderBy(x => GetReleaseSortField(x)).ToList();
+                }
+                default:
+                {
+                    return entries.OrderBy(x => x.Name).ToList();
+                }
+            }
+
+            Assert.Throw();
+            return null;
         }
 
         string ColorToHex(Color32 color)
@@ -1370,6 +1414,54 @@ namespace Projeny
 
             GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Releases", Skin.HeaderTextStyle);
 
+            var skin = Skin.ReleasesPane;
+
+            startY = endY;
+            endY = startY + skin.IconRowHeight;
+
+            var iconRowRect = Rect.MinMaxRect(startX, startY, endX, endY);
+
+            ImguiUtil.DrawColoredQuad(iconRowRect, skin.IconRowBackgroundColor);
+
+            GUILayout.BeginArea(iconRowRect);
+            {
+                GUILayout.FlexibleSpace();
+
+                GUILayout.BeginHorizontal();
+                {
+                    GUILayout.FlexibleSpace();
+
+                    if (GUILayout.Button("", skin.SortButtonStyle, GUILayout.Width(skin.IconSize.x), GUILayout.Height(skin.IconSize.y)))
+                    {
+                        GenericMenu contextMenu = new GenericMenu();
+
+                        contextMenu.AddItem(
+                            new GUIContent("Order By Name"),
+                            _releasesSortMethod == ReleasesSortMethod.Name,
+                            () => ChangeReleaseSortMethod(ReleasesSortMethod.Name));
+
+                        contextMenu.AddItem(
+                            new GUIContent("Order By Size"),
+                            _releasesSortMethod == ReleasesSortMethod.Size,
+                            () => ChangeReleaseSortMethod(ReleasesSortMethod.Size));
+
+                        contextMenu.AddItem(
+                            new GUIContent("Order By Publish Date"),
+                            _releasesSortMethod == ReleasesSortMethod.PublishDate,
+                            () => ChangeReleaseSortMethod(ReleasesSortMethod.PublishDate));
+
+                        var mousePos = Event.current.mousePosition;
+                        contextMenu.DropDown(new Rect(mousePos.x, mousePos.y, 0, 16));
+                    }
+
+                    GUILayout.Space(skin.IconRowLeftPadding);
+                }
+                GUILayout.EndHorizontal();
+
+                GUILayout.FlexibleSpace();
+            }
+            GUILayout.EndArea();
+
             startY = endY;
             endY = rect.yMax - Skin.ApplyButtonHeight - Skin.ApplyButtonTopPadding;
 
@@ -1382,6 +1474,12 @@ namespace Projeny
             {
                 StartBackgroundTask(RefreshReleasesAsync(), true);
             }
+        }
+
+        void ChangeReleaseSortMethod(ReleasesSortMethod sortMethod)
+        {
+            _releasesSortMethod = sortMethod;
+            _releasesList.ForceSort();
         }
 
         void DrawProjectPane(Rect windowRect)
@@ -1475,6 +1573,13 @@ namespace Projeny
         {
             public CoRoutine CoRoutine;
             public bool ShowProcessingLabel;
+        }
+
+        enum ReleasesSortMethod
+        {
+            Name,
+            Size,
+            PublishDate
         }
 
         enum SavePromptChoices

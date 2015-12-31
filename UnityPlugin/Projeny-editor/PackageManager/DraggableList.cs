@@ -94,6 +94,11 @@ namespace Projeny.Internal
             SortList();
         }
 
+        public void ForceSort()
+        {
+            SortList();
+        }
+
         public void Add(string entry)
         {
             Add(entry, null);
@@ -106,7 +111,7 @@ namespace Projeny.Internal
 
         void SortList()
         {
-            _entryList = _entryList.OrderBy(x => x.Name).ToList();
+            _entryList = _manager.SortList(this, _entryList);
 
             for (int i = 0; i < _entryList.Count; i++)
             {

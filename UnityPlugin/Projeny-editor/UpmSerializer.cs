@@ -117,6 +117,7 @@ namespace Projeny.Internal
             newInfo.UploadId = info.UploadId;
             newInfo.Description = info.Description;
             newInfo.PublishDate = info.PublishDate.HasValue ? DateTimeToString(info.PublishDate.Value) : null;
+            newInfo.PublishDateTicks = info.PublishDate.HasValue ? info.PublishDate.Value.Ticks : 0;
             newInfo.UnityVersion = info.UnityVersion;
             newInfo.LinkId = info.LinkId;
             newInfo.LinkType = info.LinkType;

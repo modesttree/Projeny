@@ -50,6 +50,7 @@ namespace Projeny
         public string UploadId;
         public string Description;
         public string PublishDate;
+        public long PublishDateTicks;
         public string UnityVersion;
         public string LinkId;
         public string LinkType;
