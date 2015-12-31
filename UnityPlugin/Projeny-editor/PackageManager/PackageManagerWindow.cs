@@ -225,20 +225,9 @@ namespace Projeny
 
         void OnEnable()
         {
-            if (_selected == null)
-            {
-                _selected = new List<DraggableListEntry>();
-            }
-
-            if (_allPackages == null)
-            {
-                _allPackages = new List<PackageInfo>();
-            }
-
-            if (_allReleases == null)
-            {
-                _allReleases = new List<ReleaseInfo>();
-            }
+            _selected = _selected ?? new List<DraggableListEntry>();
+            _allPackages = _allPackages ?? new List<PackageInfo>();
+            _allReleases = _allReleases ?? new List<ReleaseInfo>();
 
             if (_installedList == null)
             {
@@ -251,7 +240,6 @@ namespace Projeny
                 _releasesList = ScriptableObject.CreateInstance<DraggableList>();
                 _releasesList.Manager = this;
             }
-
 
             if (_assetsList == null)
             {
@@ -1423,13 +1411,19 @@ namespace Projeny
 
             ImguiUtil.DrawColoredQuad(iconRowRect, skin.IconRowBackgroundColor);
 
+            GUI.Label(new Rect(iconRowRect.xMin + skin.SearchIconOffset.x, iconRowRect.yMin + skin.SearchIconOffset.y, skin.SearchIconSize.x, skin.SearchIconSize.y), skin.SearchIcon);
+
             GUILayout.BeginArea(iconRowRect);
             {
                 GUILayout.FlexibleSpace();
 
                 GUILayout.BeginHorizontal();
                 {
-                    GUILayout.FlexibleSpace();
+                    GUILayout.Space(skin.TextFieldPaddingLeft);
+
+                    _releasesList.SearchFilter = GUILayout.TextField(_releasesList.SearchFilter, skin.SearchTextStyle, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+
+                    GUILayout.Space(skin.TextFieldPaddingRight);
 
                     if (GUILayout.Button("", skin.SortButtonStyle, GUILayout.Width(skin.IconSize.x), GUILayout.Height(skin.IconSize.y)))
                     {

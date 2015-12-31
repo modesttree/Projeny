@@ -191,8 +191,13 @@ namespace Projeny
         {
             public float IconRowHeight;
             public float IconRowLeftPadding;
+            public float TextFieldPaddingLeft;
+            public float TextFieldPaddingRight;
             public Vector2 IconSize;
+            public Vector2 SearchIconOffset;
             public Texture2D SortIcon;
+            public Texture2D SearchIcon;
+            public Vector2 SearchIconSize;
             public Color IconRowBackgroundColor;
 
             public GUIStyle SortButtonStyle
@@ -200,6 +205,14 @@ namespace Projeny
                 get
                 {
                     return GUI.skin.GetStyle("ReleasePaneSortButtonStyle");
+                }
+            }
+
+            public GUIStyle SearchTextStyle
+            {
+                get
+                {
+                    return GUI.skin.GetStyle("ReleasePaneSearchTextStyle");
                 }
             }
         }

@@ -31,6 +31,9 @@ namespace Projeny.Internal
         [SerializeField]
         PackageManagerWindow _manager;
 
+        [SerializeField]
+        string _searchFilter = "";
+
         static DraggableListSkin _skin;
 
         DraggableListSkin Skin
@@ -38,6 +41,19 @@ namespace Projeny.Internal
             get
             {
                 return _skin ?? (_skin = Resources.Load<DraggableListSkin>("Projeny/DraggableListSkin"));
+            }
+        }
+
+        public string SearchFilter
+        {
+            get
+            {
+                return _searchFilter;
+            }
+            set
+            {
+                Assert.IsNotNull(value);
+                _searchFilter = value;
             }
         }
 
@@ -124,7 +140,10 @@ namespace Projeny.Internal
             // Can this be calculated instead?
             var widthOfScrollBar = 15.0f;
 
-            var viewRect = new Rect(0, 0, listRect.width - 30.0f, _entryList.Count * Skin.ItemHeight);
+            var searchFilter = _searchFilter.Trim().ToLowerInvariant();
+            var visibleEntries = _entryList.Where(x => x.IsVisible && x.Name.ToLowerInvariant().Contains(searchFilter)).ToList();
+
+            var viewRect = new Rect(0, 0, listRect.width - 30.0f, visibleEntries.Count * Skin.ItemHeight);
 
             var isListUnderMouse = listRect.Contains(Event.current.mousePosition);
 
@@ -197,13 +216,8 @@ namespace Projeny.Internal
             float yPos = 0;
             _scrollPos = GUI.BeginScrollView(listRect, _scrollPos, viewRect);
             {
-                foreach (var entry in _entryList)
+                foreach (var entry in visibleEntries)
                 {
-                    if (!entry.IsVisible)
-                    {
-                        continue;
-                    }
-
                     var labelRect = new Rect(0, yPos, listRect.width, Skin.ItemHeight);
 
                     bool isItemUnderMouse = labelRect.Contains(Event.current.mousePosition);
@@ -250,6 +264,9 @@ namespace Projeny.Internal
                         {
                             if (isItemUnderMouse)
                             {
+                                // Unfocus on text field
+                                GUI.FocusControl(null);
+
                                 clickedItem = true;
                                 _manager.Select(entry);
 
@@ -282,6 +299,9 @@ namespace Projeny.Internal
 
             if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && !clickedItem &&  isListUnderMouse)
             {
+                // Unfocus on text field
+                GUI.FocusControl(null);
+
                 _manager.ClearSelected();
             }
         }
