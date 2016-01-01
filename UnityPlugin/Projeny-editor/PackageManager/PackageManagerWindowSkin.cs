@@ -310,6 +310,8 @@ namespace Projeny
             public Color VersionColor;
             public Color LoadingOverlayColor;
             public Color LoadingOverlapPopupColor;
+            public Color DraggableItemAlreadyAddedColor;
+
             public GUIStyle DropdownTextStyle;
             public GUIStyle HeaderTextStyle;
         }

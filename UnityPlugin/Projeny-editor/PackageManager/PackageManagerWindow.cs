@@ -65,6 +65,11 @@ namespace Projeny
             }
         }
 
+        string WrapWithColor(string text, Color color)
+        {
+            return "<color=#{0}>{1}</color>".Fmt(MiscUtil.ColorToHex(color), text);
+        }
+
         public void DrawItemLabel(Rect rect, DraggableListEntry entry)
         {
             switch (ClassifyList(entry.ListOwner))
@@ -72,7 +77,16 @@ namespace Projeny
                 case ListTypes.Release:
                 {
                     var info = (ReleaseInfo)(entry.Tag);
-                    DrawItemLabelWithVersion(rect, info.Name, info.Version);
+
+                    var labelStr = info.Name;
+
+                    if (IsReleaseInstalled(info))
+                    {
+                        labelStr = WrapWithColor(labelStr, Skin.Theme.DraggableItemAlreadyAddedColor);
+                    }
+
+                    DrawItemLabelWithVersion(rect, labelStr, info.Version);
+
                     break;
                 }
                 case ListTypes.Package:
@@ -81,11 +95,21 @@ namespace Projeny
 
                     if (_viewState == ViewStates.ReleasesAndPackages)
                     {
-                        DrawItemLabelWithVersion(rect, info.Name, TryGetVersion(info));
+                        DrawItemLabelWithVersion(
+                            rect, WrapWithColor(info.Name, Skin.Theme.DraggableItemAlreadyAddedColor),
+                            TryGetVersion(info));
                     }
                     else
                     {
-                        DrawListItem(rect, info.Name);
+                        Assert.IsEqual(_viewState, ViewStates.PackagesAndProject);
+
+                        var labelStr = info.Name;
+
+                        if (IsPackageAddedToProject(info.Name))
+                        {
+                            labelStr = WrapWithColor(info.Name, Skin.Theme.DraggableItemAlreadyAddedColor);
+                        }
+                        DrawListItem(rect, labelStr);
                     }
 
                     break;
@@ -93,7 +117,18 @@ namespace Projeny
                 case ListTypes.AssetItem:
                 case ListTypes.PluginItem:
                 {
-                    DrawListItem(rect, entry.Name);
+                    var labelStr = entry.Name;
+
+                    if (_viewState == ViewStates.PackagesAndProject)
+                    {
+                        labelStr = WrapWithColor(labelStr, Skin.Theme.DraggableItemAlreadyAddedColor);
+                    }
+                    else
+                    {
+                        Assert.That(_viewState == ViewStates.Project);
+                    }
+
+                    DrawListItem(rect, labelStr);
                     break;
                 }
                 default:
@@ -102,6 +137,21 @@ namespace Projeny
                     break;
                 }
             }
+        }
+
+        bool IsReleaseInstalled(ReleaseInfo info)
+        {
+            return _allPackages
+                .Any(x => x.InstallInfo != null
+                    && x.InstallInfo.ReleaseInfo != null
+                    && x.InstallInfo.ReleaseInfo.Id == info.Id
+                    && x.InstallInfo.ReleaseInfo.VersionCode == info.VersionCode);
+        }
+
+        bool IsPackageAddedToProject(string name)
+        {
+            return _assetsList.Values.Select(x => x.Name)
+                .Concat(_pluginsList.Values.Select(x => x.Name)).Contains(name);
         }
 
         string TryGetVersion(PackageInfo info)
@@ -165,7 +215,9 @@ namespace Projeny
 
         void DrawItemLabelWithVersion(Rect rect, string name, string version)
         {
-            var labelStr = string.IsNullOrEmpty(version) ? name : "{0} <color=#{1}>v{2}</color>".Fmt(name, MiscUtil.ColorToHex(Skin.Theme.VersionColor), version);
+            var labelStr = string.IsNullOrEmpty(version) ? name : "{0} {1}"
+                .Fmt(name, WrapWithColor("v" + version, Skin.Theme.VersionColor));
+
             GUI.Label(rect, labelStr, Skin.ItemTextStyle);
         }
 
@@ -1971,8 +2023,7 @@ namespace Projeny
                     // This is very hacky but the only way I can figure out how to keep the message a fixed length
                     // so that the text doesn't jump around as the number of dots change
                     // I tried using spaces instead of _ but that didn't work
-                    statusMessage += "<color=#{0}>{1}</color>"
-                        .Fmt(MiscUtil.ColorToHex(Skin.Theme.LoadingOverlapPopupColor), new String('_', 3 - numExtraDots));
+                    statusMessage += WrapWithColor(new String('_', 3 - numExtraDots), Skin.Theme.LoadingOverlapPopupColor);
                 }
 
                 GUILayout.Label(statusMessage, skin.StatusMessageTextStyle, GUILayout.ExpandWidth(true));
