@@ -48,42 +48,63 @@ class UnityPackageExtractor:
 
             assetsDir = os.path.join(tempDir, 'Assets')
 
-            rootNames = [x for x in self._sys.walkDir(assetsDir) if not x.endswith('.meta')]
-
             # If the unitypackage only contains a single directory, then extract that instead
             # To avoid ending up with PackageName/PackageName directories for everything
-            # Also, by default use that directory as the name for the package
-            # This is nice for packages that assume some directory structure
+            dirToCopy = self._chooseDirToCopy(assetsDir)
+
+            dirToCopyName = os.path.basename(dirToCopy)
+
+            assertThat(not self._isSpecialFolderName(dirToCopyName))
+
+            # If the extracted package contains a single directory, then by default use that directory as the name for the package
+            # This is nice for packages that assume some directory structure (eg. UnityTestTools)
             # Also, some packages have titles that aren't as nice as directories.  For example, Unity Test Tools uses the directory name UnityTestTools
-            # so it's nice to use this as the package name instead of the full title
+            # which is a bit nicer (though adds a bit of confusion since the release name doesn't match)
             # Note that for upgrading/downgrading, this doesn't matter because it uses the ID which is stored in the Install.yaml file
-            if len(rootNames) == 1:
-                rootName = rootNames[0]
-                fullRootPath = os.path.join(assetsDir, rootName)
-
-                if os.path.isdir(fullRootPath) and rootName != 'editor':
-                    dirToCopy = fullRootPath
-
-                    if not forcedName:
-                        forcedName = rootName
-                else:
-                    dirToCopy = assetsDir
-            else:
-                dirToCopy = assetsDir
+            if not forcedName and (dirToCopyName.lower() != 'assets' and dirToCopyName.lower() != 'plugins'):
+                forcedName = dirToCopyName
 
             if forcedName:
-                outDirName = forcedName
+                newPackageName = forcedName
             else:
                 assertThat(fallbackName)
-                outDirName = fallbackName
+                newPackageName = fallbackName
 
-            outDirPath = '[UnityPackagesDir]/{0}'.format(outDirName)
+            assertThat(not self._isSpecialFolderName(newPackageName))
+
+            outDirPath = '[UnityPackagesDir]/{0}'.format(newPackageName)
             self._sys.copyDirectory(dirToCopy, outDirPath)
 
-            return outDirName
+            return newPackageName
         finally:
             self._log.heading("Deleting temporary directory", tempDir)
             shutil.rmtree(tempDir)
+
+    def _isSpecialFolderName(self, dirName):
+        dirNameLower = dirName.lower()
+        return dirNameLower == 'editor' or dirNameLower == 'streamingassets' or dirNameLower == 'standard assets' or dirNameLower == 'webplayertemplates'
+
+    def _chooseDirToCopy(self, startDir):
+        rootNames = [x for x in self._sys.walkDir(startDir) if not x.endswith('.meta')]
+
+        assertThat(len(rootNames) > 0)
+
+        if len(rootNames) > 1:
+            return startDir
+
+        rootName = rootNames[0]
+        fullRootPath = os.path.join(startDir, rootName)
+
+        if rootName.lower() == 'plugins':
+            return self._chooseDirToCopy(fullRootPath)
+
+        if rootName.lower() == 'editor':
+            return startDir
+
+        if os.path.isdir(fullRootPath):
+            return fullRootPath
+
+        return startDir
 
 if __name__ == '__main__':
     Container.bind('Config').toSingle(Config, [])
