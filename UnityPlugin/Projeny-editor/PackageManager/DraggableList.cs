@@ -169,7 +169,7 @@ namespace Projeny.Internal
                         if (receivedDragData != null)
                         {
                             DragAndDrop.PrepareStartDrag();
-                            _manager.OnDragDrop(receivedDragData, this);
+                            _manager.EnqueueOperation(() => _manager.OnDragDrop(receivedDragData, this));
                         }
                     }
 

@@ -16,10 +16,28 @@ namespace Projeny
 {
     public class UpmHelperResponse
     {
-        public bool Succeeded;
-        public string ErrorMessage;
+        public readonly bool Succeeded;
+        public readonly string ErrorMessage;
         // The type here varies by request type
-        public object Result;
+        public readonly object Result;
+
+        UpmHelperResponse(
+            bool succeeded, string errorMessage, object result)
+        {
+            Succeeded = succeeded;
+            ErrorMessage = errorMessage;
+            Result = result;
+        }
+
+        public static UpmHelperResponse Error(string errorMessage)
+        {
+            return new UpmHelperResponse(false, errorMessage, null);
+        }
+
+        public static UpmHelperResponse Success(object result = null)
+        {
+            return new UpmHelperResponse(true, null, result);
+        }
     }
 
     public static class UpmHelper
@@ -122,17 +140,10 @@ namespace Projeny
         {
             if (response.Succeeded)
             {
-                return new UpmHelperResponse()
-                {
-                    Succeeded = true,
-                };
+                return UpmHelperResponse.Success();
             }
 
-            return new UpmHelperResponse()
-            {
-                Succeeded = false,
-                ErrorMessage = response.ErrorMessage,
-            };
+            return UpmHelperResponse.Error(response.ErrorMessage);
         }
 
         public static IEnumerator CreatePackageAsync(string name)
@@ -155,6 +166,8 @@ namespace Projeny
         {
             foreach (var info in infos)
             {
+                Log.Debug("Deleting package '{0}'".Fmt(info.Name));
+
                 var req = UpmInterface.CreateUpmRequest("deletePackage");
 
                 req.Param1 = info.Name;
@@ -174,19 +187,12 @@ namespace Projeny
                 }
                 else
                 {
-                    yield return new UpmHelperResponse()
-                    {
-                        Succeeded = false,
-                        ErrorMessage = response.ErrorMessage,
-                    };
+                    yield return UpmHelperResponse.Error(response.ErrorMessage);
                     yield break;
                 }
             }
 
-            yield return new UpmHelperResponse()
-            {
-                Succeeded = true,
-            };
+            yield return UpmHelperResponse.Success();
         }
 
         // Yields strings indicating status
@@ -207,21 +213,14 @@ namespace Projeny
                 var docs = response.Output
                     .Split(new string[] { "---" }, StringSplitOptions.None);
 
-                yield return new UpmHelperResponse()
-                {
-                    Succeeded = true,
-                    Result = docs
+                yield return UpmHelperResponse.Success(
+                    docs
                         .Select(x => UpmSerializer.DeserializeReleaseInfo(x))
-                        .Where(x => x != null).ToList(),
-                };
+                        .Where(x => x != null).ToList());
             }
             else
             {
-                yield return new UpmHelperResponse()
-                {
-                    Succeeded = false,
-                    ErrorMessage = response.ErrorMessage,
-                };
+                yield return UpmHelperResponse.Error(response.ErrorMessage);
             }
         }
 
@@ -242,21 +241,14 @@ namespace Projeny
                 var docs = response.Output
                     .Split(new string[] { "---" }, StringSplitOptions.None);
 
-                yield return new UpmHelperResponse()
-                {
-                    Succeeded = true,
-                    Result = docs
+                yield return UpmHelperResponse.Success(
+                    docs
                         .Select(x => UpmSerializer.DeserializePackageInfo(x))
-                        .Where(x => x != null).ToList(),
-                };
+                        .Where(x => x != null).ToList());
             }
             else
             {
-                yield return new UpmHelperResponse()
-                {
-                    Succeeded = false,
-                    ErrorMessage = response.ErrorMessage,
-                };
+                yield return UpmHelperResponse.Error(response.ErrorMessage);
             }
         }
     }

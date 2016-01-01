@@ -23,6 +23,11 @@ namespace Projeny.Internal
             return DerivesFrom(a, typeof(T));
         }
 
+        public static IEnumerable<T> GetDuplicates<T>(this IEnumerable<T> list)
+        {
+            return list.GroupBy(x => x).Where(x => x.Skip(1).Any()).Select(x => x.Key);
+        }
+
         public static TSource OnlyOrDefault<TSource>(this IEnumerable<TSource> source)
         {
             if (source == null)

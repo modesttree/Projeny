@@ -12,34 +12,25 @@ namespace Projeny.Internal
     // Simple wrapper around unity's logging system
     public static class Log
     {
-        // Strip out debug logs outside of unity
-        [Conditional("UNITY_EDITOR")]
         public static void Debug(string message, params object[] args)
         {
+            UnityEngine.Debug.Log(message.FmtSafe(args));
         }
-
-        /////////////
 
         public static void Info(string message, params object[] args)
         {
             UnityEngine.Debug.Log(message.FmtSafe(args));
         }
 
-        /////////////
-
         public static void Warn(string message, params object[] args)
         {
             UnityEngine.Debug.LogWarning(message.FmtSafe(args));
         }
 
-        /////////////
-
         public static void Trace(string message, params object[] args)
         {
             UnityEngine.Debug.Log(message.FmtSafe(args));
         }
-
-        /////////////
 
         public static void ErrorException(Exception e)
         {

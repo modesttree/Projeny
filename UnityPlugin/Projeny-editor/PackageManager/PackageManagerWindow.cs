@@ -47,6 +47,9 @@ namespace Projeny
         [NonSerialized]
         BackgroundTaskInfo _backgroundTaskInfo;
 
+        [NonSerialized]
+        readonly List<Action> _operationQueue = new List<Action>();
+
         const string NotAvailableLabel = "N/A";
 
         PackageManagerWindowSkin Skin
@@ -274,14 +277,19 @@ namespace Projeny
                 {
                     var inBetweenEntry = closestEntry.ListOwner.GetAtIndex(i);
 
-                    if (!_selected.Contains(inBetweenEntry))
-                    {
-                        _selected.Add(inBetweenEntry);
-                    }
+                    SelectInternal(inBetweenEntry);
                 }
             }
 
-            _selected.Add(newEntry);
+            SelectInternal(newEntry);
+        }
+
+        void SelectInternal(DraggableListEntry entry)
+        {
+            if (!_selected.Contains(entry))
+            {
+                _selected.Add(entry);
+            }
         }
 
         void OnEnable()
@@ -364,6 +372,14 @@ namespace Projeny
 
         void Update()
         {
+            // Execute any operations that were queued up doing the OnGUI event
+            var ops = _operationQueue.ToList();
+            _operationQueue.Clear();
+            foreach (var op in ops)
+            {
+                op();
+            }
+
             UpdateBackgroundTask();
 
             var deltaTime = Time.realtimeSinceStartup - _lastTime;
@@ -739,7 +755,7 @@ namespace Projeny
 
             foreach (var entry in _selected[0].ListOwner.Values)
             {
-                _selected.Add(entry);
+                SelectInternal(entry);
             }
         }
 
@@ -881,6 +897,15 @@ namespace Projeny
             yield return choice;
         }
 
+        // This method exists because we need to avoid making changes during the OnGUI event
+        // this is because the OnGUI is run in multiple passes per frame and each pass
+        // has to have the exact same amount of controls drawn, so if we say add/remove to a list on control data
+        // during this method then this can cause errors
+        public void EnqueueOperation(Action action)
+        {
+            _operationQueue.Add(action);
+        }
+
         public void OnDragDrop(DraggableList.DragData data, DraggableList dropList)
         {
             if (data.SourceList == dropList || !IsDragAllowed(data, dropList))
@@ -980,6 +1005,8 @@ namespace Projeny
             // Need to make sure we have the most recent package list so we can determine whether this is
             // an upgrade / downgrade / etc.
             yield return RefreshPackagesAsync();
+
+            Assert.That(releaseInfos.Select(x => x.Id).GetDuplicates().IsEmpty(), "Found duplicate releases selected - are you installing multiple versions of the same release?");
 
             foreach (var releaseInfo in releaseInfos)
             {

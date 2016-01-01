@@ -107,7 +107,7 @@ class ReleaseRegistryManager:
 
     def installReleaseById(self, releaseId, releaseVersionCode, suppressPrompts = False):
 
-        assertThat(releaseVersionCode)
+        assertThat(releaseVersionCode, 'Invalid release version code supplied')
         assertThat(releaseId)
 
         self._lazyInit()

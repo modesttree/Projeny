@@ -16,9 +16,27 @@ namespace Projeny
 {
     public class UpmResponse
     {
-        public bool Succeeded;
-        public string ErrorMessage;
-        public string Output;
+        public readonly bool Succeeded;
+        public readonly string ErrorMessage;
+        public readonly string Output;
+
+        UpmResponse(
+            bool succeeded, string errorMessage, string output)
+        {
+            Succeeded = succeeded;
+            ErrorMessage = errorMessage;
+            Output = output;
+        }
+
+        public static UpmResponse Error(string errorMessage)
+        {
+            return new UpmResponse(false, errorMessage, null);
+        }
+
+        public static UpmResponse Success(string output = null)
+        {
+            return new UpmResponse(true, null, output);
+        }
     }
 
     public class UpmRequest
@@ -89,7 +107,7 @@ namespace Projeny
             startInfo.RedirectStandardOutput = true;
             startInfo.RedirectStandardError = true;
 
-            UnityEngine.Debug.Log("Running command '{0} {1}'".Fmt(startInfo.FileName, startInfo.Arguments));
+            Log.Debug("Running command '{0} {1}'".Fmt(startInfo.FileName, startInfo.Arguments));
 
             return startInfo;
         }
@@ -170,18 +188,10 @@ namespace Projeny
             // data.  This can include things like serialized YAML
             if (proc.ExitCode != 0)
             {
-                return new UpmResponse()
-                {
-                    Succeeded = false,
-                    ErrorMessage = errorOutput,
-                };
+                return UpmResponse.Error(errorOutput);
             }
 
-            return new UpmResponse()
-            {
-                Succeeded = true,
-                Output = errorOutput,
-            };
+            return UpmResponse.Success(errorOutput);
         }
 
         static string FindUpmExePath()
