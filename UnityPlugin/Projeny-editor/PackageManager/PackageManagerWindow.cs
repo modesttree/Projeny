@@ -250,7 +250,7 @@ namespace Projeny
                 _allPackages = new List<PackageInfo>();
                 _allReleases = new List<ReleaseInfo>();
 
-                StartBackgroundTask(RefreshAll(), true, "Refreshing Packages");
+                SetBackgroundTask(RefreshAll(), true, "Refreshing Packages");
             }
 
             if (_installedList == null)
@@ -407,7 +407,7 @@ namespace Projeny
                 case ListTypes.AssetItem:
                 case ListTypes.PluginItem:
                 {
-                    contextMenu.AddOptionalItem(_selected.Count == 1, new GUIContent("Select in Project Tab"), false, ShowSelectedInProjectTab);
+                    contextMenu.AddOptionalItem(_selected.Count == 1 && HasFolderWithPackageName(_selected.Single().Name), new GUIContent("Select in Project Tab"), false, ShowSelectedInProjectTab);
                     break;
                 }
                 default:
@@ -420,13 +420,13 @@ namespace Projeny
             contextMenu.ShowAsContext();
         }
 
-        void ShowSelectedInProjectTab()
+        bool HasFolderWithPackageName(string name)
         {
-            Assert.That(_selected.Select(x => ClassifyList(x.ListOwner)).All(x => x == ListTypes.PluginItem || x == ListTypes.AssetItem));
-            Assert.IsEqual(_selected.Count, 1);
+            return TryGetAssetForPackageName(name) != null;
+        }
 
-            var name = _selected.Single().Name;
-
+        UnityEngine.Object TryGetAssetForPackageName(string name)
+        {
             var asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>("Assets/" + name);
 
             if (asset == null)
@@ -434,9 +434,26 @@ namespace Projeny
                 asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>("Assets/Plugins/" + name);
             }
 
-            Assert.IsNotNull(asset, "Could not find package '{0}' in project", name);
+            return asset;
+        }
 
-            Selection.activeObject = asset;
+        void ShowSelectedInProjectTab()
+        {
+            Assert.That(_selected.Select(x => ClassifyList(x.ListOwner)).All(x => x == ListTypes.PluginItem || x == ListTypes.AssetItem));
+            Assert.IsEqual(_selected.Count, 1);
+
+            var name = _selected.Single().Name;
+
+            var asset = TryGetAssetForPackageName(name);
+
+            if (asset == null)
+            {
+                SetBackgroundTask(DisplayError("Could not find package '{0}' in project".Fmt(name)), false);
+            }
+            else
+            {
+                Selection.activeObject = asset;
+            }
         }
 
         void OpenSelectedInAssetStore()
@@ -466,12 +483,12 @@ namespace Projeny
             {
                 case ListTypes.Package:
                 {
-                    StartBackgroundTask(OpenMoreInfoPopup((PackageInfo)entry.Tag), false);
+                    SetBackgroundTask(OpenMoreInfoPopup((PackageInfo)entry.Tag), false);
                     break;
                 }
                 case ListTypes.Release:
                 {
-                    StartBackgroundTask(OpenMoreInfoPopup((ReleaseInfo)entry.Tag), false);
+                    SetBackgroundTask(OpenMoreInfoPopup((ReleaseInfo)entry.Tag), false);
                     break;
                 }
                 default:
@@ -622,7 +639,7 @@ namespace Projeny
 
         void DeleteSelected()
         {
-            StartBackgroundTask(DeleteSelectedAsync(), true, "Deleting Packages");
+            SetBackgroundTask(DeleteSelectedAsync(), true, "Deleting Packages");
         }
 
         IEnumerator DeleteSelectedAsync()
@@ -641,7 +658,7 @@ namespace Projeny
                 var infos = _selected.Select(x => (PackageInfo)x.Tag).ToList();
 
                 var choice = PromptForUserChoice(
-                    "<color=yellow>Are you sure you wish to delete the following packages?</color>\n\n{0}\n\n<color=yellow>Please note the following:</color>\n\n- This change is not undoable\n- Any changes that you've made since installing will be lost\n- Any projects or other packages that still depend on this package may be put in an invalid state by deleting it".Fmt(infos.Select(x => " - " + x.Name).Join("\n")),
+                    null, "<color=yellow>Are you sure you wish to delete the following packages?</color>\n\n{0}\n\n<color=yellow>Please note the following:</color>\n\nThis change is not undoable\nAny changes that you've made since installing will be lost\nAny projects or other packages that still depend on this package may be put in an invalid state by deleting it".Fmt(infos.Select(x => x.Name).Join("\n")),
                     "Delete", "Cancel");
 
                 yield return choice;
@@ -664,18 +681,18 @@ namespace Projeny
             }
         }
 
-        public IEnumerator AlertUser(string message)
+        public IEnumerator AlertUser(string title, string message)
         {
-            return PromptForUserChoice(message, "Ok");
+            return PromptForUserChoice(title, message, "Ok");
         }
 
-        public IEnumerator<int> PromptForUserChoice(string question, params string[] choices)
+        public IEnumerator<int> PromptForUserChoice(string title, string question, params string[] choices)
         {
-            return CoRoutine.Wrap<int>(PromptForUserChoiceInternal(question, choices));
+            return CoRoutine.Wrap<int>(PromptForUserChoiceInternal(title, question, choices));
         }
 
         public IEnumerator PromptForUserChoiceInternal(
-            string question, params string[] choices)
+            string title, string question, params string[] choices)
         {
             Assert.IsNull(_popupHandler);
 
@@ -701,6 +718,12 @@ namespace Projeny
 
                                 GUILayout.BeginVertical();
                                 {
+                                    if (title != null)
+                                    {
+                                        GUILayout.Label(title, skin.TitleStyle);
+                                        GUILayout.Space(skin.TitleBottomPadding);
+                                    }
+
                                     GUILayout.Label(question, skin.LabelStyle);
 
                                     GUILayout.Space(skin.ButtonTopPadding);
@@ -778,7 +801,7 @@ namespace Projeny
                         }
                         case ListTypes.Release:
                         {
-                            StartBackgroundTask(InstallReleasesAsync(data.Entries.Select(x => (ReleaseInfo)x.Tag).ToList()), true, "Installing Releases");
+                            SetBackgroundTask(InstallReleasesAsync(data.Entries.Select(x => (ReleaseInfo)x.Tag).ToList()), true, "Installing Releases");
                             break;
                         }
                         default:
@@ -915,13 +938,13 @@ namespace Projeny
                 Assert.IsEqual(releaseInfo.Version, packageReleaseInfo.Version);
 
                 userChoice = PromptForUserChoice(
-                    "Package '{0}' is already installed with the same version ('{1}').  Would you like to re-install it anyway?  Note that any local changes you've made to the package will be reverted."
+                    null, "Package '{0}' is already installed with the same version ('{1}').  Would you like to re-install it anyway?  Note that any local changes you've made to the package will be reverted."
                         .Fmt(packageReleaseInfo.Name, packageReleaseInfo.Version), "Overwrite", "Skip", "Cancel");
             }
             else if (releaseInfo.VersionCode > packageReleaseInfo.VersionCode)
             {
                 userChoice = PromptForUserChoice(
-                    "Package '{0}' is already installed with version '{1}'. Would you like to UPGRADE it to version '{2}'?  Note that any local changes you've made to the package will be lost."
+                    null, "Package '{0}' is already installed with version '{1}'. Would you like to UPGRADE it to version '{2}'?  Note that any local changes you've made to the package will be lost."
                     .Fmt(releaseInfo.Name, packageReleaseInfo.Version, releaseInfo.Version), "Upgrade", "Skip", "Cancel");
             }
             else
@@ -929,7 +952,7 @@ namespace Projeny
                 Assert.That(releaseInfo.VersionCode < packageReleaseInfo.VersionCode);
 
                 userChoice = PromptForUserChoice(
-                    "Package '{0}' is already installed with version '{1}'. Would you like to DOWNGRADE it to version '{2}'?  Note that any local changes you've made to the package will be lost."
+                    null, "Package '{0}' is already installed with version '{1}'. Would you like to DOWNGRADE it to version '{2}'?  Note that any local changes you've made to the package will be lost."
                     .Fmt(releaseInfo.Name, packageReleaseInfo.Version, releaseInfo.Version), "Downgrade", "Skip", "Cancel");
             }
 
@@ -1032,7 +1055,7 @@ namespace Projeny
 
             if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh"))
             {
-                StartBackgroundTask(RefreshPackagesAsync(), true, "Refreshing Packages");
+                SetBackgroundTask(RefreshPackagesAsync(), true, "Refreshing Packages");
             }
 
             startX = endX + Skin.PackagesPane.ButtonPadding;
@@ -1040,7 +1063,7 @@ namespace Projeny
 
             if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "New"))
             {
-                StartBackgroundTask(CreateNewPackageAsync(), false, "Creating New Package");
+                SetBackgroundTask(CreateNewPackageAsync(), false, "Creating New Package");
             }
         }
 
@@ -1100,7 +1123,7 @@ namespace Projeny
             if (GUI.Button(Rect.MinMaxRect(rect.x + halfWidth + padding, rect.y, rect.xMax, rect.yMax), "Apply"))
             {
                 OverwriteConfig();
-                StartBackgroundTask(ProcessUpmCommand("Updating directory links", UpmHelper.UpdateLinksAsync()), true, "Updating Links");
+                SetBackgroundTask(ProcessUpmCommand("Updating directory links", UpmHelper.UpdateLinksAsync()), true, "Updating Links");
             }
         }
 
@@ -1153,14 +1176,19 @@ namespace Projeny
             }
             else
             {
-                var errorMessage = "<color=red>Operation aborted!  UPM encountered errors:</color> \n\n{0}".Fmt(response.ErrorMessage);
+                var errorMessage = "Operation aborted!  UPM encountered errors: \n\n{0}".Fmt(response.ErrorMessage);
                 Log.Error("Projeny: {0}", errorMessage);
 
-                yield return AlertUser(errorMessage);
+                yield return DisplayError(errorMessage);
 
                 ForceStopBackgroundTask();
                 yield return null;
             }
+        }
+
+        IEnumerator DisplayError(string message)
+        {
+            return AlertUser("<color=red>Error!</color>", message);
         }
 
         void UpdateAvailableReleasesList()
@@ -1178,7 +1206,7 @@ namespace Projeny
             _backgroundTaskInfo = null;
         }
 
-        void StartBackgroundTask(IEnumerator task, bool showProcessingLabel, string title = null)
+        void SetBackgroundTask(IEnumerator task, bool showProcessingLabel, string title = null)
         {
             Assert.IsNull(_backgroundTaskInfo);
             _backgroundTaskInfo = new BackgroundTaskInfo()
@@ -1455,7 +1483,7 @@ namespace Projeny
             if (HasProjectConfigChanged())
             {
                 var choice = PromptForUserChoice(
-                    "Do you want to save changes to your project?", "Save", "Don't Save", "Cancel");
+                    null, "Do you want to save changes to your project?", "Save", "Don't Save", "Cancel");
 
                 yield return choice;
 
@@ -1502,7 +1530,7 @@ namespace Projeny
 
             if (desiredConfigType != _projectConfigType)
             {
-                StartBackgroundTask(TryChangeProjectType(desiredConfigType), false);
+                SetBackgroundTask(TryChangeProjectType(desiredConfigType), false);
             }
 
             GUI.DrawTexture(new Rect(dropDownRect.xMax - Skin.ArrowSize.x + Skin.ArrowOffset.x, dropDownRect.yMin + Skin.ArrowOffset.y, Skin.ArrowSize.x, Skin.ArrowSize.y), Skin.FileDropdownArrow);
@@ -1624,7 +1652,7 @@ namespace Projeny
 
             if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh"))
             {
-                StartBackgroundTask(RefreshReleasesAsync(), true, "Refreshing Release List");
+                SetBackgroundTask(RefreshReleasesAsync(), true, "Refreshing Release List");
             }
         }
 

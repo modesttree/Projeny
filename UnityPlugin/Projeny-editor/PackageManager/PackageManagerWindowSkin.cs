@@ -262,7 +262,16 @@ namespace Projeny
             public float ButtonTopPadding;
             public float ButtonWidth;
             public float ButtonSpacing;
+            public float TitleBottomPadding;
             public float PopupWidth;
+
+            public GUIStyle TitleStyle
+            {
+                get
+                {
+                    return GUI.skin.GetStyle("GenericPromptTitleStyle");
+                }
+            }
 
             public GUIStyle LabelStyle
             {
