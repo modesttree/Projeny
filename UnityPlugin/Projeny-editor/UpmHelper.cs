@@ -46,6 +46,8 @@ namespace Projeny
         {
             var result = UpmInterface.RunUpm(UpmInterface.CreateUpmRequest("updateLinks"));
 
+            AssetDatabase.Refresh();
+
             if (!result.Succeeded)
             {
                 DisplayUpmError("Updating directory links", result.ErrorMessage);
@@ -95,6 +97,7 @@ namespace Projeny
             EditorUtility.DisplayDialog("Error", errorMessage, "Ok");
         }
 
+        // NOTE: It's up to the caller to call AssetDatabase.Refresh()
         public static IEnumerator UpdateLinksAsync()
         {
             var req = UpmInterface.CreateUpmRequest("updateLinks");
@@ -106,14 +109,7 @@ namespace Projeny
                 yield return runner.Current;
             }
 
-            var response = (UpmResponse)runner.Current;
-
-            if (response.Succeeded)
-            {
-                AssetDatabase.Refresh();
-            }
-
-            yield return CreateStandardResponse(response);
+            yield return CreateStandardResponse((UpmResponse)runner.Current);
         }
 
         public static IEnumerator InstallReleaseAsync(ReleaseInfo info)

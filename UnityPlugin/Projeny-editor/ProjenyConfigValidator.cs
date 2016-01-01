@@ -17,10 +17,14 @@ namespace Projeny
     {
         static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
-            VerifyThatAllDirectoriesAreJunctions();
-            VerifyPlatformIsCorrect();
+            VerifyProjenyConfig();
+        }
 
-            UnityEngine.Debug.Log("Verifying Projeny");
+        [MenuItem("Projeny/Verify Config")]
+        public static void VerifyProjenyConfig()
+        {
+            VerifyThatAllDirectoriesAreValidJunctions();
+            VerifyPlatformIsCorrect();
         }
 
         static void VerifyPlatformIsCorrect()
@@ -43,9 +47,10 @@ namespace Projeny
             }
         }
 
-        static void VerifyThatAllDirectoriesAreJunctions()
+        static void VerifyThatAllDirectoriesAreValidJunctions()
         {
             var badDirectories = new List<DirectoryInfo>();
+            var brokenJunctions  = new List<string>();
 
             foreach (var scriptDir in new DirectoryInfo(Application.dataPath).GetDirectories())
             {
@@ -53,7 +58,19 @@ namespace Projeny
                 {
                     foreach (var pluginDir in scriptDir.GetDirectories())
                     {
-                        if (pluginDir.Name != "Projeny" && !JunctionPoint.Exists(pluginDir.FullName))
+                        if (pluginDir.Name == "Projeny")
+                        {
+                            continue;
+                        }
+
+                        if (JunctionPoint.Exists(pluginDir.FullName))
+                        {
+                            if (!Directory.Exists(JunctionPoint.GetTarget(pluginDir.FullName)))
+                            {
+                                brokenJunctions.Add(pluginDir.FullName);
+                            }
+                        }
+                        else
                         {
                             badDirectories.Add(pluginDir);
                         }
@@ -62,7 +79,14 @@ namespace Projeny
                     continue;
                 }
 
-                if (!JunctionPoint.Exists(scriptDir.FullName))
+                if (JunctionPoint.Exists(scriptDir.FullName))
+                {
+                    if (!Directory.Exists(JunctionPoint.GetTarget(scriptDir.FullName)))
+                    {
+                        brokenJunctions.Add(scriptDir.FullName);
+                    }
+                }
+                else
                 {
                     badDirectories.Add(scriptDir);
                 }
@@ -73,7 +97,15 @@ namespace Projeny
                 var badDirectoriesStr = string.Join("\n", badDirectories.Select(x => "Assets/" + x.FullName.Substring(Application.dataPath.Length + 1)).ToArray());
 
                 EditorUtility.DisplayDialog(
-                    "Error", "Found some directories that were not created by Projeny.  This could cause data loss.  All user data in Projeny should reside in the UnityPackages directory. See documentation for details.  \n\nThe directories in question are the following: \n\n{0}".Fmt(badDirectoriesStr), "Ok");
+                    "Projeny Error", "Projeny validation failed.  Found some directories that were not created by Projeny.  This could cause data loss.  All user data in Projeny should reside in the UnityPackages directory. See documentation for details.  \n\nThe directories in question are the following: \n\n{0}".Fmt(badDirectoriesStr), "Ok");
+            }
+
+            if (brokenJunctions.Any())
+            {
+                var brokenJunctionsStr = string.Join("\n", brokenJunctions.Select(x => "Assets/" + x.Substring(Application.dataPath.Length + 1)).ToArray());
+
+                EditorUtility.DisplayDialog(
+                    "Projeny Error", "Projeny validation failed.  Found some broken directory links.  You may have deleted a package without removing the package from the project.  You can fix this by entering package manager and removing the missing packages from your project. See documentation for details.  \n\nThe directories in question are the following: \n\n{0}".Fmt(brokenJunctionsStr), "Ok");
             }
         }
     }

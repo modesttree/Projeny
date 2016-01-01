@@ -501,7 +501,7 @@ namespace Projeny
                 }
                 case ListTypes.Package:
                 {
-                    contextMenu.AddItem(new GUIContent("Delete"), false, DeleteSelected);
+                    contextMenu.AddOptionalItem(!_selected.IsEmpty(), new GUIContent("Delete"), false, DeleteSelected);
                     contextMenu.AddOptionalItem(_selected.Count == 1, new GUIContent("Open Folder"), false, OpenPackageFolderForSelected);
                     contextMenu.AddOptionalItem(_selected.Count == 1 && HasPackageYaml((PackageInfo)_selected.Single().Tag), new GUIContent("Edit " + ProjenyEditorUtil.PackageConfigFileName), false, EditPackageYamlSelected);
                     break;
@@ -1304,6 +1304,11 @@ namespace Projeny
             Assert.IsType<UpmHelperResponse>(upmTask.Current);
             var response = (UpmHelperResponse)upmTask.Current;
 
+            // Refresh assets regardless of what kind of UpmCommand this was
+            // This is good because many commands can affect the project
+            // Including installing a package, deleting a package, etc.
+            AssetDatabase.Refresh();
+
             if (response.Succeeded)
             {
                 yield return response.Result;
@@ -1381,7 +1386,6 @@ namespace Projeny
             string userInput = defaultValue;
             InputDialogStates state = InputDialogStates.None;
 
-            bool hasFocused = false;
             bool isFirst = true;
 
             _popupHandler = delegate(Rect fullRect)
@@ -1453,7 +1457,6 @@ namespace Projeny
             while (state == InputDialogStates.None)
             {
                 yield return null;
-                hasFocused = true;
             }
 
             _popupHandler = null;

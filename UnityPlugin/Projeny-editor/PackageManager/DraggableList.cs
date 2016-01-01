@@ -137,9 +137,6 @@ namespace Projeny.Internal
 
         public void Draw(Rect listRect)
         {
-            // Can this be calculated instead?
-            var widthOfScrollBar = 15.0f;
-
             var searchFilter = _searchFilter.Trim().ToLowerInvariant();
             var visibleEntries = _entryList.Where(x => x.IsVisible && x.Name.ToLowerInvariant().Contains(searchFilter)).ToList();
 
