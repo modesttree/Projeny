@@ -1,4 +1,5 @@
 
+import traceback
 from upm.log.LogStreamFile import LogStreamFile
 import upm.main.Upm as Upm
 
@@ -32,6 +33,25 @@ class Runner:
         self._param1 = param1
         self._param2 = param2
 
+        succeeded = True
+
+        # This is repeated in __main__ but this is better because
+        # it will properly log detailed errors to the file log instead of to the console
+        try:
+            self._runInternal()
+        except Exception as e:
+            sys.stderr.write(str(e))
+            self._log.error(str(e))
+
+            if not MiscUtil.isRunningAsExe():
+                self._log.error('\n' + traceback.format_exc())
+
+            succeeded = False
+
+        if not succeeded:
+            sys.exit(1)
+
+    def _runInternal(self):
         if self._requestId == 'updateLinks':
             self._packageMgr.updateProjectJunctions(self._project, self._platform)
 
@@ -117,6 +137,4 @@ if __name__ == '__main__':
 
     if not succeeded:
         sys.exit(1)
-
-
 
