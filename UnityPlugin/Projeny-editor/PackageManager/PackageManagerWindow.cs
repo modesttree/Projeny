@@ -12,7 +12,7 @@ namespace Projeny
 {
     public class PackageManagerWindow : EditorWindow
     {
-        DraggableList _installedList;
+        DraggableList _packagesList;
         DraggableList _releasesList;
         DraggableList _assetsList;
         DraggableList _pluginsList;
@@ -241,6 +241,11 @@ namespace Projeny
             _selected.Clear();
         }
 
+        public void Deselect(DraggableListEntry newEntry)
+        {
+            _selected.Remove(newEntry);
+        }
+
         public void Select(DraggableListEntry newEntry)
         {
             if (_selected.Contains(newEntry))
@@ -313,7 +318,7 @@ namespace Projeny
                 Assert.IsNull(_selected);
                 Assert.IsNull(_allPackages);
                 Assert.IsNull(_allReleases);
-                Assert.IsNull(_installedList);
+                Assert.IsNull(_packagesList);
                 Assert.IsNull(_releasesList);
                 Assert.IsNull(_assetsList);
                 Assert.IsNull(_pluginsList);
@@ -322,13 +327,13 @@ namespace Projeny
                 _allPackages = new List<PackageInfo>();
                 _allReleases = new List<ReleaseInfo>();
 
-                SetBackgroundTask(RefreshAll(), true, "Refreshing Packages");
+                SetBackgroundTask(RefreshAll(), "Refreshing Packages");
             }
 
-            if (_installedList == null)
+            if (_packagesList == null)
             {
-                _installedList = ScriptableObject.CreateInstance<DraggableList>();
-                _installedList.Manager = this;
+                _packagesList = ScriptableObject.CreateInstance<DraggableList>();
+                _packagesList.Manager = this;
             }
 
             if (_releasesList == null)
@@ -382,8 +387,15 @@ namespace Projeny
             return 0.4f;
         }
 
+        void CheckSelectedIsValid()
+        {
+            Assert.That(_selected.All(x => x.ListOwner.Values.Contains(x)));
+        }
+
         void Update()
         {
+            CheckSelectedIsValid();
+
             // Execute any operations that were queued up doing the OnGUI event
             var ops = _operationQueue.ToList();
             _operationQueue.Clear();
@@ -431,7 +443,7 @@ namespace Projeny
                 if (e.InnerException != null)
                 {
                     SetBackgroundTask(
-                        DisplayError(e.InnerException.Message), true);
+                        DisplayError(e.InnerException.Message));
                 }
 
                 throw;
@@ -441,7 +453,7 @@ namespace Projeny
                 _backgroundTaskInfo = null;
 
                 SetBackgroundTask(
-                    DisplayError(e.Message), true);
+                    DisplayError(e.Message));
                 throw;
             }
         }
@@ -514,6 +526,7 @@ namespace Projeny
                 case ListTypes.Package:
                 {
                     contextMenu.AddOptionalItem(!_selected.IsEmpty(), new GUIContent("Delete"), false, DeleteSelected);
+                    contextMenu.AddOptionalItem(_selected.Count == 1, new GUIContent("Rename"), false, RenameSelectedPackage);
                     contextMenu.AddOptionalItem(_selected.Count == 1, new GUIContent("Open Folder"), false, OpenPackageFolderForSelected);
                     contextMenu.AddOptionalItem(_selected.Count == 1 && HasPackageYaml((PackageInfo)_selected.Single().Tag), new GUIContent("Edit " + ProjenyEditorUtil.PackageConfigFileName), false, EditPackageYamlSelected);
                     break;
@@ -563,7 +576,7 @@ namespace Projeny
 
             if (asset == null)
             {
-                SetBackgroundTask(DisplayError("Could not find package '{0}' in project".Fmt(name)), false);
+                SetBackgroundTask(DisplayError("Could not find package '{0}' in project".Fmt(name)));
             }
             else
             {
@@ -598,12 +611,12 @@ namespace Projeny
             {
                 case ListTypes.Package:
                 {
-                    SetBackgroundTask(OpenMoreInfoPopup((PackageInfo)entry.Tag), false);
+                    SetBackgroundTask(OpenMoreInfoPopup((PackageInfo)entry.Tag));
                     break;
                 }
                 case ListTypes.Release:
                 {
-                    SetBackgroundTask(OpenMoreInfoPopup((ReleaseInfo)entry.Tag), false);
+                    SetBackgroundTask(OpenMoreInfoPopup((ReleaseInfo)entry.Tag));
                     break;
                 }
                 default:
@@ -743,6 +756,47 @@ namespace Projeny
             InternalEditorUtility.OpenFileAtLineExternal(configPath, 1);
         }
 
+        void RenameSelectedPackage()
+        {
+            Assert.IsEqual(_selected.Count, 1);
+
+            var info = (PackageInfo)_selected.Single().Tag;
+
+            SetBackgroundTask(RenamePackageAsync(info));
+        }
+
+        IEnumerator RenamePackageAsync(PackageInfo info)
+        {
+            var newPackageName = PromptForInput("Enter package name:", info.Name);
+
+            yield return newPackageName;
+
+            if (newPackageName.Current == null)
+            {
+                // User Cancelled
+                yield break;
+            }
+
+            if (newPackageName.Current == info.Name)
+            {
+                yield break;
+            }
+
+            var dirInfo = new DirectoryInfo(info.Path);
+            Assert.That(dirInfo.Name == info.Name);
+
+            var newPath = Path.Combine(dirInfo.Parent.FullName, newPackageName.Current);
+
+            Assert.That(!Directory.Exists(newPath), "Package with name '{0}' already exists.  Rename aborted.", newPackageName.Current);
+
+            dirInfo.MoveTo(newPath);
+
+            yield return RefreshPackagesAsync();
+
+            SelectInternal(_packagesList.Values
+                .Where(x => x.Name == newPackageName.Current).Single());
+        }
+
         void OpenPackageFolderForSelected()
         {
             Assert.IsEqual(_selected.Count, 1);
@@ -773,7 +827,7 @@ namespace Projeny
 
         void DeleteSelected()
         {
-            SetBackgroundTask(DeleteSelectedAsync(), true, "Deleting Packages");
+            SetBackgroundTask(DeleteSelectedAsync(), "Deleting Packages");
         }
 
         IEnumerator DeleteSelectedAsync()
@@ -945,7 +999,7 @@ namespace Projeny
                         }
                         case ListTypes.Release:
                         {
-                            SetBackgroundTask(InstallReleasesAsync(data.Entries.Select(x => (ReleaseInfo)x.Tag).ToList()), true, "Installing Releases");
+                            SetBackgroundTask(InstallReleasesAsync(data.Entries.Select(x => (ReleaseInfo)x.Tag).ToList()), "Installing Releases");
                             break;
                         }
                         default:
@@ -1144,7 +1198,7 @@ namespace Projeny
 
         ListTypes ClassifyList(DraggableList list)
         {
-            if (list == _installedList)
+            if (list == _packagesList)
             {
                 return ListTypes.Package;
             }
@@ -1190,7 +1244,7 @@ namespace Projeny
             startY = endY;
             endY = rect.yMax - Skin.ApplyButtonHeight - Skin.ApplyButtonTopPadding;
 
-            _installedList.Draw(Rect.MinMaxRect(startX, startY, endX, endY));
+            _packagesList.Draw(Rect.MinMaxRect(startX, startY, endX, endY));
 
             startY = endY + Skin.ApplyButtonTopPadding;
             endY = rect.yMax;
@@ -1201,7 +1255,7 @@ namespace Projeny
 
             if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh"))
             {
-                SetBackgroundTask(RefreshPackagesAsync(), true, "Refreshing Packages");
+                SetBackgroundTask(RefreshPackagesAsync(), "Refreshing Packages");
             }
 
             startX = endX + Skin.PackagesPane.ButtonPadding;
@@ -1209,7 +1263,7 @@ namespace Projeny
 
             if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "New"))
             {
-                SetBackgroundTask(CreateNewPackageAsync(), false, "Creating New Package");
+                SetBackgroundTask(CreateNewPackageAsync(), "Creating New Package");
             }
         }
 
@@ -1269,7 +1323,7 @@ namespace Projeny
             if (GUI.Button(Rect.MinMaxRect(rect.x + halfWidth + padding, rect.y, rect.xMax, rect.yMax), "Apply"))
             {
                 OverwriteConfig();
-                SetBackgroundTask(ProcessUpmCommand("Updating directory links", UpmHelper.UpdateLinksAsync()), true, "Updating Links");
+                SetBackgroundTask(ProcessUpmCommand("Updating directory links", UpmHelper.UpdateLinksAsync()), "Updating Links");
             }
         }
 
@@ -1357,14 +1411,13 @@ namespace Projeny
             _backgroundTaskInfo = null;
         }
 
-        void SetBackgroundTask(IEnumerator task, bool showProcessingLabel, string title = null)
+        void SetBackgroundTask(IEnumerator task, string title = null)
         {
             Assert.IsNull(_backgroundTaskInfo);
             _backgroundTaskInfo = new BackgroundTaskInfo()
             {
                 StatusTitle = title,
                 CoRoutine = new CoRoutine(task),
-                ShowProcessingLabel = showProcessingLabel
             };
         }
 
@@ -1380,7 +1433,6 @@ namespace Projeny
                 yield break;
             }
 
-            _backgroundTaskInfo.ShowProcessingLabel = true;
             yield return ProcessUpmCommand("Creating Package '{0}'".Fmt(userInput.Current), UpmHelper.CreatePackageAsync(userInput.Current));
             yield return RefreshPackagesAsync();
         }
@@ -1494,11 +1546,11 @@ namespace Projeny
 
         void UpdateAvailablePackagesList()
         {
-            _installedList.Clear();
+            _packagesList.Clear();
 
             foreach (var info in _allPackages)
             {
-                _installedList.Add(info.Name, info);
+                _packagesList.Add(info.Name, info);
             }
         }
 
@@ -1525,7 +1577,7 @@ namespace Projeny
                     if (_backgroundTaskInfo == null)
                     {
                         SetBackgroundTask(
-                            DisplayError(e.Message), true);
+                            DisplayError(e.Message));
                     }
 
                     return;
@@ -1721,7 +1773,7 @@ namespace Projeny
 
             if (desiredConfigType != _projectConfigType)
             {
-                SetBackgroundTask(TryChangeProjectType(desiredConfigType), false);
+                SetBackgroundTask(TryChangeProjectType(desiredConfigType));
             }
 
             GUI.DrawTexture(new Rect(dropDownRect.xMax - Skin.ArrowSize.x + Skin.ArrowOffset.x, dropDownRect.yMin + Skin.ArrowOffset.y, Skin.ArrowSize.x, Skin.ArrowSize.y), Skin.FileDropdownArrow);
@@ -1852,7 +1904,7 @@ namespace Projeny
 
             if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh"))
             {
-                SetBackgroundTask(RefreshReleasesAsync(), true, "Refreshing Release List");
+                SetBackgroundTask(RefreshReleasesAsync(), "Refreshing Release List");
             }
         }
 
@@ -2003,7 +2055,7 @@ namespace Projeny
                 {
                     _popupHandler(fullRect);
                 }
-                else if (_backgroundTaskInfo.ShowProcessingLabel)
+                else
                 {
                     DisplayGenericProcessingDialog(fullRect);
                 }
@@ -2100,7 +2152,6 @@ namespace Projeny
         public class BackgroundTaskInfo
         {
             public CoRoutine CoRoutine;
-            public bool ShowProcessingLabel;
 
             public string ProcessName;
             public string StatusTitle;

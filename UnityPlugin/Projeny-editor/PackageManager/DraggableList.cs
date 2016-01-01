@@ -83,6 +83,7 @@ namespace Projeny.Internal
 
         public void Remove(DraggableListEntry entry)
         {
+            _manager.Deselect(entry);
             _entryList.RemoveWithConfirm(entry);
             SortList();
         }
@@ -94,8 +95,7 @@ namespace Projeny.Internal
 
         public void Remove(string name)
         {
-            _entryList.RemoveWithConfirm(_entryList.Where(x => x.Name == name).Single());
-            SortList();
+            Remove(_entryList.Where(x => x.Name == name).Single());
         }
 
         public void Add(string name, UnityEngine.Object tag)
@@ -122,6 +122,10 @@ namespace Projeny.Internal
 
         public void Clear()
         {
+            foreach (var entry in _entryList)
+            {
+                _manager.Deselect(entry);
+            }
             _entryList.Clear();
         }
 
