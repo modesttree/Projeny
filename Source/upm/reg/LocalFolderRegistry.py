@@ -44,10 +44,12 @@ class LocalFolderRegistry:
     def getName(self):
         return "Local Folder ({0})".format(self._folderPath)
 
-    def installRelease(self, releaseInfo, outputDir):
+    # Should return the chosen name for the package
+    # If forcedName is non-null then this should always be the value of forcedName
+    def installRelease(self, releaseInfo, forcedName):
         fileInfo = next(x for x in self._files if x.release == releaseInfo)
         assertIsNotNone(fileInfo)
 
-        self._extractor.extractUnityPackage(fileInfo.path, outputDir)
+        return self._extractor.extractUnityPackage(fileInfo.path, releaseInfo.name, forcedName)
 
 

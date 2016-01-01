@@ -94,7 +94,7 @@ class ReleaseRegistryManager:
         assertThat(releaseVersion)
 
         self._lazyInit()
-        self._log.heading("Attempting to install release '{0}' for version '{1}'", releaseName, releaseVersion)
+        self._log.heading("Attempting to install release '{0}' (version '{1}')", releaseName, releaseVersion)
 
         assertThat(len(self._releaseRegistries) > 0, "Could not find any registries to search for the given release")
 
@@ -111,7 +111,6 @@ class ReleaseRegistryManager:
         assertThat(releaseId)
 
         self._lazyInit()
-        self._log.heading("Attempting to install release with id '{0}'", releaseId)
 
         assertThat(len(self._releaseRegistries) > 0, "Could not find any registries to search for the given release")
 
@@ -124,7 +123,9 @@ class ReleaseRegistryManager:
 
     def _installReleaseInternal(self, releaseInfo, registry, suppressPrompts = False):
 
-        installDirName = releaseInfo.name
+        self._log.heading("Attempting to install release '{0}' (version {1})", releaseInfo.name, releaseInfo.version)
+
+        installDirName = None
 
         for packageInfo in self._packageManager.getAllPackageInfos():
             installInfo = packageInfo.installInfo
@@ -147,11 +148,11 @@ class ReleaseRegistryManager:
                 # Retain original directory name in case it is referenced by other packages
                 installDirName = packageInfo.name
 
-        destDir = '[UnityPackagesDir]/{0}'.format(installDirName)
+        installDirName = registry.installRelease(releaseInfo, installDirName)
 
-        assertThat(not self._sys.directoryExists(destDir), "Found existing folder with the same name '{0}'.  If this is the same package and you want to replace, uninstall this package first then try again.", releaseInfo.name)
+        destDir = self._varMgr.expand('[UnityPackagesDir]/{0}'.format(installDirName))
 
-        registry.installRelease(releaseInfo, destDir)
+        assertThat(self._sys.directoryExists(destDir), 'Expected dir "{0}" to exist', destDir)
 
         newInstallInfo = PackageInstallInfo()
         newInstallInfo.releaseInfo = releaseInfo
