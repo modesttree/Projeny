@@ -256,7 +256,7 @@ namespace Projeny
                 _allPackages = new List<PackageInfo>();
                 _allReleases = new List<ReleaseInfo>();
 
-                StartBackgroundTask(RefreshAll(), true);
+                StartBackgroundTask(RefreshAll(), true, "Refreshing Packages");
             }
 
             if (_installedList == null)
@@ -611,7 +611,7 @@ namespace Projeny
 
         void DeleteSelectedPackages()
         {
-            StartBackgroundTask(DeleteSelectedPackagesAsync(), true);
+            StartBackgroundTask(DeleteSelectedPackagesAsync(), true, "Deleting Packages");
         }
 
         IEnumerator DeleteSelectedPackagesAsync()
@@ -628,7 +628,7 @@ namespace Projeny
 
             if (choice.Current == 0)
             {
-                yield return ProcessUpmCommand(UpmHelper.DeletePackagesAsync(infos));
+                yield return ProcessUpmCommand("Deleting selected packages", UpmHelper.DeletePackagesAsync(infos));
                 yield return RefreshPackagesAsync();
             }
         }
@@ -741,7 +741,7 @@ namespace Projeny
                         }
                         case ListTypes.Release:
                         {
-                            StartBackgroundTask(InstallReleasesAsync(data.Entries.Select(x => (ReleaseInfo)x.Tag).ToList()), true);
+                            StartBackgroundTask(InstallReleasesAsync(data.Entries.Select(x => (ReleaseInfo)x.Tag).ToList()), true, "Installing Releases");
                             break;
                         }
                         default:
@@ -824,7 +824,7 @@ namespace Projeny
                     }
                     case InstallReleaseUserChoices.Install:
                     {
-                        yield return ProcessUpmCommand(UpmHelper.InstallReleaseAsync(releaseInfo));
+                        yield return ProcessUpmCommand("Installing release '{0}'".Fmt(releaseInfo.Name), UpmHelper.InstallReleaseAsync(releaseInfo));
                         break;
                     }
                     case InstallReleaseUserChoices.Skip:
@@ -983,7 +983,7 @@ namespace Projeny
 
             if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh"))
             {
-                StartBackgroundTask(RefreshPackagesAsync(), true);
+                StartBackgroundTask(RefreshPackagesAsync(), true, "Refreshing Packages");
             }
 
             startX = endX + Skin.PackagesPane.ButtonPadding;
@@ -991,7 +991,7 @@ namespace Projeny
 
             if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "New"))
             {
-                StartBackgroundTask(CreateNewPackageAsync(), false);
+                StartBackgroundTask(CreateNewPackageAsync(), false, "Creating New Package");
             }
         }
 
@@ -1051,27 +1051,27 @@ namespace Projeny
             if (GUI.Button(Rect.MinMaxRect(rect.x + halfWidth + padding, rect.y, rect.xMax, rect.yMax), "Apply"))
             {
                 OverwriteConfig();
-                StartBackgroundTask(ProcessUpmCommand(UpmHelper.UpdateLinksAsync()), true);
+                StartBackgroundTask(ProcessUpmCommand("Updating directory links", UpmHelper.UpdateLinksAsync()), true, "Updating Links");
             }
         }
 
         IEnumerator RefreshReleasesAsync()
         {
-            var response = ProcessUpmCommandForResult<List<ReleaseInfo>>(UpmHelper.LookupReleaseListAsync());
+            var response = ProcessUpmCommandForResult<List<ReleaseInfo>>("Looking up release list", UpmHelper.LookupReleaseListAsync());
             yield return response;
 
             _allReleases = response.Current;
             UpdateAvailableReleasesList();
         }
 
-        IEnumerator<T> ProcessUpmCommandForResult<T>(IEnumerator upmTask)
+        IEnumerator<T> ProcessUpmCommandForResult<T>(string statusName, IEnumerator upmTask)
         {
-            return CoRoutine.Wrap<T>(ProcessUpmCommand(upmTask));
+            return CoRoutine.Wrap<T>(ProcessUpmCommand(statusName, upmTask));
         }
 
-        IEnumerator ProcessUpmCommand(IEnumerator upmTask)
+        IEnumerator ProcessUpmCommand(string statusName, IEnumerator upmTask)
         {
-            _backgroundTaskInfo.StatusMessage = "Starting UPM";
+            _backgroundTaskInfo.StatusMessage = statusName;
 
             while (upmTask.MoveNext())
             {
@@ -1128,11 +1128,12 @@ namespace Projeny
             _backgroundTaskInfo = null;
         }
 
-        void StartBackgroundTask(IEnumerator task, bool showProcessingLabel)
+        void StartBackgroundTask(IEnumerator task, bool showProcessingLabel, string title = null)
         {
             Assert.IsNull(_backgroundTaskInfo);
             _backgroundTaskInfo = new BackgroundTaskInfo()
             {
+                StatusTitle = title,
                 CoRoutine = new CoRoutine(task),
                 ShowProcessingLabel = showProcessingLabel
             };
@@ -1150,7 +1151,8 @@ namespace Projeny
                 yield break;
             }
 
-            yield return ProcessUpmCommand(UpmHelper.CreatePackageAsync(userInput.Current));
+            _backgroundTaskInfo.ShowProcessingLabel = true;
+            yield return ProcessUpmCommand("Creating Package '{0}'".Fmt(userInput.Current), UpmHelper.CreatePackageAsync(userInput.Current));
             yield return RefreshPackagesAsync();
         }
 
@@ -1286,7 +1288,7 @@ namespace Projeny
 
         IEnumerator RefreshPackagesAsync()
         {
-            var allPackages = ProcessUpmCommandForResult<List<PackageInfo>>(UpmHelper.LookupPackagesListAsync());
+            var allPackages = ProcessUpmCommandForResult<List<PackageInfo>>("Looking up package list", UpmHelper.LookupPackagesListAsync());
             yield return allPackages;
 
             _allPackages = allPackages.Current;
@@ -1479,7 +1481,7 @@ namespace Projeny
 
             if (desiredConfigType != _projectConfigType)
             {
-                StartBackgroundTask(TryChangeProjectType(desiredConfigType), true);
+                StartBackgroundTask(TryChangeProjectType(desiredConfigType), false);
             }
 
             GUI.DrawTexture(new Rect(dropDownRect.xMax - Skin.ArrowSize.x + Skin.ArrowOffset.x, dropDownRect.yMin + Skin.ArrowOffset.y, Skin.ArrowSize.x, Skin.ArrowSize.y), Skin.FileDropdownArrow);
@@ -1601,7 +1603,7 @@ namespace Projeny
 
             if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh"))
             {
-                StartBackgroundTask(RefreshReleasesAsync(), true);
+                StartBackgroundTask(RefreshReleasesAsync(), true, "Refreshing Release List");
             }
         }
 
@@ -1813,6 +1815,7 @@ namespace Projeny
             public CoRoutine CoRoutine;
             public bool ShowProcessingLabel;
 
+            public string ProcessName;
             public string StatusTitle;
             public string StatusMessage;
         }
