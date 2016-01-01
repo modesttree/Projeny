@@ -158,12 +158,6 @@ namespace Projeny
             }
         }
 
-        string ColorToHex(Color32 color)
-        {
-            string hex = color.r.ToString("X2") + color.g.ToString("X2") + color.b.ToString("X2");
-            return hex;
-        }
-
         void DrawListItem(Rect rect, string name)
         {
             GUI.Label(rect, name, Skin.ItemTextStyle);
@@ -171,7 +165,7 @@ namespace Projeny
 
         void DrawItemLabelWithVersion(Rect rect, string name, string version)
         {
-            var labelStr = string.IsNullOrEmpty(version) ? name : "{0} <color=#{1}>v{2}</color>".Fmt(name, ColorToHex(Skin.Theme.VersionColor), version);
+            var labelStr = string.IsNullOrEmpty(version) ? name : "{0} <color=#{1}>v{2}</color>".Fmt(name, MiscUtil.ColorToHex(Skin.Theme.VersionColor), version);
             GUI.Label(rect, labelStr, Skin.ItemTextStyle);
         }
 
@@ -1789,20 +1783,15 @@ namespace Projeny
                 {
                     var statusMessage = _backgroundTaskInfo.StatusMessage;
 
-                    int numExtraDots = (int)(Time.realtimeSinceStartup * skin.DotRepeatRate) % 5;
+                    int numExtraDots = (int)(Time.realtimeSinceStartup * skin.DotRepeatRate) % 4;
 
-                    for (int i = 0; i < 3; i++)
-                    {
-                        if (i < numExtraDots)
-                        {
-                            statusMessage += ".";
-                        }
-                        else
-                        {
-                            // Add spaces so it's always the same length so that centering works
-                            statusMessage += " ";
-                        }
-                    }
+                    statusMessage += new String('.', numExtraDots);
+
+                    // This is very hacky but the only way I can figure out how to keep the message a fixed length
+                    // so that the text doesn't jump around as the number of dots change
+                    // I tried using spaces instead of _ but that didn't work
+                    statusMessage += "<color=#{0}>{1}</color>"
+                        .Fmt(MiscUtil.ColorToHex(Skin.Theme.LoadingOverlapPopupColor), new String('_', 3 - numExtraDots));
 
                     GUILayout.Label(statusMessage, skin.StatusMessageTextStyle, GUILayout.ExpandWidth(true));
                 }
