@@ -603,6 +603,23 @@ namespace Projeny
             System.Diagnostics.Process.Start(info.Path);
         }
 
+        void SelectAll()
+        {
+            if (_selected.IsEmpty())
+            {
+                return;
+            }
+
+            var listType = ClassifyList(_selected[0].ListOwner);
+
+            Assert.That(_selected.All(x => ClassifyList(x.ListOwner) == listType));
+
+            foreach (var entry in _selected[0].ListOwner.Values)
+            {
+                _selected.Add(entry);
+            }
+        }
+
         void DeleteSelected()
         {
             StartBackgroundTask(DeleteSelectedAsync(), true, "Deleting Packages");
@@ -1777,9 +1794,32 @@ namespace Projeny
 
         void CheckForKeypresses()
         {
-            if (Event.current.type == EventType.KeyDown && GUI.enabled)
+            if (!GUI.enabled)
             {
-                switch (Event.current.keyCode)
+                // Popup visible
+                return;
+            }
+
+            var e = Event.current;
+
+            if (e.type == EventType.ValidateCommand)
+            {
+                if (e.commandName == "SelectAll")
+                {
+                    e.Use();
+                }
+            }
+            else if (e.type == EventType.ExecuteCommand)
+            {
+                if (e.commandName == "SelectAll")
+                {
+                    SelectAll();
+                    e.Use();
+                }
+            }
+            else if (e.type == EventType.KeyDown)
+            {
+                switch (e.keyCode)
                 {
                     case KeyCode.Delete:
                     {
