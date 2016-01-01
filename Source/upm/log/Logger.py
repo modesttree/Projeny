@@ -52,7 +52,7 @@ class Logger:
             msg = msg.format(*args)
 
         self.currentHeading = msg
-        self._logInternal(msg + '...', LogType.Heading)
+        self._logInternal(msg, LogType.Heading)
 
     def debug(self, msg, *args):
         self._logInternal(msg, LogType.Debug, *args)

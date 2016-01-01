@@ -24,7 +24,7 @@ namespace Projeny
         [MenuItem("Projeny/Update Links", false, 1)]
         public static void UpdateLinks()
         {
-            UpmInterface.UpdateLinks();
+            UpmHelper.UpdateLinks();
         }
 
         [MenuItem("Projeny/Package Manager...", false, 1)]
@@ -45,7 +45,7 @@ namespace Projeny
             }
             else
             {
-                UpmInterface.DisplayUpmError(
+                UpmHelper.DisplayUpmError(
                     "Updating C# Project", response.ErrorMessage);
             }
         }
@@ -53,43 +53,43 @@ namespace Projeny
         [MenuItem("Projeny/Change Platform/Windows", false, 7)]
         public static void ChangePlatformWin()
         {
-            UpmInterface.ChangePlatform(BuildTarget.StandaloneWindows);
+            UpmHelper.ChangePlatform(BuildTarget.StandaloneWindows);
         }
 
         [MenuItem("Projeny/Change Platform/Webplayer", false, 7)]
         public static void ChangePlatformWebplayer()
         {
-            UpmInterface.ChangePlatform(BuildTarget.WebPlayer);
+            UpmHelper.ChangePlatform(BuildTarget.WebPlayer);
         }
 
         [MenuItem("Projeny/Change Platform/Android", false, 7)]
         public static void ChangePlatformAndroid()
         {
-            UpmInterface.ChangePlatform(BuildTarget.Android);
+            UpmHelper.ChangePlatform(BuildTarget.Android);
         }
 
         [MenuItem("Projeny/Change Platform/Web GL", false, 7)]
         public static void ChangePlatformWebGL()
         {
-            UpmInterface.ChangePlatform(BuildTarget.WebGL);
+            UpmHelper.ChangePlatform(BuildTarget.WebGL);
         }
 
         [MenuItem("Projeny/Change Platform/OsX", false, 7)]
         public static void ChangePlatformOsX()
         {
-            UpmInterface.ChangePlatform(BuildTarget.StandaloneOSXUniversal);
+            UpmHelper.ChangePlatform(BuildTarget.StandaloneOSXUniversal);
         }
 
         [MenuItem("Projeny/Change Platform/Linux", false, 7)]
         public static void ChangePlatformLinux()
         {
-            UpmInterface.ChangePlatform(BuildTarget.StandaloneLinux);
+            UpmHelper.ChangePlatform(BuildTarget.StandaloneLinux);
         }
 
         [MenuItem("Projeny/Change Platform/iOS", false, 7)]
         public static void ChangePlatformIos()
         {
-            UpmInterface.ChangePlatform(BuildTarget.iOS);
+            UpmHelper.ChangePlatform(BuildTarget.iOS);
         }
     }
 }

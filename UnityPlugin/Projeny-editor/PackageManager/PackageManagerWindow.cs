@@ -256,19 +256,31 @@ namespace Projeny
                 _allPackages = new List<PackageInfo>();
                 _allReleases = new List<ReleaseInfo>();
 
+                StartBackgroundTask(RefreshAll(), true);
+            }
+
+            if (_installedList == null)
+            {
                 _installedList = ScriptableObject.CreateInstance<DraggableList>();
                 _installedList.Manager = this;
+            }
 
+            if (_releasesList == null)
+            {
                 _releasesList = ScriptableObject.CreateInstance<DraggableList>();
                 _releasesList.Manager = this;
+            }
 
+            if (_assetsList == null)
+            {
                 _assetsList = ScriptableObject.CreateInstance<DraggableList>();
                 _assetsList.Manager = this;
+            }
 
+            if (_pluginsList == null)
+            {
                 _pluginsList = ScriptableObject.CreateInstance<DraggableList>();
                 _pluginsList.Manager = this;
-
-                StartBackgroundTask(RefreshAll(), true);
             }
         }
 
@@ -616,11 +628,7 @@ namespace Projeny
 
             if (choice.Current == 0)
             {
-                var result = UpmInterface.DeletePackagesAsync(infos);
-                yield return result;
-
-                // Do this regardless of whether result.Current is true since
-                // some packages might have been deleted
+                yield return ProcessUpmCommand(UpmHelper.DeletePackagesAsync(infos));
                 yield return RefreshPackagesAsync();
             }
         }
@@ -816,14 +824,7 @@ namespace Projeny
                     }
                     case InstallReleaseUserChoices.Install:
                     {
-                        var result = UpmInterface.InstallReleaseAsync(releaseInfo);
-                        yield return result;
-
-                        if (!result.Current)
-                        {
-                            // Error occurred - just abort
-                            yield break;
-                        }
+                        yield return ProcessUpmCommand(UpmHelper.InstallReleaseAsync(releaseInfo));
                         break;
                     }
                     case InstallReleaseUserChoices.Skip:
@@ -1050,20 +1051,65 @@ namespace Projeny
             if (GUI.Button(Rect.MinMaxRect(rect.x + halfWidth + padding, rect.y, rect.xMax, rect.yMax), "Apply"))
             {
                 OverwriteConfig();
-                StartBackgroundTask(UpmInterface.UpdateLinksAsync(), true);
+                StartBackgroundTask(ProcessUpmCommand(UpmHelper.UpdateLinksAsync()), true);
             }
         }
 
         IEnumerator RefreshReleasesAsync()
         {
-            var result = UpmInterface.LookupReleaseListAsync();
-            yield return result;
+            var response = ProcessUpmCommandForResult<List<ReleaseInfo>>(UpmHelper.LookupReleaseListAsync());
+            yield return response;
 
-            // Null indicates failure
-            if (result.Current != null)
+            _allReleases = response.Current;
+            UpdateAvailableReleasesList();
+        }
+
+        IEnumerator<T> ProcessUpmCommandForResult<T>(IEnumerator upmTask)
+        {
+            return CoRoutine.Wrap<T>(ProcessUpmCommand(upmTask));
+        }
+
+        IEnumerator ProcessUpmCommand(IEnumerator upmTask)
+        {
+            _backgroundTaskInfo.StatusMessage = "Starting UPM";
+
+            while (upmTask.MoveNext())
             {
-                _allReleases = result.Current;
-                UpdateAvailableReleasesList();
+                if (upmTask.Current is UpmHelperResponse)
+                {
+                    Assert.That(!upmTask.MoveNext());
+                    break;
+                }
+
+                if (upmTask.Current != null)
+                {
+                    Assert.IsType<List<string>>(upmTask.Current);
+                    var outputLines = (List<string>)upmTask.Current;
+
+                    if (outputLines.Count > 0)
+                    {
+                        _backgroundTaskInfo.StatusMessage = outputLines.Last();
+                    }
+                }
+
+                yield return null;
+            }
+
+            Assert.IsType<UpmHelperResponse>(upmTask.Current);
+            var response = (UpmHelperResponse)upmTask.Current;
+
+            if (response.Succeeded)
+            {
+                yield return response.Result;
+            }
+            else
+            {
+                // TODO: Make this use our custom popup stuff
+                var errorMessage = "Operation aborted.  UPM encountered errors. Details: \n\n{0}".Fmt(response.ErrorMessage);
+                Log.Error("Projeny: {0}", errorMessage);
+                EditorUtility.DisplayDialog("Error", errorMessage, "Ok");
+                ForceStopBackgroundTask();
+                yield return null;
             }
         }
 
@@ -1075,6 +1121,11 @@ namespace Projeny
             {
                 _releasesList.Add(info.Name, info);
             }
+        }
+
+        void ForceStopBackgroundTask()
+        {
+            _backgroundTaskInfo = null;
         }
 
         void StartBackgroundTask(IEnumerator task, bool showProcessingLabel)
@@ -1099,13 +1150,8 @@ namespace Projeny
                 yield break;
             }
 
-            var succeeded = UpmInterface.CreatePackageAsync(userInput.Current);
-            yield return succeeded;
-
-            if (succeeded.Current)
-            {
-                yield return RefreshPackagesAsync();
-            }
+            yield return ProcessUpmCommand(UpmHelper.CreatePackageAsync(userInput.Current));
+            yield return RefreshPackagesAsync();
         }
 
         void DrawPopupCommon(Rect fullRect, Rect popupRect)
@@ -1240,15 +1286,11 @@ namespace Projeny
 
         IEnumerator RefreshPackagesAsync()
         {
-            var allPackages = UpmInterface.LookupPackagesListAsync();
+            var allPackages = ProcessUpmCommandForResult<List<PackageInfo>>(UpmHelper.LookupPackagesListAsync());
             yield return allPackages;
 
-            if (allPackages.Current != null)
-            // Returns null on failure
-            {
-                _allPackages = allPackages.Current;
-                UpdateAvailablePackagesList();
-            }
+            _allPackages = allPackages.Current;
+            UpdateAvailablePackagesList();
         }
 
         void UpdateAvailablePackagesList()
@@ -1717,29 +1759,62 @@ namespace Projeny
 
         void DisplayGenericProcessingDialog(Rect fullRect)
         {
-            ImguiUtil.DrawColoredQuad(fullRect, Skin.Theme.LoadingOverlayColor);
+            var skin = Skin.AsyncPopupPane;
+            var popupRect = ImguiUtil.CenterRectInRect(fullRect, skin.PopupSize);
 
-            var size = Skin.ProcessingPopupSize;
-            var popupRect = new Rect(fullRect.width * 0.5f - 0.5f * size.x, 0.5f * fullRect.height - 0.5f * size.y, size.x, size.y);
+            DrawPopupCommon(fullRect, popupRect);
 
-            ImguiUtil.DrawColoredQuad(popupRect, Skin.Theme.LoadingOverlapPopupColor);
+            var contentRect = ImguiUtil.CreateContentRectWithPadding(
+                popupRect, skin.PanelPadding);
 
-            var message = "Processing";
-
-            int numExtraDots = (int)(Time.realtimeSinceStartup * Skin.ProcessingDotRepeatRate) % 5;
-
-            for (int i = 0; i < numExtraDots; i++)
+            GUILayout.BeginArea(contentRect);
             {
-                message += ".";
-            }
+                string title;
 
-            GUI.Label(popupRect, message, Skin.ProcessingPopupTextStyle);
+                if (string.IsNullOrEmpty(_backgroundTaskInfo.StatusTitle))
+                {
+                    title = "Processing";
+                }
+                else
+                {
+                    title = _backgroundTaskInfo.StatusTitle;
+                }
+
+                GUILayout.Label(title, skin.HeadingTextStyle, GUILayout.ExpandWidth(true));
+                GUILayout.Space(skin.HeadingBottomPadding);
+
+                if (!string.IsNullOrEmpty(_backgroundTaskInfo.StatusMessage))
+                {
+                    var statusMessage = _backgroundTaskInfo.StatusMessage;
+
+                    int numExtraDots = (int)(Time.realtimeSinceStartup * skin.DotRepeatRate) % 5;
+
+                    for (int i = 0; i < 3; i++)
+                    {
+                        if (i < numExtraDots)
+                        {
+                            statusMessage += ".";
+                        }
+                        else
+                        {
+                            // Add spaces so it's always the same length so that centering works
+                            statusMessage += " ";
+                        }
+                    }
+
+                    GUILayout.Label(statusMessage, skin.StatusMessageTextStyle, GUILayout.ExpandWidth(true));
+                }
+            }
+            GUILayout.EndArea();
         }
 
         public class BackgroundTaskInfo
         {
             public CoRoutine CoRoutine;
             public bool ShowProcessingLabel;
+
+            public string StatusTitle;
+            public string StatusMessage;
         }
 
         enum ReleasesSortMethod

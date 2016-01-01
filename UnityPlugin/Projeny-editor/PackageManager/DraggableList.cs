@@ -306,11 +306,6 @@ namespace Projeny.Internal
             }
         }
 
-        void OnThing2()
-        {
-            Debug.Log("TODO - thing2");
-        }
-
         public class DragData
         {
             public List<DraggableListEntry> Entries;

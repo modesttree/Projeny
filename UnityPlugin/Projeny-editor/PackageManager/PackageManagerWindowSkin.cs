@@ -69,6 +69,7 @@ namespace Projeny
         public ReleaseInfoMoreInfoDialogProperties ReleaseMoreInfoDialog;
         public GenericPromptDialogProperties GenericPromptDialog;
         public ReleasesPaneProperties ReleasesPane;
+        public AsyncPopupPaneProperties AsyncPopupPane;
 
         public GUIStyle ItemTextStyle
         {
@@ -182,6 +183,31 @@ namespace Projeny
                 get
                 {
                     return GUI.skin.GetStyle("InputDialogLabelStyle");
+                }
+            }
+        }
+
+        [Serializable]
+        public class AsyncPopupPaneProperties
+        {
+            public float PanelPadding;
+            public Vector2 PopupSize;
+            public float DotRepeatRate;
+            public float HeadingBottomPadding;
+
+            public GUIStyle HeadingTextStyle
+            {
+                get
+                {
+                    return GUI.skin.GetStyle("ProcessingPopupTextStyle");
+                }
+            }
+
+            public GUIStyle StatusMessageTextStyle
+            {
+                get
+                {
+                    return GUI.skin.GetStyle("ProcessingPopupStatusTextStyle");
                 }
             }
         }

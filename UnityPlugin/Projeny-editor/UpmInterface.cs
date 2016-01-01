@@ -14,54 +14,25 @@ using Projeny.Internal;
 
 namespace Projeny
 {
+    public class UpmResponse
+    {
+        public bool Succeeded;
+        public string ErrorMessage;
+        public string Output;
+    }
+
+    public class UpmRequest
+    {
+        public string RequestId;
+        public string ProjectName;
+        public BuildTarget Platform;
+        public string ConfigPath;
+        public string Param1;
+        public string Param2;
+    }
+
     public static class UpmInterface
     {
-        public static bool UpdateLinks()
-        {
-            var result = RunUpm(CreateUpmRequest("updateLinks"));
-
-            if (!result.Succeeded)
-            {
-                DisplayUpmError("Updating directory links", result.ErrorMessage);
-                return false;
-            }
-
-            return true;
-        }
-
-        public static void ChangePlatform(BuildTarget desiredPlatform)
-        {
-            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
-            {
-                // They hit cancel in the save dialog
-                return;
-            }
-
-            if (ProjenyEditorUtil.GetPlatformFromDirectoryName() == desiredPlatform)
-            {
-                UnityEngine.Debug.Log("Projeny: Already at the desired platform, no need to change project.");
-                return;
-            }
-
-            var result = RunUpm(CreateUpmRequestForPlatform("updateLinks", desiredPlatform));
-
-            if (result.Succeeded)
-            {
-                result = RunUpm(CreateUpmRequestForPlatform("openUnity", desiredPlatform));
-            }
-
-            if (result.Succeeded)
-            {
-                EditorApplication.Exit(0);
-            }
-            else
-            {
-                DisplayUpmError(
-                    "Changing platform to '{0}'"
-                    .Fmt(desiredPlatform.ToString()), result.ErrorMessage);
-            }
-        }
-
         public static UpmRequest CreateUpmRequest(string requestId)
         {
             return CreateUpmRequestForProjectAndPlatform(
@@ -91,14 +62,7 @@ namespace Projeny
             };
         }
 
-        public static void DisplayUpmError(string operationDescription, string errors)
-        {
-            var errorMessage = "Operation aborted.  UPM encountered errors when running '{0}'. Details: \n\n{1}".Fmt(operationDescription, errors);
-            Log.Error("Projeny: {0}", errorMessage);
-            EditorUtility.DisplayDialog("Error", errorMessage, "Ok");
-        }
-
-        static Process RunUpmCommonStart(UpmRequest request, out StringBuilder allOutputOutValue)
+        static ProcessStartInfo GetUpmProcessStartInfo(UpmRequest request)
         {
             var startInfo = new ProcessStartInfo();
 
@@ -127,36 +91,35 @@ namespace Projeny
 
             UnityEngine.Debug.Log("Running command '{0} {1}'".Fmt(startInfo.FileName, startInfo.Arguments));
 
-            Process proc = new Process();
-            proc.StartInfo = startInfo;
-
-            var allOutput = new StringBuilder();
-            proc.OutputDataReceived += (sender, outputArgs) => allOutput.AppendLine(outputArgs.Data);
-            proc.ErrorDataReceived += (sender, outputArgs) => allOutput.AppendLine(outputArgs.Data);
-
-            allOutputOutValue = allOutput;
-            return proc;
+            return startInfo;
         }
 
         public static UpmResponse RunUpm(UpmRequest request)
         {
-            StringBuilder allOutput;
-            var proc = RunUpmCommonStart(request, out allOutput);
+            Assert.Throw("TODO");
+            return null;
+            //StringBuilder allOutput;
+            //StringBuilder allErrors;
 
-            proc.Start();
+            //Process proc = new Process();
+            //proc.StartInfo = GetUpmProcessStartInfo(request);
 
-            proc.BeginOutputReadLine();
-            proc.BeginErrorReadLine();
+            //proc.Start();
 
-            proc.WaitForExit();
+            //proc.BeginOutputReadLine();
+            //proc.BeginErrorReadLine();
 
-            return RunUpmCommonEnd(proc, allOutput);
+            //proc.WaitForExit();
+
+            //return RunUpmCommonEnd(proc, allErrors);
         }
 
-        public static IEnumerator<UpmResponse> RunUpmAsync(UpmRequest request)
+        // This will yield string values that contain some status message
+        // until finally yielding a value of type UpmResponse with the final data
+        public static IEnumerator RunUpmAsync(UpmRequest request)
         {
-            StringBuilder allOutput;
-            var proc = RunUpmCommonStart(request, out allOutput);
+            Process proc = new Process();
+            proc.StartInfo = GetUpmProcessStartInfo(request);
 
             proc.EnableRaisingEvents = true;
 
@@ -168,34 +131,54 @@ namespace Projeny
 
             proc.Start();
 
-            proc.BeginOutputReadLine();
+            var errorLines = new List<string>();
+            proc.ErrorDataReceived += (sender, outputArgs) => errorLines.Add(outputArgs.Data);
+
+            var outputLines = new List<string>();
+            proc.OutputDataReceived += (sender, outputArgs) => outputLines.Add(outputArgs.Data);
+
             proc.BeginErrorReadLine();
+            proc.BeginOutputReadLine();
 
             while (!hasExited)
             {
-                yield return null;
+                if (outputLines.IsEmpty())
+                {
+                    yield return null;
+                }
+                else
+                {
+                    var newLines = outputLines.ToList();
+                    outputLines.Clear();
+                    yield return newLines;
+                }
             }
 
-            yield return RunUpmCommonEnd(proc, allOutput);
+            yield return RunUpmCommonEnd(
+                proc, errorLines.Join(Environment.NewLine));
         }
 
-        static UpmResponse RunUpmCommonEnd(Process proc, StringBuilder allOutput)
+        static UpmResponse RunUpmCommonEnd(
+            Process proc, string errorOutput)
         {
-            var finalOutput = allOutput.ToString().Trim();
-
+            // If it returns an error code, then assume that
+            // the contents of STDERR are the error message to display
+            // to the user
+            // Otherwise, assume the contents of STDERR are the final output
+            // data.  This can include things like serialized YAML
             if (proc.ExitCode != 0)
             {
                 return new UpmResponse()
                 {
                     Succeeded = false,
-                    ErrorMessage = finalOutput,
+                    ErrorMessage = errorOutput,
                 };
             }
 
             return new UpmResponse()
             {
                 Succeeded = true,
-                Output = finalOutput,
+                Output = errorOutput,
             };
         }
 
@@ -265,194 +248,12 @@ namespace Projeny
             throw new NotImplementedException();
         }
 
-        // Async Methods
-        public static IEnumerator<Boolean> UpdateLinksAsync()
-        {
-            return CoRoutine.Wrap<Boolean>(UpdateLinksAsyncInternal());
-        }
-
-        static IEnumerator UpdateLinksAsyncInternal()
-        {
-            var req = CreateUpmRequest("updateLinks");
-
-            var result = RunUpmAsync(req);
-            yield return result;
-
-            if (result.Current.Succeeded)
-            {
-                AssetDatabase.Refresh();
-                Log.Info("Projeny: Updated directory links");
-                yield return true;
-            }
-            else
-            {
-                DisplayUpmError("Updating Directory Links", result.Current.ErrorMessage);
-                yield return false;
-            }
-        }
-
-        public static IEnumerator<Boolean> InstallReleaseAsync(ReleaseInfo info)
-        {
-            return CoRoutine.Wrap<Boolean>(InstallReleaseAsyncInternal(info));
-        }
-
-        static IEnumerator InstallReleaseAsyncInternal(ReleaseInfo info)
-        {
-            var req = CreateUpmRequest("installRelease");
-
-            req.Param1 = info.Id;
-
-            if (info.HasVersionCode)
-            {
-                req.Param2 = info.VersionCode.ToString();
-            }
-
-            var result = RunUpmAsync(req);
-            yield return result;
-
-            if (result.Current.Succeeded)
-            {
-                Log.Info("Installed new release '{0}' ({1})".Fmt(info.Name, info.Version));
-                yield return true;
-            }
-            else
-            {
-                DisplayUpmError("Installing Release '{0}' ({1})".Fmt(info.Name, info.Version), result.Current.ErrorMessage);
-                yield return false;
-            }
-        }
-
-        public static IEnumerator<Boolean> CreatePackageAsync(string name)
-        {
-            return CoRoutine.Wrap<Boolean>(CreatePackageAsyncInternal(name));
-        }
-
-        static IEnumerator CreatePackageAsyncInternal(string name)
-        {
-            var req = CreateUpmRequest("createPackage");
-
-            req.Param1 = name;
-
-            var result = RunUpmAsync(req);
-            yield return result;
-
-            if (!result.Current.Succeeded)
-            {
-                DisplayUpmError("Creating Package '{0}'".Fmt(name), result.Current.ErrorMessage);
-                yield return false;
-                yield break;
-            }
-
-            Log.Info("Created package '{0}'".Fmt(name));
-            yield return true;
-        }
-
-        public static IEnumerator<Boolean> DeletePackagesAsync(List<PackageInfo> infos)
-        {
-            return CoRoutine.Wrap<Boolean>(DeletePackagesAsyncInternal(infos));
-        }
-
-        static IEnumerator DeletePackagesAsyncInternal(List<PackageInfo> infos)
-        {
-            foreach (var info in infos)
-            {
-                var req = CreateUpmRequest("deletePackage");
-
-                req.Param1 = info.Name;
-
-                var result = RunUpmAsync(req);
-                yield return result;
-
-                if (!result.Current.Succeeded)
-                {
-                    DisplayUpmError("Deleting Package '{0}'".Fmt(info.Name), result.Current.ErrorMessage);
-                    yield return false;
-                    yield break;
-                }
-
-                Log.Info("Deleted package '{0}'".Fmt(info.Name));
-            }
-
-            yield return true;
-        }
-
-        // NOTE: Returns null on failure
-        public static IEnumerator<List<ReleaseInfo>> LookupReleaseListAsync()
-        {
-            return CoRoutine.Wrap<List<ReleaseInfo>>(LookupReleaseListAsyncInternal());
-        }
-
-        static IEnumerator LookupReleaseListAsyncInternal()
-        {
-            var req = CreateUpmRequest("listReleases");
-
-            var result = RunUpmAsync(req);
-            yield return result;
-
-            if (result.Current.Succeeded)
-            {
-                var docs = result.Current.Output
-                    .Split(new string[] { "---" }, StringSplitOptions.None);
-
-                yield return docs
-                    .Select(x => UpmSerializer.DeserializeReleaseInfo(x))
-                    .Where(x => x != null).ToList();
-            }
-            else
-            {
-                DisplayUpmError("Looking up all releases", result.Current.ErrorMessage);
-                yield return null;
-            }
-        }
-
-        // NOTE: Returns null on failure
-        public static IEnumerator<List<PackageInfo>> LookupPackagesListAsync()
-        {
-            return CoRoutine.Wrap<List<PackageInfo>>(LookupPackagesListAsyncInternal());
-        }
-
-        static IEnumerator LookupPackagesListAsyncInternal()
-        {
-            var result = RunUpmAsync(CreateUpmRequest("listPackages"));
-            yield return result;
-
-            if (!result.Current.Succeeded)
-            {
-                DisplayUpmError("Package lookup", result.Current.ErrorMessage);
-                yield return null;
-                yield break;
-            }
-
-            var docs = result.Current.Output
-                .Split(new string[] { "---" }, StringSplitOptions.None);
-
-            yield return docs
-                .Select(x => UpmSerializer.DeserializePackageInfo(x)).Where(x => x != null).ToList();
-        }
-
         public class UpmException : Exception
         {
             public UpmException(string errorMessage)
                 : base(errorMessage)
             {
             }
-        }
-
-        public class UpmResponse
-        {
-            public bool Succeeded;
-            public string ErrorMessage;
-            public string Output;
-        }
-
-        public class UpmRequest
-        {
-            public string RequestId;
-            public string ProjectName;
-            public BuildTarget Platform;
-            public string ConfigPath;
-            public string Param1;
-            public string Param2;
         }
     }
 }

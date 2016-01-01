@@ -3,6 +3,7 @@ from upm.ioc.Inject import Inject
 from upm.ioc.Inject import InjectMany
 import upm.ioc.IocAssertions as Assertions
 
+import time
 from upm.reg.ReleaseInfo import ReleaseInfo
 import upm.reg.UnityPackageAnalyzer as UnityPackageAnalyzer
 
@@ -30,7 +31,8 @@ class LocalFolderRegistry:
         return [x.release for x in self._files]
 
     def init(self):
-        self._log.heading('Initializing registry for local folder "{0}"', self._folderPath)
+        self._log.heading('Initializing registry for local folder')
+        self._log.debug('Initializing registry for local folder "{0}"', self._folderPath)
 
         for path in self._sys.findFilesByPattern(self._folderPath, '*.unitypackage'):
             release = self._packageAnalyzer.getReleaseInfoFromUnityPackage(path)

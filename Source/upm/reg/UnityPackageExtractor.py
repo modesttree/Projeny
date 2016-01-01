@@ -32,7 +32,7 @@ class UnityPackageExtractor:
         fileName = os.path.basename(unityPackagePath)
         packageName = os.path.splitext(fileName)[0]
 
-        self._log.heading("Running unity to extract '{0}' to directory '{1}'", fileName, outputDir)
+        self._log.heading("Extracting '{0}' to temporary directory", fileName)
         tempDir = tempfile.mkdtemp()
         self._log.info("Using temp directory '{0}'", tempDir)
 
@@ -58,7 +58,7 @@ class UnityPackageExtractor:
             self._sys.copyDirectory(dirToCopy, outputDir)
 
         finally:
-            self._log.heading("Deleting temp directory '{0}'", tempDir)
+            self._log.heading("Deleting temporary directory", tempDir)
             shutil.rmtree(tempDir)
 
 if __name__ == '__main__':

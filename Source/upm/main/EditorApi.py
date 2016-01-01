@@ -3,7 +3,7 @@ from upm.log.LogStreamFile import LogStreamFile
 import upm.main.Upm as Upm
 
 import upm.util.YamlSerializer as YamlSerializer
-from upm.log.LogStreamConsoleErrorsOnly import LogStreamConsoleErrorsOnly
+from upm.log.LogStreamConsoleHeadingsOnly import LogStreamConsoleHeadingsOnly
 import os
 import upm.ioc.Container as Container
 from upm.ioc.Inject import Inject
@@ -17,7 +17,6 @@ from upm.util.Assert import *
 import time
 
 class Runner:
-    _scriptRunner = Inject('ScriptRunner')
     _log = Inject('Logger')
     _packageMgr = Inject('PackageManager')
     _unityHelper = Inject('UnityHelper')
@@ -25,19 +24,13 @@ class Runner:
     _releaseRegistryManager = Inject('ReleaseRegistryManager')
 
     def run(self, project, platform, requestId, param1, param2):
+        self._log.debug("Started EditorApi with arguments: {0}".format(" ".join(sys.argv[1:])))
+
         self._project = project
         self._platform = platform
         self._requestId = requestId
         self._param1 = param1
         self._param2 = param2
-
-        success = self._scriptRunner.runWrapper(self._runInternal)
-
-        if not success:
-            sys.exit(1)
-
-    def _runInternal(self):
-        self._log.debug("Started EditorApi with arguments: {0}".format(" ".join(sys.argv[1:])))
 
         if self._requestId == 'updateLinks':
             self._packageMgr.updateProjectJunctions(self._project, self._platform)
@@ -55,18 +48,18 @@ class Runner:
         elif self._requestId == 'listPackages':
             infos = self._packageMgr.getAllPackageInfos()
             for packageInfo in infos:
-                print('---')
-                print(YamlSerializer.serialize(packageInfo))
+                sys.stderr.write('---\n')
+                sys.stderr.write(YamlSerializer.serialize(packageInfo) + '\n')
 
         elif self._requestId == 'listProjects':
             projectNames = self._packageMgr.getAllProjectNames()
             for projName in projectNames:
-                print(projName)
+                sys.stderr.write(projName + '\n')
 
         elif self._requestId == 'listReleases':
             for release in self._releaseRegistryManager.lookupAllReleases():
-                print('---')
-                print(YamlSerializer.serialize(release))
+                sys.stderr.write('---\n')
+                sys.stderr.write(YamlSerializer.serialize(release) + '\n')
 
         elif self._requestId == 'deletePackage':
             self._log.info("Deleting package '{0}'", self._param1)
@@ -84,7 +77,7 @@ class Runner:
             assertThat(False, "Invalid request id '{0}'", self._requestId)
 
 def installBindings(configPath):
-    Container.bind('LogStream').toSingle(LogStreamConsoleErrorsOnly)
+    Container.bind('LogStream').toSingle(LogStreamConsoleHeadingsOnly)
     Container.bind('LogStream').toSingle(LogStreamFile)
     Upm.installBindings(configPath)
 
@@ -107,7 +100,7 @@ def main():
 
 if __name__ == '__main__':
     if (sys.version_info < (3, 0)):
-        print('Wrong version of python!  Install python 3 and try again')
+        sys.stderr.write('Wrong version of python!  Install python 3 and try again')
         sys.exit(2)
 
     succeeded = True
