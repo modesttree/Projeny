@@ -116,7 +116,8 @@ namespace Projeny
                     }
                     else
                     {
-                        Assert.IsEqual(_viewState, ViewStates.PackagesAndProject);
+                        // this isn't always the case since it can be rendered when interpolating
+                        //Assert.IsEqual(_viewState, ViewStates.PackagesAndProject);
 
                         var labelStr = info.Name;
 
@@ -140,7 +141,8 @@ namespace Projeny
                     }
                     else
                     {
-                        Assert.That(_viewState == ViewStates.Project);
+                        // this isn't always the case since it can be rendered when interpolating
+                        //Assert.That(_viewState == ViewStates.Project);
                     }
 
                     DrawListItem(rect, labelStr);
@@ -387,14 +389,22 @@ namespace Projeny
             return 0.4f;
         }
 
-        void CheckSelectedIsValid()
+        void CheckStateIsValid()
         {
             Assert.That(_selected.All(x => x.ListOwner.Values.Contains(x)));
+
+            Assert.IsNotNull(_packagesList);
+            Assert.IsNotNull(_allPackages);
+            Assert.That(_packagesList.Values.All(x => _allPackages.Contains((PackageInfo)x.Tag)));
+
+            Assert.IsNotNull(_releasesList);
+            Assert.IsNotNull(_allReleases);
+            Assert.That(_releasesList.Values.All(x => _allReleases.Contains((ReleaseInfo)x.Tag)));
         }
 
         void Update()
         {
-            CheckSelectedIsValid();
+            CheckStateIsValid();
 
             // Execute any operations that were queued up doing the OnGUI event
             var ops = _operationQueue.ToList();
