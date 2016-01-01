@@ -400,7 +400,7 @@ namespace Projeny
                 }
                 case ListTypes.Package:
                 {
-                    contextMenu.AddItem(new GUIContent("Delete"), false, DeleteSelectedPackages);
+                    contextMenu.AddItem(new GUIContent("Delete"), false, DeleteSelected);
                     contextMenu.AddOptionalItem(_selected.Count == 1, new GUIContent("Open Folder"), false, OpenPackageFolderForSelected);
                     break;
                 }
@@ -603,27 +603,47 @@ namespace Projeny
             System.Diagnostics.Process.Start(info.Path);
         }
 
-        void DeleteSelectedPackages()
+        void DeleteSelected()
         {
-            StartBackgroundTask(DeleteSelectedPackagesAsync(), true, "Deleting Packages");
+            StartBackgroundTask(DeleteSelectedAsync(), true, "Deleting Packages");
         }
 
-        IEnumerator DeleteSelectedPackagesAsync()
+        IEnumerator DeleteSelectedAsync()
         {
-            Assert.That(_selected.All(x => ClassifyList(x.ListOwner) == ListTypes.Package));
-
-            var infos = _selected.Select(x => (PackageInfo)x.Tag).ToList();
-
-            var choice = PromptUserForConfirm(
-                "<color=yellow>Are you sure you wish to delete the following packages?</color>\n\n{0}\n\n<color=yellow>Please note the following:</color>\n\n- This change is not undoable\n- Any changes that you've made since installing will be lost\n- Any projects or other packages that still depend on this package may be put in an invalid state by deleting it".Fmt(infos.Select(x => " - " + x.Name).Join("\n")),
-                "Delete", "Cancel");
-
-            yield return choice;
-
-            if (choice.Current == 0)
+            if (_selected.IsEmpty())
             {
-                yield return ProcessUpmCommand("Deleting selected packages", UpmHelper.DeletePackagesAsync(infos));
-                yield return RefreshPackagesAsync();
+                yield break;
+            }
+
+            var listType = ClassifyList(_selected[0].ListOwner);
+
+            Assert.That(_selected.All(x => ClassifyList(x.ListOwner) == listType));
+
+            if (listType == ListTypes.Package)
+            {
+                var infos = _selected.Select(x => (PackageInfo)x.Tag).ToList();
+
+                var choice = PromptUserForConfirm(
+                    "<color=yellow>Are you sure you wish to delete the following packages?</color>\n\n{0}\n\n<color=yellow>Please note the following:</color>\n\n- This change is not undoable\n- Any changes that you've made since installing will be lost\n- Any projects or other packages that still depend on this package may be put in an invalid state by deleting it".Fmt(infos.Select(x => " - " + x.Name).Join("\n")),
+                    "Delete", "Cancel");
+
+                yield return choice;
+
+                if (choice.Current == 0)
+                {
+                    yield return ProcessUpmCommand("Deleting selected packages", UpmHelper.DeletePackagesAsync(infos));
+                    yield return RefreshPackagesAsync();
+                }
+            }
+            else if (listType == ListTypes.AssetItem || listType == ListTypes.PluginItem)
+            {
+                var entriesToRemove = _selected.ToList();
+                _selected.Clear();
+
+                foreach (var entry in entriesToRemove)
+                {
+                    entry.ListOwner.Remove(entry);
+                }
             }
         }
 
@@ -1734,6 +1754,8 @@ namespace Projeny
                 DrawReleasePane(windowRect);
             }
 
+            CheckForKeypresses();
+
             GUI.enabled = true;
 
             if (_backgroundTaskInfo == null)
@@ -1749,6 +1771,21 @@ namespace Projeny
                 else if (_backgroundTaskInfo.ShowProcessingLabel)
                 {
                     DisplayGenericProcessingDialog(fullRect);
+                }
+            }
+        }
+
+        void CheckForKeypresses()
+        {
+            if (Event.current.type == EventType.KeyDown && GUI.enabled)
+            {
+                switch (Event.current.keyCode)
+                {
+                    case KeyCode.Delete:
+                    {
+                        DeleteSelected();
+                        break;
+                    }
                 }
             }
         }
@@ -1779,9 +1816,11 @@ namespace Projeny
                 GUILayout.Label(title, skin.HeadingTextStyle, GUILayout.ExpandWidth(true));
                 GUILayout.Space(skin.HeadingBottomPadding);
 
+                string statusMessage = "";
+
                 if (!string.IsNullOrEmpty(_backgroundTaskInfo.StatusMessage))
                 {
-                    var statusMessage = _backgroundTaskInfo.StatusMessage;
+                    statusMessage = _backgroundTaskInfo.StatusMessage;
 
                     int numExtraDots = (int)(Time.realtimeSinceStartup * skin.DotRepeatRate) % 4;
 
@@ -1792,10 +1831,11 @@ namespace Projeny
                     // I tried using spaces instead of _ but that didn't work
                     statusMessage += "<color=#{0}>{1}</color>"
                         .Fmt(MiscUtil.ColorToHex(Skin.Theme.LoadingOverlapPopupColor), new String('_', 3 - numExtraDots));
-
-                    GUILayout.Label(statusMessage, skin.StatusMessageTextStyle, GUILayout.ExpandWidth(true));
                 }
+
+                GUILayout.Label(statusMessage, skin.StatusMessageTextStyle, GUILayout.ExpandWidth(true));
             }
+
             GUILayout.EndArea();
         }
 

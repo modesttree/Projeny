@@ -96,22 +96,24 @@ namespace Projeny
 
         public static UpmResponse RunUpm(UpmRequest request)
         {
-            Assert.Throw("TODO");
-            return null;
-            //StringBuilder allOutput;
-            //StringBuilder allErrors;
+            Process proc = new Process();
+            proc.StartInfo = GetUpmProcessStartInfo(request);
 
-            //Process proc = new Process();
-            //proc.StartInfo = GetUpmProcessStartInfo(request);
+            proc.Start();
 
-            //proc.Start();
+            var errorLines = new List<string>();
+            proc.ErrorDataReceived += (sender, outputArgs) => errorLines.Add(outputArgs.Data);
 
-            //proc.BeginOutputReadLine();
-            //proc.BeginErrorReadLine();
+            var outputLines = new List<string>();
+            proc.OutputDataReceived += (sender, outputArgs) => outputLines.Add(outputArgs.Data);
 
-            //proc.WaitForExit();
+            proc.BeginErrorReadLine();
+            proc.BeginOutputReadLine();
 
-            //return RunUpmCommonEnd(proc, allErrors);
+            proc.WaitForExit();
+
+            return RunUpmCommonEnd(
+                proc, errorLines.Join(Environment.NewLine));
         }
 
         // This will yield string values that contain some status message
