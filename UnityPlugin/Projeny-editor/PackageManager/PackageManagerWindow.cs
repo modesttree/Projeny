@@ -312,14 +312,7 @@ namespace Projeny
 
         void Update()
         {
-            if (_backgroundTaskInfo != null)
-            {
-                // NOTE: If the tab isn't focused this task will take awhile
-                if (!_backgroundTaskInfo.CoRoutine.Pump())
-                {
-                    _backgroundTaskInfo = null;
-                }
-            }
+            UpdateBackgroundTask();
 
             var deltaTime = Time.realtimeSinceStartup - _lastTime;
             _lastTime = Time.realtimeSinceStartup;
@@ -331,6 +324,46 @@ namespace Projeny
 
             // Doesn't seem worth trying to detect changes, just redraw every frame
             Repaint();
+        }
+
+        void UpdateBackgroundTask()
+        {
+            if (_backgroundTaskInfo == null)
+            {
+                return;
+            }
+
+            try
+            {
+                // NOTE: Do not assume a constant frame rate here
+                // (When we aren't in focus this gets updated less often)
+                if (!_backgroundTaskInfo.CoRoutine.Pump())
+                {
+                    _backgroundTaskInfo = null;
+                }
+            }
+            catch (CoRoutineException e)
+            {
+                _backgroundTaskInfo = null;
+
+                // If possible, display this as a popup
+                // Otherwise it will still be visible in the console so that's fine
+                if (e.InnerException != null)
+                {
+                    SetBackgroundTask(
+                        DisplayError(e.InnerException.Message), true);
+                }
+
+                throw;
+            }
+            catch (Exception e)
+            {
+                _backgroundTaskInfo = null;
+
+                SetBackgroundTask(
+                    DisplayError(e.Message), true);
+                throw;
+            }
         }
 
         public bool IsDragAllowed(DraggableList.DragData data, DraggableList list)
@@ -1359,7 +1392,28 @@ namespace Projeny
 
             if (File.Exists(configPath))
             {
-                var savedConfig = DeserializeProjectConfig(configPath);
+                ProjectConfig savedConfig;
+
+                try
+                {
+                    savedConfig = DeserializeProjectConfig(configPath);
+                }
+                catch (Exception e)
+                // This can happen if the file has yaml serialization errors
+                {
+                    Log.ErrorException(e);
+
+                    // If we don't already have a popup/async task happening, then
+                    // display the error popup
+                    // Otherwise the error will only be shown in console which is fine
+                    if (_backgroundTaskInfo == null)
+                    {
+                        SetBackgroundTask(
+                            DisplayError(e.Message), true);
+                    }
+
+                    return;
+                }
 
                 // Null when file is empty
                 if (savedConfig == null)
@@ -1447,7 +1501,20 @@ namespace Projeny
                 return !currentConfig.Packages.IsEmpty() || !currentConfig.PackagesPlugins.IsEmpty();
             }
 
-            var savedConfig = DeserializeProjectConfig(configPath);
+            ProjectConfig savedConfig;
+
+            try
+            {
+                savedConfig = DeserializeProjectConfig(configPath);
+            }
+            catch (Exception e)
+            {
+                Log.ErrorException(e);
+                // This happens if we have serialization errors
+                // Just log the error then assume that the file is different in this case so that the user
+                // has the option to overwrite
+                return true;
+            }
 
             if (savedConfig == null)
             {
@@ -1460,7 +1527,15 @@ namespace Projeny
 
         ProjectConfig DeserializeProjectConfig(string configPath)
         {
-            return UpmSerializer.DeserializeProjectConfig(File.ReadAllText(configPath));
+            try
+            {
+                return UpmSerializer.DeserializeProjectConfig(File.ReadAllText(configPath));
+            }
+            catch (Exception e)
+            {
+                throw new Exception(
+                    "Error while reading from '{0}': \n\n{1}".Fmt(Path.GetFileName(configPath), e.Message));
+            }
         }
 
         ProjectConfig GetProjectConfigFromLists()
@@ -1544,12 +1619,19 @@ namespace Projeny
             var buttonWidth = ((endX - startX) - 3 * buttonPadding) / 3.0f;
             var buttonHeight = endY - startY;
 
+            var configPath = GetProjectConfigPath();
+            var configFileExists = File.Exists(configPath);
+
             startX = startX + buttonPadding;
 
+            bool wasEnabled;
+            wasEnabled = GUI.enabled;
+            GUI.enabled = configFileExists;
             if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "Revert"))
             {
                 RefreshProject();
             }
+            GUI.enabled = wasEnabled;
 
             startX = startX + buttonWidth + buttonPadding;
 
@@ -1560,11 +1642,13 @@ namespace Projeny
 
             startX = startX + buttonWidth + buttonPadding;
 
-            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "Open"))
+            wasEnabled = GUI.enabled;
+            GUI.enabled = configFileExists;
+            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "Edit"))
             {
-                var configPath = GetProjectConfigPath();
                 InternalEditorUtility.OpenFileAtLineExternal(configPath, 1);
             }
+            GUI.enabled = wasEnabled;
         }
 
         string[] GetConfigTypesDisplayValues()
