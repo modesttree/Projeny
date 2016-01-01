@@ -1264,8 +1264,28 @@ namespace Projeny
             string userInput = defaultValue;
             InputDialogStates state = InputDialogStates.None;
 
+            bool hasFocused = false;
+            bool isFirst = true;
+
             _popupHandler = delegate(Rect fullRect)
             {
+                if (Event.current.type == EventType.KeyDown)
+                {
+                    switch (Event.current.keyCode)
+                    {
+                        case KeyCode.Return:
+                        {
+                            state = InputDialogStates.Submitted;
+                            break;
+                        }
+                        case KeyCode.Escape:
+                        {
+                            state = InputDialogStates.Cancelled;
+                            break;
+                        }
+                    }
+                }
+
                 var popupRect = ImguiUtil.CenterRectInRect(fullRect, Skin.InputDialog.PopupSize);
 
                 DrawPopupCommon(fullRect, popupRect);
@@ -1277,7 +1297,9 @@ namespace Projeny
                 {
                     GUILayout.Label(label, Skin.InputDialog.LabelStyle);
 
+                    GUI.SetNextControlName("PopupTextField");
                     userInput = GUILayout.TextField(userInput, 100);
+                    GUI.SetNextControlName("");
 
                     GUILayout.Space(5);
 
@@ -1298,11 +1320,23 @@ namespace Projeny
                     GUILayout.EndHorizontal();
                 }
                 GUILayout.EndArea();
+
+                if (isFirst)
+                {
+                    isFirst = false;
+                    // Need to remove focus then regain focus on the text box for it to select the whole contents
+                    GUI.FocusControl("");
+                }
+                else if (string.IsNullOrEmpty(GUI.GetNameOfFocusedControl()))
+                {
+                    GUI.FocusControl("PopupTextField");
+                }
             };
 
             while (state == InputDialogStates.None)
             {
                 yield return null;
+                hasFocused = true;
             }
 
             _popupHandler = null;
