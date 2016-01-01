@@ -43,6 +43,7 @@ MonoBehaviour:
     VersionColor: {r: 0, g: 0, b: 0, a: 0}
     LoadingOverlayColor: {r: 0.5294118, g: 0.5294118, b: 0.5294118, a: 0.166}
     LoadingOverlapPopupColor: {r: 0.83823526, g: 0.83823526, b: 0.83823526, a: 1}
+    DraggableItemAlreadyAddedColor: {r: 1, g: 1, b: 1, a: 1}
     DropdownTextStyle:
       m_Name: 
       m_Normal:
@@ -165,6 +166,7 @@ MonoBehaviour:
     VersionColor: {r: 0.5735294, g: 0.5735294, b: 0.5735294, a: 1}
     LoadingOverlayColor: {r: 0.6102941, g: 0.6102941, b: 0.6102941, a: 0.303}
     LoadingOverlapPopupColor: {r: 0.17647058, g: 0.17647058, b: 0.17647058, a: 1}
+    DraggableItemAlreadyAddedColor: {r: 0, g: 1, b: 0.46206903, a: 1}
     DropdownTextStyle:
       m_Name: 
       m_Normal:
@@ -308,10 +310,11 @@ MonoBehaviour:
     NotAvailableColor: {r: 0.44852942, g: 0.44852942, b: 0.44852942, a: 0.747}
     PopupSize: {x: 718.3, y: 346.5}
   GenericPromptDialog:
-    PanelPadding: 31.9
-    ButtonTopPadding: 22.79
+    PanelPadding: 20.8
+    ButtonTopPadding: 18.2
     ButtonWidth: 133.2
     ButtonSpacing: 27.18
+    TitleBottomPadding: 16.28
     PopupWidth: 616.13
   ReleasesPane:
     ButtonSpacing: 0

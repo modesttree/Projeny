@@ -764,8 +764,8 @@ namespace Projeny
                 var infos = _selected.Select(x => (PackageInfo)x.Tag).ToList();
 
                 var choice = PromptForUserChoice(
-                    null, "<color=yellow>Are you sure you wish to delete the following packages?</color>\n\n{0}\n\n<color=yellow>Please note the following:</color>\n\nThis change is not undoable\nAny changes that you've made since installing will be lost\nAny projects or other packages that still depend on this package may be put in an invalid state by deleting it".Fmt(infos.Select(x => x.Name).Join("\n")),
-                    "Delete", "Cancel");
+                    "<color=yellow>Are you sure you wish to delete the following packages?</color>\n\n{0}\n\n<color=yellow>Please note the following:</color>\n\n- This change is not undoable\n- Any changes that you've made since installing will be lost\n- Any projects or other packages that still depend on this package may be put in an invalid state by deleting it".Fmt(infos.Select(x => "- " + x.Name).Join("\n")),
+                    new[] { "Delete", "Cancel" }, null, "DeleteSelectedPopupTextStyle");
 
                 yield return choice;
 
@@ -787,18 +787,19 @@ namespace Projeny
             }
         }
 
-        public IEnumerator AlertUser(string title, string message)
+        public IEnumerator AlertUser(string message, string title = null)
         {
-            return PromptForUserChoice(title, message, "Ok");
+            return PromptForUserChoice(message, new[] { "Ok" }, title);
         }
 
-        public IEnumerator<int> PromptForUserChoice(string title, string question, params string[] choices)
+        public IEnumerator<int> PromptForUserChoice(string question, string[] choices, string title = null, string styleOverride = null)
         {
-            return CoRoutine.Wrap<int>(PromptForUserChoiceInternal(title, question, choices));
+            return CoRoutine.Wrap<int>(
+                PromptForUserChoiceInternal(question, choices, title, styleOverride));
         }
 
         public IEnumerator PromptForUserChoiceInternal(
-            string title, string question, params string[] choices)
+            string question, string[] choices, string title = null, string styleOverride = null)
         {
             Assert.IsNull(_popupHandler);
 
@@ -830,7 +831,7 @@ namespace Projeny
                                         GUILayout.Space(skin.TitleBottomPadding);
                                     }
 
-                                    GUILayout.Label(question, skin.LabelStyle);
+                                    GUILayout.Label(question, styleOverride == null ? skin.LabelStyle : GUI.skin.GetStyle(styleOverride));
 
                                     GUILayout.Space(skin.ButtonTopPadding);
 
@@ -1044,22 +1045,22 @@ namespace Projeny
                 Assert.IsEqual(releaseInfo.Version, packageReleaseInfo.Version);
 
                 userChoice = PromptForUserChoice(
-                    null, "Package '{0}' is already installed with the same version ('{1}').  Would you like to re-install it anyway?  Note that any local changes you've made to the package will be reverted."
-                        .Fmt(packageReleaseInfo.Name, packageReleaseInfo.Version), "Overwrite", "Skip", "Cancel");
+                    "Package '{0}' is already installed with the same version ('{1}').  Would you like to re-install it anyway?  Note that any local changes you've made to the package will be reverted."
+                        .Fmt(packageReleaseInfo.Name, packageReleaseInfo.Version), new[] { "Overwrite", "Skip", "Cancel" });
             }
             else if (releaseInfo.VersionCode > packageReleaseInfo.VersionCode)
             {
                 userChoice = PromptForUserChoice(
-                    null, "Package '{0}' is already installed with version '{1}'. Would you like to UPGRADE it to version '{2}'?  Note that any local changes you've made to the package will be lost."
-                    .Fmt(releaseInfo.Name, packageReleaseInfo.Version, releaseInfo.Version), "Upgrade", "Skip", "Cancel");
+                    "Package '{0}' is already installed with version '{1}'. Would you like to UPGRADE it to version '{2}'?  Note that any local changes you've made to the package will be lost."
+                    .Fmt(releaseInfo.Name, packageReleaseInfo.Version, releaseInfo.Version), new[] { "Upgrade", "Skip", "Cancel" });
             }
             else
             {
                 Assert.That(releaseInfo.VersionCode < packageReleaseInfo.VersionCode);
 
                 userChoice = PromptForUserChoice(
-                    null, "Package '{0}' is already installed with version '{1}'. Would you like to DOWNGRADE it to version '{2}'?  Note that any local changes you've made to the package will be lost."
-                    .Fmt(releaseInfo.Name, packageReleaseInfo.Version, releaseInfo.Version), "Downgrade", "Skip", "Cancel");
+                    "Package '{0}' is already installed with version '{1}'. Would you like to DOWNGRADE it to version '{2}'?  Note that any local changes you've made to the package will be lost."
+                    .Fmt(releaseInfo.Name, packageReleaseInfo.Version, releaseInfo.Version), new[] { "Downgrade", "Skip", "Cancel" });
             }
 
             yield return userChoice;
@@ -1294,7 +1295,7 @@ namespace Projeny
 
         IEnumerator DisplayError(string message)
         {
-            return AlertUser("<color=red>Error!</color>", message);
+            return AlertUser(message, "<color=red>Error!</color>");
         }
 
         void UpdateAvailableReleasesList()
@@ -1631,7 +1632,7 @@ namespace Projeny
             if (HasProjectConfigChanged())
             {
                 var choice = PromptForUserChoice(
-                    null, "Do you want to save changes to your project?", "Save", "Don't Save", "Cancel");
+                    "Do you want to save changes to your project?", new[] { "Save", "Don't Save", "Cancel" });
 
                 yield return choice;
 
