@@ -15,10 +15,12 @@ namespace Projeny
 {
     public static class ProjenyEditorUtil
     {
-        public const string ConfigFileName = "upm.yaml";
+        public const string ConfigFileName = "Upm.yaml";
 
-        public const string ProjectConfigFileName = "project.yaml";
-        public const string ProjectConfigUserFileName = "projectUser.yaml";
+        public const string ProjectConfigFileName = "Project.yaml";
+        public const string ProjectConfigUserFileName = "ProjectUser.yaml";
+
+        public const string PackageConfigFileName = "Package.yaml";
 
         public static string GetCurrentProjectName()
         {

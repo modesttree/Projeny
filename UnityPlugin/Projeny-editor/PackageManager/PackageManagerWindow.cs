@@ -487,11 +487,13 @@ namespace Projeny
                 {
                     contextMenu.AddItem(new GUIContent("Delete"), false, DeleteSelected);
                     contextMenu.AddOptionalItem(_selected.Count == 1, new GUIContent("Open Folder"), false, OpenPackageFolderForSelected);
+                    contextMenu.AddOptionalItem(_selected.Count == 1 && HasPackageYaml((PackageInfo)_selected.Single().Tag), new GUIContent("Edit " + ProjenyEditorUtil.PackageConfigFileName), false, EditPackageYamlSelected);
                     break;
                 }
                 case ListTypes.AssetItem:
                 case ListTypes.PluginItem:
                 {
+                    contextMenu.AddItem(new GUIContent("Remove"), false, DeleteSelected);
                     contextMenu.AddOptionalItem(_selected.Count == 1 && HasFolderWithPackageName(_selected.Single().Name), new GUIContent("Select in Project Tab"), false, ShowSelectedInProjectTab);
                     break;
                 }
@@ -692,6 +694,25 @@ namespace Projeny
 
             var args = @"/select, " + info.LocalPath;
             System.Diagnostics.Process.Start("explorer.exe", args);
+        }
+
+        bool HasPackageYaml(PackageInfo info)
+        {
+            var configPath = Path.Combine(info.Path, ProjenyEditorUtil.PackageConfigFileName);
+            return File.Exists(configPath);
+        }
+
+        void EditPackageYamlSelected()
+        {
+            Assert.IsEqual(_selected.Count, 1);
+
+            var info = (PackageInfo)_selected.Single().Tag;
+
+            var configPath = Path.Combine(info.Path, ProjenyEditorUtil.PackageConfigFileName);
+
+            Assert.That(File.Exists(configPath));
+
+            InternalEditorUtility.OpenFileAtLineExternal(configPath, 1);
         }
 
         void OpenPackageFolderForSelected()
@@ -1978,6 +1999,7 @@ namespace Projeny
                     case KeyCode.Delete:
                     {
                         DeleteSelected();
+                        e.Use();
                         break;
                     }
                 }
