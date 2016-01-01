@@ -640,7 +640,7 @@ namespace Projeny
             {
                 var infos = _selected.Select(x => (PackageInfo)x.Tag).ToList();
 
-                var choice = PromptUserForConfirm(
+                var choice = PromptForUserChoice(
                     "<color=yellow>Are you sure you wish to delete the following packages?</color>\n\n{0}\n\n<color=yellow>Please note the following:</color>\n\n- This change is not undoable\n- Any changes that you've made since installing will be lost\n- Any projects or other packages that still depend on this package may be put in an invalid state by deleting it".Fmt(infos.Select(x => " - " + x.Name).Join("\n")),
                     "Delete", "Cancel");
 
@@ -664,13 +664,18 @@ namespace Projeny
             }
         }
 
-        public IEnumerator<int> PromptUserForConfirm(string confirmMessage, string button1, string button2)
+        public IEnumerator AlertUser(string message)
         {
-            return CoRoutine.Wrap<int>(PromptUserForConfirmInternal(confirmMessage, button1, button2));
+            return PromptForUserChoice(message, "Ok");
         }
 
-        public IEnumerator PromptUserForConfirmInternal(
-            string confirmMessage, string button1, string button2)
+        public IEnumerator<int> PromptForUserChoice(string question, params string[] choices)
+        {
+            return CoRoutine.Wrap<int>(PromptForUserChoiceInternal(question, choices));
+        }
+
+        public IEnumerator PromptForUserChoiceInternal(
+            string question, params string[] choices)
         {
             Assert.IsNull(_popupHandler);
 
@@ -696,7 +701,7 @@ namespace Projeny
 
                                 GUILayout.BeginVertical();
                                 {
-                                    GUILayout.Label(confirmMessage, skin.LabelStyle);
+                                    GUILayout.Label(question, skin.LabelStyle);
 
                                     GUILayout.Space(skin.ButtonTopPadding);
 
@@ -704,16 +709,17 @@ namespace Projeny
                                     {
                                         GUILayout.FlexibleSpace();
 
-                                        if (GUILayout.Button(button1, GUILayout.Width(skin.ButtonWidth)))
+                                        for (int i = 0; i < choices.Length; i++)
                                         {
-                                            choice = 0;
-                                        }
+                                            if (i > 0)
+                                            {
+                                                GUILayout.Space(skin.ButtonSpacing);
+                                            }
 
-                                        GUILayout.Space(skin.ButtonSpacing);
-
-                                        if (GUILayout.Button(button2, GUILayout.Width(skin.ButtonWidth)))
-                                        {
-                                            choice = 1;
+                                            if (GUILayout.Button(choices[i], GUILayout.Width(skin.ButtonWidth)))
+                                            {
+                                                choice = i;
+                                            }
                                         }
 
                                         GUILayout.FlexibleSpace();
@@ -847,7 +853,11 @@ namespace Projeny
 
             foreach (var releaseInfo in releaseInfos)
             {
-                switch (CheckShouldInstall(releaseInfo))
+                var userChoice = CheckShouldInstall(releaseInfo);
+
+                yield return userChoice;
+
+                switch (userChoice.Current)
                 {
                     case InstallReleaseUserChoices.Cancel:
                     {
@@ -874,13 +884,19 @@ namespace Projeny
             yield return RefreshPackagesAsync();
         }
 
-        InstallReleaseUserChoices CheckShouldInstall(ReleaseInfo releaseInfo)
+        IEnumerator<InstallReleaseUserChoices> CheckShouldInstall(ReleaseInfo releaseInfo)
+        {
+            return CoRoutine.Wrap<InstallReleaseUserChoices>(CheckShouldInstallInternal(releaseInfo));
+        }
+
+        IEnumerator CheckShouldInstallInternal(ReleaseInfo releaseInfo)
         {
             var packageInfo = TryFindPackageInfoForRelease(releaseInfo);
 
             if (packageInfo == null)
             {
-                return InstallReleaseUserChoices.Install;
+                yield return InstallReleaseUserChoices.Install;
+                yield break;
             }
 
             Assert.IsNotNull(packageInfo.InstallInfo);
@@ -892,21 +908,19 @@ namespace Projeny
             Assert.That(packageReleaseInfo.HasVersionCode);
             Assert.That(releaseInfo.HasVersionCode);
 
-            int choice = -1;
+            IEnumerator<int> userChoice;
 
             if (packageReleaseInfo.VersionCode == releaseInfo.VersionCode)
             {
                 Assert.IsEqual(releaseInfo.Version, packageReleaseInfo.Version);
 
-                choice = EditorUtility.DisplayDialogComplex(
-                    "Package Already Installed",
-                    "Package '{0}' is already installed with version '{1}'.  Would you like to install anyway?  Note that any local changes you've made to the package will be reverted."
+                userChoice = PromptForUserChoice(
+                    "Package '{0}' is already installed with the same version ('{1}').  Would you like to re-install it anyway?  Note that any local changes you've made to the package will be reverted."
                         .Fmt(packageReleaseInfo.Name, packageReleaseInfo.Version), "Overwrite", "Skip", "Cancel");
             }
             else if (releaseInfo.VersionCode > packageReleaseInfo.VersionCode)
             {
-                choice = EditorUtility.DisplayDialogComplex(
-                    "Package Upgrade",
+                userChoice = PromptForUserChoice(
                     "Package '{0}' is already installed with version '{1}'. Would you like to UPGRADE it to version '{2}'?  Note that any local changes you've made to the package will be lost."
                     .Fmt(releaseInfo.Name, packageReleaseInfo.Version, releaseInfo.Version), "Upgrade", "Skip", "Cancel");
             }
@@ -914,30 +928,34 @@ namespace Projeny
             {
                 Assert.That(releaseInfo.VersionCode < packageReleaseInfo.VersionCode);
 
-                choice = EditorUtility.DisplayDialogComplex(
-                    "Package Downgrade",
+                userChoice = PromptForUserChoice(
                     "Package '{0}' is already installed with version '{1}'. Would you like to DOWNGRADE it to version '{2}'?  Note that any local changes you've made to the package will be lost."
                     .Fmt(releaseInfo.Name, packageReleaseInfo.Version, releaseInfo.Version), "Downgrade", "Skip", "Cancel");
             }
 
-            switch (choice)
+            yield return userChoice;
+
+            switch (userChoice.Current)
             {
                 case 0:
                 {
-                    return InstallReleaseUserChoices.Install;
+                    yield return InstallReleaseUserChoices.Install;
+                    break;
                 }
                 case 1:
                 {
-                    return InstallReleaseUserChoices.Skip;
+                    yield return InstallReleaseUserChoices.Skip;
+                    break;
                 }
                 case 2:
                 {
-                    return InstallReleaseUserChoices.Cancel;
+                    yield return InstallReleaseUserChoices.Cancel;
+                    break;
                 }
                 default:
                 {
                     Assert.Throw();
-                    return InstallReleaseUserChoices.Cancel;
+                    break;
                 }
             }
         }
@@ -1135,10 +1153,11 @@ namespace Projeny
             }
             else
             {
-                // TODO: Make this use our custom popup stuff
-                var errorMessage = "Operation aborted.  UPM encountered errors. Details: \n\n{0}".Fmt(response.ErrorMessage);
+                var errorMessage = "<color=red>Operation aborted!  UPM encountered errors:</color> \n\n{0}".Fmt(response.ErrorMessage);
                 Log.Error("Projeny: {0}", errorMessage);
-                EditorUtility.DisplayDialog("Error", errorMessage, "Ok");
+
+                yield return AlertUser(errorMessage);
+
                 ForceStopBackgroundTask();
                 yield return null;
             }
@@ -1191,70 +1210,6 @@ namespace Projeny
         {
             ImguiUtil.DrawColoredQuad(fullRect, Skin.Theme.LoadingOverlayColor);
             ImguiUtil.DrawColoredQuad(popupRect, Skin.Theme.LoadingOverlapPopupColor);
-        }
-
-        IEnumerator<SavePromptChoices> PromptForSave()
-        {
-            return CoRoutine.Wrap<SavePromptChoices>(PromptForSaveInternal());
-        }
-
-        IEnumerator PromptForSaveInternal()
-        {
-            Assert.IsNull(_popupHandler);
-
-            SavePromptChoices? choice = null;
-
-            _popupHandler = delegate(Rect fullRect)
-            {
-                var popupRect = ImguiUtil.CenterRectInRect(fullRect, Skin.SavePromptDialog.PopupSize);
-
-                DrawPopupCommon(fullRect, popupRect);
-
-                var contentRect = ImguiUtil.CreateContentRectWithPadding(
-                    popupRect, Skin.SavePromptDialog.PanelPadding);
-
-                GUILayout.BeginArea(contentRect);
-                {
-                    GUILayout.Label("Do you want to save changes to your project?", Skin.SavePromptDialog.LabelStyle);
-
-                    GUILayout.Space(Skin.SavePromptDialog.ButtonTopPadding);
-
-                    GUILayout.BeginHorizontal();
-                    {
-                        GUILayout.FlexibleSpace();
-
-                        if (GUILayout.Button("Save"))
-                        {
-                            choice = SavePromptChoices.Save;
-                        }
-
-                        GUILayout.Space(Skin.SavePromptDialog.ButtonPadding);
-
-                        if (GUILayout.Button("Don't Save"))
-                        {
-                            choice = SavePromptChoices.DontSave;
-                        }
-
-                        GUILayout.Space(Skin.SavePromptDialog.ButtonPadding);
-
-                        if (GUILayout.Button("Cancel"))
-                        {
-                            choice = SavePromptChoices.Cancel;
-                        }
-                    }
-                    GUILayout.EndHorizontal();
-                }
-                GUILayout.EndArea();
-            };
-
-            while (!choice.HasValue)
-            {
-                yield return null;
-            }
-
-            _popupHandler = null;
-
-            yield return choice.Value;
         }
 
         IEnumerator<string> PromptForInput(string label, string defaultValue)
@@ -1499,23 +1454,24 @@ namespace Projeny
         {
             if (HasProjectConfigChanged())
             {
-                var choice = PromptForSave();
+                var choice = PromptForUserChoice(
+                    "Do you want to save changes to your project?", "Save", "Don't Save", "Cancel");
 
                 yield return choice;
 
                 switch (choice.Current)
                 {
-                    case SavePromptChoices.Save:
+                    case 0:
                     {
                         OverwriteConfig();
                         break;
                     }
-                    case SavePromptChoices.DontSave:
+                    case 1:
                     {
                         // Do nothing
                         break;
                     }
-                    case SavePromptChoices.Cancel:
+                    case 2:
                     {
                         yield break;
                     }
@@ -1928,13 +1884,6 @@ namespace Projeny
             Name,
             Size,
             PublishDate
-        }
-
-        enum SavePromptChoices
-        {
-            Save,
-            DontSave,
-            Cancel
         }
 
         enum ProjectConfigTypes

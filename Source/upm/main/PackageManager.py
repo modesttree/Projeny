@@ -136,7 +136,10 @@ class PackageManager:
         assertThat(self._varMgr.hasKey('UnityPackagesDir'), "Could not find 'UnityPackagesDir' in PathVars.  Have you set up your {0} file?", ConfigFileName)
 
         self._log.heading('Creating new package "{0}"', packageName)
-        self._sys.createDirectory('[UnityPackagesDir]/{0}'.format(packageName))
+        newPath = '[UnityPackagesDir]/{0}'.format(packageName)
+
+        assertThat(not self._sys.directoryExists(newPath), "Found existing package at path '{0}'", newPath)
+        self._sys.createDirectory(newPath)
 
     def deletePackage(self, name):
         self._log.heading("Deleting package '{0}'", name)
