@@ -98,9 +98,21 @@ namespace Projeny
 
                     if (_viewState == ViewStates.ReleasesAndPackages)
                     {
-                        DrawItemLabelWithVersion(
-                            rect, WrapWithColor(info.Name, Skin.Theme.DraggableItemAlreadyAddedColor),
-                            TryGetVersion(info));
+                        if (info.InstallInfo != null && info.InstallInfo.ReleaseInfo != null)
+                        {
+                            var releaseInfo = info.InstallInfo.ReleaseInfo;
+
+                            var displayValue = "{0} ({1}{2})".Fmt(
+                                info.Name,
+                                WrapWithColor(releaseInfo.Name, Skin.Theme.DraggableItemAlreadyAddedColor),
+                                string.IsNullOrEmpty(releaseInfo.Version) ? "" : WrapWithColor(" v" + releaseInfo.Version, Skin.Theme.VersionColor));
+
+                            GUI.Label(rect, displayValue, Skin.ItemTextStyle);
+                        }
+                        else
+                        {
+                            DrawListItem(rect, info.Name);
+                        }
                     }
                     else
                     {
