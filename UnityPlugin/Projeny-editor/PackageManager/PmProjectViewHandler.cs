@@ -12,6 +12,7 @@ namespace Projeny
 {
     public class PmProjectViewHandler
     {
+        readonly AsyncProcessor _asyncProcessor;
         readonly PmModel _model;
         readonly PmView _view;
 
@@ -22,8 +23,10 @@ namespace Projeny
         public PmProjectViewHandler(
             PmModel model,
             PmView view,
-            PmProjectHandler projectHandler)
+            PmProjectHandler projectHandler,
+            AsyncProcessor asyncProcessor)
         {
+            _asyncProcessor = asyncProcessor;
             _model = model;
             _view = view;
             _projectHandler = projectHandler;
@@ -58,8 +61,44 @@ namespace Projeny
 
         public void OnClickedProjectType(ProjectConfigTypes desiredConfigType)
         {
-            Assert.Throw("TODO");
-            //AddBackgroundTask(TryChangeProjectType(desiredConfigType));
+            _asyncProcessor.Process(TryChangeProjectType(desiredConfigType));
+        }
+
+        IEnumerator TryChangeProjectType(ProjectConfigTypes configType)
+        {
+            if (_projectHandler.HasProjectConfigChanged())
+            {
+                var choice = _view.PromptForUserChoice(
+                    "Do you want to save changes to your project?", new[] { "Save", "Don't Save", "Cancel" });
+
+                yield return choice;
+
+                switch (choice.Current)
+                {
+                    case 0:
+                    {
+                        _projectHandler.OverwriteConfig();
+                        break;
+                    }
+                    case 1:
+                    {
+                        // Do nothing
+                        break;
+                    }
+                    case 2:
+                    {
+                        yield break;
+                    }
+                    default:
+                    {
+                        Assert.Throw();
+                        break;
+                    }
+                }
+            }
+
+            _model.ProjectConfigType = configType;
+            _projectHandler.RefreshProject();
         }
 
         public void OnClickedProjectEditButton()

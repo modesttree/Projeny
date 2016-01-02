@@ -31,8 +31,11 @@ namespace Projeny.Internal
             _model.AssetItemsChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
             _model.PackagesChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
 
+            _model.ProjectConfigTypeChanged += _eventManager.Add(OnProjectConfigTypeChanged, EventQueueMode.LatestOnly);
+
             _eventManager.Trigger(OnViewStateChanged);
             _eventManager.Trigger(OnListDisplayValuesDirty);
+            _eventManager.Trigger(OnProjectConfigTypeChanged);
         }
 
         public void Dispose()
@@ -42,12 +45,19 @@ namespace Projeny.Internal
             _model.AssetItemsChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
             _model.PackagesChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
 
+            _model.ProjectConfigTypeChanged -= _eventManager.Remove(OnProjectConfigTypeChanged);
+
             _eventManager.AssertIsEmpty();
         }
 
         public void Update()
         {
             _eventManager.Flush();
+        }
+
+        void OnProjectConfigTypeChanged()
+        {
+            _view.ConfigType = _model.ProjectConfigType;
         }
 
         void OnListDisplayValuesDirty()

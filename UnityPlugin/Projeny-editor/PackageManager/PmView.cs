@@ -58,8 +58,6 @@ namespace Projeny
         DraggableList _assetsList;
         DraggableList _pluginsList;
 
-        ProjectConfigTypes _selectedConfigType;
-
         PackageManagerWindowSkin _skin;
 
         public PmView()
@@ -73,6 +71,12 @@ namespace Projeny
         }
 
         public PmViewStates ViewState
+        {
+            get;
+            set;
+        }
+
+        public ProjectConfigTypes ConfigType
         {
             get;
             set;
@@ -289,6 +293,12 @@ namespace Projeny
             }
         }
 
+        public bool ShowBlockedPopup
+        {
+            get;
+            set;
+        }
+
         public bool IsBlocked
         {
             get;
@@ -424,11 +434,11 @@ namespace Projeny
                 rect.yMax);
 
             var displayValues = GetConfigTypesDisplayValues();
-            var desiredConfigType = (ProjectConfigTypes)EditorGUI.Popup(dropDownRect, (int)_selectedConfigType, displayValues, Skin.DropdownTextStyle);
+            var desiredConfigType = (ProjectConfigTypes)EditorGUI.Popup(dropDownRect, (int)ConfigType, displayValues, Skin.DropdownTextStyle);
 
             GUI.Button(dropDownRect, displayValues[(int)desiredConfigType]);
 
-            if (desiredConfigType != _selectedConfigType)
+            if (desiredConfigType != ConfigType)
             {
                 ClickedProjectType(desiredConfigType);
             }
@@ -812,7 +822,10 @@ namespace Projeny
                 }
                 else
                 {
-                    DisplayGenericProcessingDialog(fullRect);
+                    if (ShowBlockedPopup)
+                    {
+                        DisplayGenericProcessingDialog(fullRect);
+                    }
                 }
             }
         }

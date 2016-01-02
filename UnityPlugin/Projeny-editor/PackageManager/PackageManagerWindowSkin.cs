@@ -24,6 +24,8 @@ namespace Projeny
 
         public float InterpSpeed;
 
+        public float ProcessingPopupDelayTime;
+
         public float HeaderHeight;
         public float ListVerticalSpacing;
         public float ListHorizontalSpacing;

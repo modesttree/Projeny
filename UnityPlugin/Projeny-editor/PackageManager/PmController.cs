@@ -27,9 +27,28 @@ namespace Projeny
 
         bool _isDisplayingError;
 
+        float _isBlockedStartTime;
+        bool _isBlocked;
+
         public PmController(PmModel model)
         {
             _model = model;
+        }
+
+        bool IsBlocked
+        {
+            get
+            {
+                return _isBlocked;
+            }
+            set
+            {
+                if (_isBlocked != value)
+                {
+                    _isBlockedStartTime = Time.realtimeSinceStartup;
+                    _isBlocked = value;
+                }
+            }
         }
 
         public void Initialize()
@@ -58,7 +77,7 @@ namespace Projeny
 
             _viewModelSyncer = new PmModelSyncer(_model, _view);
             _projectHandler = new PmProjectHandler(_model);
-            _projectViewHandler = new PmProjectViewHandler(_model, _view, _projectHandler);
+            _projectViewHandler = new PmProjectViewHandler(_model, _view, _projectHandler, _asyncProcessor);
         }
 
         void ObserveViewEvents()
@@ -296,12 +315,18 @@ namespace Projeny
         {
             _eventManager.Flush();
             _asyncProcessor.Tick();
-            _viewModelSyncer.Update();
-
-            _view.IsBlocked = _asyncProcessor.IsBlocking;
-            _view.Update();
 
             _projectViewHandler.Update();
+
+            // Do this last so all model updates get forwarded to view
+            _viewModelSyncer.Update();
+
+            IsBlocked = _asyncProcessor.IsBlocking;
+
+            _view.IsBlocked = IsBlocked;
+            _view.ShowBlockedPopup = ShouldShowBlockedPopup();
+
+            _view.Update();
 
             //UpdateBackgroundTask();
 
@@ -317,6 +342,12 @@ namespace Projeny
             //_view.BlockedStatusMessage = null;
             //_view.BlockedStatusTitle = null;
             //}
+        }
+
+        bool ShouldShowBlockedPopup()
+        {
+            // We only wnat to display the popup if enough time has passed to avoid short flashes for quick async tasks
+            return Time.realtimeSinceStartup - _isBlockedStartTime > _view.Skin.ProcessingPopupDelayTime;
         }
 
         //void UpdateBackgroundTask()
@@ -934,43 +965,6 @@ namespace Projeny
             yield return _view.AlertUser(message, "<color=red>Error!</color>");
 
             _isDisplayingError = false;
-        }
-
-        IEnumerator TryChangeProjectType(ProjectConfigTypes configType)
-        {
-            if (_projectHandler.HasProjectConfigChanged())
-            {
-                var choice = _view.PromptForUserChoice(
-                    "Do you want to save changes to your project?", new[] { "Save", "Don't Save", "Cancel" });
-
-                yield return choice;
-
-                switch (choice.Current)
-                {
-                    case 0:
-                    {
-                        _projectHandler.OverwriteConfig();
-                        break;
-                    }
-                    case 1:
-                    {
-                        // Do nothing
-                        break;
-                    }
-                    case 2:
-                    {
-                        yield break;
-                    }
-                    default:
-                    {
-                        Assert.Throw();
-                        break;
-                    }
-                }
-            }
-
-            _model.ProjectConfigType = configType;
-            _projectHandler.RefreshProject();
         }
 
         public void OnGUI(Rect fullRect)
