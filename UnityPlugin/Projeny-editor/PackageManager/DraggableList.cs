@@ -112,21 +112,23 @@ namespace Projeny.Internal
             for (int i = 0; i < newItems.Count; i++)
             {
                 var item = newItems[i];
-                var entry = oldEntries.TryGetValue(item.Model);
 
-                // Keep old entries where possible to maintain selection
-                if (entry == null)
+                var entry = new DraggableListEntry()
                 {
-                    entry = new DraggableListEntry()
-                    {
-                        Name = item.Caption,
-                        Model = item.Model,
-                        ListOwner = this,
-                        ListType = _listType,
-                    };
+                    Name = item.Caption,
+                    Model = item.Model,
+                    ListOwner = this,
+                    ListType = _listType,
+                    Index = i,
+                };
+
+                var oldEntry = oldEntries.TryGetValue(item.Model);
+
+                if (oldEntry != null)
+                {
+                    entry.IsSelected = oldEntry.IsSelected;
                 }
 
-                entry.Index = i;
                 _entries.Add(entry);
             }
         }

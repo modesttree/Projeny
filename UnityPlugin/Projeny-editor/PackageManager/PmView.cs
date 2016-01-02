@@ -40,6 +40,8 @@ namespace Projeny.Internal
     {
         const string NotAvailableLabel = "N/A";
 
+        public event Action ReleasesSortMethodChanged = delegate {};
+        public event Action ReleaseSortAscendingChanged = delegate {};
         public event Action ViewStateChanged = delegate {};
         public event Action<ProjectConfigTypes> ClickedProjectType = delegate {};
         public event Action ClickedRefreshReleaseList = delegate {};
@@ -49,7 +51,6 @@ namespace Projeny.Internal
         public event Action ClickedProjectRevertButton = delegate {};
         public event Action ClickedProjectSaveButton = delegate {};
         public event Action ClickedProjectEditButton = delegate {};
-        public event Action<Rect> ClickedReleasesSortMenu = delegate {};
         public event Action<DraggableList.DragData, DraggableList> DragDroppedListItem = delegate {};
 
         public event Action<ListTypes, ListTypes, List<DraggableListEntry>> DraggedDroppedListEntries = delegate {};
@@ -96,6 +97,7 @@ namespace Projeny.Internal
             {
                 if (_model.ViewState != value)
                 {
+                    Log.Trace("changed viewstate");
                     _model.ViewState = value;
                     ViewStateChanged();
                 }
@@ -122,7 +124,11 @@ namespace Projeny.Internal
             }
             set
             {
-                _model.ReleasesSortMethod = value;
+                if (_model.ReleasesSortMethod != value)
+                {
+                    _model.ReleasesSortMethod = value;
+                    ReleasesSortMethodChanged();
+                }
             }
         }
 
@@ -134,7 +140,11 @@ namespace Projeny.Internal
             }
             set
             {
-                _model.ReleaseSortAscending = value;
+                if (_model.ReleaseSortAscending != value)
+                {
+                    _model.ReleaseSortAscending = value;
+                    ReleaseSortAscendingChanged();
+                }
             }
         }
 
@@ -158,33 +168,6 @@ namespace Projeny.Internal
         public void RemoveContextMenuHandler(ListTypes listType)
         {
             _contextMenuHandlers.RemoveWithConfirm(listType);
-        }
-
-        object GetReleaseSortField(DraggableListEntry entry)
-        {
-            Assert.Throw("TODO");
-            return entry.Name;
-
-            //var info = (ReleaseInfo)entry.Tag;
-
-            //switch (_model.ReleasesSortMethod)
-            //{
-                //case ReleasesSortMethod.Name:
-                //{
-                    //return info.Name;
-                //}
-                //case ReleasesSortMethod.Size:
-                //{
-                    //return info.CompressedSize;
-                //}
-                //case ReleasesSortMethod.PublishDate:
-                //{
-                    //return info.AssetStoreInfo == null ? 0 : info.AssetStoreInfo.PublishDateTicks;
-                //}
-            //}
-
-            //Assert.Throw();
-            //return null;
         }
 
         public List<DraggableListEntry> GetSelected(ListTypes listType)
@@ -218,12 +201,6 @@ namespace Projeny.Internal
             //{
                 //case ListTypes.Release:
                 //{
-                    //if (_model.ReleaseSortAscending)
-                    //{
-                        //return entries.OrderBy(x => GetReleaseSortField(x)).ToList();
-                    //}
-
-                    //return entries.OrderByDescending(x => GetReleaseSortField(x)).ToList();
                 //}
                 //default:
                 //{
@@ -986,12 +963,11 @@ namespace Projeny.Internal
 
                 if (Event.current.type == EventType.MouseDown)
                 {
-                    Assert.Throw("TODO");
-                    //_model.ReleaseSortAscending = !_model.ReleaseSortAscending;
+                    ReleaseSortAscending = !ReleaseSortAscending;
                     releaseList.UpdateIndices();
                 }
             }
-            //GUI.DrawTexture(buttonRect, _model.ReleaseSortAscending ? skin.SortDirDownIcon : skin.SortDirUpIcon);
+            GUI.DrawTexture(buttonRect, ReleaseSortAscending ? skin.SortDirDownIcon : skin.SortDirUpIcon);
 
             startX = endX;
             endX = startX + skin.ButtonWidth;
@@ -1003,10 +979,34 @@ namespace Projeny.Internal
 
                 if (Event.current.type == EventType.MouseDown)
                 {
-                    ClickedReleasesSortMenu(buttonRect);
+                    ShowReleasesSortMenu(buttonRect);
                 }
             }
             GUI.DrawTexture(buttonRect, skin.SortIcon);
+        }
+
+        void ShowReleasesSortMenu(Rect buttonRect)
+        {
+            var startPos = new Vector2(buttonRect.xMin, buttonRect.yMax);
+
+            GenericMenu contextMenu = new GenericMenu();
+
+            contextMenu.AddItem(
+                new GUIContent("Order By Name"),
+                ReleasesSortMethod == ReleasesSortMethod.Name,
+                () => ReleasesSortMethod = ReleasesSortMethod.Name);
+
+            contextMenu.AddItem(
+                new GUIContent("Order By Size"),
+                ReleasesSortMethod == ReleasesSortMethod.Size,
+                () => ReleasesSortMethod = ReleasesSortMethod.Size);
+
+            contextMenu.AddItem(
+                new GUIContent("Order By Publish Date"),
+                ReleasesSortMethod == ReleasesSortMethod.PublishDate,
+                () => ReleasesSortMethod = ReleasesSortMethod.PublishDate);
+
+            contextMenu.DropDown(new Rect(startPos.x, startPos.y, 0, 0));
         }
 
         void DrawProjectPane(Rect windowRect)

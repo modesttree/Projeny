@@ -92,8 +92,6 @@ namespace Projeny
             _view.ClickedRefreshPackages += _eventManager.Add(OnClickedRefreshPackages, EventQueueMode.LatestOnly);
             _view.ClickedCreateNewPackage += _eventManager.Add(OnClickedCreateNewPackage, EventQueueMode.LatestOnly);
 
-            _view.ClickedReleasesSortMenu += _eventManager.Add<Rect>(OnClickedReleasesSortMenu, EventQueueMode.LatestOnly);
-
             _view.DraggedDroppedListEntries += _eventManager.Add<ListTypes, ListTypes, List<DraggableListEntry>>(OnDraggedDroppedListEntries, EventQueueMode.LatestOnly);
         }
 
@@ -101,8 +99,6 @@ namespace Projeny
         {
             _view.ClickedRefreshPackages -= _eventManager.Remove(OnClickedRefreshPackages);
             _view.ClickedCreateNewPackage -= _eventManager.Remove(OnClickedCreateNewPackage);
-
-            _view.ClickedReleasesSortMenu -= _eventManager.Remove<Rect>(OnClickedReleasesSortMenu);
 
             _view.DraggedDroppedListEntries -= _eventManager.Remove<ListTypes, ListTypes, List<DraggableListEntry>>(OnDraggedDroppedListEntries);
 
@@ -255,40 +251,6 @@ namespace Projeny
 
             _viewModelSyncer.Dispose();
             _releasesViewHandler.Dispose();
-        }
-
-        public void OnClickedReleasesSortMenu(Rect buttonRect)
-        {
-            ShowReleasesSortMenu(new Vector2(buttonRect.xMin, buttonRect.yMax));
-        }
-
-        void ShowReleasesSortMenu(Vector2 startPos)
-        {
-            GenericMenu contextMenu = new GenericMenu();
-
-            contextMenu.AddItem(
-                new GUIContent("Order By Name"),
-                _view.ReleasesSortMethod == ReleasesSortMethod.Name,
-                () => ChangeReleaseSortMethod(ReleasesSortMethod.Name));
-
-            contextMenu.AddItem(
-                new GUIContent("Order By Size"),
-                _view.ReleasesSortMethod == ReleasesSortMethod.Size,
-                () => ChangeReleaseSortMethod(ReleasesSortMethod.Size));
-
-            contextMenu.AddItem(
-                new GUIContent("Order By Publish Date"),
-                _view.ReleasesSortMethod == ReleasesSortMethod.PublishDate,
-                () => ChangeReleaseSortMethod(ReleasesSortMethod.PublishDate));
-
-            contextMenu.DropDown(new Rect(startPos.x, startPos.y, 0, 0));
-        }
-
-        void ChangeReleaseSortMethod(ReleasesSortMethod sortMethod)
-        {
-            _view.ReleasesSortMethod = sortMethod;
-            Assert.Throw("TODO");
-            //_releasesList.ForceSort();
         }
 
         public void OnClickedCreateNewPackage()

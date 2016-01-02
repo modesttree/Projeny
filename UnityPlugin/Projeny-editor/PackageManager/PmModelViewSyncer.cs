@@ -32,6 +32,8 @@ namespace Projeny.Internal
             _model.ReleasesChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
 
             _view.ViewStateChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
+            _view.ReleasesSortMethodChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
+            _view.ReleaseSortAscendingChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
 
             _eventManager.Trigger(OnListDisplayValuesDirty);
         }
@@ -44,6 +46,8 @@ namespace Projeny.Internal
             _model.ReleasesChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
 
             _view.ViewStateChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
+            _view.ReleasesSortMethodChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
+            _view.ReleaseSortAscendingChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
 
             _eventManager.AssertIsEmpty();
         }
@@ -55,21 +59,55 @@ namespace Projeny.Internal
 
         void OnListDisplayValuesDirty()
         {
+            Log.Trace("OnListDisplayValuesDirty called");
+
             _view.SetListItems(
                 ListTypes.Release,
-                _model.Releases.Select(x => CreateListItem(x)).ToList());
+                OrderReleases().Select(x => CreateListItem(x)).ToList());
 
             _view.SetListItems(
                 ListTypes.PluginItem,
-                _model.PluginItems.Select(x => CreateListItemForProjectItem(x)).ToList());
+                _model.PluginItems.OrderBy(x => x).Select(x => CreateListItemForProjectItem(x)).ToList());
 
             _view.SetListItems(
                 ListTypes.AssetItem,
-                _model.AssetItems.Select(x => CreateListItemForProjectItem(x)).ToList());
+                _model.AssetItems.OrderBy(x => x).Select(x => CreateListItemForProjectItem(x)).ToList());
 
             _view.SetListItems(
                 ListTypes.Package,
-                _model.Packages.Select(x => CreateListItem(x)).ToList());
+                _model.Packages.OrderBy(x => x.Name).Select(x => CreateListItem(x)).ToList());
+        }
+
+        IEnumerable<ReleaseInfo> OrderReleases()
+        {
+            if (_view.ReleaseSortAscending)
+            {
+                return _model.Releases.OrderBy(x => GetReleaseSortField(x));
+            }
+
+            return _model.Releases.OrderByDescending(x => GetReleaseSortField(x));
+        }
+
+        object GetReleaseSortField(ReleaseInfo info)
+        {
+            switch (_view.ReleasesSortMethod)
+            {
+                case ReleasesSortMethod.Name:
+                {
+                    return info.Name;
+                }
+                case ReleasesSortMethod.Size:
+                {
+                    return info.CompressedSize;
+                }
+                case ReleasesSortMethod.PublishDate:
+                {
+                    return info.AssetStoreInfo == null ? 0 : info.AssetStoreInfo.PublishDateTicks;
+                }
+            }
+
+            Assert.Throw();
+            return null;
         }
 
         ListItemData CreateListItemForProjectItem(string name)
