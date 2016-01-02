@@ -23,6 +23,14 @@ namespace Projeny
             }
         }
 
+        public GUIStyle ItemTextStyle
+        {
+            get
+            {
+                return GUI.skin.GetStyle("DraggableListItemStyle");
+            }
+        }
+
         [Serializable]
         public class ThemeProperties
         {

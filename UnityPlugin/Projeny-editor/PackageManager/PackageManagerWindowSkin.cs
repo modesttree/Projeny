@@ -71,14 +71,6 @@ namespace Projeny
         public ReleasesPaneProperties ReleasesPane;
         public AsyncPopupPaneProperties AsyncPopupPane;
 
-        public GUIStyle ItemTextStyle
-        {
-            get
-            {
-                return GUI.skin.GetStyle("DraggableListItemStyle");
-            }
-        }
-
         public GUIStyle HeaderTextStyle
         {
             get

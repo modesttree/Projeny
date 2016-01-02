@@ -13,11 +13,8 @@ using Projeny.Internal;
 
 namespace Projeny
 {
-    // We need to make this ScriptableObject because it is referenced
-    // using polymorphism in DraggableList (in the object tag field)
-    // And polymorphism is only supported for ScriptableObject's
     [Serializable]
-    public class PackageInfo : ScriptableObject
+    public class PackageInfo
     {
         public string Name;
         public string Path;
@@ -27,7 +24,7 @@ namespace Projeny
     }
 
     [Serializable]
-    public class PackageInstallInfo : ScriptableObject
+    public class PackageInstallInfo
     {
         public string InstallDate;
         public long InstallDateTicks;

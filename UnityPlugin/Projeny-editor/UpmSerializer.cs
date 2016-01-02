@@ -57,7 +57,7 @@ namespace Projeny.Internal
                 return null;
             }
 
-            var newInfo = ScriptableObject.CreateInstance<PackageInfo>();
+            var newInfo = new PackageInfo();
 
             newInfo.Name = info.Name;
             newInfo.Path = info.Path;
@@ -73,7 +73,7 @@ namespace Projeny.Internal
                 return null;
             }
 
-            var newInfo = ScriptableObject.CreateInstance<PackageInstallInfo>();
+            var newInfo = new PackageInstallInfo();
 
             newInfo.InstallDate = DateTimeToString(info.InstallDate);
             newInfo.InstallDateTicks = info.InstallDate.Ticks;
@@ -89,7 +89,7 @@ namespace Projeny.Internal
                 return null;
             }
 
-            var newInfo = ScriptableObject.CreateInstance<ReleaseInfo>();
+            var newInfo = new ReleaseInfo();
 
             newInfo.Name = info.Name;
 
@@ -124,7 +124,7 @@ namespace Projeny.Internal
                 return null;
             }
 
-            var newInfo = ScriptableObject.CreateInstance<AssetStoreInfo>();
+            var newInfo = new AssetStoreInfo();
 
             newInfo.PublisherId = info.PublisherId;
             newInfo.PublisherLabel = info.PublisherLabel;

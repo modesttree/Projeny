@@ -11,6 +11,11 @@ namespace Projeny.Internal
             GUI.color = Color.white;
         }
 
+        public static string WrapWithColor(string text, Color color)
+        {
+            return "<color=#{0}>{1}</color>".Fmt(MiscUtil.ColorToHex(color), text);
+        }
+
         public static Rect CreateContentRectWithPadding(Rect rect, float padding)
         {
             return Rect.MinMaxRect(rect.xMin + padding, rect.yMin + padding, rect.xMax - padding, rect.yMax - padding);

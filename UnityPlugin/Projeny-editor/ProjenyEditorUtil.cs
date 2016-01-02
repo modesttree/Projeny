@@ -13,6 +13,14 @@ using Projeny.Internal;
 
 namespace Projeny
 {
+    public enum ProjectConfigTypes
+    {
+        LocalProject,
+        LocalProjectUser,
+        AllProjects,
+        AllProjectsUser,
+    }
+
     public static class ProjenyEditorUtil
     {
         public const string ConfigFileName = "Upm.yaml";
@@ -30,6 +38,34 @@ namespace Projeny
         public static string GetCurrentPlatformDirName()
         {
             return GetCurrentProjectInfo().PlatformDirName;
+        }
+
+        public static string GetProjectConfigPath(ProjectConfigTypes configType)
+        {
+            var projectRootDir = Path.Combine(Application.dataPath, "../..");
+            var unityProjectsDir = Path.Combine(projectRootDir, "..");
+
+            switch (configType)
+            {
+                case ProjectConfigTypes.LocalProject:
+                {
+                    return Path.Combine(projectRootDir, ProjenyEditorUtil.ProjectConfigFileName);
+                }
+                case ProjectConfigTypes.LocalProjectUser:
+                {
+                    return Path.Combine(projectRootDir, ProjenyEditorUtil.ProjectConfigUserFileName);
+                }
+                case ProjectConfigTypes.AllProjects:
+                {
+                    return Path.Combine(unityProjectsDir, ProjenyEditorUtil.ProjectConfigFileName);
+                }
+                case ProjectConfigTypes.AllProjectsUser:
+                {
+                    return Path.Combine(unityProjectsDir, ProjenyEditorUtil.ProjectConfigUserFileName);
+                }
+            }
+
+            return null;
         }
 
         // This is called by the build script to generate the monodevelop solution

@@ -23,6 +23,11 @@ namespace Projeny.Internal
             return DerivesFrom(a, typeof(T));
         }
 
+        public static bool IsLength<T>(this IEnumerable<T> enumerable, int amount)
+        {
+            return enumerable.Take(amount + 1).Count() == amount;
+        }
+
         public static IEnumerable<T> GetDuplicates<T>(this IEnumerable<T> list)
         {
             return list.GroupBy(x => x).Where(x => x.Skip(1).Any()).Select(x => x.Key);

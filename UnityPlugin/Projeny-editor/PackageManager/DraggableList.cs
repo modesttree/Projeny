@@ -7,34 +7,31 @@ using Projeny.Internal;
 
 namespace Projeny.Internal
 {
-    [Serializable]
-    public class DraggableListEntry : ScriptableObject
+    public class DraggableListEntry
     {
         public DraggableList ListOwner;
         public string Name;
-        public UnityEngine.Object Tag;
-        public bool IsVisible = true;
+        public object Tag;
         public int Index;
     }
 
-    [Serializable]
-    public class DraggableList : ScriptableObject
+    public class DraggableList
     {
         static readonly string DragId = "DraggableListData";
 
-        [SerializeField]
-        List<DraggableListEntry> _entryList = new List<DraggableListEntry>();
+        readonly List<DraggableListEntry> _entryList = new List<DraggableListEntry>();
+        readonly PackageManagerView _manager;
 
-        [SerializeField]
         Vector2 _scrollPos;
 
-        [SerializeField]
-        PackageManagerWindow _manager;
-
-        [SerializeField]
         string _searchFilter = "";
 
         static DraggableListSkin _skin;
+
+        public DraggableList(PackageManagerView manager)
+        {
+            _manager = manager;
+        }
 
         DraggableListSkin Skin
         {
@@ -54,14 +51,6 @@ namespace Projeny.Internal
             {
                 Assert.IsNotNull(value);
                 _searchFilter = value;
-            }
-        }
-
-        public PackageManagerWindow Manager
-        {
-            set
-            {
-                _manager = value;
             }
         }
 
@@ -85,7 +74,7 @@ namespace Projeny.Internal
         {
             _manager.Deselect(entry);
             _entryList.RemoveWithConfirm(entry);
-            SortList();
+            UpdateIndices();
         }
 
         public DraggableListEntry GetAtIndex(int index)
@@ -98,21 +87,16 @@ namespace Projeny.Internal
             Remove(_entryList.Where(x => x.Name == name).Single());
         }
 
-        public void Add(string name, UnityEngine.Object tag)
+        public void Add(string name, object tag)
         {
-            var entry = ScriptableObject.CreateInstance<DraggableListEntry>();
+            var entry = new DraggableListEntry();
 
             entry.Name = name;
             entry.Tag = tag;
             entry.ListOwner = this;
 
             _entryList.Add(entry);
-            SortList();
-        }
-
-        public void ForceSort()
-        {
-            SortList();
+            UpdateIndices();
         }
 
         public void Add(string entry)
@@ -129,10 +113,8 @@ namespace Projeny.Internal
             _entryList.Clear();
         }
 
-        void SortList()
+        public void UpdateIndices()
         {
-            _entryList = _manager.SortList(this, _entryList);
-
             for (int i = 0; i < _entryList.Count; i++)
             {
                 _entryList[i].Index = i;
@@ -142,7 +124,7 @@ namespace Projeny.Internal
         public void Draw(Rect listRect)
         {
             var searchFilter = _searchFilter.Trim().ToLowerInvariant();
-            var visibleEntries = _entryList.Where(x => x.IsVisible && x.Name.ToLowerInvariant().Contains(searchFilter)).ToList();
+            var visibleEntries = _entryList.Where(x => x.Name.ToLowerInvariant().Contains(searchFilter)).ToList();
 
             var viewRect = new Rect(0, 0, listRect.width - 30.0f, visibleEntries.Count * Skin.ItemHeight);
 
@@ -170,7 +152,7 @@ namespace Projeny.Internal
                         if (receivedDragData != null)
                         {
                             DragAndDrop.PrepareStartDrag();
-                            _manager.EnqueueOperation(() => _manager.OnDragDrop(receivedDragData, this));
+                            _manager.OnDragDrop(receivedDragData, this);
                         }
                     }
 
@@ -291,7 +273,7 @@ namespace Projeny.Internal
                         }
                     }
 
-                    _manager.DrawItemLabel(labelRect, entry);
+                    GUI.Label(labelRect, entry.Name, Skin.ItemTextStyle);
 
                     yPos += Skin.ItemHeight;
                 }

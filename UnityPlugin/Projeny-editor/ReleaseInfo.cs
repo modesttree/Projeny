@@ -13,11 +13,8 @@ using Projeny.Internal;
 
 namespace Projeny
 {
-    // We need to make this ScriptableObject because it is referenced
-    // using polymorphism in DraggableList (in the object tag field)
-    // And polymorphism is only supported for ScriptableObject's
     [Serializable]
-    public class ReleaseInfo : ScriptableObject
+    public class ReleaseInfo
     {
         public string Id;
         public string Name;
@@ -40,7 +37,7 @@ namespace Projeny
     }
 
     [Serializable]
-    public class AssetStoreInfo : ScriptableObject
+    public class AssetStoreInfo
     {
         public string PublisherId;
         public string PublisherLabel;

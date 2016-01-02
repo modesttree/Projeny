@@ -12,140 +12,222 @@ namespace Projeny
 {
     public class PackageManagerWindow : EditorWindow
     {
-        DraggableList _packagesList;
-        DraggableList _releasesList;
-        DraggableList _assetsList;
-        DraggableList _pluginsList;
-
-        List<PackageInfo> _allPackages;
-        List<ReleaseInfo> _allReleases;
-
-        ProjectConfigTypes _projectConfigType;
-
-        ViewStates _viewState = ViewStates.PackagesAndProject;
-
-        PackageManagerWindowSkin _skin;
-
-        List<DraggableListEntry> _selected;
-
-        Action<Rect> _popupHandler;
-
-        ReleasesSortMethod _releasesSortMethod;
+        PackageManagerModel _model;
 
         bool _hasInitialized;
-        bool _releaseSortAscending;
 
         [NonSerialized]
-        float _split1 = 0;
+        PackageManagerView _view;
 
         [NonSerialized]
-        float _split2 = 0.5f;
+        EventManager _eventManager;
 
         [NonSerialized]
-        float _lastTime = 0.5f;
+        AsyncProcessor _asyncProcessor;
 
         [NonSerialized]
-        BackgroundTaskInfo _backgroundTaskInfo;
+        bool _isDisplayingError;
 
-        [NonSerialized]
-        readonly List<Action> _operationQueue = new List<Action>();
-
-        const string NotAvailableLabel = "N/A";
-
-        PackageManagerWindowSkin Skin
+        void OnEnable()
         {
-            get
+            if (!_hasInitialized)
             {
-                return _skin ?? (_skin = Resources.Load<PackageManagerWindowSkin>("Projeny/PackageManagerSkin"));
+                _hasInitialized = true;
+
+                _model = new PackageManagerModel();
+
+                Log.Trace("STEVETODO");
+                //AddBackgroundTask(RefreshAll(), "Refreshing Packages");
+            }
+
+            Assert.IsNotNull(_model);
+            Assert.IsNull(_view);
+            Assert.IsNull(_eventManager);
+            Assert.IsNull(_asyncProcessor);
+
+            _asyncProcessor = new AsyncProcessor();
+            _eventManager = new EventManager();
+
+            _view = new PackageManagerView();
+
+            ObserveViewEvents();
+        }
+
+        void ObserveViewEvents()
+        {
+            // Use EventQueueMode.LatestOnly to ensure we don't execute anything during the OnGUI event
+            // This is important since OnGUI is called in multiple passes and we have to ensure that the same
+            // controls are rendered each pass
+            _view.ClickedProjectType += _eventManager.Add<ProjectConfigTypes>(OnClickedProjectType, EventQueueMode.LatestOnly);
+            _view.ClickedRefreshReleaseList += _eventManager.Add(OnClickedRefreshReleaseList, EventQueueMode.LatestOnly);
+            _view.ClickedRefreshPackages += _eventManager.Add(OnClickedRefreshPackages, EventQueueMode.LatestOnly);
+            _view.ClickedCreateNewPackage += _eventManager.Add(OnClickedCreateNewPackage, EventQueueMode.LatestOnly);
+            _view.ClickedProjectApplyButton += _eventManager.Add(OnClickedProjectApplyButton, EventQueueMode.LatestOnly);
+            _view.ClickedProjectRevertButton += _eventManager.Add(OnClickedProjectRevertButton, EventQueueMode.LatestOnly);
+            _view.ClickedProjectSaveButton += _eventManager.Add(OnClickedProjectSaveButton, EventQueueMode.LatestOnly);
+            _view.ClickedProjectEditButton += _eventManager.Add(OnClickedProjectEditButton, EventQueueMode.LatestOnly);
+            _view.ClickedReleasesSortMenu += _eventManager.Add<Rect>(OnClickedReleasesSortMenu, EventQueueMode.LatestOnly);
+            _view.ContextMenuOpened += _eventManager.Add<DraggableList>(OnContextMenuOpened, EventQueueMode.LatestOnly);
+
+            _view.DraggedDroppedListEntries += _eventManager.Add<ListTypes, ListTypes, List<DraggableListEntry>>(OnDraggedDroppedListEntries, EventQueueMode.LatestOnly);
+
+            _model.PluginItemsChanged += _eventManager.Add(OnDisplayValuesDirty, EventQueueMode.LatestOnly);
+            _model.AssetItemsChanged += _eventManager.Add(OnDisplayValuesDirty, EventQueueMode.LatestOnly);
+            _model.PackagesChanged += _eventManager.Add(OnDisplayValuesDirty, EventQueueMode.LatestOnly);
+        }
+
+        void UnobserveViewEvents()
+        {
+            _view.ClickedProjectType -= _eventManager.Remove<ProjectConfigTypes>(OnClickedProjectType);
+            _view.ClickedRefreshReleaseList -= _eventManager.Remove(OnClickedRefreshReleaseList);
+            _view.ClickedRefreshPackages -= _eventManager.Remove(OnClickedRefreshPackages);
+            _view.ClickedCreateNewPackage -= _eventManager.Remove(OnClickedCreateNewPackage);
+            _view.ClickedProjectApplyButton -= _eventManager.Remove(OnClickedProjectApplyButton);
+            _view.ClickedProjectRevertButton -= _eventManager.Remove(OnClickedProjectRevertButton);
+            _view.ClickedProjectSaveButton -= _eventManager.Remove(OnClickedProjectSaveButton);
+            _view.ClickedProjectEditButton -= _eventManager.Remove(OnClickedProjectEditButton);
+            _view.ClickedReleasesSortMenu -= _eventManager.Remove<Rect>(OnClickedReleasesSortMenu);
+            _view.ContextMenuOpened -= _eventManager.Remove<DraggableList>(OnContextMenuOpened);
+
+            _view.DraggedDroppedListEntries -= _eventManager.Remove<ListTypes, ListTypes, List<DraggableListEntry>>(OnDraggedDroppedListEntries);
+
+            _model.PluginItemsChanged -= _eventManager.Remove(OnDisplayValuesDirty);
+            _model.AssetItemsChanged -= _eventManager.Remove(OnDisplayValuesDirty);
+            _model.PackagesChanged -= _eventManager.Remove(OnDisplayValuesDirty);
+
+            _eventManager.AssertIsEmpty();
+        }
+
+        void OnDraggedDroppedListEntries(ListTypes sourceType, ListTypes dropType, List<DraggableListEntry> entries)
+        {
+            foreach (var entry in entries)
+            {
+                OnDraggedDroppedListEntry(sourceType, dropType, entry);
             }
         }
 
-        public IEnumerable<DraggableListEntry> Selected
+        void OnDraggedDroppedListEntry(ListTypes sourceType, ListTypes dropType, DraggableListEntry entry)
         {
-            get
+            switch (dropType)
             {
-                return _selected;
-            }
-        }
-
-        string WrapWithColor(string text, Color color)
-        {
-            return "<color=#{0}>{1}</color>".Fmt(MiscUtil.ColorToHex(color), text);
-        }
-
-        public void DrawItemLabel(Rect rect, DraggableListEntry entry)
-        {
-            switch (ClassifyList(entry.ListOwner))
-            {
-                case ListTypes.Release:
+                case ListTypes.Package:
                 {
-                    var info = (ReleaseInfo)(entry.Tag);
-
-                    var labelStr = info.Name;
-
-                    if (IsReleaseInstalled(info))
+                    switch (sourceType)
                     {
-                        labelStr = WrapWithColor(labelStr, Skin.Theme.DraggableItemAlreadyAddedColor);
+                        case ListTypes.PluginItem:
+                        {
+                            var name = (string)entry.Tag;
+                            _model.RemovePluginItem(name);
+                            break;
+                        }
+                        case ListTypes.AssetItem:
+                        {
+                            var name = (string)entry.Tag;
+                            _model.RemoveAssetItem(name);
+                            break;
+                        }
+                        case ListTypes.Release:
+                        {
+                            Assert.Throw("TODO");
+                            //AddBackgroundTask(InstallReleasesAsync(data.Entries.Select(x => (ReleaseInfo)x.Tag).ToList()), "Installing Releases");
+                            break;
+                        }
+                        default:
+                        {
+                            Assert.Throw();
+                            break;
+                        }
                     }
-
-                    DrawItemLabelWithVersion(rect, labelStr, info.Version);
 
                     break;
                 }
-                case ListTypes.Package:
+                case ListTypes.PluginItem:
                 {
-                    var info = (PackageInfo)(entry.Tag);
-
-                    if (_viewState == ViewStates.ReleasesAndPackages)
+                    switch (sourceType)
                     {
-                        if (info.InstallInfo != null && info.InstallInfo.ReleaseInfo != null)
+                        case ListTypes.AssetItem:
                         {
-                            var releaseInfo = info.InstallInfo.ReleaseInfo;
+                            var name = (string)entry.Tag;
+                            _model.RemoveAssetItem(name);
+                            _model.AddPluginItem(name);
 
-                            var displayValue = "{0} ({1}{2})".Fmt(
-                                info.Name,
-                                WrapWithColor(releaseInfo.Name, Skin.Theme.DraggableItemAlreadyAddedColor),
-                                string.IsNullOrEmpty(releaseInfo.Version) ? "" : WrapWithColor(" v" + releaseInfo.Version, Skin.Theme.VersionColor));
-
-                            GUI.Label(rect, displayValue, Skin.ItemTextStyle);
+                            break;
                         }
-                        else
+                        case ListTypes.PluginItem:
                         {
-                            DrawListItem(rect, info.Name);
+                            // Do nothing
+                            break;
                         }
-                    }
-                    else
-                    {
-                        // this isn't always the case since it can be rendered when interpolating
-                        //Assert.IsEqual(_viewState, ViewStates.PackagesAndProject);
-
-                        var labelStr = info.Name;
-
-                        if (IsPackageAddedToProject(info.Name))
+                        case ListTypes.Package:
                         {
-                            labelStr = WrapWithColor(info.Name, Skin.Theme.DraggableItemAlreadyAddedColor);
+                            var info = (PackageInfo)entry.Tag;
+
+                            if (!_model.HasPluginItem(info.Name))
+                            {
+                                if (_model.HasAssetItem(info.Name))
+                                {
+                                    _model.RemoveAssetItem(info.Name);
+                                }
+
+                                _model.AddPluginItem(info.Name);
+                            }
+
+                            break;
                         }
-                        DrawListItem(rect, labelStr);
+                        default:
+                        {
+                            Assert.Throw("TODO");
+                            break;
+                        }
                     }
 
                     break;
                 }
                 case ListTypes.AssetItem:
-                case ListTypes.PluginItem:
                 {
-                    var labelStr = entry.Name;
-
-                    if (_viewState == ViewStates.PackagesAndProject)
+                    switch (sourceType)
                     {
-                        labelStr = WrapWithColor(labelStr, Skin.Theme.DraggableItemAlreadyAddedColor);
-                    }
-                    else
-                    {
-                        // this isn't always the case since it can be rendered when interpolating
-                        //Assert.That(_viewState == ViewStates.Project);
+                        case ListTypes.AssetItem:
+                        {
+                            // Do nothing
+                            break;
+                        }
+                        case ListTypes.PluginItem:
+                        {
+                            var name = (string)entry.Tag;
+
+                            _model.RemovePluginItem(name);
+                            _model.AddAssetItem(name);
+                            break;
+                        }
+                        case ListTypes.Package:
+                        {
+                            var info = (PackageInfo)entry.Tag;
+
+                            if (!_model.HasAssetItem(info.Name))
+                            {
+                                if (_model.HasPluginItem(info.Name))
+                                {
+                                    _model.RemovePluginItem(info.Name);
+                                }
+
+                                _model.AddAssetItem(info.Name);
+                            }
+
+                            break;
+                        }
+                        default:
+                        {
+                            Assert.Throw();
+                            break;
+                        }
                     }
 
-                    DrawListItem(rect, labelStr);
+                    break;
+                }
+                case ListTypes.Release:
+                {
+                    // Nothing can drag here
                     break;
                 }
                 default:
@@ -156,205 +238,163 @@ namespace Projeny
             }
         }
 
-        bool IsReleaseInstalled(ReleaseInfo info)
+        void OnDisplayValuesDirty()
         {
-            return _allPackages
-                .Any(x => x.InstallInfo != null
-                    && x.InstallInfo.ReleaseInfo != null
-                    && x.InstallInfo.ReleaseInfo.Id == info.Id
-                    && x.InstallInfo.ReleaseInfo.VersionCode == info.VersionCode);
+            _view.SetPluginItems(_model.PluginItems
+                .Select(x => CreateListItemForProjectItem(x)).ToList());
+
+            _view.SetAssetItems(_model.AssetItems
+                .Select(x => CreateListItemForProjectItem(x)).ToList());
+
+            _view.SetPackages(_model.Packages
+                .Select(x => CreateListItem(x)).ToList());
         }
 
-        bool IsPackageAddedToProject(string name)
+        PackageManagerView.ListItemData CreateListItemForProjectItem(string name)
         {
-            return _assetsList.Values.Select(x => x.Name)
-                .Concat(_pluginsList.Values.Select(x => x.Name)).Contains(name);
+            string caption;
+
+            if (_model.ViewState == PackageManagerViewStates.PackagesAndProject)
+            {
+                caption = ImguiUtil.WrapWithColor(name, _view.Skin.Theme.DraggableItemAlreadyAddedColor);
+            }
+            else
+            {
+                // this isn't always the case since it can be rendered when interpolating
+                //Assert.That(_viewState == PackageManagerViewStates.Project);
+                caption = name;
+            }
+
+            return new PackageManagerView.ListItemData()
+            {
+                Caption = caption,
+                Tag = name
+            };
         }
 
-        string TryGetVersion(PackageInfo info)
+        PackageManagerView.ListItemData CreateListItem(PackageInfo info)
         {
-            if (info.InstallInfo == null || info.InstallInfo.ReleaseInfo == null)
+            if (_model.ViewState == PackageManagerViewStates.ReleasesAndPackages)
             {
-                return null;
+                Assert.Throw("TODO");
+                //if (info.InstallInfo != null && info.InstallInfo.ReleaseInfo != null)
+                //{
+                    //var releaseInfo = info.InstallInfo.ReleaseInfo;
+
+                    //var displayValue = "{0} ({1}{2})".Fmt(
+                        //info.Name,
+                        //WrapWithColor(releaseInfo.Name, Skin.Theme.DraggableItemAlreadyAddedColor),
+                        //string.IsNullOrEmpty(releaseInfo.Version) ? "" : WrapWithColor(" v" + releaseInfo.Version, Skin.Theme.VersionColor));
+
+                    //GUI.Label(rect, displayValue, Skin.ItemTextStyle);
+                //}
+                //else
+                //{
+                    //DrawListItem(rect, info.Name);
+                //}
             }
 
-            return info.InstallInfo.ReleaseInfo.Version;
+            // this isn't always the case since it can be rendered when interpolating
+            //Assert.IsEqual(_model.ViewState, PackageManagerViewStates.PackagesAndProject);
+
+            string caption;
+
+            if (_model.IsPackageAddedToProject(info.Name))
+            {
+                caption = ImguiUtil.WrapWithColor(
+                    info.Name, _view.Skin.Theme.DraggableItemAlreadyAddedColor);
+            }
+            else
+            {
+                caption = info.Name;
+            }
+
+            return new PackageManagerView.ListItemData()
+            {
+                Caption = caption,
+                Tag = info
+            };
         }
 
-        object GetReleaseSortField(DraggableListEntry entry)
+        void OnDisable()
         {
-            var info = (ReleaseInfo)entry.Tag;
-
-            switch (_releasesSortMethod)
-            {
-                case ReleasesSortMethod.Name:
-                {
-                    return info.Name;
-                }
-                case ReleasesSortMethod.Size:
-                {
-                    return info.CompressedSize;
-                }
-                case ReleasesSortMethod.PublishDate:
-                {
-                    return info.AssetStoreInfo == null ? 0 : info.AssetStoreInfo.PublishDateTicks;
-                }
-            }
-
-            Assert.Throw();
-            return null;
+            UnobserveViewEvents();
         }
 
-        public List<DraggableListEntry> SortList(DraggableList list, List<DraggableListEntry> entries)
+        public void OnClickedReleasesSortMenu(Rect buttonRect)
         {
-            switch (ClassifyList(list))
-            {
-                case ListTypes.Release:
-                {
-                    if (_releaseSortAscending)
-                    {
-                        return entries.OrderBy(x => GetReleaseSortField(x)).ToList();
-                    }
-
-                    return entries.OrderByDescending(x => GetReleaseSortField(x)).ToList();
-                }
-                default:
-                {
-                    return entries.OrderBy(x => x.Name).ToList();
-                }
-            }
+            ShowReleasesSortMenu(new Vector2(buttonRect.xMin, buttonRect.yMax));
         }
 
-        void DrawListItem(Rect rect, string name)
+        void ShowReleasesSortMenu(Vector2 startPos)
         {
-            GUI.Label(rect, name, Skin.ItemTextStyle);
+            GenericMenu contextMenu = new GenericMenu();
+
+            contextMenu.AddItem(
+                new GUIContent("Order By Name"),
+                _model.ReleasesSortMethod == ReleasesSortMethod.Name,
+                () => ChangeReleaseSortMethod(ReleasesSortMethod.Name));
+
+            contextMenu.AddItem(
+                new GUIContent("Order By Size"),
+                _model.ReleasesSortMethod == ReleasesSortMethod.Size,
+                () => ChangeReleaseSortMethod(ReleasesSortMethod.Size));
+
+            contextMenu.AddItem(
+                new GUIContent("Order By Publish Date"),
+                _model.ReleasesSortMethod == ReleasesSortMethod.PublishDate,
+                () => ChangeReleaseSortMethod(ReleasesSortMethod.PublishDate));
+
+            contextMenu.DropDown(new Rect(startPos.x, startPos.y, 0, 0));
         }
 
-        void DrawItemLabelWithVersion(Rect rect, string name, string version)
+        void ChangeReleaseSortMethod(ReleasesSortMethod sortMethod)
         {
-            var labelStr = string.IsNullOrEmpty(version) ? name : "{0} {1}"
-                .Fmt(name, WrapWithColor("v" + version, Skin.Theme.VersionColor));
-
-            GUI.Label(rect, labelStr, Skin.ItemTextStyle);
+            _model.ReleasesSortMethod = sortMethod;
+            Assert.Throw("TODO");
+            //_releasesList.ForceSort();
         }
 
-        public void ClearSelected()
+        public void OnClickedProjectEditButton()
         {
-            _selected.Clear();
+            var configPath = ProjenyEditorUtil.GetProjectConfigPath(_model.ProjectConfigType);
+            InternalEditorUtility.OpenFileAtLineExternal(configPath, 1);
         }
 
-        public void Deselect(DraggableListEntry newEntry)
+        public void OnClickedProjectSaveButton()
         {
-            _selected.Remove(newEntry);
+            OverwriteConfig();
         }
 
-        public void Select(DraggableListEntry newEntry)
+        public void OnClickedProjectRevertButton()
         {
-            if (_selected.Contains(newEntry))
-            {
-                if (Event.current.control)
-                {
-                    _selected.RemoveWithConfirm(newEntry);
-                }
-
-                return;
-            }
-
-            if (!Event.current.control && !Event.current.shift)
-            {
-                _selected.Clear();
-            }
-
-            // The selection entry list should all be from the same list
-            foreach (var existingEntry in _selected.ToList())
-            {
-                if (existingEntry.ListOwner != newEntry.ListOwner)
-                {
-                    _selected.Remove(existingEntry);
-                }
-            }
-
-            if (Event.current.shift && !_selected.IsEmpty())
-            {
-                var closestEntry = _selected.Select(x => new { Distance = Mathf.Abs(x.Index - newEntry.Index), Entry = x }).OrderBy(x => x.Distance).Select(x => x.Entry).First();
-
-                int startIndex;
-                int endIndex;
-
-                if (closestEntry.Index > newEntry.Index)
-                {
-                    startIndex = newEntry.Index + 1;
-                    endIndex = closestEntry.Index - 1;
-                }
-                else
-                {
-                    startIndex = closestEntry.Index + 1;
-                    endIndex = newEntry.Index - 1;
-                }
-
-                for (int i = startIndex; i <= endIndex; i++)
-                {
-                    var inBetweenEntry = closestEntry.ListOwner.GetAtIndex(i);
-
-                    SelectInternal(inBetweenEntry);
-                }
-            }
-
-            SelectInternal(newEntry);
+            RefreshProject();
         }
 
-        void SelectInternal(DraggableListEntry entry)
+        public void OnClickedProjectApplyButton()
         {
-            if (!_selected.Contains(entry))
-            {
-                _selected.Add(entry);
-            }
+            OverwriteConfig();
+            AddBackgroundTask(ProcessUpmCommand("Updating directory links", UpmHelper.UpdateLinksAsync()), "Updating Links");
         }
 
-        void OnEnable()
+        public void OnClickedCreateNewPackage()
         {
-            if (!_hasInitialized)
-            {
-                _hasInitialized = true;
+            AddBackgroundTask(CreateNewPackageAsync(), "Creating New Package");
+        }
 
-                Assert.IsNull(_selected);
-                Assert.IsNull(_allPackages);
-                Assert.IsNull(_allReleases);
-                Assert.IsNull(_packagesList);
-                Assert.IsNull(_releasesList);
-                Assert.IsNull(_assetsList);
-                Assert.IsNull(_pluginsList);
+        public void OnClickedRefreshPackages()
+        {
+            AddBackgroundTask(RefreshPackagesAsync(), "Refreshing Packages");
+        }
 
-                _selected = new List<DraggableListEntry>();
-                _allPackages = new List<PackageInfo>();
-                _allReleases = new List<ReleaseInfo>();
+        public void OnClickedRefreshReleaseList()
+        {
+            AddBackgroundTask(RefreshReleasesAsync(), "Refreshing Release List");
+        }
 
-                SetBackgroundTask(RefreshAll(), "Refreshing Packages");
-            }
-
-            if (_packagesList == null)
-            {
-                _packagesList = ScriptableObject.CreateInstance<DraggableList>();
-                _packagesList.Manager = this;
-            }
-
-            if (_releasesList == null)
-            {
-                _releasesList = ScriptableObject.CreateInstance<DraggableList>();
-                _releasesList.Manager = this;
-            }
-
-            if (_assetsList == null)
-            {
-                _assetsList = ScriptableObject.CreateInstance<DraggableList>();
-                _assetsList.Manager = this;
-            }
-
-            if (_pluginsList == null)
-            {
-                _pluginsList = ScriptableObject.CreateInstance<DraggableList>();
-                _pluginsList.Manager = this;
-            }
+        public void OnClickedProjectType(ProjectConfigTypes desiredConfigType)
+        {
+            AddBackgroundTask(TryChangeProjectType(desiredConfigType));
         }
 
         IEnumerator RefreshAll()
@@ -364,198 +404,129 @@ namespace Projeny
             yield return RefreshReleasesAsync();
         }
 
-        float GetDesiredSplit1()
-        {
-            if (_viewState == ViewStates.ReleasesAndPackages)
-            {
-                return 0.5f;
-            }
-
-            return 0;
-        }
-
-        float GetDesiredSplit2()
-        {
-            if (_viewState == ViewStates.ReleasesAndPackages)
-            {
-                return 1.0f;
-            }
-
-            if (_viewState == ViewStates.Project)
-            {
-                return 0;
-            }
-
-            return 0.4f;
-        }
-
-        void CheckStateIsValid()
-        {
-            Assert.That(_selected.All(x => x.ListOwner.Values.Contains(x)));
-
-            Assert.IsNotNull(_packagesList);
-            Assert.IsNotNull(_allPackages);
-            Assert.That(_packagesList.Values.All(x => _allPackages.Contains((PackageInfo)x.Tag)));
-
-            Assert.IsNotNull(_releasesList);
-            Assert.IsNotNull(_allReleases);
-            Assert.That(_releasesList.Values.All(x => _allReleases.Contains((ReleaseInfo)x.Tag)));
-        }
-
         void Update()
         {
-            CheckStateIsValid();
+            _eventManager.Flush();
+            _asyncProcessor.Tick();
+            //UpdateBackgroundTask();
 
-            // Execute any operations that were queued up doing the OnGUI event
-            var ops = _operationQueue.ToList();
-            _operationQueue.Clear();
-            foreach (var op in ops)
-            {
-                op();
-            }
+            _view.IsBlocked = _asyncProcessor.IsBlocking;
 
-            UpdateBackgroundTask();
+            //if (_backgroundTaskInfo != null)
+            //{
+                //_view.IsBlocked = true;
+                //_view.BlockedStatusMessage = _backgroundTaskInfo.StatusMessage;
+                //_view.BlockedStatusTitle = _backgroundTaskInfo.StatusTitle;
+            //}
+            //else
+            //{
+                //_view.IsBlocked = false;
+                //_view.BlockedStatusMessage = null;
+                //_view.BlockedStatusTitle = null;
+            //}
 
-            var deltaTime = Time.realtimeSinceStartup - _lastTime;
-            _lastTime = Time.realtimeSinceStartup;
-
-            var px = Mathf.Clamp(deltaTime * Skin.InterpSpeed, 0, 1);
-
-            _split1 = Mathf.Lerp(_split1, GetDesiredSplit1(), px);
-            _split2 = Mathf.Lerp(_split2, GetDesiredSplit2(), px);
+            _view.Update();
 
             // Doesn't seem worth trying to detect changes, just redraw every frame
             Repaint();
         }
 
-        void UpdateBackgroundTask()
+        //void UpdateBackgroundTask()
+        //{
+            //if (_backgroundTaskInfo == null)
+            //{
+                //return;
+            //}
+
+            //try
+            //{
+                //// NOTE: Do not assume a constant frame rate here
+                //// (When we aren't in focus this gets updated less often)
+                //if (!_backgroundTaskInfo.CoRoutine.Pump())
+                //{
+                    //_backgroundTaskInfo = null;
+                //}
+            //}
+            //catch (CoRoutineException e)
+            //{
+                //_backgroundTaskInfo = null;
+
+                //// If possible, display this as a popup
+                //// Otherwise it will still be visible in the console so that's fine
+                //if (e.InnerException != null)
+                //{
+                    //AddBackgroundTask(
+                        //_view.DisplayError(e.InnerException.Message));
+                //}
+
+                //throw;
+            //}
+            //catch (Exception e)
+            //{
+                //_backgroundTaskInfo = null;
+
+                //AddBackgroundTask(
+                    //_view.DisplayError(e.Message));
+                //throw;
+            //}
+        //}
+
+        public void OnContextMenuOpened(DraggableList sourceList)
         {
-            if (_backgroundTaskInfo == null)
-            {
-                return;
-            }
+            // Move this to view?
 
-            try
-            {
-                // NOTE: Do not assume a constant frame rate here
-                // (When we aren't in focus this gets updated less often)
-                if (!_backgroundTaskInfo.CoRoutine.Pump())
-                {
-                    _backgroundTaskInfo = null;
-                }
-            }
-            catch (CoRoutineException e)
-            {
-                _backgroundTaskInfo = null;
+            //var listType = ClassifyList(sourceList);
 
-                // If possible, display this as a popup
-                // Otherwise it will still be visible in the console so that's fine
-                if (e.InnerException != null)
-                {
-                    SetBackgroundTask(
-                        DisplayError(e.InnerException.Message));
-                }
+            //GenericMenu contextMenu = new GenericMenu();
 
-                throw;
-            }
-            catch (Exception e)
-            {
-                _backgroundTaskInfo = null;
+            //switch (listType)
+            //{
+                //case ListTypes.Release:
+                //{
+                    //bool hasLocalPath = false;
+                    //bool hasAssetStoreLink = false;
 
-                SetBackgroundTask(
-                    DisplayError(e.Message));
-                throw;
-            }
-        }
+                    //var singleInfo = _selected.OnlyOrDefault();
 
-        public bool IsDragAllowed(DraggableList.DragData data, DraggableList list)
-        {
-            var sourceListType = ClassifyList(data.SourceList);
-            var dropListType = ClassifyList(list);
+                    //if (singleInfo != null)
+                    //{
+                        //var info = (ReleaseInfo)singleInfo.Tag;
 
-            if (sourceListType == dropListType)
-            {
-                return true;
-            }
+                        //hasLocalPath = info.LocalPath != null && File.Exists(info.LocalPath);
 
-            switch (dropListType)
-            {
-                case ListTypes.Package:
-                {
-                    return sourceListType == ListTypes.Release || sourceListType == ListTypes.AssetItem || sourceListType == ListTypes.PluginItem;
-                }
-                case ListTypes.Release:
-                {
-                    return false;
-                }
-                case ListTypes.AssetItem:
-                {
-                    return sourceListType == ListTypes.Package || sourceListType == ListTypes.PluginItem;
-                }
-                case ListTypes.PluginItem:
-                {
-                    return sourceListType == ListTypes.Package || sourceListType == ListTypes.AssetItem;
-                }
-            }
+                        //hasAssetStoreLink = info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.LinkId);
+                    //}
 
-            Assert.Throw();
-            return true;
-        }
+                    //contextMenu.AddOptionalItem(hasLocalPath, new GUIContent("Open Folder"), false, OpenReleaseFolderForSelected);
 
-        public void OpenContextMenu(DraggableList sourceList)
-        {
-            var listType = ClassifyList(sourceList);
+                    //contextMenu.AddOptionalItem(singleInfo != null, new GUIContent("More Info..."), false, OpenMoreInfoPopupForSelected);
 
-            GenericMenu contextMenu = new GenericMenu();
+                    //contextMenu.AddOptionalItem(hasAssetStoreLink, new GUIContent("Open In Asset Store"), false, OpenSelectedInAssetStore);
+                    //break;
+                //}
+                //case ListTypes.Package:
+                //{
+                    //contextMenu.AddOptionalItem(!_selected.IsEmpty(), new GUIContent("Delete"), false, DeleteSelected);
+                    //contextMenu.AddOptionalItem(_selected.Count == 1, new GUIContent("Rename"), false, RenameSelectedPackage);
+                    //contextMenu.AddOptionalItem(_selected.Count == 1, new GUIContent("Open Folder"), false, OpenPackageFolderForSelected);
+                    //contextMenu.AddOptionalItem(_selected.Count == 1 && HasPackageYaml((PackageInfo)_selected.Single().Tag), new GUIContent("Edit " + ProjenyEditorUtil.PackageConfigFileName), false, EditPackageYamlSelected);
+                    //break;
+                //}
+                //case ListTypes.AssetItem:
+                //case ListTypes.PluginItem:
+                //{
+                    //contextMenu.AddItem(new GUIContent("Remove"), false, DeleteSelected);
+                    //contextMenu.AddOptionalItem(_selected.Count == 1 && HasFolderWithPackageName(_selected.Single().Name), new GUIContent("Select in Project Tab"), false, ShowSelectedInProjectTab);
+                    //break;
+                //}
+                //default:
+                //{
+                    //Assert.Throw();
+                    //break;
+                //}
+            //}
 
-            switch (listType)
-            {
-                case ListTypes.Release:
-                {
-                    bool hasLocalPath = false;
-                    bool hasAssetStoreLink = false;
-
-                    var singleInfo = _selected.OnlyOrDefault();
-
-                    if (singleInfo != null)
-                    {
-                        var info = (ReleaseInfo)singleInfo.Tag;
-
-                        hasLocalPath = info.LocalPath != null && File.Exists(info.LocalPath);
-
-                        hasAssetStoreLink = info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.LinkId);
-                    }
-
-                    contextMenu.AddOptionalItem(hasLocalPath, new GUIContent("Open Folder"), false, OpenReleaseFolderForSelected);
-
-                    contextMenu.AddOptionalItem(singleInfo != null, new GUIContent("More Info..."), false, OpenMoreInfoPopupForSelected);
-
-                    contextMenu.AddOptionalItem(hasAssetStoreLink, new GUIContent("Open In Asset Store"), false, OpenSelectedInAssetStore);
-                    break;
-                }
-                case ListTypes.Package:
-                {
-                    contextMenu.AddOptionalItem(!_selected.IsEmpty(), new GUIContent("Delete"), false, DeleteSelected);
-                    contextMenu.AddOptionalItem(_selected.Count == 1, new GUIContent("Rename"), false, RenameSelectedPackage);
-                    contextMenu.AddOptionalItem(_selected.Count == 1, new GUIContent("Open Folder"), false, OpenPackageFolderForSelected);
-                    contextMenu.AddOptionalItem(_selected.Count == 1 && HasPackageYaml((PackageInfo)_selected.Single().Tag), new GUIContent("Edit " + ProjenyEditorUtil.PackageConfigFileName), false, EditPackageYamlSelected);
-                    break;
-                }
-                case ListTypes.AssetItem:
-                case ListTypes.PluginItem:
-                {
-                    contextMenu.AddItem(new GUIContent("Remove"), false, DeleteSelected);
-                    contextMenu.AddOptionalItem(_selected.Count == 1 && HasFolderWithPackageName(_selected.Single().Name), new GUIContent("Select in Project Tab"), false, ShowSelectedInProjectTab);
-                    break;
-                }
-                default:
-                {
-                    Assert.Throw();
-                    break;
-                }
-            }
-
-            contextMenu.ShowAsContext();
+            //contextMenu.ShowAsContext();
         }
 
         bool HasFolderWithPackageName(string name)
@@ -577,64 +548,67 @@ namespace Projeny
 
         void ShowSelectedInProjectTab()
         {
-            Assert.That(_selected.Select(x => ClassifyList(x.ListOwner)).All(x => x == ListTypes.PluginItem || x == ListTypes.AssetItem));
-            Assert.IsEqual(_selected.Count, 1);
+            Assert.Throw("TODO");
+            //Assert.That(_selected.Select(x => ClassifyList(x.ListOwner)).All(x => x == ListTypes.PluginItem || x == ListTypes.AssetItem));
+            //Assert.IsEqual(_selected.Count, 1);
 
-            var name = _selected.Single().Name;
+            //var name = _selected.Single().Name;
 
-            var asset = TryGetAssetForPackageName(name);
+            //var asset = TryGetAssetForPackageName(name);
 
-            if (asset == null)
-            {
-                SetBackgroundTask(DisplayError("Could not find package '{0}' in project".Fmt(name)));
-            }
-            else
-            {
-                Selection.activeObject = asset;
-            }
+            //if (asset == null)
+            //{
+                //AddBackgroundTask(DisplayError("Could not find package '{0}' in project".Fmt(name)));
+            //}
+            //else
+            //{
+                //Selection.activeObject = asset;
+            //}
         }
 
         void OpenSelectedInAssetStore()
         {
-            Assert.IsEqual(_selected.Count, 1);
+            Assert.Throw("TODO");
+            //Assert.IsEqual(_selected.Count, 1);
 
-            var entry = _selected.Single();
+            //var entry = _selected.Single();
 
-            Assert.IsEqual(ClassifyList(entry.ListOwner), ListTypes.Release);
+            //Assert.IsEqual(ClassifyList(entry.ListOwner), ListTypes.Release);
 
-            var info = (ReleaseInfo)entry.Tag;
-            var assetStoreInfo = info.AssetStoreInfo;
+            //var info = (ReleaseInfo)entry.Tag;
+            //var assetStoreInfo = info.AssetStoreInfo;
 
-            Assert.IsNotNull(assetStoreInfo);
+            //Assert.IsNotNull(assetStoreInfo);
 
-            var fullUrl = "https://www.assetstore.unity3d.com/#/{0}/{1}".Fmt(assetStoreInfo.LinkType, assetStoreInfo.LinkId);
-            Application.OpenURL(fullUrl);
+            //var fullUrl = "https://www.assetstore.unity3d.com/#/{0}/{1}".Fmt(assetStoreInfo.LinkType, assetStoreInfo.LinkId);
+            //Application.OpenURL(fullUrl);
         }
 
         void OpenMoreInfoPopupForSelected()
         {
-            Assert.IsEqual(_selected.Count, 1);
+            Assert.Throw("TODO");
+            //Assert.IsEqual(_selected.Count, 1);
 
-            var entry = _selected.Single();
+            //var entry = _selected.Single();
 
-            switch (ClassifyList(entry.ListOwner))
-            {
-                case ListTypes.Package:
-                {
-                    SetBackgroundTask(OpenMoreInfoPopup((PackageInfo)entry.Tag));
-                    break;
-                }
-                case ListTypes.Release:
-                {
-                    SetBackgroundTask(OpenMoreInfoPopup((ReleaseInfo)entry.Tag));
-                    break;
-                }
-                default:
-                {
-                    Assert.Throw();
-                    break;
-                }
-            }
+            //switch (ClassifyList(entry.ListOwner))
+            //{
+                //case ListTypes.Package:
+                //{
+                    //AddBackgroundTask(OpenMoreInfoPopup((PackageInfo)entry.Tag));
+                    //break;
+                //}
+                //case ListTypes.Release:
+                //{
+                    //AddBackgroundTask(OpenMoreInfoPopup((ReleaseInfo)entry.Tag));
+                    //break;
+                //}
+                //default:
+                //{
+                    //Assert.Throw();
+                    //break;
+                //}
+            //}
         }
 
         IEnumerator OpenMoreInfoPopup(PackageInfo info)
@@ -643,108 +617,18 @@ namespace Projeny
             yield break;
         }
 
-        IEnumerator OpenMoreInfoPopup(ReleaseInfo info)
-        {
-            Assert.IsNull(_popupHandler);
-
-            bool isDone = false;
-
-            var skin = Skin.ReleaseMoreInfoDialog;
-            Vector2 scrollPos = Vector2.zero;
-
-            _popupHandler = delegate(Rect fullRect)
-            {
-                var popupRect = ImguiUtil.CenterRectInRect(fullRect, skin.PopupSize);
-
-                DrawPopupCommon(fullRect, popupRect);
-
-                var contentRect = ImguiUtil.CreateContentRectWithPadding(
-                    popupRect, skin.PanelPadding);
-
-                GUILayout.BeginArea(contentRect);
-                {
-                    GUILayout.Label("Release Info", skin.HeadingStyle);
-
-                    GUILayout.Space(skin.HeadingBottomPadding);
-
-                    scrollPos = GUILayout.BeginScrollView(scrollPos, false, true, GUI.skin.horizontalScrollbar, GUI.skin.verticalScrollbar, skin.ScrollViewStyle, GUILayout.Height(skin.ListHeight));
-                    {
-                        GUILayout.Space(skin.ListPaddingTop);
-
-                        DrawMoreInfoRow(skin, "Name", info.Name);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Version", string.IsNullOrEmpty(info.Version) ? NotAvailableLabel : info.Version);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Publish Date", info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.PublishDate) ? info.AssetStoreInfo.PublishDate : NotAvailableLabel);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Compressed Size", info.HasCompressedSize ? MiscUtil.ConvertByteSizeToDisplayValue(info.CompressedSize) : NotAvailableLabel);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Publisher", info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.PublisherLabel) ? info.AssetStoreInfo.PublisherLabel : NotAvailableLabel);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Category", info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.CategoryLabel) ? info.AssetStoreInfo.CategoryLabel : NotAvailableLabel);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Description", info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.Description) ? info.AssetStoreInfo.Description : NotAvailableLabel);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Unity Version", info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.UnityVersion) ? info.AssetStoreInfo.UnityVersion : NotAvailableLabel);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "ID", info.Id);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Publish Notes", info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.PublishNotes) ? info.AssetStoreInfo.PublishNotes : NotAvailableLabel);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Version Code", info.HasVersionCode ? info.VersionCode.ToString() : NotAvailableLabel);
-                        GUILayout.Space(skin.RowSpacing);
-                    }
-                    GUI.EndScrollView();
-                }
-                GUILayout.EndArea();
-
-                var okButtonRect = new Rect(
-                    contentRect.xMin + 0.5f * contentRect.width - 0.5f * skin.OkButtonWidth,
-                    contentRect.yMax - skin.MarginBottom - skin.OkButtonHeight,
-                    skin.OkButtonWidth,
-                    skin.OkButtonHeight);
-
-                if (GUI.Button(okButtonRect, "Ok") || Event.current.keyCode == KeyCode.Escape)
-                {
-                    isDone = true;
-                }
-            };
-
-            while (!isDone)
-            {
-                yield return null;
-            }
-
-            _popupHandler = null;
-        }
-
-        void DrawMoreInfoRow(PackageManagerWindowSkin.ReleaseInfoMoreInfoDialogProperties skin, string label, string value)
-        {
-            GUILayout.BeginHorizontal();
-            {
-                if (value == NotAvailableLabel)
-                {
-                    GUI.color = skin.NotAvailableColor;
-                }
-                GUILayout.Label(label + ":", skin.LabelStyle, GUILayout.Width(skin.LabelColumnWidth));
-                GUILayout.Space(skin.ColumnSpacing);
-                GUILayout.Label(value, skin.ValueStyle, GUILayout.Width(skin.ValueColumnWidth));
-                GUI.color = Color.white;
-            }
-            GUILayout.EndHorizontal();
-        }
-
         void OpenReleaseFolderForSelected()
         {
-            Assert.IsEqual(_selected.Count, 1);
+            Assert.Throw("TODO");
+            //Assert.IsEqual(_selected.Count, 1);
 
-            var info = (ReleaseInfo)_selected.Single().Tag;
+            //var info = (ReleaseInfo)_selected.Single().Tag;
 
-            Assert.IsNotNull(info.LocalPath);
-            PathUtil.AssertPathIsValid(info.LocalPath);
+            //Assert.IsNotNull(info.LocalPath);
+            //PathUtil.AssertPathIsValid(info.LocalPath);
 
-            var args = @"/select, " + info.LocalPath;
-            System.Diagnostics.Process.Start("explorer.exe", args);
+            //var args = @"/select, " + info.LocalPath;
+            //System.Diagnostics.Process.Start("explorer.exe", args);
         }
 
         bool HasPackageYaml(PackageInfo info)
@@ -755,29 +639,31 @@ namespace Projeny
 
         void EditPackageYamlSelected()
         {
-            Assert.IsEqual(_selected.Count, 1);
+            Assert.Throw("TODO");
+            //Assert.IsEqual(_selected.Count, 1);
 
-            var info = (PackageInfo)_selected.Single().Tag;
+            //var info = (PackageInfo)_selected.Single().Tag;
 
-            var configPath = Path.Combine(info.Path, ProjenyEditorUtil.PackageConfigFileName);
+            //var configPath = Path.Combine(info.Path, ProjenyEditorUtil.PackageConfigFileName);
 
-            Assert.That(File.Exists(configPath));
+            //Assert.That(File.Exists(configPath));
 
-            InternalEditorUtility.OpenFileAtLineExternal(configPath, 1);
+            //InternalEditorUtility.OpenFileAtLineExternal(configPath, 1);
         }
 
         void RenameSelectedPackage()
         {
-            Assert.IsEqual(_selected.Count, 1);
+            Assert.Throw("TODO");
+            //Assert.IsEqual(_selected.Count, 1);
 
-            var info = (PackageInfo)_selected.Single().Tag;
+            //var info = (PackageInfo)_selected.Single().Tag;
 
-            SetBackgroundTask(RenamePackageAsync(info));
+            //AddBackgroundTask(RenamePackageAsync(info));
         }
 
         IEnumerator RenamePackageAsync(PackageInfo info)
         {
-            var newPackageName = PromptForInput("Enter package name:", info.Name);
+            var newPackageName = _view.PromptForInput("Enter package name:", info.Name);
 
             yield return newPackageName;
 
@@ -803,277 +689,85 @@ namespace Projeny
 
             yield return RefreshPackagesAsync();
 
-            SelectInternal(_packagesList.Values
-                .Where(x => x.Name == newPackageName.Current).Single());
+            Assert.Throw("TODO");
+            //SelectInternal(_packagesList.Values
+                //.Where(x => x.Name == newPackageName.Current).Single());
         }
 
         void OpenPackageFolderForSelected()
         {
-            Assert.IsEqual(_selected.Count, 1);
+            Assert.Throw("TODO");
+            //Assert.IsEqual(_selected.Count, 1);
 
-            var info = (PackageInfo)_selected.Single().Tag;
+            //var info = (PackageInfo)_selected.Single().Tag;
 
-            Assert.That(Directory.Exists(info.Path));
+            //Assert.That(Directory.Exists(info.Path));
 
-            System.Diagnostics.Process.Start(info.Path);
+            //System.Diagnostics.Process.Start(info.Path);
         }
 
         void SelectAll()
         {
-            if (_selected.IsEmpty())
-            {
-                return;
-            }
+            Assert.Throw("TODO");
+            //if (_selected.IsEmpty())
+            //{
+                //return;
+            //}
 
-            var listType = ClassifyList(_selected[0].ListOwner);
+            //var listType = ClassifyList(_selected[0].ListOwner);
 
-            Assert.That(_selected.All(x => ClassifyList(x.ListOwner) == listType));
+            //Assert.That(_selected.All(x => ClassifyList(x.ListOwner) == listType));
 
-            foreach (var entry in _selected[0].ListOwner.Values)
-            {
-                SelectInternal(entry);
-            }
+            //foreach (var entry in _selected[0].ListOwner.Values)
+            //{
+                //SelectInternal(entry);
+            //}
         }
 
         void DeleteSelected()
         {
-            SetBackgroundTask(DeleteSelectedAsync(), "Deleting Packages");
+            AddBackgroundTask(DeleteSelectedAsync(), "Deleting Packages");
         }
 
         IEnumerator DeleteSelectedAsync()
         {
-            if (_selected.IsEmpty())
-            {
-                yield break;
-            }
+            Assert.Throw("TODO");
+            yield break;
+            //if (_selected.IsEmpty())
+            //{
+                //yield break;
+            //}
 
-            var listType = ClassifyList(_selected[0].ListOwner);
+            //var listType = ClassifyList(_selected[0].ListOwner);
 
-            Assert.That(_selected.All(x => ClassifyList(x.ListOwner) == listType));
+            //Assert.That(_selected.All(x => ClassifyList(x.ListOwner) == listType));
 
-            if (listType == ListTypes.Package)
-            {
-                var infos = _selected.Select(x => (PackageInfo)x.Tag).ToList();
+            //if (listType == ListTypes.Package)
+            //{
+                //var infos = _selected.Select(x => (PackageInfo)x.Tag).ToList();
 
-                var choice = PromptForUserChoice(
-                    "<color=yellow>Are you sure you wish to delete the following packages?</color>\n\n{0}\n\n<color=yellow>Please note the following:</color>\n\n- This change is not undoable\n- Any changes that you've made since installing will be lost\n- Any projects or other packages that still depend on this package may be put in an invalid state by deleting it".Fmt(infos.Select(x => "- " + x.Name).Join("\n")),
-                    new[] { "Delete", "Cancel" }, null, "DeleteSelectedPopupTextStyle");
+                //var choice = _view.PromptForUserChoice(
+                    //"<color=yellow>Are you sure you wish to delete the following packages?</color>\n\n{0}\n\n<color=yellow>Please note the following:</color>\n\n- This change is not undoable\n- Any changes that you've made since installing will be lost\n- Any projects or other packages that still depend on this package may be put in an invalid state by deleting it".Fmt(infos.Select(x => "- " + x.Name).Join("\n")),
+                    //new[] { "Delete", "Cancel" }, null, "DeleteSelectedPopupTextStyle");
 
-                yield return choice;
+                //yield return choice;
 
-                if (choice.Current == 0)
-                {
-                    yield return ProcessUpmCommand("Deleting selected packages", UpmHelper.DeletePackagesAsync(infos));
-                    yield return RefreshPackagesAsync();
-                }
-            }
-            else if (listType == ListTypes.AssetItem || listType == ListTypes.PluginItem)
-            {
-                var entriesToRemove = _selected.ToList();
-                _selected.Clear();
+                //if (choice.Current == 0)
+                //{
+                    //yield return ProcessUpmCommand("Deleting selected packages", UpmHelper.DeletePackagesAsync(infos));
+                    //yield return RefreshPackagesAsync();
+                //}
+            //}
+            //else if (listType == ListTypes.AssetItem || listType == ListTypes.PluginItem)
+            //{
+                //var entriesToRemove = _selected.ToList();
+                //_selected.Clear();
 
-                foreach (var entry in entriesToRemove)
-                {
-                    entry.ListOwner.Remove(entry);
-                }
-            }
-        }
-
-        public IEnumerator AlertUser(string message, string title = null)
-        {
-            return PromptForUserChoice(message, new[] { "Ok" }, title);
-        }
-
-        public IEnumerator<int> PromptForUserChoice(string question, string[] choices, string title = null, string styleOverride = null)
-        {
-            return CoRoutine.Wrap<int>(
-                PromptForUserChoiceInternal(question, choices, title, styleOverride));
-        }
-
-        public IEnumerator PromptForUserChoiceInternal(
-            string question, string[] choices, string title = null, string styleOverride = null)
-        {
-            Assert.IsNull(_popupHandler);
-
-            int choice = -1;
-
-            var skin = Skin.GenericPromptDialog;
-
-            _popupHandler = delegate(Rect fullRect)
-            {
-                GUILayout.BeginArea(fullRect);
-                {
-                    GUILayout.FlexibleSpace();
-                    GUILayout.BeginHorizontal();
-                    {
-                        GUILayout.FlexibleSpace();
-                        GUILayout.BeginVertical(skin.BackgroundStyle, GUILayout.Width(skin.PopupWidth));
-                        {
-                            GUILayout.Space(skin.PanelPadding);
-
-                            GUILayout.BeginHorizontal();
-                            {
-                                GUILayout.Space(skin.PanelPadding);
-
-                                GUILayout.BeginVertical();
-                                {
-                                    if (title != null)
-                                    {
-                                        GUILayout.Label(title, skin.TitleStyle);
-                                        GUILayout.Space(skin.TitleBottomPadding);
-                                    }
-
-                                    GUILayout.Label(question, styleOverride == null ? skin.LabelStyle : GUI.skin.GetStyle(styleOverride));
-
-                                    GUILayout.Space(skin.ButtonTopPadding);
-
-                                    GUILayout.BeginHorizontal();
-                                    {
-                                        GUILayout.FlexibleSpace();
-
-                                        for (int i = 0; i < choices.Length; i++)
-                                        {
-                                            if (i > 0)
-                                            {
-                                                GUILayout.Space(skin.ButtonSpacing);
-                                            }
-
-                                            if (GUILayout.Button(choices[i], GUILayout.Width(skin.ButtonWidth)))
-                                            {
-                                                choice = i;
-                                            }
-                                        }
-
-                                        GUILayout.FlexibleSpace();
-                                    }
-                                    GUILayout.EndHorizontal();
-                                }
-                                GUILayout.EndVertical();
-                                GUILayout.Space(skin.PanelPadding);
-                            }
-                            GUILayout.EndHorizontal();
-                            GUILayout.Space(skin.PanelPadding);
-                        }
-                        GUILayout.EndVertical();
-                        GUILayout.FlexibleSpace();
-                    }
-                    GUILayout.EndHorizontal();
-                    GUILayout.FlexibleSpace();
-                }
-                GUILayout.EndArea();
-            };
-
-            while (choice == -1)
-            {
-                yield return null;
-            }
-
-            _popupHandler = null;
-
-            yield return choice;
-        }
-
-        // This method exists because we need to avoid making changes during the OnGUI event
-        // this is because the OnGUI is run in multiple passes per frame and each pass
-        // has to have the exact same amount of controls drawn, so if we say add/remove to a list on control data
-        // during this method then this can cause errors
-        public void EnqueueOperation(Action action)
-        {
-            _operationQueue.Add(action);
-        }
-
-        public void OnDragDrop(DraggableList.DragData data, DraggableList dropList)
-        {
-            if (data.SourceList == dropList || !IsDragAllowed(data, dropList))
-            {
-                return;
-            }
-
-            var sourceListType = ClassifyList(data.SourceList);
-            var dropListType = ClassifyList(dropList);
-
-            switch (dropListType)
-            {
-                case ListTypes.Package:
-                {
-                    switch (sourceListType)
-                    {
-                        case ListTypes.PluginItem:
-                        case ListTypes.AssetItem:
-                        {
-                            foreach (var entry in data.Entries)
-                            {
-                                data.SourceList.Remove(entry);
-                            }
-                            break;
-                        }
-                        case ListTypes.Release:
-                        {
-                            SetBackgroundTask(InstallReleasesAsync(data.Entries.Select(x => (ReleaseInfo)x.Tag).ToList()), "Installing Releases");
-                            break;
-                        }
-                        default:
-                        {
-                            Assert.Throw();
-                            break;
-                        }
-                    }
-
-                    break;
-                }
-                case ListTypes.PluginItem:
-                case ListTypes.AssetItem:
-                {
-                    switch (sourceListType)
-                    {
-                        case ListTypes.AssetItem:
-                        case ListTypes.PluginItem:
-                        {
-                            foreach (var entry in data.Entries)
-                            {
-                                data.SourceList.Remove(entry);
-                                dropList.Add(entry.Name, entry.Tag);
-                            }
-                            break;
-                        }
-                        case ListTypes.Package:
-                        {
-                            foreach (var entry in data.Entries)
-                            {
-                                if (!dropList.DisplayValues.Contains(entry.Name))
-                                {
-                                    var otherList = dropListType == ListTypes.PluginItem ? _assetsList : _pluginsList;
-
-                                    if (otherList.DisplayValues.Contains(entry.Name))
-                                    {
-                                        otherList.Remove(entry.Name);
-                                    }
-
-                                    dropList.Add(entry.Name);
-                                }
-                            }
-                            break;
-                        }
-                        default:
-                        {
-                            Assert.Throw();
-                            break;
-                        }
-                    }
-
-                    break;
-                }
-                case ListTypes.Release:
-                {
-                    // Nothing can drag here
-                    break;
-                }
-                default:
-                {
-                    Assert.Throw();
-                    break;
-                }
-            }
+                //foreach (var entry in entriesToRemove)
+                //{
+                    //entry.ListOwner.Remove(entry);
+                //}
+            //}
         }
 
         IEnumerator InstallReleasesAsync(List<ReleaseInfo> releaseInfos)
@@ -1147,13 +841,13 @@ namespace Projeny
             {
                 Assert.IsEqual(releaseInfo.Version, packageReleaseInfo.Version);
 
-                userChoice = PromptForUserChoice(
+                userChoice = _view.PromptForUserChoice(
                     "Package '{0}' is already installed with the same version ('{1}').  Would you like to re-install it anyway?  Note that any local changes you've made to the package will be reverted."
                         .Fmt(packageReleaseInfo.Name, packageReleaseInfo.Version), new[] { "Overwrite", "Skip", "Cancel" });
             }
             else if (releaseInfo.VersionCode > packageReleaseInfo.VersionCode)
             {
-                userChoice = PromptForUserChoice(
+                userChoice = _view.PromptForUserChoice(
                     "Package '{0}' is already installed with version '{1}'. Would you like to UPGRADE it to version '{2}'?  Note that any local changes you've made to the package will be lost."
                     .Fmt(releaseInfo.Name, packageReleaseInfo.Version, releaseInfo.Version), new[] { "Upgrade", "Skip", "Cancel" });
             }
@@ -1161,7 +855,7 @@ namespace Projeny
             {
                 Assert.That(releaseInfo.VersionCode < packageReleaseInfo.VersionCode);
 
-                userChoice = PromptForUserChoice(
+                userChoice = _view.PromptForUserChoice(
                     "Package '{0}' is already installed with version '{1}'. Would you like to DOWNGRADE it to version '{2}'?  Note that any local changes you've made to the package will be lost."
                     .Fmt(releaseInfo.Name, packageReleaseInfo.Version, releaseInfo.Version), new[] { "Downgrade", "Skip", "Cancel" });
             }
@@ -1195,7 +889,7 @@ namespace Projeny
 
         PackageInfo TryFindPackageInfoForRelease(ReleaseInfo releaseInfo)
         {
-            foreach (var packageInfo in _allPackages)
+            foreach (var packageInfo in _model.Packages)
             {
                 if (packageInfo.InstallInfo != null && packageInfo.InstallInfo.ReleaseInfo != null && packageInfo.InstallInfo.ReleaseInfo.Id == releaseInfo.Id)
                 {
@@ -1208,133 +902,8 @@ namespace Projeny
 
         ListTypes ClassifyList(DraggableList list)
         {
-            if (list == _packagesList)
-            {
-                return ListTypes.Package;
-            }
-
-            if (list == _releasesList)
-            {
-                return ListTypes.Release;
-            }
-
-            if (list == _assetsList)
-            {
-                return ListTypes.AssetItem;
-            }
-
-            if (list == _pluginsList)
-            {
-                return ListTypes.PluginItem;
-            }
-
-            Assert.Throw();
+            Assert.Throw("TODO");
             return ListTypes.AssetItem;
-        }
-
-        void DrawPackagesPane(Rect windowRect)
-        {
-            var startX = windowRect.xMin + _split1 * windowRect.width + Skin.ListVerticalSpacing;
-            var endX = windowRect.xMin + _split2 * windowRect.width - Skin.ListVerticalSpacing;
-            var startY = windowRect.yMin;
-            var endY = windowRect.yMax;
-
-            DrawPackagesPane2(Rect.MinMaxRect(startX, startY, endX, endY));
-        }
-
-        void DrawPackagesPane2(Rect rect)
-        {
-            var startX = rect.xMin;
-            var endX = rect.xMax;
-            var startY = rect.yMin;
-            var endY = startY + Skin.HeaderHeight;
-
-            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Packages", Skin.HeaderTextStyle);
-
-            startY = endY;
-            endY = rect.yMax - Skin.ApplyButtonHeight - Skin.ApplyButtonTopPadding;
-
-            _packagesList.Draw(Rect.MinMaxRect(startX, startY, endX, endY));
-
-            startY = endY + Skin.ApplyButtonTopPadding;
-            endY = rect.yMax;
-
-            var horizMiddle = 0.5f * (rect.xMax + rect.xMin);
-
-            endX = horizMiddle - 0.5f * Skin.PackagesPane.ButtonPadding;
-
-            if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh"))
-            {
-                SetBackgroundTask(RefreshPackagesAsync(), "Refreshing Packages");
-            }
-
-            startX = endX + Skin.PackagesPane.ButtonPadding;
-            endX = rect.xMax;
-
-            if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "New"))
-            {
-                SetBackgroundTask(CreateNewPackageAsync(), "Creating New Package");
-            }
-        }
-
-        void DoMyWindow(int id)
-        {
-            ImguiUtil.DrawColoredQuad(new Rect(0, 0, 1000, 1000), Color.red);
-        }
-
-        void DrawProjectPane2(Rect rect)
-        {
-            var startX = rect.xMin;
-            var endX = rect.xMax;
-            var startY = rect.yMin;
-            var endY = startY + Skin.HeaderHeight;
-
-            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Project", Skin.HeaderTextStyle);
-
-            startY = endY;
-            endY = startY + Skin.FileDropdownHeight;
-
-            DrawFileDropdown(Rect.MinMaxRect(startX, startY, endX, endY));
-
-            startY = endY;
-            endY = startY + Skin.HeaderHeight;
-
-            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Assets Folder", Skin.HeaderTextStyle);
-
-            startY = endY;
-            endY = rect.yMax - Skin.ApplyButtonHeight - Skin.ApplyButtonTopPadding;
-
-            DrawProjectPane3(Rect.MinMaxRect(startX, startY, endX, endY));
-
-            startY = endY + Skin.ApplyButtonTopPadding;
-            endY = rect.yMax;
-
-            DrawButtons(Rect.MinMaxRect(startX, startY, endX, endY));
-        }
-
-        void DrawProjectPane3(Rect listRect)
-        {
-            var halfHeight = 0.5f * listRect.height;
-
-            var rect1 = new Rect(listRect.x, listRect.y, listRect.width, halfHeight - 0.5f * Skin.ListHorizontalSpacing);
-            var rect2 = new Rect(listRect.x, listRect.y + halfHeight + 0.5f * Skin.ListHorizontalSpacing, listRect.width, listRect.height - halfHeight - 0.5f * Skin.ListHorizontalSpacing);
-
-            _assetsList.Draw(rect1);
-            _pluginsList.Draw(rect2);
-
-            GUI.Label(Rect.MinMaxRect(rect1.xMin, rect1.yMax, rect1.xMax, rect2.yMin), "Plugins Folder", Skin.HeaderTextStyle);
-        }
-
-        void DrawButtons(Rect rect)
-        {
-            var halfWidth = rect.width * 0.5f;
-            var padding = 0.5f * Skin.ProjectButtonsPadding;
-
-            if (GUI.Button(Rect.MinMaxRect(rect.x + halfWidth + padding, rect.y, rect.xMax, rect.yMax), "Apply"))
-            {
-                OverwriteConfig();
-                SetBackgroundTask(ProcessUpmCommand("Updating directory links", UpmHelper.UpdateLinksAsync()), "Updating Links");
-            }
         }
 
         IEnumerator RefreshReleasesAsync()
@@ -1342,7 +911,7 @@ namespace Projeny
             var response = ProcessUpmCommandForResult<List<ReleaseInfo>>("Looking up release list", UpmHelper.LookupReleaseListAsync());
             yield return response;
 
-            _allReleases = response.Current;
+            _model.SetReleases(response.Current);
             UpdateAvailableReleasesList();
         }
 
@@ -1353,7 +922,8 @@ namespace Projeny
 
         IEnumerator ProcessUpmCommand(string statusName, IEnumerator upmTask)
         {
-            _backgroundTaskInfo.StatusMessage = statusName;
+            Assert.IsNull(_view.BlockedStatusMessage);
+            _view.BlockedStatusMessage = statusName;
 
             while (upmTask.MoveNext())
             {
@@ -1370,7 +940,7 @@ namespace Projeny
 
                     if (outputLines.Count > 0)
                     {
-                        _backgroundTaskInfo.StatusMessage = outputLines.Last();
+                        _view.BlockedStatusMessage = outputLines.Last();
                     }
                 }
 
@@ -1385,55 +955,56 @@ namespace Projeny
             // Including installing a package, deleting a package, etc.
             AssetDatabase.Refresh();
 
+            _view.BlockedStatusMessage = null;
+
             if (response.Succeeded)
             {
                 yield return response.Result;
             }
             else
             {
-                var errorMessage = "Operation aborted!  UPM encountered errors: \n\n{0}".Fmt(response.ErrorMessage);
-                Log.Error("Projeny: {0}", errorMessage);
-
-                yield return DisplayError(errorMessage);
-
-                ForceStopBackgroundTask();
-                yield return null;
+                throw new UpmCommandException(response.ErrorMessage);
             }
-        }
-
-        IEnumerator DisplayError(string message)
-        {
-            return AlertUser(message, "<color=red>Error!</color>");
         }
 
         void UpdateAvailableReleasesList()
         {
-            _releasesList.Clear();
+            Assert.Throw("TODO");
+            //_releasesList.Clear();
 
-            foreach (var info in _allReleases)
-            {
-                _releasesList.Add(info.Name, info);
-            }
+            //foreach (var info in _allReleases)
+            //{
+                //_releasesList.Add(info.Name, info);
+            //}
         }
 
         void ForceStopBackgroundTask()
         {
-            _backgroundTaskInfo = null;
+            Assert.Throw("TODO");
+            //_backgroundTaskInfo = null;
         }
 
-        void SetBackgroundTask(IEnumerator task, string title = null)
+        void AddBackgroundTask(IEnumerator task, string title = null)
         {
-            Assert.IsNull(_backgroundTaskInfo);
-            _backgroundTaskInfo = new BackgroundTaskInfo()
-            {
-                StatusTitle = title,
-                CoRoutine = new CoRoutine(task),
-            };
+            _asyncProcessor.Process(RunMainBackgroundTask(task, title));
+        }
+
+        IEnumerator RunMainBackgroundTask(IEnumerator task, string title)
+        {
+            Assert.IsNull(_view.BlockedStatusTitle);
+            Assert.IsNull(_view.BlockedStatusMessage);
+
+            _view.BlockedStatusTitle = title;
+
+            yield return task;
+
+            Assert.IsEqual(_view.BlockedStatusTitle, title);
+            _view.BlockedStatusTitle = null;
         }
 
         IEnumerator CreateNewPackageAsync()
         {
-            var userInput = PromptForInput("Enter new package name:", "Untitled");
+            var userInput = _view.PromptForInput("Enter new package name:", "Untitled");
 
             yield return userInput;
 
@@ -1447,230 +1018,101 @@ namespace Projeny
             yield return RefreshPackagesAsync();
         }
 
-        void DrawPopupCommon(Rect fullRect, Rect popupRect)
-        {
-            ImguiUtil.DrawColoredQuad(fullRect, Skin.Theme.LoadingOverlayColor);
-            ImguiUtil.DrawColoredQuad(popupRect, Skin.Theme.LoadingOverlapPopupColor);
-        }
-
-        IEnumerator<string> PromptForInput(string label, string defaultValue)
-        {
-            Assert.IsNull(_popupHandler);
-
-            string userInput = defaultValue;
-            InputDialogStates state = InputDialogStates.None;
-
-            bool isFirst = true;
-
-            _popupHandler = delegate(Rect fullRect)
-            {
-                if (Event.current.type == EventType.KeyDown)
-                {
-                    switch (Event.current.keyCode)
-                    {
-                        case KeyCode.Return:
-                        {
-                            state = InputDialogStates.Submitted;
-                            break;
-                        }
-                        case KeyCode.Escape:
-                        {
-                            state = InputDialogStates.Cancelled;
-                            break;
-                        }
-                    }
-                }
-
-                var popupRect = ImguiUtil.CenterRectInRect(fullRect, Skin.InputDialog.PopupSize);
-
-                DrawPopupCommon(fullRect, popupRect);
-
-                var contentRect = ImguiUtil.CreateContentRectWithPadding(
-                    popupRect, Skin.InputDialog.PanelPadding);
-
-                GUILayout.BeginArea(contentRect);
-                {
-                    GUILayout.Label(label, Skin.InputDialog.LabelStyle);
-
-                    GUI.SetNextControlName("PopupTextField");
-                    userInput = GUILayout.TextField(userInput, 100);
-                    GUI.SetNextControlName("");
-
-                    GUILayout.Space(5);
-
-                    GUILayout.BeginHorizontal();
-                    {
-                        GUILayout.FlexibleSpace();
-
-                        if (GUILayout.Button("Submit", GUILayout.MaxWidth(100)))
-                        {
-                            state = InputDialogStates.Submitted;
-                        }
-
-                        if (GUILayout.Button("Cancel", GUILayout.MaxWidth(100)))
-                        {
-                            state = InputDialogStates.Cancelled;
-                        }
-                    }
-                    GUILayout.EndHorizontal();
-                }
-                GUILayout.EndArea();
-
-                if (isFirst)
-                {
-                    isFirst = false;
-                    // Need to remove focus then regain focus on the text box for it to select the whole contents
-                    GUI.FocusControl("");
-                }
-                else if (string.IsNullOrEmpty(GUI.GetNameOfFocusedControl()))
-                {
-                    GUI.FocusControl("PopupTextField");
-                }
-            };
-
-            while (state == InputDialogStates.None)
-            {
-                yield return null;
-            }
-
-            _popupHandler = null;
-
-            if (state == InputDialogStates.Submitted)
-            {
-                yield return userInput;
-            }
-            else
-            {
-                // Just return null
-            }
-        }
-
         IEnumerator RefreshPackagesAsync()
         {
             var allPackages = ProcessUpmCommandForResult<List<PackageInfo>>("Looking up package list", UpmHelper.LookupPackagesListAsync());
             yield return allPackages;
 
-            _allPackages = allPackages.Current;
-            UpdateAvailablePackagesList();
-        }
-
-        void UpdateAvailablePackagesList()
-        {
-            _packagesList.Clear();
-
-            foreach (var info in _allPackages)
-            {
-                _packagesList.Add(info.Name, info);
-            }
+            _model.SetPackages(allPackages.Current);
         }
 
         void RefreshProject()
         {
-            var configPath = GetProjectConfigPath();
+            var configPath = ProjenyEditorUtil.GetProjectConfigPath(_model.ProjectConfigType);
 
-            if (File.Exists(configPath))
+            if (!File.Exists(configPath))
             {
-                ProjectConfig savedConfig;
+                ResetProject();
+                return;
+            }
 
-                try
-                {
-                    savedConfig = DeserializeProjectConfig(configPath);
-                }
-                catch (Exception e)
-                // This can happen if the file has yaml serialization errors
-                {
-                    Log.ErrorException(e);
+            ProjectConfig savedConfig;
 
-                    // If we don't already have a popup/async task happening, then
-                    // display the error popup
-                    // Otherwise the error will only be shown in console which is fine
-                    if (_backgroundTaskInfo == null)
-                    {
-                        SetBackgroundTask(
-                            DisplayError(e.Message));
-                    }
+            try
+            {
+                savedConfig = DeserializeProjectConfig(configPath);
+            }
+            catch (Exception e)
+            // This can happen if the file has yaml serialization errors
+            {
+                DisplayError(e.Message);
+                return;
+            }
 
-                    return;
-                }
-
-                // Null when file is empty
-                if (savedConfig == null)
-                {
-                    ClearProjectLists();
-                }
-                else
-                {
-                    PopulateListsFromConfig(savedConfig);
-                }
+            // Null when file is empty
+            if (savedConfig == null)
+            {
+                ResetProject();
             }
             else
             {
-                ClearProjectLists();
+                PopulateModelFromConfig(savedConfig);
             }
         }
 
-        string GetProjectConfigPath()
+        void DisplayError(string message)
         {
-            var projectRootDir = Path.Combine(Application.dataPath, "../..");
-            var unityProjectsDir = Path.Combine(projectRootDir, "..");
+            Log.Error("Projeny: " + message);
 
-            switch (_projectConfigType)
+            // Do not display errors on top of each other
+            // In those cases it will still be in the log and that's enough
+            if (!_isDisplayingError)
             {
-                case ProjectConfigTypes.LocalProject:
-                {
-                    return Path.Combine(projectRootDir, ProjenyEditorUtil.ProjectConfigFileName);
-                }
-                case ProjectConfigTypes.LocalProjectUser:
-                {
-                    return Path.Combine(projectRootDir, ProjenyEditorUtil.ProjectConfigUserFileName);
-                }
-                case ProjectConfigTypes.AllProjects:
-                {
-                    return Path.Combine(unityProjectsDir, ProjenyEditorUtil.ProjectConfigFileName);
-                }
-                case ProjectConfigTypes.AllProjectsUser:
-                {
-                    return Path.Combine(unityProjectsDir, ProjenyEditorUtil.ProjectConfigUserFileName);
-                }
+                _asyncProcessor.Process(DisplayErrorInternal(message));
             }
-
-            return null;
         }
 
-        void ClearProjectLists()
+        IEnumerator DisplayErrorInternal(string message)
         {
-            _pluginsList.Clear();
-            _assetsList.Clear();
+            Assert.That(!_isDisplayingError);
+            _isDisplayingError = true;
 
-            UpdateAvailablePackagesList();
+            yield return _view.AlertUser(message, "<color=red>Error!</color>");
+
+            _isDisplayingError = false;
         }
 
-        void PopulateListsFromConfig(ProjectConfig config)
+        void ResetProject()
         {
-            _pluginsList.Clear();
-            _assetsList.Clear();
+            _model.ClearAssetItems();
+            _model.ClearPluginItems();
+        }
 
-            foreach (var name in config.Packages)
-            {
-                _assetsList.Add(name);
-            }
+        void PopulateModelFromConfig(ProjectConfig config)
+        {
+            _model.ClearPluginItems();
 
             foreach (var name in config.PackagesPlugins)
             {
-                _pluginsList.Add(name);
+                _model.AddPluginItem(name);
             }
 
-            UpdateAvailablePackagesList();
+            _model.ClearAssetItems();
+
+            foreach (var name in config.Packages)
+            {
+                _model.AddAssetItem(name);
+            }
         }
 
         void OverwriteConfig()
         {
-            File.WriteAllText(GetProjectConfigPath(), GetSerializedProjectConfigFromLists());
+            File.WriteAllText(ProjenyEditorUtil.GetProjectConfigPath(_model.ProjectConfigType), GetSerializedProjectConfigFromLists());
         }
 
         bool HasProjectConfigChanged()
         {
-            var configPath = GetProjectConfigPath();
+            var configPath = ProjenyEditorUtil.GetProjectConfigPath(_model.ProjectConfigType);
 
             var currentConfig = GetProjectConfigFromLists();
 
@@ -1720,8 +1162,8 @@ namespace Projeny
         {
             var config = new ProjectConfig();
 
-            config.Packages = _assetsList.DisplayValues.ToList();
-            config.PackagesPlugins = _pluginsList.DisplayValues.ToList();
+            config.Packages = _model.AssetItems.ToList();
+            config.PackagesPlugins = _model.PluginItems.ToList();
 
             return config;
         }
@@ -1735,7 +1177,7 @@ namespace Projeny
         {
             if (HasProjectConfigChanged())
             {
-                var choice = PromptForUserChoice(
+                var choice = _view.PromptForUserChoice(
                     "Do you want to save changes to your project?", new[] { "Save", "Don't Save", "Cancel" });
 
                 yield return choice;
@@ -1764,312 +1206,17 @@ namespace Projeny
                 }
             }
 
-            _projectConfigType = configType;
-            RefreshProject();
-        }
-
-        void DrawFileDropdown(Rect rect)
-        {
-            var dropDownRect = Rect.MinMaxRect(
-                rect.xMin,
-                rect.yMin,
-                rect.xMax - Skin.FileButtonsPercentWidth * rect.width,
-                rect.yMax);
-
-            var displayValues = GetConfigTypesDisplayValues();
-            var desiredConfigType = (ProjectConfigTypes)EditorGUI.Popup(dropDownRect, (int)_projectConfigType, displayValues, Skin.DropdownTextStyle);
-
-            GUI.Button(dropDownRect, displayValues[(int)desiredConfigType]);
-
-            if (desiredConfigType != _projectConfigType)
-            {
-                SetBackgroundTask(TryChangeProjectType(desiredConfigType));
-            }
-
-            GUI.DrawTexture(new Rect(dropDownRect.xMax - Skin.ArrowSize.x + Skin.ArrowOffset.x, dropDownRect.yMin + Skin.ArrowOffset.y, Skin.ArrowSize.x, Skin.ArrowSize.y), Skin.FileDropdownArrow);
-
-            var startX = rect.xMax - Skin.FileButtonsPercentWidth * rect.width;
-            var startY = rect.yMin;
-            var endX = rect.xMax;
-            var endY = rect.yMax;
-
-            var buttonPadding = Skin.FileButtonsPadding;
-            var buttonWidth = ((endX - startX) - 3 * buttonPadding) / 3.0f;
-            var buttonHeight = endY - startY;
-
-            var configPath = GetProjectConfigPath();
-            var configFileExists = File.Exists(configPath);
-
-            startX = startX + buttonPadding;
-
-            bool wasEnabled;
-            wasEnabled = GUI.enabled;
-            GUI.enabled = configFileExists;
-            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "Revert"))
-            {
-                RefreshProject();
-            }
-            GUI.enabled = wasEnabled;
-
-            startX = startX + buttonWidth + buttonPadding;
-
-            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "Save"))
-            {
-                OverwriteConfig();
-            }
-
-            startX = startX + buttonWidth + buttonPadding;
-
-            wasEnabled = GUI.enabled;
-            GUI.enabled = configFileExists;
-            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "Edit"))
-            {
-                InternalEditorUtility.OpenFileAtLineExternal(configPath, 1);
-            }
-            GUI.enabled = wasEnabled;
-        }
-
-        string[] GetConfigTypesDisplayValues()
-        {
-            return new[]
-            {
-                ProjenyEditorUtil.ProjectConfigFileName,
-                ProjenyEditorUtil.ProjectConfigUserFileName,
-                ProjenyEditorUtil.ProjectConfigFileName + " (global)",
-                ProjenyEditorUtil.ProjectConfigUserFileName + " (global)",
-            };
-        }
-
-        void DrawArrowColumns(Rect fullRect)
-        {
-            var halfHeight = 0.5f * fullRect.height;
-
-            var rect1 = new Rect(Skin.ListVerticalSpacing, halfHeight - 0.5f * Skin.ArrowHeight, Skin.ArrowWidth, Skin.ArrowHeight);
-
-            if ((int)_viewState > 0)
-            {
-                if (GUI.Button(rect1, ""))
-                {
-                    _viewState = (ViewStates)((int)_viewState - 1);
-                }
-
-                if (Skin.ArrowLeftTexture != null)
-                {
-                    GUI.DrawTexture(new Rect(rect1.xMin + 0.5f * rect1.width - 0.5f * Skin.ArrowButtonIconWidth, rect1.yMin + 0.5f * rect1.height - 0.5f * Skin.ArrowButtonIconHeight, Skin.ArrowButtonIconWidth, Skin.ArrowButtonIconHeight), Skin.ArrowLeftTexture);
-                }
-            }
-
-            var rect2 = new Rect(fullRect.xMax - Skin.ListVerticalSpacing - Skin.ArrowWidth, halfHeight - 0.5f * Skin.ArrowHeight, Skin.ArrowWidth, Skin.ArrowHeight);
-
-            var numValues = Enum.GetValues(typeof(ViewStates)).Length;
-
-            if ((int)_viewState < numValues-1)
-            {
-                if (GUI.Button(rect2, ""))
-                {
-                    _viewState = (ViewStates)((int)_viewState + 1);
-                }
-
-                if (Skin.ArrowRightTexture != null)
-                {
-                    GUI.DrawTexture(new Rect(rect2.xMin + 0.5f * rect2.width - 0.5f * Skin.ArrowButtonIconWidth, rect2.yMin + 0.5f * rect2.height - 0.5f * Skin.ArrowButtonIconHeight, Skin.ArrowButtonIconWidth, Skin.ArrowButtonIconHeight), Skin.ArrowRightTexture);
-                }
-            }
-        }
-
-        void DrawReleasePane(Rect windowRect)
-        {
-            var startX = windowRect.xMin;
-            var endX = windowRect.xMin + _split1 * windowRect.width - Skin.ListVerticalSpacing;
-            var startY = windowRect.yMin;
-            var endY = windowRect.yMax;
-
-            DrawReleasePane2(Rect.MinMaxRect(startX, startY, endX, endY));
-        }
-
-        void DrawReleasePane2(Rect rect)
-        {
-            var startX = rect.xMin;
-            var endX = rect.xMax;
-            var startY = rect.yMin;
-            var endY = startY + Skin.HeaderHeight;
-
-            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Releases", Skin.HeaderTextStyle);
-
-            var skin = Skin.ReleasesPane;
-
-            startY = endY;
-            endY = startY + skin.IconRowHeight;
-
-            var iconRowRect = Rect.MinMaxRect(startX, startY, endX, endY);
-            DrawSearchPane(iconRowRect);
-
-            startY = endY;
-            endY = rect.yMax - Skin.ApplyButtonHeight - Skin.ApplyButtonTopPadding;
-
-            _releasesList.Draw(Rect.MinMaxRect(startX, startY, endX, endY));
-
-            startY = endY + Skin.ApplyButtonTopPadding;
-            endY = rect.yMax;
-
-            if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh"))
-            {
-                SetBackgroundTask(RefreshReleasesAsync(), "Refreshing Release List");
-            }
-        }
-
-        void DrawSearchPane(Rect rect)
-        {
-            var startX = rect.xMin;
-            var endX = rect.xMax;
-            var startY = rect.yMin;
-            var endY = rect.yMax;
-
-            var skin = Skin.ReleasesPane;
-
-            ImguiUtil.DrawColoredQuad(rect, skin.IconRowBackgroundColor);
-
-            endX = rect.xMax - 2 * skin.ButtonWidth;
-
-            var searchBarRect = Rect.MinMaxRect(startX, startY, endX, endY);
-            if (searchBarRect.Contains(Event.current.mousePosition))
-            {
-                ImguiUtil.DrawColoredQuad(searchBarRect, skin.MouseOverBackgroundColor);
-            }
-
-            GUI.Label(new Rect(startX + skin.SearchIconOffset.x, startY + skin.SearchIconOffset.y, skin.SearchIconSize.x, skin.SearchIconSize.y), skin.SearchIcon);
-
-            _releasesList.SearchFilter = GUI.TextField(
-                searchBarRect, _releasesList.SearchFilter, skin.SearchTextStyle);
-
-            startX = endX;
-            endX = startX + skin.ButtonWidth;
-
-            Rect buttonRect;
-
-            buttonRect = Rect.MinMaxRect(startX, startY, endX, endY);
-            if (buttonRect.Contains(Event.current.mousePosition))
-            {
-                ImguiUtil.DrawColoredQuad(buttonRect, skin.MouseOverBackgroundColor);
-
-                if (Event.current.type == EventType.MouseDown)
-                {
-                    _releaseSortAscending = !_releaseSortAscending;
-                    _releasesList.ForceSort();
-                }
-            }
-            GUI.DrawTexture(buttonRect, _releaseSortAscending ? skin.SortDirDownIcon : skin.SortDirUpIcon);
-
-            startX = endX;
-            endX = startX + skin.ButtonWidth;
-
-            buttonRect = Rect.MinMaxRect(startX, startY, endX, endY);
-            if (buttonRect.Contains(Event.current.mousePosition))
-            {
-                ImguiUtil.DrawColoredQuad(buttonRect, skin.MouseOverBackgroundColor);
-
-                if (Event.current.type == EventType.MouseDown)
-                {
-                    ShowReleasesSortMenu(new Vector2(buttonRect.xMin, buttonRect.yMax));
-                }
-            }
-            GUI.DrawTexture(buttonRect, skin.SortIcon);
-        }
-
-        void ShowReleasesSortMenu(Vector2 startPos)
-        {
-            GenericMenu contextMenu = new GenericMenu();
-
-            contextMenu.AddItem(
-                new GUIContent("Order By Name"),
-                _releasesSortMethod == ReleasesSortMethod.Name,
-                () => ChangeReleaseSortMethod(ReleasesSortMethod.Name));
-
-            contextMenu.AddItem(
-                new GUIContent("Order By Size"),
-                _releasesSortMethod == ReleasesSortMethod.Size,
-                () => ChangeReleaseSortMethod(ReleasesSortMethod.Size));
-
-            contextMenu.AddItem(
-                new GUIContent("Order By Publish Date"),
-                _releasesSortMethod == ReleasesSortMethod.PublishDate,
-                () => ChangeReleaseSortMethod(ReleasesSortMethod.PublishDate));
-
-            contextMenu.DropDown(new Rect(startPos.x, startPos.y, 0, 0));
-        }
-
-        void ChangeReleaseSortMethod(ReleasesSortMethod sortMethod)
-        {
-            _releasesSortMethod = sortMethod;
-            _releasesList.ForceSort();
-        }
-
-        void DrawProjectPane(Rect windowRect)
-        {
-            var startX = windowRect.xMin + _split2 * windowRect.width + Skin.ListVerticalSpacing;
-            var endX = windowRect.xMax - Skin.ListVerticalSpacing;
-            var startY = windowRect.yMin;
-            var endY = windowRect.yMax;
-
-            var rect = Rect.MinMaxRect(startX, startY, endX, endY);
-
-            DrawProjectPane2(rect);
+            Assert.Throw("TODO");
+            //_projectConfigType = configType;
+            //RefreshProject();
         }
 
         public void OnGUI()
         {
-            GUI.skin = Skin.GUISkin;
-
             var fullRect = new Rect(0, 0, this.position.width, this.position.height);
-
-            if (_backgroundTaskInfo != null)
-            {
-                // Do not allow any input processing when running an async task
-                GUI.enabled = false;
-            }
-
-            DrawArrowColumns(fullRect);
-
-            var windowRect = Rect.MinMaxRect(
-                Skin.ListVerticalSpacing + Skin.ArrowWidth,
-                Skin.MarginTop,
-                this.position.width - Skin.ListVerticalSpacing - Skin.ArrowWidth,
-                this.position.height - Skin.MarginBottom);
-
-            if (_split2 >= 0.1f)
-            {
-                DrawPackagesPane(windowRect);
-            }
-
-            if (_split2 <= 0.92f)
-            {
-                DrawProjectPane(windowRect);
-            }
-
-            if (_split1 >= 0.1f)
-            {
-                DrawReleasePane(windowRect);
-            }
+            _view.OnGUI(fullRect);
 
             CheckForKeypresses();
-
-            GUI.enabled = true;
-
-            if (_backgroundTaskInfo == null)
-            {
-                Assert.IsNull(_popupHandler);
-            }
-            else
-            {
-                if (_popupHandler != null)
-                {
-                    _popupHandler(fullRect);
-                }
-                else
-                {
-                    DisplayGenericProcessingDialog(fullRect);
-                }
-            }
         }
 
         void CheckForKeypresses()
@@ -2111,52 +1258,12 @@ namespace Projeny
             }
         }
 
-        void DisplayGenericProcessingDialog(Rect fullRect)
+        public class UpmCommandException : Exception
         {
-            var skin = Skin.AsyncPopupPane;
-            var popupRect = ImguiUtil.CenterRectInRect(fullRect, skin.PopupSize);
-
-            DrawPopupCommon(fullRect, popupRect);
-
-            var contentRect = ImguiUtil.CreateContentRectWithPadding(
-                popupRect, skin.PanelPadding);
-
-            GUILayout.BeginArea(contentRect);
+            public UpmCommandException(string message)
+                : base(message)
             {
-                string title;
-
-                if (string.IsNullOrEmpty(_backgroundTaskInfo.StatusTitle))
-                {
-                    title = "Processing";
-                }
-                else
-                {
-                    title = _backgroundTaskInfo.StatusTitle;
-                }
-
-                GUILayout.Label(title, skin.HeadingTextStyle, GUILayout.ExpandWidth(true));
-                GUILayout.Space(skin.HeadingBottomPadding);
-
-                string statusMessage = "";
-
-                if (!string.IsNullOrEmpty(_backgroundTaskInfo.StatusMessage))
-                {
-                    statusMessage = _backgroundTaskInfo.StatusMessage;
-
-                    int numExtraDots = (int)(Time.realtimeSinceStartup * skin.DotRepeatRate) % 4;
-
-                    statusMessage += new String('.', numExtraDots);
-
-                    // This is very hacky but the only way I can figure out how to keep the message a fixed length
-                    // so that the text doesn't jump around as the number of dots change
-                    // I tried using spaces instead of _ but that didn't work
-                    statusMessage += WrapWithColor(new String('_', 3 - numExtraDots), Skin.Theme.LoadingOverlapPopupColor);
-                }
-
-                GUILayout.Label(statusMessage, skin.StatusMessageTextStyle, GUILayout.ExpandWidth(true));
             }
-
-            GUILayout.EndArea();
         }
 
         public class BackgroundTaskInfo
@@ -2168,48 +1275,11 @@ namespace Projeny
             public string StatusMessage;
         }
 
-        enum ReleasesSortMethod
-        {
-            Name,
-            Size,
-            PublishDate
-        }
-
-        enum ProjectConfigTypes
-        {
-            LocalProject,
-            LocalProjectUser,
-            AllProjects,
-            AllProjectsUser,
-        }
-
         enum InstallReleaseUserChoices
         {
+            Install,
             Cancel,
             Skip,
-            Install,
-        }
-
-        enum ViewStates
-        {
-            ReleasesAndPackages,
-            PackagesAndProject,
-            Project,
-        }
-
-        enum InputDialogStates
-        {
-            None,
-            Cancelled,
-            Submitted
-        }
-
-        enum ListTypes
-        {
-            Package,
-            Release,
-            AssetItem,
-            PluginItem
         }
     }
 }
