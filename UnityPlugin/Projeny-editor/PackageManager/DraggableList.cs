@@ -14,13 +14,14 @@ namespace Projeny.Internal
         public int Index;
         public DraggableList ListOwner;
         public ListTypes ListType;
+        public bool IsSelected;
     }
 
     public class DraggableList
     {
         static readonly string DragId = "DraggableListData";
 
-        readonly List<DraggableListEntry> _entryList = new List<DraggableListEntry>();
+        readonly List<DraggableListEntry> _entries = new List<DraggableListEntry>();
         readonly PmView _manager;
 
         readonly Model _model;
@@ -70,7 +71,7 @@ namespace Projeny.Internal
         {
             get
             {
-                return _entryList;
+                return _entries;
             }
         }
 
@@ -78,25 +79,32 @@ namespace Projeny.Internal
         {
             get
             {
-                return _entryList.Select(x => x.Name);
+                return _entries.Select(x => x.Name);
+            }
+        }
+
+        public void ClearSelected()
+        {
+            foreach (var entry in _entries)
+            {
+                entry.IsSelected = false;
             }
         }
 
         public void Remove(DraggableListEntry entry)
         {
-            _manager.Deselect(entry);
-            _entryList.RemoveWithConfirm(entry);
+            _entries.RemoveWithConfirm(entry);
             UpdateIndices();
         }
 
         public DraggableListEntry GetAtIndex(int index)
         {
-            return _entryList[index];
+            return _entries[index];
         }
 
         public void Remove(string name)
         {
-            Remove(_entryList.Where(x => x.Name == name).Single());
+            Remove(_entries.Where(x => x.Name == name).Single());
         }
 
         public void Add(string name, object tag)
@@ -109,7 +117,7 @@ namespace Projeny.Internal
                 ListType = _listType,
             };
 
-            _entryList.Add(entry);
+            _entries.Add(entry);
             UpdateIndices();
         }
 
@@ -120,25 +128,80 @@ namespace Projeny.Internal
 
         public void Clear()
         {
-            foreach (var entry in _entryList)
-            {
-                _manager.Deselect(entry);
-            }
-            _entryList.Clear();
+            _entries.Clear();
         }
 
         public void UpdateIndices()
         {
-            for (int i = 0; i < _entryList.Count; i++)
+            for (int i = 0; i < _entries.Count; i++)
             {
-                _entryList[i].Index = i;
+                _entries[i].Index = i;
             }
+        }
+
+        void Select(DraggableListEntry newEntry)
+        {
+            if (newEntry.IsSelected)
+            {
+                if (Event.current.control)
+                {
+                    newEntry.IsSelected = false;
+                }
+
+                return;
+            }
+
+            if (!Event.current.control && !Event.current.shift)
+            {
+                _manager.ClearSelected();
+            }
+
+            // The selection entry list should all be from the same list
+            _manager.ClearOtherListSelected(_listType);
+
+            var selected = GetSelected();
+
+            if (Event.current.shift && !selected.IsEmpty())
+            {
+                var closestEntry = selected
+                    .Select(x => new { Distance = Mathf.Abs(x.Index - newEntry.Index), Entry = x })
+                    .OrderBy(x => x.Distance)
+                    .Select(x => x.Entry).First();
+
+                int startIndex;
+                int endIndex;
+
+                if (closestEntry.Index > newEntry.Index)
+                {
+                    startIndex = newEntry.Index + 1;
+                    endIndex = closestEntry.Index - 1;
+                }
+                else
+                {
+                    startIndex = closestEntry.Index + 1;
+                    endIndex = newEntry.Index - 1;
+                }
+
+                for (int i = startIndex; i <= endIndex; i++)
+                {
+                    var inBetweenEntry = closestEntry.ListOwner.GetAtIndex(i);
+
+                    inBetweenEntry.IsSelected = true;
+                }
+            }
+
+            newEntry.IsSelected = true;
+        }
+
+        public List<DraggableListEntry> GetSelected()
+        {
+            return _entries.Where(x => x.IsSelected).ToList();
         }
 
         public void Draw(Rect listRect)
         {
             var searchFilter = _model.SearchFilter.Trim().ToLowerInvariant();
-            var visibleEntries = _entryList.Where(x => x.Name.ToLowerInvariant().Contains(searchFilter)).ToList();
+            var visibleEntries = _entries.Where(x => x.Name.ToLowerInvariant().Contains(searchFilter)).ToList();
 
             var viewRect = new Rect(0, 0, listRect.width - 30.0f, visibleEntries.Count * Skin.ItemHeight);
 
@@ -221,7 +284,7 @@ namespace Projeny.Internal
 
                     Color itemColor;
 
-                    if (_manager.Selected.Contains(entry))
+                    if (entry.IsSelected)
                     {
                         itemColor = Skin.Theme.ListItemSelectedColor;
                     }
@@ -251,7 +314,7 @@ namespace Projeny.Internal
                                 if (!Event.current.shift && !Event.current.control)
                                 {
                                     _manager.ClearSelected();
-                                    _manager.Select(entry);
+                                    Select(entry);
                                 }
                             }
 
@@ -265,7 +328,7 @@ namespace Projeny.Internal
                                 GUI.FocusControl(null);
 
                                 clickedItem = true;
-                                _manager.Select(entry);
+                                Select(entry);
 
                                 if (Event.current.button == 0)
                                 {
@@ -273,7 +336,7 @@ namespace Projeny.Internal
 
                                     var dragData = new DragData()
                                     {
-                                        Entries = _manager.Selected.ToList(),
+                                        Entries = GetSelected(),
                                         SourceList = this,
                                     };
 
@@ -315,6 +378,7 @@ namespace Projeny.Internal
         {
             public Vector2 ScrollPos;
             public string SearchFilter = "";
+            public List<int> SelectedIndices = new List<int>();
         }
     }
 }

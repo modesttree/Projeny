@@ -79,8 +79,7 @@ namespace Projeny
 
         List<string> GetSelectedItems()
         {
-            return _view.Selected
-                .Where(x => x.ListType == ListTypes.AssetItem || x.ListType == ListTypes.PluginItem)
+            return _view.GetSelected(ListTypes.AssetItem).Concat(_view.GetSelected(ListTypes.PluginItem))
                 .Select(x => (string)x.Tag).ToList();
         }
 

@@ -39,8 +39,7 @@ namespace Projeny
 
         List<PackageInfo> GetSelectedItems()
         {
-            return _view.Selected
-                .Where(x => x.ListType == ListTypes.Package)
+            return _view.GetSelected(ListTypes.Package)
                 .Select(x => (PackageInfo)x.Tag).ToList();
         }
 

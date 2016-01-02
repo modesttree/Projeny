@@ -58,8 +58,6 @@ namespace Projeny.Internal
 
         readonly List<PopupInfo> _popupHandlers = new List<PopupInfo>();
 
-        readonly List<DraggableListEntry> _selected = new List<DraggableListEntry>();
-
         readonly List<DraggableList> _lists = new List<DraggableList>();
 
         readonly Model _model;
@@ -140,14 +138,6 @@ namespace Projeny.Internal
             }
         }
 
-        public IEnumerable<DraggableListEntry> Selected
-        {
-            get
-            {
-                return _selected;
-            }
-        }
-
         public string BlockedStatusMessage
         {
             get;
@@ -197,76 +187,27 @@ namespace Projeny.Internal
             //return null;
         }
 
+        public List<DraggableListEntry> GetSelected(ListTypes listType)
+        {
+            return _lists[(int)listType].GetSelected();
+        }
+
+        public void ClearOtherListSelected(ListTypes type)
+        {
+            foreach (var list in _lists)
+            {
+                if (list.ListType != type)
+                {
+                    list.ClearSelected();
+                }
+            }
+        }
+
         public void ClearSelected()
         {
-            _selected.Clear();
-        }
-
-        public void Deselect(DraggableListEntry newEntry)
-        {
-            _selected.Remove(newEntry);
-        }
-
-        public void Select(DraggableListEntry newEntry)
-        {
-            if (_selected.Contains(newEntry))
+            foreach (var list in _lists)
             {
-                if (Event.current.control)
-                {
-                    _selected.RemoveWithConfirm(newEntry);
-                }
-
-                return;
-            }
-
-            if (!Event.current.control && !Event.current.shift)
-            {
-                _selected.Clear();
-            }
-
-            // The selection entry list should all be from the same list
-            foreach (var existingEntry in _selected.ToList())
-            {
-                if (existingEntry.ListOwner != newEntry.ListOwner)
-                {
-                    _selected.Remove(existingEntry);
-                }
-            }
-
-            if (Event.current.shift && !_selected.IsEmpty())
-            {
-                var closestEntry = _selected.Select(x => new { Distance = Mathf.Abs(x.Index - newEntry.Index), Entry = x }).OrderBy(x => x.Distance).Select(x => x.Entry).First();
-
-                int startIndex;
-                int endIndex;
-
-                if (closestEntry.Index > newEntry.Index)
-                {
-                    startIndex = newEntry.Index + 1;
-                    endIndex = closestEntry.Index - 1;
-                }
-                else
-                {
-                    startIndex = closestEntry.Index + 1;
-                    endIndex = newEntry.Index - 1;
-                }
-
-                for (int i = startIndex; i <= endIndex; i++)
-                {
-                    var inBetweenEntry = closestEntry.ListOwner.GetAtIndex(i);
-
-                    SelectInternal(inBetweenEntry);
-                }
-            }
-
-            SelectInternal(newEntry);
-        }
-
-        void SelectInternal(DraggableListEntry entry)
-        {
-            if (!_selected.Contains(entry))
-            {
-                _selected.Add(entry);
+                list.ClearSelected();
             }
         }
 
