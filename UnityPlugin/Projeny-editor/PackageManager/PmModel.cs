@@ -31,6 +31,7 @@ namespace Projeny
         public event Action PluginItemsChanged = delegate {};
         public event Action AssetItemsChanged = delegate {};
         public event Action PackagesChanged = delegate {};
+        public event Action ReleasesChanged = delegate {};
         public event Action ProjectConfigTypeChanged = delegate {};
 
         [SerializeField]
@@ -46,10 +47,10 @@ namespace Projeny
         bool _releaseSortAscending;
 
         [SerializeField]
-        List<PackageInfo> _allPackages = new List<PackageInfo>();
+        List<PackageInfo> _packages = new List<PackageInfo>();
 
         [SerializeField]
-        List<ReleaseInfo> _allReleases = new List<ReleaseInfo>();
+        List<ReleaseInfo> _releases = new List<ReleaseInfo>();
 
         [SerializeField]
         List<string> _assetItems = new List<string>();
@@ -59,6 +60,14 @@ namespace Projeny
 
         public PmModel()
         {
+        }
+
+        public IEnumerable<ReleaseInfo> Releases
+        {
+            get
+            {
+                return _releases;
+            }
         }
 
         public IEnumerable<string> AssetItems
@@ -81,7 +90,7 @@ namespace Projeny
         {
             get
             {
-                return _allPackages;
+                return _packages;
             }
         }
 
@@ -189,15 +198,16 @@ namespace Projeny
 
         public void SetPackages(List<PackageInfo> packages)
         {
-            _allPackages.Clear();
-            _allPackages.AddRange(packages);
+            _packages.Clear();
+            _packages.AddRange(packages);
             PackagesChanged();
         }
 
         public void SetReleases(List<ReleaseInfo> releases)
         {
-            _allReleases.Clear();
-            _allReleases.AddRange(releases);
+            _releases.Clear();
+            _releases.AddRange(releases);
+            ReleasesChanged();
         }
 
         public bool IsPackageAddedToProject(string name)
@@ -207,7 +217,7 @@ namespace Projeny
 
         public bool IsReleaseInstalled(ReleaseInfo info)
         {
-            return _allPackages
+            return _packages
                 .Any(x => x.InstallInfo != null
                         && x.InstallInfo.ReleaseInfo != null
                         && x.InstallInfo.ReleaseInfo.Id == info.Id

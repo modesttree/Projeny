@@ -101,6 +101,7 @@ namespace Projeny.Internal
             return !Enumerable.SequenceEqual(currentConfig.Packages.OrderBy(t => t), savedConfig.Packages.OrderBy(t => t))
                 || !Enumerable.SequenceEqual(currentConfig.PackagesPlugins.OrderBy(t => t), savedConfig.PackagesPlugins.OrderBy(t => t));
         }
+
         public void RefreshProject()
         {
             var configPath = ProjenyEditorUtil.GetProjectConfigPath(_model.ProjectConfigType);

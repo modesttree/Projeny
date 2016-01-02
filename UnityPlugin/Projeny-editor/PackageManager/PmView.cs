@@ -326,6 +326,16 @@ namespace Projeny
             }
         }
 
+        public void SetReleaseItems(List<ListItemData> items)
+        {
+            _releasesList.Clear();
+
+            foreach (var item in items)
+            {
+                _releasesList.Add(item.Caption, item.Tag);
+            }
+        }
+
         public void SetPluginItems(List<ListItemData> items)
         {
             _pluginsList.Clear();

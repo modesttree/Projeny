@@ -30,6 +30,7 @@ namespace Projeny.Internal
             _model.PluginItemsChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
             _model.AssetItemsChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
             _model.PackagesChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
+            _model.ReleasesChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
 
             _model.ProjectConfigTypeChanged += _eventManager.Add(OnProjectConfigTypeChanged, EventQueueMode.LatestOnly);
 
@@ -44,6 +45,7 @@ namespace Projeny.Internal
             _model.PluginItemsChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
             _model.AssetItemsChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
             _model.PackagesChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
+            _model.ReleasesChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
 
             _model.ProjectConfigTypeChanged -= _eventManager.Remove(OnProjectConfigTypeChanged);
 
@@ -62,6 +64,9 @@ namespace Projeny.Internal
 
         void OnListDisplayValuesDirty()
         {
+            _view.SetReleaseItems(_model.Releases
+                .Select(x => CreateListItem(x)).ToList());
+
             _view.SetPluginItems(_model.PluginItems
                 .Select(x => CreateListItemForProjectItem(x)).ToList());
 
@@ -91,6 +96,30 @@ namespace Projeny.Internal
             {
                 Caption = caption,
                 Tag = name
+            };
+        }
+
+        PmView.ListItemData CreateListItem(ReleaseInfo info)
+        {
+            string caption;
+
+            if (_model.IsReleaseInstalled(info))
+            {
+                caption = ImguiUtil.WrapWithColor(
+                    info.Name, _view.Skin.Theme.DraggableItemAlreadyAddedColor);
+            }
+            else
+            {
+                caption = info.Name;
+            }
+
+            caption = string.IsNullOrEmpty(info.Version) ? caption : "{0} {1}"
+                .Fmt(caption, ImguiUtil.WrapWithColor("v" + info.Version, _view.Skin.Theme.VersionColor));
+
+            return new PmView.ListItemData()
+            {
+                Caption = caption,
+                Tag = info,
             };
         }
 

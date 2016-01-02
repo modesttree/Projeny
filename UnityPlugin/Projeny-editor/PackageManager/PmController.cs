@@ -25,6 +25,9 @@ namespace Projeny
         PmProjectViewHandler _projectViewHandler;
         PmProjectHandler _projectHandler;
 
+        PmReleasesHandler _releasesHandler;
+        PmReleasesViewHandler _releasesViewHandler;
+
         UpmCommandHandler _upmCommandHandler;
         PmViewAsyncHandler _viewAsyncHandler;
 
@@ -45,6 +48,7 @@ namespace Projeny
         {
             _viewModelSyncer.Initialize();
             _projectViewHandler.Initialize();
+            _releasesViewHandler.Initialize();
 
             ObserveViewEvents();
         }
@@ -64,8 +68,10 @@ namespace Projeny
             _viewAsyncHandler = new PmViewAsyncHandler(_view, _asyncProcessor);
             _viewModelSyncer = new PmModelSyncer(_model, _view);
             _projectHandler = new PmProjectHandler(_model);
+            _releasesHandler = new PmReleasesHandler(_model, _upmCommandHandler);
             _projectViewHandler = new PmProjectViewHandler(
                 _model, _view, _projectHandler, _asyncProcessor, _upmCommandHandler);
+            _releasesViewHandler = new PmReleasesViewHandler(_model, _view, _asyncProcessor, _releasesHandler);
         }
 
         void ObserveViewEvents()
@@ -73,7 +79,6 @@ namespace Projeny
             // Use EventQueueMode.LatestOnly to ensure we don't execute anything during the OnGUI event
             // This is important since OnGUI is called in multiple passes and we have to ensure that the same
             // controls are rendered each pass
-            _view.ClickedRefreshReleaseList += _eventManager.Add(OnClickedRefreshReleaseList, EventQueueMode.LatestOnly);
             _view.ClickedRefreshPackages += _eventManager.Add(OnClickedRefreshPackages, EventQueueMode.LatestOnly);
             _view.ClickedCreateNewPackage += _eventManager.Add(OnClickedCreateNewPackage, EventQueueMode.LatestOnly);
 
@@ -85,7 +90,6 @@ namespace Projeny
 
         void UnobserveViewEvents()
         {
-            _view.ClickedRefreshReleaseList -= _eventManager.Remove(OnClickedRefreshReleaseList);
             _view.ClickedRefreshPackages -= _eventManager.Remove(OnClickedRefreshPackages);
             _view.ClickedCreateNewPackage -= _eventManager.Remove(OnClickedCreateNewPackage);
 
@@ -240,7 +244,9 @@ namespace Projeny
         public void Dispose()
         {
             UnobserveViewEvents();
+
             _viewModelSyncer.Dispose();
+            _releasesViewHandler.Dispose();
         }
 
         public void OnClickedReleasesSortMenu(Rect buttonRect)
@@ -287,16 +293,11 @@ namespace Projeny
             _asyncProcessor.Process(RefreshPackagesAsync(), "Refreshing Packages");
         }
 
-        public void OnClickedRefreshReleaseList()
-        {
-            _asyncProcessor.Process(RefreshReleasesAsync(), "Refreshing Release List");
-        }
-
         IEnumerator RefreshAll()
         {
             _projectHandler.RefreshProject();
             yield return RefreshPackagesAsync();
-            yield return RefreshReleasesAsync();
+            yield return _releasesHandler.RefreshReleasesAsync();
         }
 
         public void Update()
@@ -309,6 +310,7 @@ namespace Projeny
             // Do this last so all model updates get forwarded to view
             _viewModelSyncer.Update();
             _viewAsyncHandler.Update();
+            _releasesViewHandler.Update();
 
             _view.Update();
 
@@ -802,26 +804,6 @@ namespace Projeny
         {
             Assert.Throw("TODO");
             return ListTypes.AssetItem;
-        }
-
-        IEnumerator RefreshReleasesAsync()
-        {
-            var response = _upmCommandHandler.ProcessUpmCommandForResult<List<ReleaseInfo>>("Looking up release list", UpmHelper.LookupReleaseListAsync());
-            yield return response;
-
-            _model.SetReleases(response.Current);
-            UpdateAvailableReleasesList();
-        }
-
-        void UpdateAvailableReleasesList()
-        {
-            Assert.Throw("TODO");
-            //_releasesList.Clear();
-
-            //foreach (var info in _allReleases)
-            //{
-            //_releasesList.Add(info.Name, info);
-            //}
         }
 
         void ForceStopBackgroundTask()
