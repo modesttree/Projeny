@@ -210,7 +210,8 @@ namespace Projeny
                     .Split(new string[] { "---" }, StringSplitOptions.None);
 
                 yield return UpmHelperResponse.Success(
-                    docs
+                    docs.Select(x => x.Trim())
+                        .Where(x => x.Length > 0)
                         .Select(x => UpmSerializer.DeserializeReleaseInfo(x))
                         .Where(x => x != null).ToList());
             }

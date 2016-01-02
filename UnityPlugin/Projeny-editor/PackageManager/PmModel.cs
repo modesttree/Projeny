@@ -135,6 +135,7 @@ namespace Projeny
 
         public void SetReleases(List<ReleaseInfo> releases)
         {
+            Assert.That(releases.All(x => !string.IsNullOrEmpty(x.Name)));
             _releases.Clear();
             _releases.AddRange(releases);
             ReleasesChanged();
