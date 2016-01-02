@@ -30,8 +30,7 @@ namespace Projeny
 
         UpmCommandHandler _upmCommandHandler;
         PmViewAsyncHandler _viewAsyncHandler;
-
-        bool _isDisplayingError;
+        PmViewErrorHandler _viewErrorHandler;
 
         public PmController(PmModel model)
         {
@@ -69,8 +68,9 @@ namespace Projeny
             _viewModelSyncer = new PmModelViewSyncer(_model, _view);
             _projectHandler = new PmProjectHandler(_model);
             _releasesHandler = new PmReleasesHandler(_model, _upmCommandHandler);
+            _viewErrorHandler = new PmViewErrorHandler(_view, _asyncProcessor);
             _projectViewHandler = new PmProjectViewHandler(
-                _model, _view, _projectHandler, _asyncProcessor, _upmCommandHandler);
+                _model, _view, _projectHandler, _asyncProcessor, _upmCommandHandler, _viewErrorHandler);
             _releasesViewHandler = new PmReleasesViewHandler(_model, _view, _asyncProcessor, _releasesHandler);
         }
 
@@ -85,7 +85,6 @@ namespace Projeny
             _view.ClickedViewLeftButton += _eventManager.Add(OnClickedViewLeftButton, EventQueueMode.LatestOnly);
 
             _view.ClickedReleasesSortMenu += _eventManager.Add<Rect>(OnClickedReleasesSortMenu, EventQueueMode.LatestOnly);
-            _view.ContextMenuOpened += _eventManager.Add<DraggableList>(OnContextMenuOpened, EventQueueMode.LatestOnly);
 
             _view.DraggedDroppedListEntries += _eventManager.Add<ListTypes, ListTypes, List<DraggableListEntry>>(OnDraggedDroppedListEntries, EventQueueMode.LatestOnly);
         }
@@ -98,7 +97,6 @@ namespace Projeny
             _view.ClickedViewLeftButton -= _eventManager.Remove(OnClickedViewLeftButton);
 
             _view.ClickedReleasesSortMenu -= _eventManager.Remove<Rect>(OnClickedReleasesSortMenu);
-            _view.ContextMenuOpened -= _eventManager.Remove<DraggableList>(OnContextMenuOpened);
 
             _view.DraggedDroppedListEntries -= _eventManager.Remove<ListTypes, ListTypes, List<DraggableListEntry>>(OnDraggedDroppedListEntries);
 
@@ -442,43 +440,6 @@ namespace Projeny
             //contextMenu.ShowAsContext();
         }
 
-        bool HasFolderWithPackageName(string name)
-        {
-            return TryGetAssetForPackageName(name) != null;
-        }
-
-        UnityEngine.Object TryGetAssetForPackageName(string name)
-        {
-            var asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>("Assets/" + name);
-
-            if (asset == null)
-            {
-                asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>("Assets/Plugins/" + name);
-            }
-
-            return asset;
-        }
-
-        void ShowSelectedInProjectTab()
-        {
-            Assert.Throw("TODO");
-            //Assert.That(_selected.Select(x => ClassifyList(x.ListOwner)).All(x => x == ListTypes.PluginItem || x == ListTypes.AssetItem));
-            //Assert.IsEqual(_selected.Count, 1);
-
-            //var name = _selected.Single().Name;
-
-            //var asset = TryGetAssetForPackageName(name);
-
-            //if (asset == null)
-            //{
-            //AddBackgroundTask(DisplayError("Could not find package '{0}' in project".Fmt(name)));
-            //}
-            //else
-            //{
-            //Selection.activeObject = asset;
-            //}
-        }
-
         void OpenSelectedInAssetStore()
         {
             Assert.Throw("TODO");
@@ -639,7 +600,6 @@ namespace Projeny
 
         void DeleteSelected()
         {
-            _asyncProcessor.Process(DeleteSelectedAsync(), "Deleting Packages");
         }
 
         IEnumerator DeleteSelectedAsync()
@@ -848,29 +808,6 @@ namespace Projeny
             yield return allPackages;
 
             _model.SetPackages(allPackages.Current);
-        }
-
-        void DisplayError(string message)
-        {
-            Log.Error("Projeny: " + message);
-
-            // Do not display errors on top of each other
-            // In those cases it will still be in the log and that's enough
-            if (!_isDisplayingError)
-            {
-                _asyncProcessor.Process(
-                    DisplayErrorInternal(message));
-            }
-        }
-
-        IEnumerator DisplayErrorInternal(string message)
-        {
-            Assert.That(!_isDisplayingError);
-            _isDisplayingError = true;
-
-            yield return _view.AlertUser(message, "<color=red>Error!</color>");
-
-            _isDisplayingError = false;
         }
 
         public void OnGUI(Rect fullRect)

@@ -18,6 +18,23 @@ namespace Projeny
         PluginItem
     }
 
+    public class ContextMenuItem
+    {
+        public readonly bool IsEnabled;
+        public readonly string Caption;
+        public readonly Action Handler;
+        public readonly bool IsChecked;
+
+        public ContextMenuItem(
+            bool isEnabled, string caption, bool isChecked, Action handler)
+        {
+            IsEnabled = isEnabled;
+            Caption = caption;
+            Handler = handler;
+            IsChecked = isChecked;
+        }
+    }
+
     public class PmView
     {
         public class ListItemData
@@ -38,9 +55,10 @@ namespace Projeny
         public event Action ClickedViewRightButton = delegate {};
         public event Action<Rect> ClickedReleasesSortMenu = delegate {};
         public event Action<DraggableList.DragData, DraggableList> DragDroppedListItem = delegate {};
-        public event Action<DraggableList> ContextMenuOpened = delegate {};
 
         public event Action<ListTypes, ListTypes, List<DraggableListEntry>> DraggedDroppedListEntries = delegate {};
+
+        readonly Dictionary<ListTypes, Func<IEnumerable<ContextMenuItem>>> _contextMenuHandlers = new Dictionary<ListTypes, Func<IEnumerable<ContextMenuItem>>>();
 
         const string NotAvailableLabel = "N/A";
 
@@ -54,7 +72,7 @@ namespace Projeny
         readonly List<PopupInfo> _popupHandlers = new List<PopupInfo>();
         int _popupIdCount;
 
-        List<DraggableListEntry> _selected;
+        readonly List<DraggableListEntry> _selected = new List<DraggableListEntry>();
 
         DraggableList _packagesList;
         DraggableList _releasesList;
@@ -65,12 +83,18 @@ namespace Projeny
 
         public PmView()
         {
-            _selected = new List<DraggableListEntry>();
-
             _packagesList = new DraggableList(this);
             _releasesList = new DraggableList(this);
             _assetsList = new DraggableList(this);
             _pluginsList = new DraggableList(this);
+        }
+
+        public IEnumerable<DraggableListEntry> Selected
+        {
+            get
+            {
+                return _selected;
+            }
         }
 
         public PmViewStates ViewState
@@ -95,6 +119,16 @@ namespace Projeny
         {
             get;
             set;
+        }
+
+        public void AddContextMenuHandler(ListTypes listType, Func<IEnumerable<ContextMenuItem>> handler)
+        {
+            _contextMenuHandlers.Add(listType, handler);
+        }
+
+        public void RemoveContextMenuHandler(ListTypes listType)
+        {
+            _contextMenuHandlers.RemoveWithConfirm(listType);
         }
 
         object GetReleaseSortField(DraggableListEntry entry)
@@ -280,14 +314,6 @@ namespace Projeny
             //}
         }
 
-        public IEnumerable<DraggableListEntry> Selected
-        {
-            get
-            {
-                return _selected;
-            }
-        }
-
         public PackageManagerWindowSkin Skin
         {
             get
@@ -434,7 +460,23 @@ namespace Projeny
 
         public void OpenContextMenu(DraggableList dropList)
         {
-            ContextMenuOpened(dropList);
+            var itemGetter = _contextMenuHandlers.TryGetValue(ClassifyList(dropList));
+
+            if (itemGetter == null)
+            {
+                return;
+            }
+
+            GenericMenu contextMenu = new GenericMenu();
+
+            foreach (var item in itemGetter())
+            {
+                var handler = item.Handler;
+                contextMenu.AddOptionalItem(
+                    item.IsEnabled, new GUIContent(item.Caption), item.IsChecked, () => handler());
+            }
+
+            contextMenu.ShowAsContext();
         }
 
         void DrawFileDropdown(Rect rect)

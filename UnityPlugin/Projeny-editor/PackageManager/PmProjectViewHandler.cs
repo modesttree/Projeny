@@ -12,6 +12,7 @@ namespace Projeny
 {
     public class PmProjectViewHandler
     {
+        readonly PmViewErrorHandler _errorHandler;
         readonly UpmCommandHandler _upmCommandHandler;
         readonly AsyncProcessor _asyncProcessor;
         readonly PmModel _model;
@@ -26,8 +27,10 @@ namespace Projeny
             PmView view,
             PmProjectHandler projectHandler,
             AsyncProcessor asyncProcessor,
-            UpmCommandHandler upmCommandHandler)
+            UpmCommandHandler upmCommandHandler,
+            PmViewErrorHandler errorHandler)
         {
+            _errorHandler = errorHandler;
             _upmCommandHandler = upmCommandHandler;
             _asyncProcessor = asyncProcessor;
             _model = model;
@@ -43,6 +46,9 @@ namespace Projeny
             _view.ClickedProjectRevertButton += _eventManager.Add(OnClickedProjectRevertButton, EventQueueMode.LatestOnly);
             _view.ClickedProjectSaveButton += _eventManager.Add(OnClickedProjectSaveButton, EventQueueMode.LatestOnly);
             _view.ClickedProjectEditButton += _eventManager.Add(OnClickedProjectEditButton, EventQueueMode.LatestOnly);
+
+            _view.AddContextMenuHandler(ListTypes.AssetItem, GetProjectItemContextMenu);
+            _view.AddContextMenuHandler(ListTypes.PluginItem, GetProjectItemContextMenu);
         }
 
         public void Dispose()
@@ -54,7 +60,82 @@ namespace Projeny
             _view.ClickedProjectSaveButton -= _eventManager.Remove(OnClickedProjectSaveButton);
             _view.ClickedProjectEditButton -= _eventManager.Remove(OnClickedProjectEditButton);
 
+            _view.RemoveContextMenuHandler(ListTypes.AssetItem);
+            _view.RemoveContextMenuHandler(ListTypes.PluginItem);
+
             _eventManager.AssertIsEmpty();
+        }
+
+        IEnumerable<ContextMenuItem> GetProjectItemContextMenu()
+        {
+            var selected = GetSelectedItems();
+
+            yield return new ContextMenuItem(
+                !selected.IsEmpty(), "Remove", false, OnContextMenuDeleteSelected);
+
+            yield return new ContextMenuItem(
+                selected.Count == 1 && HasFolderWithPackageName(selected.Single()), "Select in Project Tab", false, OnContextMenuShowSelectedInProjectTab);
+        }
+
+        List<string> GetSelectedItems()
+        {
+            return _view.Selected.Select(x => (string)x.Tag).ToList();
+        }
+
+        bool HasFolderWithPackageName(string name)
+        {
+            return TryGetAssetForPackageName(name) != null;
+        }
+
+        UnityEngine.Object TryGetAssetForPackageName(string name)
+        {
+            var asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>("Assets/" + name);
+
+            if (asset == null)
+            {
+                asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>("Assets/Plugins/" + name);
+            }
+
+            return asset;
+        }
+
+        void OnContextMenuShowSelectedInProjectTab()
+        {
+            var selected = GetSelectedItems();
+
+            Assert.IsEqual(selected.Count, 1);
+
+            var name = selected.Single();
+
+            var asset = TryGetAssetForPackageName(name);
+
+            if (asset == null)
+            {
+                _errorHandler.DisplayError(
+                    "Could not find package '{0}' in project".Fmt(name));
+            }
+            else
+            {
+                Selection.activeObject = asset;
+            }
+        }
+
+        void OnContextMenuDeleteSelected()
+        {
+            var selected = GetSelectedItems();
+
+            foreach (var name in selected)
+            {
+                if (_model.HasAssetItem(name))
+                {
+                    _model.RemoveAssetItem(name);
+                }
+                else
+                {
+                    Assert.That(_model.HasPluginItem(name));
+                    _model.RemovePluginItem(name);
+                }
+            }
         }
 
         public void Update()

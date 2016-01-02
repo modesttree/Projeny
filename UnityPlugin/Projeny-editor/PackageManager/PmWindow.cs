@@ -13,6 +13,8 @@ namespace Projeny
     // Pm = Package Manager
     public class PmWindow : EditorWindow
     {
+        // Note here that the model is the only thing that gets serialized,
+        // the other classes get re-created every assembly reload
         PmModel _model;
 
         bool _hasInitialized;
