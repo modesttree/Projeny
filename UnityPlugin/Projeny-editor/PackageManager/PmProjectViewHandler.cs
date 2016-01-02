@@ -80,7 +80,7 @@ namespace Projeny
         List<string> GetSelectedItems()
         {
             return _view.GetSelected(ListTypes.AssetItem).Concat(_view.GetSelected(ListTypes.PluginItem))
-                .Select(x => (string)x.Tag).ToList();
+                .Select(x => (string)x.Model).ToList();
         }
 
         bool HasFolderWithPackageName(string name)

@@ -40,7 +40,7 @@ namespace Projeny
         List<PackageInfo> GetSelectedItems()
         {
             return _view.GetSelected(ListTypes.Package)
-                .Select(x => (PackageInfo)x.Tag).ToList();
+                .Select(x => (PackageInfo)x.Model).ToList();
         }
 
         IEnumerable<ContextMenuItem> GetContextMenuItems()

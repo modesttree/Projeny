@@ -127,13 +127,13 @@ namespace Projeny
                     {
                         case ListTypes.PluginItem:
                         {
-                            var name = (string)entry.Tag;
+                            var name = (string)entry.Model;
                             _model.RemovePluginItem(name);
                             break;
                         }
                         case ListTypes.AssetItem:
                         {
-                            var name = (string)entry.Tag;
+                            var name = (string)entry.Model;
                             _model.RemoveAssetItem(name);
                             break;
                         }
@@ -158,7 +158,7 @@ namespace Projeny
                     {
                         case ListTypes.AssetItem:
                         {
-                            var name = (string)entry.Tag;
+                            var name = (string)entry.Model;
                             _model.RemoveAssetItem(name);
                             _model.AddPluginItem(name);
 
@@ -171,7 +171,7 @@ namespace Projeny
                         }
                         case ListTypes.Package:
                         {
-                            var info = (PackageInfo)entry.Tag;
+                            var info = (PackageInfo)entry.Model;
 
                             if (!_model.HasPluginItem(info.Name))
                             {
@@ -205,7 +205,7 @@ namespace Projeny
                         }
                         case ListTypes.PluginItem:
                         {
-                            var name = (string)entry.Tag;
+                            var name = (string)entry.Model;
 
                             _model.RemovePluginItem(name);
                             _model.AddAssetItem(name);
@@ -213,7 +213,7 @@ namespace Projeny
                         }
                         case ListTypes.Package:
                         {
-                            var info = (PackageInfo)entry.Tag;
+                            var info = (PackageInfo)entry.Model;
 
                             if (!_model.HasAssetItem(info.Name))
                             {

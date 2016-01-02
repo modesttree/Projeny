@@ -10,11 +10,17 @@ namespace Projeny.Internal
     public class DraggableListEntry
     {
         public string Name;
-        public object Tag;
+        public object Model;
         public int Index;
         public DraggableList ListOwner;
         public ListTypes ListType;
         public bool IsSelected;
+    }
+
+    public class ListItemData
+    {
+        public string Caption;
+        public object Model;
     }
 
     public class DraggableList
@@ -97,6 +103,34 @@ namespace Projeny.Internal
             UpdateIndices();
         }
 
+        public void SetItems(List<ListItemData> newItems)
+        {
+            var oldEntries = _entries.ToDictionary(x => x.Model, x => x);
+
+            _entries.Clear();
+
+            for (int i = 0; i < newItems.Count; i++)
+            {
+                var item = newItems[i];
+                var entry = oldEntries.TryGetValue(item.Model);
+
+                // Keep old entries where possible to maintain selection
+                if (entry == null)
+                {
+                    entry = new DraggableListEntry()
+                    {
+                        Name = item.Caption,
+                        Model = item.Model,
+                        ListOwner = this,
+                        ListType = _listType,
+                    };
+                }
+
+                entry.Index = i;
+                _entries.Add(entry);
+            }
+        }
+
         public DraggableListEntry GetAtIndex(int index)
         {
             return _entries[index];
@@ -105,25 +139,6 @@ namespace Projeny.Internal
         public void Remove(string name)
         {
             Remove(_entries.Where(x => x.Name == name).Single());
-        }
-
-        public void Add(string name, object tag)
-        {
-            var entry = new DraggableListEntry()
-            {
-                Name = name,
-                Tag = tag,
-                ListOwner = this,
-                ListType = _listType,
-            };
-
-            _entries.Add(entry);
-            UpdateIndices();
-        }
-
-        public void Add(string entry)
-        {
-            Add(entry, null);
         }
 
         public void Clear()

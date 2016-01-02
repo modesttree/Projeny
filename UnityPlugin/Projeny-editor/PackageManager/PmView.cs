@@ -291,14 +291,7 @@ namespace Projeny.Internal
         public void SetListItems(
             ListTypes listType, List<ListItemData> items)
         {
-            var list = GetList(listType);
-
-            list.Clear();
-
-            foreach (var item in items)
-            {
-                list.Add(item.Caption, item.Tag);
-            }
+            GetList(listType).SetItems(items);
         }
 
         DraggableList GetList(ListTypes listType)
@@ -1155,12 +1148,6 @@ namespace Projeny.Internal
             public ReleasesSortMethod ReleasesSortMethod;
             public bool ReleaseSortAscending;
             public List<DraggableList.Model> ListModels = new List<DraggableList.Model>();
-        }
-
-        public class ListItemData
-        {
-            public string Caption;
-            public object Tag;
         }
     }
 }

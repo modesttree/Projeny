@@ -72,7 +72,7 @@ namespace Projeny.Internal
                 _model.Packages.Select(x => CreateListItem(x)).ToList());
         }
 
-        PmView.ListItemData CreateListItemForProjectItem(string name)
+        ListItemData CreateListItemForProjectItem(string name)
         {
             string caption;
 
@@ -87,14 +87,14 @@ namespace Projeny.Internal
                 caption = name;
             }
 
-            return new PmView.ListItemData()
+            return new ListItemData()
             {
                 Caption = caption,
-                Tag = name
+                Model = name
             };
         }
 
-        PmView.ListItemData CreateListItem(ReleaseInfo info)
+        ListItemData CreateListItem(ReleaseInfo info)
         {
             string caption;
 
@@ -111,14 +111,14 @@ namespace Projeny.Internal
             caption = string.IsNullOrEmpty(info.Version) ? caption : "{0} {1}"
                 .Fmt(caption, ImguiUtil.WrapWithColor("v" + info.Version, _view.Skin.Theme.VersionColor));
 
-            return new PmView.ListItemData()
+            return new ListItemData()
             {
                 Caption = caption,
-                Tag = info,
+                Model = info,
             };
         }
 
-        PmView.ListItemData CreateListItem(PackageInfo info)
+        ListItemData CreateListItem(PackageInfo info)
         {
             string caption;
 
@@ -153,10 +153,10 @@ namespace Projeny.Internal
                 }
             }
 
-            return new PmView.ListItemData()
+            return new ListItemData()
             {
                 Caption = caption,
-                Tag = info
+                Model = info
             };
         }
     }
