@@ -74,19 +74,19 @@ namespace Projeny
 
         readonly List<DraggableListEntry> _selected = new List<DraggableListEntry>();
 
-        DraggableList _packagesList;
-        DraggableList _releasesList;
-        DraggableList _assetsList;
-        DraggableList _pluginsList;
+        readonly DraggableList _packagesList;
+        readonly DraggableList _releasesList;
+        readonly DraggableList _assetsList;
+        readonly DraggableList _pluginsList;
 
         PackageManagerWindowSkin _skin;
 
         public PmView()
         {
-            _packagesList = new DraggableList(this);
-            _releasesList = new DraggableList(this);
-            _assetsList = new DraggableList(this);
-            _pluginsList = new DraggableList(this);
+            _packagesList = new DraggableList(this, ListTypes.Package);
+            _releasesList = new DraggableList(this, ListTypes.Release);
+            _assetsList = new DraggableList(this, ListTypes.AssetItem);
+            _pluginsList = new DraggableList(this, ListTypes.PluginItem);
         }
 
         public IEnumerable<DraggableListEntry> Selected
@@ -334,44 +334,43 @@ namespace Projeny
             set;
         }
 
-        public void SetPackages(List<ListItemData> packageItems)
+        public void SetListItems(
+            ListTypes listType, List<ListItemData> items)
         {
-            _packagesList.Clear();
+            var list = GetList(listType);
 
-            foreach (var item in packageItems)
-            {
-                _packagesList.Add(item.Caption, item.Tag);
-            }
-        }
-
-        public void SetAssetItems(List<ListItemData> assetItems)
-        {
-            _assetsList.Clear();
-
-            foreach (var item in assetItems)
-            {
-                _assetsList.Add(item.Caption, item.Tag);
-            }
-        }
-
-        public void SetReleaseItems(List<ListItemData> items)
-        {
-            _releasesList.Clear();
+            list.Clear();
 
             foreach (var item in items)
             {
-                _releasesList.Add(item.Caption, item.Tag);
+                list.Add(item.Caption, item.Tag);
             }
         }
 
-        public void SetPluginItems(List<ListItemData> items)
+        DraggableList GetList(ListTypes listType)
         {
-            _pluginsList.Clear();
-
-            foreach (var item in items)
+            switch (listType)
             {
-                _pluginsList.Add(item.Caption, item.Tag);
+                case ListTypes.Package:
+                {
+                    return _packagesList;
+                }
+                case ListTypes.Release:
+                {
+                    return _releasesList;
+                }
+                case ListTypes.AssetItem:
+                {
+                    return _assetsList;
+                }
+                case ListTypes.PluginItem:
+                {
+                    return _pluginsList;
+                }
             }
+
+            Assert.Throw();
+            return null;
         }
 
         public bool IsDragAllowed(DraggableList.DragData data, DraggableList list)

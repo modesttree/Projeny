@@ -65,17 +65,21 @@ namespace Projeny.Internal
 
         void OnListDisplayValuesDirty()
         {
-            _view.SetReleaseItems(_model.Releases
-                .Select(x => CreateListItem(x)).ToList());
+            _view.SetListItems(
+                ListTypes.Release,
+                _model.Releases.Select(x => CreateListItem(x)).ToList());
 
-            _view.SetPluginItems(_model.PluginItems
-                .Select(x => CreateListItemForProjectItem(x)).ToList());
+            _view.SetListItems(
+                ListTypes.PluginItem,
+                _model.PluginItems.Select(x => CreateListItemForProjectItem(x)).ToList());
 
-            _view.SetAssetItems(_model.AssetItems
-                .Select(x => CreateListItemForProjectItem(x)).ToList());
+            _view.SetListItems(
+                ListTypes.AssetItem,
+                _model.AssetItems.Select(x => CreateListItemForProjectItem(x)).ToList());
 
-            _view.SetPackages(_model.Packages
-                .Select(x => CreateListItem(x)).ToList());
+            _view.SetListItems(
+                ListTypes.Package,
+                _model.Packages.Select(x => CreateListItem(x)).ToList());
         }
 
         PmView.ListItemData CreateListItemForProjectItem(string name)

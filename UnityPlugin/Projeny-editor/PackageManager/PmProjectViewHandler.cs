@@ -79,7 +79,9 @@ namespace Projeny
 
         List<string> GetSelectedItems()
         {
-            return _view.Selected.Select(x => (string)x.Tag).ToList();
+            return _view.Selected
+                .Where(x => x.ListType == ListTypes.AssetItem || x.ListType == ListTypes.PluginItem)
+                .Select(x => (string)x.Tag).ToList();
         }
 
         bool HasFolderWithPackageName(string name)

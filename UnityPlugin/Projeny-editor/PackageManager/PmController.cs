@@ -31,6 +31,8 @@ namespace Projeny
         UpmCommandHandler _upmCommandHandler;
         PmViewAsyncHandler _viewAsyncHandler;
         PmViewErrorHandler _viewErrorHandler;
+        PmPackageViewHandler _packageViewHandler;
+        PmPackageHandler _packageHandler;
 
         public PmController(PmModel model)
         {
@@ -47,6 +49,7 @@ namespace Projeny
         {
             _viewModelSyncer.Initialize();
             _projectViewHandler.Initialize();
+            _packageViewHandler.Initialize();
             _releasesViewHandler.Initialize();
 
             ObserveViewEvents();
@@ -69,6 +72,9 @@ namespace Projeny
             _projectHandler = new PmProjectHandler(_model);
             _releasesHandler = new PmReleasesHandler(_model, _upmCommandHandler);
             _viewErrorHandler = new PmViewErrorHandler(_view, _asyncProcessor);
+            _packageHandler = new PmPackageHandler(_model, _upmCommandHandler);
+            _packageViewHandler = new PmPackageViewHandler(_view, _asyncProcessor, _packageHandler);
+
             _projectViewHandler = new PmProjectViewHandler(
                 _model, _view, _projectHandler, _asyncProcessor, _upmCommandHandler, _viewErrorHandler);
             _releasesViewHandler = new PmReleasesViewHandler(_model, _view, _asyncProcessor, _releasesHandler);
@@ -302,13 +308,13 @@ namespace Projeny
 
         public void OnClickedRefreshPackages()
         {
-            _asyncProcessor.Process(RefreshPackagesAsync(), "Refreshing Packages");
+            _asyncProcessor.Process(_packageHandler.RefreshPackagesAsync(), "Refreshing Packages");
         }
 
         IEnumerator RefreshAll()
         {
             _projectHandler.RefreshProject();
-            yield return RefreshPackagesAsync();
+            yield return _packageHandler.RefreshPackagesAsync();
             yield return _releasesHandler.RefreshReleasesAsync();
         }
 
@@ -318,6 +324,7 @@ namespace Projeny
             _asyncProcessor.Tick();
 
             _projectViewHandler.Update();
+            _packageViewHandler.Update();
 
             // Do this last so all model updates get forwarded to view
             _viewModelSyncer.Update();
@@ -392,49 +399,45 @@ namespace Projeny
 
             //switch (listType)
             //{
-            //case ListTypes.Release:
-            //{
-            //bool hasLocalPath = false;
-            //bool hasAssetStoreLink = false;
+                //case ListTypes.Release:
+                //{
+                    //bool hasLocalPath = false;
+                    //bool hasAssetStoreLink = false;
 
-            //var singleInfo = _selected.OnlyOrDefault();
+                    //var singleInfo = _selected.OnlyOrDefault();
 
-            //if (singleInfo != null)
-            //{
-            //var info = (ReleaseInfo)singleInfo.Tag;
+                    //if (singleInfo != null)
+                    //{
+                        //var info = (ReleaseInfo)singleInfo.Tag;
 
-            //hasLocalPath = info.LocalPath != null && File.Exists(info.LocalPath);
+                        //hasLocalPath = info.LocalPath != null && File.Exists(info.LocalPath);
 
-            //hasAssetStoreLink = info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.LinkId);
-            //}
+                        //hasAssetStoreLink = info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.LinkId);
+                    //}
 
-            //contextMenu.AddOptionalItem(hasLocalPath, new GUIContent("Open Folder"), false, OpenReleaseFolderForSelected);
+                    //contextMenu.AddOptionalItem(hasLocalPath, new GUIContent("Open Folder"), false, OpenReleaseFolderForSelected);
 
-            //contextMenu.AddOptionalItem(singleInfo != null, new GUIContent("More Info..."), false, OpenMoreInfoPopupForSelected);
+                    //contextMenu.AddOptionalItem(singleInfo != null, new GUIContent("More Info..."), false, OpenMoreInfoPopupForSelected);
 
-            //contextMenu.AddOptionalItem(hasAssetStoreLink, new GUIContent("Open In Asset Store"), false, OpenSelectedInAssetStore);
-            //break;
-            //}
-            //case ListTypes.Package:
-            //{
-            //contextMenu.AddOptionalItem(!_selected.IsEmpty(), new GUIContent("Delete"), false, DeleteSelected);
-            //contextMenu.AddOptionalItem(_selected.Count == 1, new GUIContent("Rename"), false, RenameSelectedPackage);
-            //contextMenu.AddOptionalItem(_selected.Count == 1, new GUIContent("Open Folder"), false, OpenPackageFolderForSelected);
-            //contextMenu.AddOptionalItem(_selected.Count == 1 && HasPackageYaml((PackageInfo)_selected.Single().Tag), new GUIContent("Edit " + ProjenyEditorUtil.PackageConfigFileName), false, EditPackageYamlSelected);
-            //break;
-            //}
-            //case ListTypes.AssetItem:
-            //case ListTypes.PluginItem:
-            //{
-            //contextMenu.AddItem(new GUIContent("Remove"), false, DeleteSelected);
-            //contextMenu.AddOptionalItem(_selected.Count == 1 && HasFolderWithPackageName(_selected.Single().Name), new GUIContent("Select in Project Tab"), false, ShowSelectedInProjectTab);
-            //break;
-            //}
-            //default:
-            //{
-            //Assert.Throw();
-            //break;
-            //}
+                    //contextMenu.AddOptionalItem(hasAssetStoreLink, new GUIContent("Open In Asset Store"), false, OpenSelectedInAssetStore);
+                    //break;
+                //}
+                //case ListTypes.Package:
+                //{
+                    //break;
+                //}
+                //case ListTypes.AssetItem:
+                //case ListTypes.PluginItem:
+                //{
+                    //contextMenu.AddItem(new GUIContent("Remove"), false, DeleteSelected);
+                    //contextMenu.AddOptionalItem(_selected.Count == 1 && HasFolderWithPackageName(_selected.Single().Name), new GUIContent("Select in Project Tab"), false, ShowSelectedInProjectTab);
+                    //break;
+                //}
+                //default:
+                //{
+                    //Assert.Throw();
+                    //break;
+                //}
             //}
 
             //contextMenu.ShowAsContext();
@@ -505,12 +508,6 @@ namespace Projeny
             //System.Diagnostics.Process.Start("explorer.exe", args);
         }
 
-        bool HasPackageYaml(PackageInfo info)
-        {
-            var configPath = Path.Combine(info.Path, ProjenyEditorUtil.PackageConfigFileName);
-            return File.Exists(configPath);
-        }
-
         void EditPackageYamlSelected()
         {
             Assert.Throw("TODO");
@@ -523,49 +520,6 @@ namespace Projeny
             //Assert.That(File.Exists(configPath));
 
             //InternalEditorUtility.OpenFileAtLineExternal(configPath, 1);
-        }
-
-        void RenameSelectedPackage()
-        {
-            Assert.Throw("TODO");
-            //Assert.IsEqual(_selected.Count, 1);
-
-            //var info = (PackageInfo)_selected.Single().Tag;
-
-            //AddBackgroundTask(RenamePackageAsync(info));
-        }
-
-        IEnumerator RenamePackageAsync(PackageInfo info)
-        {
-            var newPackageName = _view.PromptForInput("Enter package name:", info.Name);
-
-            yield return newPackageName;
-
-            if (newPackageName.Current == null)
-            {
-                // User Cancelled
-                yield break;
-            }
-
-            if (newPackageName.Current == info.Name)
-            {
-                yield break;
-            }
-
-            var dirInfo = new DirectoryInfo(info.Path);
-            Assert.That(dirInfo.Name == info.Name);
-
-            var newPath = Path.Combine(dirInfo.Parent.FullName, newPackageName.Current);
-
-            Assert.That(!Directory.Exists(newPath), "Package with name '{0}' already exists.  Rename aborted.", newPackageName.Current);
-
-            dirInfo.MoveTo(newPath);
-
-            yield return RefreshPackagesAsync();
-
-            Assert.Throw("TODO");
-            //SelectInternal(_packagesList.Values
-            //.Where(x => x.Name == newPackageName.Current).Single());
         }
 
         void OpenPackageFolderForSelected()
@@ -608,7 +562,7 @@ namespace Projeny
             yield break;
             //if (_selected.IsEmpty())
             //{
-            //yield break;
+                //yield break;
             //}
 
             //var listType = ClassifyList(_selected[0].ListOwner);
@@ -617,37 +571,24 @@ namespace Projeny
 
             //if (listType == ListTypes.Package)
             //{
-            //var infos = _selected.Select(x => (PackageInfo)x.Tag).ToList();
-
-            //var choice = _view.PromptForUserChoice(
-                //"<color=yellow>Are you sure you wish to delete the following packages?</color>\n\n{0}\n\n<color=yellow>Please note the following:</color>\n\n- This change is not undoable\n- Any changes that you've made since installing will be lost\n- Any projects or other packages that still depend on this package may be put in an invalid state by deleting it".Fmt(infos.Select(x => "- " + x.Name).Join("\n")),
-                //new[] { "Delete", "Cancel" }, null, "DeleteSelectedPopupTextStyle");
-
-                //yield return choice;
-
-                //if (choice.Current == 0)
-                //{
-                //yield return _upmCommandHandler.ProcessUpmCommand("Deleting selected packages", UpmHelper.DeletePackagesAsync(infos));
-                //yield return RefreshPackagesAsync();
-                //}
-                //}
-                //else if (listType == ListTypes.AssetItem || listType == ListTypes.PluginItem)
-                //{
+            //}
+            //else if (listType == ListTypes.AssetItem || listType == ListTypes.PluginItem)
+            //{
                 //var entriesToRemove = _selected.ToList();
                 //_selected.Clear();
 
                 //foreach (var entry in entriesToRemove)
                 //{
-                //entry.ListOwner.Remove(entry);
+                    //entry.ListOwner.Remove(entry);
                 //}
-                //}
+            //}
         }
 
         IEnumerator InstallReleasesAsync(List<ReleaseInfo> releaseInfos)
         {
             // Need to make sure we have the most recent package list so we can determine whether this is
             // an upgrade / downgrade / etc.
-            yield return RefreshPackagesAsync();
+            yield return _packageHandler.RefreshPackagesAsync();
 
             Assert.That(releaseInfos.Select(x => x.Id).GetDuplicates().IsEmpty(), "Found duplicate releases selected - are you installing multiple versions of the same release?");
 
@@ -682,7 +623,7 @@ namespace Projeny
                 }
             }
 
-            yield return RefreshPackagesAsync();
+            yield return _packageHandler.RefreshPackagesAsync();
         }
 
         IEnumerator<InstallReleaseUserChoices> CheckShouldInstall(ReleaseInfo releaseInfo)
@@ -799,15 +740,7 @@ namespace Projeny
             }
 
             yield return _upmCommandHandler.ProcessUpmCommand("Creating Package '{0}'".Fmt(userInput.Current), UpmHelper.CreatePackageAsync(userInput.Current));
-            yield return RefreshPackagesAsync();
-        }
-
-        IEnumerator RefreshPackagesAsync()
-        {
-            var allPackages = _upmCommandHandler.ProcessUpmCommandForResult<List<PackageInfo>>("Looking up package list", UpmHelper.LookupPackagesListAsync());
-            yield return allPackages;
-
-            _model.SetPackages(allPackages.Current);
+            yield return _packageHandler.RefreshPackagesAsync();
         }
 
         public void OnGUI(Rect fullRect)

@@ -9,10 +9,11 @@ namespace Projeny.Internal
 {
     public class DraggableListEntry
     {
-        public DraggableList ListOwner;
         public string Name;
         public object Tag;
         public int Index;
+        public DraggableList ListOwner;
+        public ListTypes ListType;
     }
 
     public class DraggableList
@@ -26,11 +27,13 @@ namespace Projeny.Internal
 
         string _searchFilter = "";
 
+        ListTypes _listType;
         static DraggableListSkin _skin;
 
-        public DraggableList(PmView manager)
+        public DraggableList(PmView manager, ListTypes listType)
         {
             _manager = manager;
+            _listType = listType;
         }
 
         DraggableListSkin Skin
@@ -89,11 +92,13 @@ namespace Projeny.Internal
 
         public void Add(string name, object tag)
         {
-            var entry = new DraggableListEntry();
-
-            entry.Name = name;
-            entry.Tag = tag;
-            entry.ListOwner = this;
+            var entry = new DraggableListEntry()
+            {
+                Name = name,
+                Tag = tag,
+                ListOwner = this,
+                ListType = _listType,
+            };
 
             _entryList.Add(entry);
             UpdateIndices();
