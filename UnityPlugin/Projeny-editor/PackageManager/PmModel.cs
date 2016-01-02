@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace Projeny
 {
-    public enum PackageManagerViewStates
+    public enum PmViewStates
     {
         ReleasesAndPackages,
         PackagesAndProject,
@@ -24,29 +24,40 @@ namespace Projeny
         PublishDate
     }
 
-
-
     [Serializable]
-    public class PackageManagerModel
+    public class PmModel
     {
         public event Action ViewStateChanged = delegate {};
         public event Action PluginItemsChanged = delegate {};
         public event Action AssetItemsChanged = delegate {};
         public event Action PackagesChanged = delegate {};
+        public event Action ProjectConfigTypeChanged = delegate {};
 
-        PackageManagerViewStates _viewState = PackageManagerViewStates.PackagesAndProject;
+        [SerializeField]
+        PmViewStates _viewState = PmViewStates.PackagesAndProject;
 
+        [SerializeField]
         ProjectConfigTypes _projectConfigType = ProjectConfigTypes.LocalProject;
 
+        [SerializeField]
         ReleasesSortMethod _releasesSortMethod;
+
+        [SerializeField]
         bool _releaseSortAscending;
 
-        readonly List<PackageInfo> _allPackages = new List<PackageInfo>();
-        readonly List<ReleaseInfo> _allReleases = new List<ReleaseInfo>();
-        readonly List<string> _assetItems = new List<string>();
-        readonly List<string> _pluginItems = new List<string>();
+        [SerializeField]
+        List<PackageInfo> _allPackages = new List<PackageInfo>();
 
-        public PackageManagerModel()
+        [SerializeField]
+        List<ReleaseInfo> _allReleases = new List<ReleaseInfo>();
+
+        [SerializeField]
+        List<string> _assetItems = new List<string>();
+
+        [SerializeField]
+        List<string> _pluginItems = new List<string>();
+
+        public PmModel()
         {
         }
 
@@ -104,9 +115,17 @@ namespace Projeny
             {
                 return _projectConfigType;
             }
+            set
+            {
+                if (_projectConfigType != value)
+                {
+                    _projectConfigType = value;
+                    ProjectConfigTypeChanged();
+                }
+            }
         }
 
-        public PackageManagerViewStates ViewState
+        public PmViewStates ViewState
         {
             get
             {

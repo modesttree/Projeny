@@ -18,7 +18,7 @@ namespace Projeny
         PluginItem
     }
 
-    public class PackageManagerView
+    public class PmView
     {
         public class ListItemData
         {
@@ -49,7 +49,6 @@ namespace Projeny
 
         bool _doesConfigFileExist = true;
 
-        PackageManagerViewStates _viewState;
         Action<Rect> _popupHandler;
 
         List<DraggableListEntry> _selected;
@@ -63,7 +62,7 @@ namespace Projeny
 
         PackageManagerWindowSkin _skin;
 
-        public PackageManagerView()
+        public PmView()
         {
             _selected = new List<DraggableListEntry>();
 
@@ -71,6 +70,12 @@ namespace Projeny
             _releasesList = new DraggableList(this);
             _assetsList = new DraggableList(this);
             _pluginsList = new DraggableList(this);
+        }
+
+        public PmViewStates ViewState
+        {
+            get;
+            set;
         }
 
         public string BlockedStatusMessage
@@ -367,7 +372,7 @@ namespace Projeny
 
         float GetDesiredSplit1()
         {
-            if (_viewState == PackageManagerViewStates.ReleasesAndPackages)
+            if (ViewState == PmViewStates.ReleasesAndPackages)
             {
                 return 0.5f;
             }
@@ -747,12 +752,12 @@ namespace Projeny
 
         float GetDesiredSplit2()
         {
-            if (_viewState == PackageManagerViewStates.ReleasesAndPackages)
+            if (ViewState == PmViewStates.ReleasesAndPackages)
             {
                 return 1.0f;
             }
 
-            if (_viewState == PackageManagerViewStates.Project)
+            if (ViewState == PmViewStates.Project)
             {
                 return 0;
             }
@@ -867,11 +872,11 @@ namespace Projeny
             var rect1 = new Rect(
                 Skin.ListVerticalSpacing, halfHeight - 0.5f * Skin.ArrowHeight, Skin.ArrowWidth, Skin.ArrowHeight);
 
-            if ((int)_viewState > 0)
+            if ((int)ViewState > 0)
             {
                 if (GUI.Button(rect1, ""))
                 {
-                    _viewState = (PackageManagerViewStates)((int)_viewState - 1);
+                    ViewState = (PmViewStates)((int)ViewState - 1);
                 }
 
                 if (Skin.ArrowLeftTexture != null)
@@ -882,13 +887,13 @@ namespace Projeny
 
             var rect2 = new Rect(fullRect.xMax - Skin.ListVerticalSpacing - Skin.ArrowWidth, halfHeight - 0.5f * Skin.ArrowHeight, Skin.ArrowWidth, Skin.ArrowHeight);
 
-            var numValues = Enum.GetValues(typeof(PackageManagerViewStates)).Length;
+            var numValues = Enum.GetValues(typeof(PmViewStates)).Length;
 
-            if ((int)_viewState < numValues-1)
+            if ((int)ViewState < numValues-1)
             {
                 if (GUI.Button(rect2, ""))
                 {
-                    _viewState = (PackageManagerViewStates)((int)_viewState + 1);
+                    ViewState = (PmViewStates)((int)ViewState + 1);
                 }
 
                 if (Skin.ArrowRightTexture != null)

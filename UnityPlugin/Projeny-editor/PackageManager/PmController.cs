@@ -10,47 +10,55 @@ using System.Linq;
 
 namespace Projeny
 {
-    public class PackageManagerWindow : EditorWindow
+    public class PmController : IDisposable
     {
-        PackageManagerModel _model;
+        readonly PmModel _model;
 
-        bool _hasInitialized;
+        PmView _view;
 
-        [NonSerialized]
-        PackageManagerView _view;
+        PmModelSyncer _viewModelSyncer;
 
-        [NonSerialized]
         EventManager _eventManager;
 
-        [NonSerialized]
         AsyncProcessor _asyncProcessor;
 
-        [NonSerialized]
+        PmProjectViewHandler _projectViewHandler;
+        PmProjectHandler _projectHandler;
+
         bool _isDisplayingError;
 
-        void OnEnable()
+        public PmController(PmModel model)
         {
-            if (!_hasInitialized)
-            {
-                _hasInitialized = true;
+            _model = model;
+        }
 
-                _model = new PackageManagerModel();
+        public void Initialize()
+        {
+            SetupDependencies();
+            Start();
+        }
 
-                Log.Trace("STEVETODO");
-                //AddBackgroundTask(RefreshAll(), "Refreshing Packages");
-            }
+        void Start()
+        {
+            _viewModelSyncer.Initialize();
+            _projectViewHandler.Initialize();
 
-            Assert.IsNotNull(_model);
-            Assert.IsNull(_view);
-            Assert.IsNull(_eventManager);
-            Assert.IsNull(_asyncProcessor);
+            ObserveViewEvents();
+        }
 
+        void SetupDependencies()
+        {
+            // We could use a DI framework like zenject here but it's overkill
+            // and also we'd like to keep the dependencies for Projeny low
+            // So just do poor man's DI instead
             _asyncProcessor = new AsyncProcessor();
             _eventManager = new EventManager();
 
-            _view = new PackageManagerView();
+            _view = new PmView();
 
-            ObserveViewEvents();
+            _viewModelSyncer = new PmModelSyncer(_model, _view);
+            _projectHandler = new PmProjectHandler(_model);
+            _projectViewHandler = new PmProjectViewHandler(_model, _view, _projectHandler);
         }
 
         void ObserveViewEvents()
@@ -58,42 +66,26 @@ namespace Projeny
             // Use EventQueueMode.LatestOnly to ensure we don't execute anything during the OnGUI event
             // This is important since OnGUI is called in multiple passes and we have to ensure that the same
             // controls are rendered each pass
-            _view.ClickedProjectType += _eventManager.Add<ProjectConfigTypes>(OnClickedProjectType, EventQueueMode.LatestOnly);
             _view.ClickedRefreshReleaseList += _eventManager.Add(OnClickedRefreshReleaseList, EventQueueMode.LatestOnly);
             _view.ClickedRefreshPackages += _eventManager.Add(OnClickedRefreshPackages, EventQueueMode.LatestOnly);
             _view.ClickedCreateNewPackage += _eventManager.Add(OnClickedCreateNewPackage, EventQueueMode.LatestOnly);
-            _view.ClickedProjectApplyButton += _eventManager.Add(OnClickedProjectApplyButton, EventQueueMode.LatestOnly);
-            _view.ClickedProjectRevertButton += _eventManager.Add(OnClickedProjectRevertButton, EventQueueMode.LatestOnly);
-            _view.ClickedProjectSaveButton += _eventManager.Add(OnClickedProjectSaveButton, EventQueueMode.LatestOnly);
-            _view.ClickedProjectEditButton += _eventManager.Add(OnClickedProjectEditButton, EventQueueMode.LatestOnly);
+
             _view.ClickedReleasesSortMenu += _eventManager.Add<Rect>(OnClickedReleasesSortMenu, EventQueueMode.LatestOnly);
             _view.ContextMenuOpened += _eventManager.Add<DraggableList>(OnContextMenuOpened, EventQueueMode.LatestOnly);
 
             _view.DraggedDroppedListEntries += _eventManager.Add<ListTypes, ListTypes, List<DraggableListEntry>>(OnDraggedDroppedListEntries, EventQueueMode.LatestOnly);
-
-            _model.PluginItemsChanged += _eventManager.Add(OnDisplayValuesDirty, EventQueueMode.LatestOnly);
-            _model.AssetItemsChanged += _eventManager.Add(OnDisplayValuesDirty, EventQueueMode.LatestOnly);
-            _model.PackagesChanged += _eventManager.Add(OnDisplayValuesDirty, EventQueueMode.LatestOnly);
         }
 
         void UnobserveViewEvents()
         {
-            _view.ClickedProjectType -= _eventManager.Remove<ProjectConfigTypes>(OnClickedProjectType);
             _view.ClickedRefreshReleaseList -= _eventManager.Remove(OnClickedRefreshReleaseList);
             _view.ClickedRefreshPackages -= _eventManager.Remove(OnClickedRefreshPackages);
             _view.ClickedCreateNewPackage -= _eventManager.Remove(OnClickedCreateNewPackage);
-            _view.ClickedProjectApplyButton -= _eventManager.Remove(OnClickedProjectApplyButton);
-            _view.ClickedProjectRevertButton -= _eventManager.Remove(OnClickedProjectRevertButton);
-            _view.ClickedProjectSaveButton -= _eventManager.Remove(OnClickedProjectSaveButton);
-            _view.ClickedProjectEditButton -= _eventManager.Remove(OnClickedProjectEditButton);
+
             _view.ClickedReleasesSortMenu -= _eventManager.Remove<Rect>(OnClickedReleasesSortMenu);
             _view.ContextMenuOpened -= _eventManager.Remove<DraggableList>(OnContextMenuOpened);
 
             _view.DraggedDroppedListEntries -= _eventManager.Remove<ListTypes, ListTypes, List<DraggableListEntry>>(OnDraggedDroppedListEntries);
-
-            _model.PluginItemsChanged -= _eventManager.Remove(OnDisplayValuesDirty);
-            _model.AssetItemsChanged -= _eventManager.Remove(OnDisplayValuesDirty);
-            _model.PackagesChanged -= _eventManager.Remove(OnDisplayValuesDirty);
 
             _eventManager.AssertIsEmpty();
         }
@@ -238,87 +230,10 @@ namespace Projeny
             }
         }
 
-        void OnDisplayValuesDirty()
-        {
-            _view.SetPluginItems(_model.PluginItems
-                .Select(x => CreateListItemForProjectItem(x)).ToList());
-
-            _view.SetAssetItems(_model.AssetItems
-                .Select(x => CreateListItemForProjectItem(x)).ToList());
-
-            _view.SetPackages(_model.Packages
-                .Select(x => CreateListItem(x)).ToList());
-        }
-
-        PackageManagerView.ListItemData CreateListItemForProjectItem(string name)
-        {
-            string caption;
-
-            if (_model.ViewState == PackageManagerViewStates.PackagesAndProject)
-            {
-                caption = ImguiUtil.WrapWithColor(name, _view.Skin.Theme.DraggableItemAlreadyAddedColor);
-            }
-            else
-            {
-                // this isn't always the case since it can be rendered when interpolating
-                //Assert.That(_viewState == PackageManagerViewStates.Project);
-                caption = name;
-            }
-
-            return new PackageManagerView.ListItemData()
-            {
-                Caption = caption,
-                Tag = name
-            };
-        }
-
-        PackageManagerView.ListItemData CreateListItem(PackageInfo info)
-        {
-            if (_model.ViewState == PackageManagerViewStates.ReleasesAndPackages)
-            {
-                Assert.Throw("TODO");
-                //if (info.InstallInfo != null && info.InstallInfo.ReleaseInfo != null)
-                //{
-                    //var releaseInfo = info.InstallInfo.ReleaseInfo;
-
-                    //var displayValue = "{0} ({1}{2})".Fmt(
-                        //info.Name,
-                        //WrapWithColor(releaseInfo.Name, Skin.Theme.DraggableItemAlreadyAddedColor),
-                        //string.IsNullOrEmpty(releaseInfo.Version) ? "" : WrapWithColor(" v" + releaseInfo.Version, Skin.Theme.VersionColor));
-
-                    //GUI.Label(rect, displayValue, Skin.ItemTextStyle);
-                //}
-                //else
-                //{
-                    //DrawListItem(rect, info.Name);
-                //}
-            }
-
-            // this isn't always the case since it can be rendered when interpolating
-            //Assert.IsEqual(_model.ViewState, PackageManagerViewStates.PackagesAndProject);
-
-            string caption;
-
-            if (_model.IsPackageAddedToProject(info.Name))
-            {
-                caption = ImguiUtil.WrapWithColor(
-                    info.Name, _view.Skin.Theme.DraggableItemAlreadyAddedColor);
-            }
-            else
-            {
-                caption = info.Name;
-            }
-
-            return new PackageManagerView.ListItemData()
-            {
-                Caption = caption,
-                Tag = info
-            };
-        }
-
-        void OnDisable()
+        public void Dispose()
         {
             UnobserveViewEvents();
+            _viewModelSyncer.Dispose();
         }
 
         public void OnClickedReleasesSortMenu(Rect buttonRect)
@@ -355,28 +270,6 @@ namespace Projeny
             //_releasesList.ForceSort();
         }
 
-        public void OnClickedProjectEditButton()
-        {
-            var configPath = ProjenyEditorUtil.GetProjectConfigPath(_model.ProjectConfigType);
-            InternalEditorUtility.OpenFileAtLineExternal(configPath, 1);
-        }
-
-        public void OnClickedProjectSaveButton()
-        {
-            OverwriteConfig();
-        }
-
-        public void OnClickedProjectRevertButton()
-        {
-            RefreshProject();
-        }
-
-        public void OnClickedProjectApplyButton()
-        {
-            OverwriteConfig();
-            AddBackgroundTask(ProcessUpmCommand("Updating directory links", UpmHelper.UpdateLinksAsync()), "Updating Links");
-        }
-
         public void OnClickedCreateNewPackage()
         {
             AddBackgroundTask(CreateNewPackageAsync(), "Creating New Package");
@@ -392,84 +285,79 @@ namespace Projeny
             AddBackgroundTask(RefreshReleasesAsync(), "Refreshing Release List");
         }
 
-        public void OnClickedProjectType(ProjectConfigTypes desiredConfigType)
-        {
-            AddBackgroundTask(TryChangeProjectType(desiredConfigType));
-        }
-
         IEnumerator RefreshAll()
         {
-            RefreshProject();
+            _projectHandler.RefreshProject();
             yield return RefreshPackagesAsync();
             yield return RefreshReleasesAsync();
         }
 
-        void Update()
+        public void Update()
         {
             _eventManager.Flush();
             _asyncProcessor.Tick();
-            //UpdateBackgroundTask();
+            _viewModelSyncer.Update();
 
             _view.IsBlocked = _asyncProcessor.IsBlocking;
+            _view.Update();
+
+            _projectViewHandler.Update();
+
+            //UpdateBackgroundTask();
 
             //if (_backgroundTaskInfo != null)
             //{
-                //_view.IsBlocked = true;
-                //_view.BlockedStatusMessage = _backgroundTaskInfo.StatusMessage;
-                //_view.BlockedStatusTitle = _backgroundTaskInfo.StatusTitle;
+            //_view.IsBlocked = true;
+            //_view.BlockedStatusMessage = _backgroundTaskInfo.StatusMessage;
+            //_view.BlockedStatusTitle = _backgroundTaskInfo.StatusTitle;
             //}
             //else
             //{
-                //_view.IsBlocked = false;
-                //_view.BlockedStatusMessage = null;
-                //_view.BlockedStatusTitle = null;
+            //_view.IsBlocked = false;
+            //_view.BlockedStatusMessage = null;
+            //_view.BlockedStatusTitle = null;
             //}
-
-            _view.Update();
-
-            // Doesn't seem worth trying to detect changes, just redraw every frame
-            Repaint();
         }
 
         //void UpdateBackgroundTask()
         //{
-            //if (_backgroundTaskInfo == null)
-            //{
-                //return;
+        //if (_backgroundTaskInfo == null)
+        //{
+        //return;
+        //}
+
+        //try
+        //{
+        //// NOTE: Do not assume a constant frame rate here
+        //// (When we aren't in focus this gets updated less often)
+        //if (!_backgroundTaskInfo.CoRoutine.Pump())
+        //{
+        //_backgroundTaskInfo = null;
+        //}
+        //}
+        //catch (CoRoutineException e)
+        //{
+        //_backgroundTaskInfo = null;
+
+        //// If possible, display this as a popup
+        //// Otherwise it will still be visible in the console so that's fine
+        //if (e.InnerException != null)
+        //{
+        //AddBackgroundTask(
+            //_view.DisplayError(e.InnerException.Message));
             //}
 
-            //try
-            //{
-                //// NOTE: Do not assume a constant frame rate here
-                //// (When we aren't in focus this gets updated less often)
-                //if (!_backgroundTaskInfo.CoRoutine.Pump())
-                //{
-                    //_backgroundTaskInfo = null;
-                //}
-            //}
-            //catch (CoRoutineException e)
-            //{
-                //_backgroundTaskInfo = null;
-
-                //// If possible, display this as a popup
-                //// Otherwise it will still be visible in the console so that's fine
-                //if (e.InnerException != null)
-                //{
-                    //AddBackgroundTask(
-                        //_view.DisplayError(e.InnerException.Message));
-                //}
-
-                //throw;
+            //throw;
             //}
             //catch (Exception e)
             //{
-                //_backgroundTaskInfo = null;
+            //_backgroundTaskInfo = null;
 
-                //AddBackgroundTask(
-                    //_view.DisplayError(e.Message));
+            //AddBackgroundTask(
+                //_view.DisplayError(e.Message));
                 //throw;
-            //}
-        //}
+                //}
+                //}
 
         public void OnContextMenuOpened(DraggableList sourceList)
         {
@@ -481,49 +369,49 @@ namespace Projeny
 
             //switch (listType)
             //{
-                //case ListTypes.Release:
-                //{
-                    //bool hasLocalPath = false;
-                    //bool hasAssetStoreLink = false;
+            //case ListTypes.Release:
+            //{
+            //bool hasLocalPath = false;
+            //bool hasAssetStoreLink = false;
 
-                    //var singleInfo = _selected.OnlyOrDefault();
+            //var singleInfo = _selected.OnlyOrDefault();
 
-                    //if (singleInfo != null)
-                    //{
-                        //var info = (ReleaseInfo)singleInfo.Tag;
+            //if (singleInfo != null)
+            //{
+            //var info = (ReleaseInfo)singleInfo.Tag;
 
-                        //hasLocalPath = info.LocalPath != null && File.Exists(info.LocalPath);
+            //hasLocalPath = info.LocalPath != null && File.Exists(info.LocalPath);
 
-                        //hasAssetStoreLink = info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.LinkId);
-                    //}
+            //hasAssetStoreLink = info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.LinkId);
+            //}
 
-                    //contextMenu.AddOptionalItem(hasLocalPath, new GUIContent("Open Folder"), false, OpenReleaseFolderForSelected);
+            //contextMenu.AddOptionalItem(hasLocalPath, new GUIContent("Open Folder"), false, OpenReleaseFolderForSelected);
 
-                    //contextMenu.AddOptionalItem(singleInfo != null, new GUIContent("More Info..."), false, OpenMoreInfoPopupForSelected);
+            //contextMenu.AddOptionalItem(singleInfo != null, new GUIContent("More Info..."), false, OpenMoreInfoPopupForSelected);
 
-                    //contextMenu.AddOptionalItem(hasAssetStoreLink, new GUIContent("Open In Asset Store"), false, OpenSelectedInAssetStore);
-                    //break;
-                //}
-                //case ListTypes.Package:
-                //{
-                    //contextMenu.AddOptionalItem(!_selected.IsEmpty(), new GUIContent("Delete"), false, DeleteSelected);
-                    //contextMenu.AddOptionalItem(_selected.Count == 1, new GUIContent("Rename"), false, RenameSelectedPackage);
-                    //contextMenu.AddOptionalItem(_selected.Count == 1, new GUIContent("Open Folder"), false, OpenPackageFolderForSelected);
-                    //contextMenu.AddOptionalItem(_selected.Count == 1 && HasPackageYaml((PackageInfo)_selected.Single().Tag), new GUIContent("Edit " + ProjenyEditorUtil.PackageConfigFileName), false, EditPackageYamlSelected);
-                    //break;
-                //}
-                //case ListTypes.AssetItem:
-                //case ListTypes.PluginItem:
-                //{
-                    //contextMenu.AddItem(new GUIContent("Remove"), false, DeleteSelected);
-                    //contextMenu.AddOptionalItem(_selected.Count == 1 && HasFolderWithPackageName(_selected.Single().Name), new GUIContent("Select in Project Tab"), false, ShowSelectedInProjectTab);
-                    //break;
-                //}
-                //default:
-                //{
-                    //Assert.Throw();
-                    //break;
-                //}
+            //contextMenu.AddOptionalItem(hasAssetStoreLink, new GUIContent("Open In Asset Store"), false, OpenSelectedInAssetStore);
+            //break;
+            //}
+            //case ListTypes.Package:
+            //{
+            //contextMenu.AddOptionalItem(!_selected.IsEmpty(), new GUIContent("Delete"), false, DeleteSelected);
+            //contextMenu.AddOptionalItem(_selected.Count == 1, new GUIContent("Rename"), false, RenameSelectedPackage);
+            //contextMenu.AddOptionalItem(_selected.Count == 1, new GUIContent("Open Folder"), false, OpenPackageFolderForSelected);
+            //contextMenu.AddOptionalItem(_selected.Count == 1 && HasPackageYaml((PackageInfo)_selected.Single().Tag), new GUIContent("Edit " + ProjenyEditorUtil.PackageConfigFileName), false, EditPackageYamlSelected);
+            //break;
+            //}
+            //case ListTypes.AssetItem:
+            //case ListTypes.PluginItem:
+            //{
+            //contextMenu.AddItem(new GUIContent("Remove"), false, DeleteSelected);
+            //contextMenu.AddOptionalItem(_selected.Count == 1 && HasFolderWithPackageName(_selected.Single().Name), new GUIContent("Select in Project Tab"), false, ShowSelectedInProjectTab);
+            //break;
+            //}
+            //default:
+            //{
+            //Assert.Throw();
+            //break;
+            //}
             //}
 
             //contextMenu.ShowAsContext();
@@ -558,11 +446,11 @@ namespace Projeny
 
             //if (asset == null)
             //{
-                //AddBackgroundTask(DisplayError("Could not find package '{0}' in project".Fmt(name)));
+            //AddBackgroundTask(DisplayError("Could not find package '{0}' in project".Fmt(name)));
             //}
             //else
             //{
-                //Selection.activeObject = asset;
+            //Selection.activeObject = asset;
             //}
         }
 
@@ -593,21 +481,21 @@ namespace Projeny
 
             //switch (ClassifyList(entry.ListOwner))
             //{
-                //case ListTypes.Package:
-                //{
-                    //AddBackgroundTask(OpenMoreInfoPopup((PackageInfo)entry.Tag));
-                    //break;
-                //}
-                //case ListTypes.Release:
-                //{
-                    //AddBackgroundTask(OpenMoreInfoPopup((ReleaseInfo)entry.Tag));
-                    //break;
-                //}
-                //default:
-                //{
-                    //Assert.Throw();
-                    //break;
-                //}
+            //case ListTypes.Package:
+            //{
+            //AddBackgroundTask(OpenMoreInfoPopup((PackageInfo)entry.Tag));
+            //break;
+            //}
+            //case ListTypes.Release:
+            //{
+            //AddBackgroundTask(OpenMoreInfoPopup((ReleaseInfo)entry.Tag));
+            //break;
+            //}
+            //default:
+            //{
+            //Assert.Throw();
+            //break;
+            //}
             //}
         }
 
@@ -691,7 +579,7 @@ namespace Projeny
 
             Assert.Throw("TODO");
             //SelectInternal(_packagesList.Values
-                //.Where(x => x.Name == newPackageName.Current).Single());
+            //.Where(x => x.Name == newPackageName.Current).Single());
         }
 
         void OpenPackageFolderForSelected()
@@ -711,7 +599,7 @@ namespace Projeny
             Assert.Throw("TODO");
             //if (_selected.IsEmpty())
             //{
-                //return;
+            //return;
             //}
 
             //var listType = ClassifyList(_selected[0].ListOwner);
@@ -720,7 +608,7 @@ namespace Projeny
 
             //foreach (var entry in _selected[0].ListOwner.Values)
             //{
-                //SelectInternal(entry);
+            //SelectInternal(entry);
             //}
         }
 
@@ -735,7 +623,7 @@ namespace Projeny
             yield break;
             //if (_selected.IsEmpty())
             //{
-                //yield break;
+            //yield break;
             //}
 
             //var listType = ClassifyList(_selected[0].ListOwner);
@@ -744,30 +632,30 @@ namespace Projeny
 
             //if (listType == ListTypes.Package)
             //{
-                //var infos = _selected.Select(x => (PackageInfo)x.Tag).ToList();
+            //var infos = _selected.Select(x => (PackageInfo)x.Tag).ToList();
 
-                //var choice = _view.PromptForUserChoice(
-                    //"<color=yellow>Are you sure you wish to delete the following packages?</color>\n\n{0}\n\n<color=yellow>Please note the following:</color>\n\n- This change is not undoable\n- Any changes that you've made since installing will be lost\n- Any projects or other packages that still depend on this package may be put in an invalid state by deleting it".Fmt(infos.Select(x => "- " + x.Name).Join("\n")),
-                    //new[] { "Delete", "Cancel" }, null, "DeleteSelectedPopupTextStyle");
+            //var choice = _view.PromptForUserChoice(
+                //"<color=yellow>Are you sure you wish to delete the following packages?</color>\n\n{0}\n\n<color=yellow>Please note the following:</color>\n\n- This change is not undoable\n- Any changes that you've made since installing will be lost\n- Any projects or other packages that still depend on this package may be put in an invalid state by deleting it".Fmt(infos.Select(x => "- " + x.Name).Join("\n")),
+                //new[] { "Delete", "Cancel" }, null, "DeleteSelectedPopupTextStyle");
 
                 //yield return choice;
 
                 //if (choice.Current == 0)
                 //{
-                    //yield return ProcessUpmCommand("Deleting selected packages", UpmHelper.DeletePackagesAsync(infos));
-                    //yield return RefreshPackagesAsync();
+                //yield return ProcessUpmCommand("Deleting selected packages", UpmHelper.DeletePackagesAsync(infos));
+                //yield return RefreshPackagesAsync();
                 //}
-            //}
-            //else if (listType == ListTypes.AssetItem || listType == ListTypes.PluginItem)
-            //{
+                //}
+                //else if (listType == ListTypes.AssetItem || listType == ListTypes.PluginItem)
+                //{
                 //var entriesToRemove = _selected.ToList();
                 //_selected.Clear();
 
                 //foreach (var entry in entriesToRemove)
                 //{
-                    //entry.ListOwner.Remove(entry);
+                //entry.ListOwner.Remove(entry);
                 //}
-            //}
+                //}
         }
 
         IEnumerator InstallReleasesAsync(List<ReleaseInfo> releaseInfos)
@@ -843,7 +731,7 @@ namespace Projeny
 
                 userChoice = _view.PromptForUserChoice(
                     "Package '{0}' is already installed with the same version ('{1}').  Would you like to re-install it anyway?  Note that any local changes you've made to the package will be reverted."
-                        .Fmt(packageReleaseInfo.Name, packageReleaseInfo.Version), new[] { "Overwrite", "Skip", "Cancel" });
+                    .Fmt(packageReleaseInfo.Name, packageReleaseInfo.Version), new[] { "Overwrite", "Skip", "Cancel" });
             }
             else if (releaseInfo.VersionCode > packageReleaseInfo.VersionCode)
             {
@@ -974,7 +862,7 @@ namespace Projeny
 
             //foreach (var info in _allReleases)
             //{
-                //_releasesList.Add(info.Name, info);
+            //_releasesList.Add(info.Name, info);
             //}
         }
 
@@ -1026,40 +914,6 @@ namespace Projeny
             _model.SetPackages(allPackages.Current);
         }
 
-        void RefreshProject()
-        {
-            var configPath = ProjenyEditorUtil.GetProjectConfigPath(_model.ProjectConfigType);
-
-            if (!File.Exists(configPath))
-            {
-                ResetProject();
-                return;
-            }
-
-            ProjectConfig savedConfig;
-
-            try
-            {
-                savedConfig = DeserializeProjectConfig(configPath);
-            }
-            catch (Exception e)
-            // This can happen if the file has yaml serialization errors
-            {
-                DisplayError(e.Message);
-                return;
-            }
-
-            // Null when file is empty
-            if (savedConfig == null)
-            {
-                ResetProject();
-            }
-            else
-            {
-                PopulateModelFromConfig(savedConfig);
-            }
-        }
-
         void DisplayError(string message)
         {
             Log.Error("Projeny: " + message);
@@ -1082,100 +936,9 @@ namespace Projeny
             _isDisplayingError = false;
         }
 
-        void ResetProject()
-        {
-            _model.ClearAssetItems();
-            _model.ClearPluginItems();
-        }
-
-        void PopulateModelFromConfig(ProjectConfig config)
-        {
-            _model.ClearPluginItems();
-
-            foreach (var name in config.PackagesPlugins)
-            {
-                _model.AddPluginItem(name);
-            }
-
-            _model.ClearAssetItems();
-
-            foreach (var name in config.Packages)
-            {
-                _model.AddAssetItem(name);
-            }
-        }
-
-        void OverwriteConfig()
-        {
-            File.WriteAllText(ProjenyEditorUtil.GetProjectConfigPath(_model.ProjectConfigType), GetSerializedProjectConfigFromLists());
-        }
-
-        bool HasProjectConfigChanged()
-        {
-            var configPath = ProjenyEditorUtil.GetProjectConfigPath(_model.ProjectConfigType);
-
-            var currentConfig = GetProjectConfigFromLists();
-
-            if (!File.Exists(configPath))
-            {
-                return !currentConfig.Packages.IsEmpty() || !currentConfig.PackagesPlugins.IsEmpty();
-            }
-
-            ProjectConfig savedConfig;
-
-            try
-            {
-                savedConfig = DeserializeProjectConfig(configPath);
-            }
-            catch (Exception e)
-            {
-                Log.ErrorException(e);
-                // This happens if we have serialization errors
-                // Just log the error then assume that the file is different in this case so that the user
-                // has the option to overwrite
-                return true;
-            }
-
-            if (savedConfig == null)
-            {
-                return !currentConfig.Packages.IsEmpty() || !currentConfig.PackagesPlugins.IsEmpty();
-            }
-
-            return !Enumerable.SequenceEqual(currentConfig.Packages.OrderBy(t => t), savedConfig.Packages.OrderBy(t => t))
-                || !Enumerable.SequenceEqual(currentConfig.PackagesPlugins.OrderBy(t => t), savedConfig.PackagesPlugins.OrderBy(t => t));
-        }
-
-        ProjectConfig DeserializeProjectConfig(string configPath)
-        {
-            try
-            {
-                return UpmSerializer.DeserializeProjectConfig(File.ReadAllText(configPath));
-            }
-            catch (Exception e)
-            {
-                throw new Exception(
-                    "Error while reading from '{0}': \n\n{1}".Fmt(Path.GetFileName(configPath), e.Message));
-            }
-        }
-
-        ProjectConfig GetProjectConfigFromLists()
-        {
-            var config = new ProjectConfig();
-
-            config.Packages = _model.AssetItems.ToList();
-            config.PackagesPlugins = _model.PluginItems.ToList();
-
-            return config;
-        }
-
-        string GetSerializedProjectConfigFromLists()
-        {
-            return UpmSerializer.SerializeProjectConfig(GetProjectConfigFromLists());
-        }
-
         IEnumerator TryChangeProjectType(ProjectConfigTypes configType)
         {
-            if (HasProjectConfigChanged())
+            if (_projectHandler.HasProjectConfigChanged())
             {
                 var choice = _view.PromptForUserChoice(
                     "Do you want to save changes to your project?", new[] { "Save", "Don't Save", "Cancel" });
@@ -1186,7 +949,7 @@ namespace Projeny
                 {
                     case 0:
                     {
-                        OverwriteConfig();
+                        _projectHandler.OverwriteConfig();
                         break;
                     }
                     case 1:
@@ -1206,14 +969,12 @@ namespace Projeny
                 }
             }
 
-            Assert.Throw("TODO");
-            //_projectConfigType = configType;
-            //RefreshProject();
+            _model.ProjectConfigType = configType;
+            _projectHandler.RefreshProject();
         }
 
-        public void OnGUI()
+        public void OnGUI(Rect fullRect)
         {
-            var fullRect = new Rect(0, 0, this.position.width, this.position.height);
             _view.OnGUI(fullRect);
 
             CheckForKeypresses();
@@ -1283,3 +1044,4 @@ namespace Projeny
         }
     }
 }
+

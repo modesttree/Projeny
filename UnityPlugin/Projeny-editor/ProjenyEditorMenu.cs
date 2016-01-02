@@ -30,7 +30,7 @@ namespace Projeny
         [MenuItem("Projeny/Package Manager...", false, 1)]
         public static void OpenPackageManager()
         {
-            var window = EditorWindow.GetWindow<PackageManagerWindow>();
+            var window = EditorWindow.GetWindow<PmWindow>();
             window.titleContent = new GUIContent("  Projeny", Resources.Load<Texture2D>("Projeny/Icon"));
         }
 

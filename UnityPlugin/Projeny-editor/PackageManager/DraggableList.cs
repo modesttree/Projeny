@@ -20,7 +20,7 @@ namespace Projeny.Internal
         static readonly string DragId = "DraggableListData";
 
         readonly List<DraggableListEntry> _entryList = new List<DraggableListEntry>();
-        readonly PackageManagerView _manager;
+        readonly PmView _manager;
 
         Vector2 _scrollPos;
 
@@ -28,7 +28,7 @@ namespace Projeny.Internal
 
         static DraggableListSkin _skin;
 
-        public DraggableList(PackageManagerView manager)
+        public DraggableList(PmView manager)
         {
             _manager = manager;
         }
