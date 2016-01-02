@@ -34,6 +34,8 @@ namespace Projeny
         public event Action ClickedProjectRevertButton = delegate {};
         public event Action ClickedProjectSaveButton = delegate {};
         public event Action ClickedProjectEditButton = delegate {};
+        public event Action ClickedViewLeftButton = delegate {};
+        public event Action ClickedViewRightButton = delegate {};
         public event Action<Rect> ClickedReleasesSortMenu = delegate {};
         public event Action<DraggableList.DragData, DraggableList> DragDroppedListItem = delegate {};
         public event Action<DraggableList> ContextMenuOpened = delegate {};
@@ -911,7 +913,7 @@ namespace Projeny
             {
                 if (GUI.Button(rect1, ""))
                 {
-                    ViewState = (PmViewStates)((int)ViewState - 1);
+                    ClickedViewLeftButton();
                 }
 
                 if (Skin.ArrowLeftTexture != null)
@@ -928,7 +930,7 @@ namespace Projeny
             {
                 if (GUI.Button(rect2, ""))
                 {
-                    ViewState = (PmViewStates)((int)ViewState + 1);
+                    ClickedViewRightButton();
                 }
 
                 if (Skin.ArrowRightTexture != null)

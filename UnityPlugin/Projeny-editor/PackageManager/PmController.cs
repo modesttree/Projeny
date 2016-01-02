@@ -16,7 +16,7 @@ namespace Projeny
 
         PmView _view;
 
-        PmModelSyncer _viewModelSyncer;
+        PmModelViewSyncer _viewModelSyncer;
 
         EventManager _eventManager;
 
@@ -66,7 +66,7 @@ namespace Projeny
             _upmCommandHandler = new UpmCommandHandler(_view);
 
             _viewAsyncHandler = new PmViewAsyncHandler(_view, _asyncProcessor);
-            _viewModelSyncer = new PmModelSyncer(_model, _view);
+            _viewModelSyncer = new PmModelViewSyncer(_model, _view);
             _projectHandler = new PmProjectHandler(_model);
             _releasesHandler = new PmReleasesHandler(_model, _upmCommandHandler);
             _projectViewHandler = new PmProjectViewHandler(
@@ -81,6 +81,8 @@ namespace Projeny
             // controls are rendered each pass
             _view.ClickedRefreshPackages += _eventManager.Add(OnClickedRefreshPackages, EventQueueMode.LatestOnly);
             _view.ClickedCreateNewPackage += _eventManager.Add(OnClickedCreateNewPackage, EventQueueMode.LatestOnly);
+            _view.ClickedViewRightButton += _eventManager.Add(OnClickedViewRightButton, EventQueueMode.LatestOnly);
+            _view.ClickedViewLeftButton += _eventManager.Add(OnClickedViewLeftButton, EventQueueMode.LatestOnly);
 
             _view.ClickedReleasesSortMenu += _eventManager.Add<Rect>(OnClickedReleasesSortMenu, EventQueueMode.LatestOnly);
             _view.ContextMenuOpened += _eventManager.Add<DraggableList>(OnContextMenuOpened, EventQueueMode.LatestOnly);
@@ -92,6 +94,8 @@ namespace Projeny
         {
             _view.ClickedRefreshPackages -= _eventManager.Remove(OnClickedRefreshPackages);
             _view.ClickedCreateNewPackage -= _eventManager.Remove(OnClickedCreateNewPackage);
+            _view.ClickedViewRightButton -= _eventManager.Remove(OnClickedViewRightButton);
+            _view.ClickedViewLeftButton -= _eventManager.Remove(OnClickedViewLeftButton);
 
             _view.ClickedReleasesSortMenu -= _eventManager.Remove<Rect>(OnClickedReleasesSortMenu);
             _view.ContextMenuOpened -= _eventManager.Remove<DraggableList>(OnContextMenuOpened);
@@ -99,6 +103,16 @@ namespace Projeny
             _view.DraggedDroppedListEntries -= _eventManager.Remove<ListTypes, ListTypes, List<DraggableListEntry>>(OnDraggedDroppedListEntries);
 
             _eventManager.AssertIsEmpty();
+        }
+
+        void OnClickedViewLeftButton()
+        {
+            _model.ViewState = (PmViewStates)((int)_model.ViewState - 1);
+        }
+
+        void OnClickedViewRightButton()
+        {
+            _model.ViewState = (PmViewStates)((int)_model.ViewState + 1);
         }
 
         void OnDraggedDroppedListEntries(ListTypes sourceType, ListTypes dropType, List<DraggableListEntry> entries)

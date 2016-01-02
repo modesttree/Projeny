@@ -70,7 +70,11 @@ namespace Projeny.Internal
         {
             if (info == null)
             {
-                return null;
+                // Can't return null here since unity serialization doesn't support null
+                return new PackageInstallInfo()
+                {
+                    ReleaseInfo = ConvertToPublic((ReleaseInfoInternal)null)
+                };
             }
 
             var newInfo = new PackageInstallInfo();
@@ -86,7 +90,11 @@ namespace Projeny.Internal
         {
             if (info == null)
             {
-                return null;
+                // Can't return null here since unity serialization doesn't support null
+                return new ReleaseInfo()
+                {
+                    AssetStoreInfo = ConvertToPublic((AssetStoreInfoInternal)null),
+                };
             }
 
             var newInfo = new ReleaseInfo();
@@ -121,7 +129,8 @@ namespace Projeny.Internal
         {
             if (info == null)
             {
-                return null;
+                // Can't return null here since unity serialization doesn't support null
+                return new AssetStoreInfo();
             }
 
             var newInfo = new AssetStoreInfo();

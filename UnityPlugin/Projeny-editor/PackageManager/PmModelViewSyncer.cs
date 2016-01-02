@@ -10,14 +10,14 @@ using System.Linq;
 
 namespace Projeny.Internal
 {
-    public class PmModelSyncer : IDisposable
+    public class PmModelViewSyncer : IDisposable
     {
         readonly PmModel _model;
         readonly PmView _view;
 
         readonly EventManager _eventManager = new EventManager();
 
-        public PmModelSyncer(
+        public PmModelViewSyncer(
             PmModel model, PmView view)
         {
             _model = model;
@@ -61,6 +61,7 @@ namespace Projeny.Internal
         {
             _view.ConfigType = _model.ProjectConfigType;
         }
+
 
         void OnListDisplayValuesDirty()
         {
@@ -125,39 +126,37 @@ namespace Projeny.Internal
 
         PmView.ListItemData CreateListItem(PackageInfo info)
         {
-            if (_model.ViewState == PmViewStates.ReleasesAndPackages)
-            {
-                Assert.Throw("TODO");
-                //if (info.InstallInfo != null && info.InstallInfo.ReleaseInfo != null)
-                //{
-                    //var releaseInfo = info.InstallInfo.ReleaseInfo;
-
-                    //var displayValue = "{0} ({1}{2})".Fmt(
-                        //info.Name,
-                        //WrapWithColor(releaseInfo.Name, Skin.Theme.DraggableItemAlreadyAddedColor),
-                        //string.IsNullOrEmpty(releaseInfo.Version) ? "" : WrapWithColor(" v" + releaseInfo.Version, Skin.Theme.VersionColor));
-
-                    //GUI.Label(rect, displayValue, Skin.ItemTextStyle);
-                //}
-                //else
-                //{
-                    //DrawListItem(rect, info.Name);
-                //}
-            }
-
-            // this isn't always the case since it can be rendered when interpolating
-            //Assert.IsEqual(_model.ViewState, PmViewStates.PackagesAndProject);
-
             string caption;
 
-            if (_model.IsPackageAddedToProject(info.Name))
+            if (_model.ViewState == PmViewStates.ReleasesAndPackages)
             {
-                caption = ImguiUtil.WrapWithColor(
-                    info.Name, _view.Skin.Theme.DraggableItemAlreadyAddedColor);
+                var releaseInfo = info.InstallInfo.ReleaseInfo;
+                if (!string.IsNullOrEmpty(releaseInfo.Name))
+                {
+                    caption = "{0} ({1}{2})".Fmt(
+                        info.Name,
+                        ImguiUtil.WrapWithColor(releaseInfo.Name, _view.Skin.Theme.DraggableItemAlreadyAddedColor),
+                        string.IsNullOrEmpty(releaseInfo.Version) ? "" : ImguiUtil.WrapWithColor(" v" + releaseInfo.Version, _view.Skin.Theme.VersionColor));
+                }
+                else
+                {
+                    caption = info.Name;
+                }
             }
             else
             {
-                caption = info.Name;
+                // this isn't always the case since it can be rendered when interpolating
+                //Assert.IsEqual(_model.ViewState, PmViewStates.PackagesAndProject);
+
+                if (_model.IsPackageAddedToProject(info.Name))
+                {
+                    caption = ImguiUtil.WrapWithColor(
+                        info.Name, _view.Skin.Theme.DraggableItemAlreadyAddedColor);
+                }
+                else
+                {
+                    caption = info.Name;
+                }
             }
 
             return new PmView.ListItemData()

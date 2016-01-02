@@ -19,7 +19,6 @@ namespace Projeny
         public string Name;
         public string Path;
 
-        // May be null
         public PackageInstallInfo InstallInfo;
     }
 
@@ -29,7 +28,6 @@ namespace Projeny
         public string InstallDate;
         public long InstallDateTicks;
 
-        // May be null
         public ReleaseInfo ReleaseInfo;
     }
 }
