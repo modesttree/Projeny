@@ -49,7 +49,8 @@ namespace Projeny
 
         bool _doesConfigFileExist = true;
 
-        Action<Rect> _popupHandler;
+        readonly List<PopupInfo> _popupHandlers = new List<PopupInfo>();
+        int _popupIdCount;
 
         List<DraggableListEntry> _selected;
 
@@ -392,7 +393,6 @@ namespace Projeny
 
         void DrawPopupCommon(Rect fullRect, Rect popupRect)
         {
-            ImguiUtil.DrawColoredQuad(fullRect, Skin.Theme.LoadingOverlayColor);
             ImguiUtil.DrawColoredQuad(popupRect, Skin.Theme.LoadingOverlapPopupColor);
         }
 
@@ -494,16 +494,31 @@ namespace Projeny
                 PromptForUserChoiceInternal(question, choices, title, styleOverride));
         }
 
+        public int AddPopup(Action<Rect> handler)
+        {
+            _popupIdCount++;
+            int newId = _popupIdCount;
+
+            Assert.That(_popupHandlers.Where(x => x.Id == newId).IsEmpty());
+
+            _popupHandlers.Add(new PopupInfo(newId, handler));
+            return newId;
+        }
+
+        public void RemovePopup(int id)
+        {
+            var info = _popupHandlers.Where(x => x.Id == id).Single();
+            _popupHandlers.RemoveWithConfirm(info);
+        }
+
         public IEnumerator PromptForUserChoiceInternal(
             string question, string[] choices, string title = null, string styleOverride = null)
         {
-            Assert.IsNull(_popupHandler);
-
             int choice = -1;
 
             var skin = Skin.GenericPromptDialog;
 
-            _popupHandler = delegate(Rect fullRect)
+            var popupId = AddPopup(delegate(Rect fullRect)
             {
                 GUILayout.BeginArea(fullRect);
                 {
@@ -565,28 +580,26 @@ namespace Projeny
                     GUILayout.FlexibleSpace();
                 }
                 GUILayout.EndArea();
-            };
+            });
 
             while (choice == -1)
             {
                 yield return null;
             }
 
-            _popupHandler = null;
+            RemovePopup(popupId);
 
             yield return choice;
         }
 
         public IEnumerator<string> PromptForInput(string label, string defaultValue)
         {
-            Assert.IsNull(_popupHandler);
-
             string userInput = defaultValue;
             InputDialogStates state = InputDialogStates.None;
 
             bool isFirst = true;
 
-            _popupHandler = delegate(Rect fullRect)
+            var popupId = AddPopup(delegate(Rect fullRect)
             {
                 if (Event.current.type == EventType.KeyDown)
                 {
@@ -650,14 +663,14 @@ namespace Projeny
                 {
                     GUI.FocusControl("PopupTextField");
                 }
-            };
+            });
 
             while (state == InputDialogStates.None)
             {
                 yield return null;
             }
 
-            _popupHandler = null;
+            RemovePopup(popupId);
 
             if (state == InputDialogStates.Submitted)
             {
@@ -687,14 +700,12 @@ namespace Projeny
 
         IEnumerator OpenMoreInfoPopup(ReleaseInfo info)
         {
-            Assert.IsNull(_popupHandler);
-
             bool isDone = false;
 
             var skin = Skin.ReleaseMoreInfoDialog;
             Vector2 scrollPos = Vector2.zero;
 
-            _popupHandler = delegate(Rect fullRect)
+            var popupId = AddPopup(delegate(Rect fullRect)
             {
                 var popupRect = ImguiUtil.CenterRectInRect(fullRect, skin.PopupSize);
 
@@ -750,14 +761,14 @@ namespace Projeny
                 {
                     isDone = true;
                 }
-            };
+            });
 
             while (!isDone)
             {
                 yield return null;
             }
 
-            _popupHandler = null;
+            RemovePopup(popupId);
         }
 
         float GetDesiredSplit2()
@@ -810,21 +821,22 @@ namespace Projeny
 
             GUI.enabled = true;
 
-            if (!IsBlocked)
+            if (IsBlocked)
             {
-                Assert.IsNull(_popupHandler);
-            }
-            else
-            {
-                if (_popupHandler != null)
+                if (ShowBlockedPopup || !_popupHandlers.IsEmpty())
                 {
-                    _popupHandler(fullRect);
-                }
-                else
-                {
-                    if (ShowBlockedPopup)
+                    ImguiUtil.DrawColoredQuad(fullRect, Skin.Theme.LoadingOverlayColor);
+
+                    if (_popupHandlers.IsEmpty())
                     {
                         DisplayGenericProcessingDialog(fullRect);
+                    }
+                    else
+                    {
+                        foreach (var info in _popupHandlers)
+                        {
+                            info.Handler(fullRect);
+                        }
                     }
                 }
             }
@@ -1132,6 +1144,18 @@ namespace Projeny
             None,
             Cancelled,
             Submitted
+        }
+
+        class PopupInfo
+        {
+            public readonly int Id;
+            public readonly Action<Rect> Handler;
+
+            public PopupInfo(int id, Action<Rect> handler)
+            {
+                Id = id;
+                Handler = handler;
+            }
         }
     }
 }

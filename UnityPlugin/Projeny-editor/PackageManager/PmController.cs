@@ -25,30 +25,14 @@ namespace Projeny
         PmProjectViewHandler _projectViewHandler;
         PmProjectHandler _projectHandler;
 
-        bool _isDisplayingError;
+        UpmCommandHandler _upmCommandHandler;
+        PmViewAsyncHandler _viewAsyncHandler;
 
-        float _isBlockedStartTime;
-        bool _isBlocked;
+        bool _isDisplayingError;
 
         public PmController(PmModel model)
         {
             _model = model;
-        }
-
-        bool IsBlocked
-        {
-            get
-            {
-                return _isBlocked;
-            }
-            set
-            {
-                if (_isBlocked != value)
-                {
-                    _isBlockedStartTime = Time.realtimeSinceStartup;
-                    _isBlocked = value;
-                }
-            }
         }
 
         public void Initialize()
@@ -75,9 +59,13 @@ namespace Projeny
 
             _view = new PmView();
 
+            _upmCommandHandler = new UpmCommandHandler(_view);
+
+            _viewAsyncHandler = new PmViewAsyncHandler(_view, _asyncProcessor);
             _viewModelSyncer = new PmModelSyncer(_model, _view);
             _projectHandler = new PmProjectHandler(_model);
-            _projectViewHandler = new PmProjectViewHandler(_model, _view, _projectHandler, _asyncProcessor);
+            _projectViewHandler = new PmProjectViewHandler(
+                _model, _view, _projectHandler, _asyncProcessor, _upmCommandHandler);
         }
 
         void ObserveViewEvents()
@@ -291,17 +279,17 @@ namespace Projeny
 
         public void OnClickedCreateNewPackage()
         {
-            AddBackgroundTask(CreateNewPackageAsync(), "Creating New Package");
+            _asyncProcessor.Process(CreateNewPackageAsync());
         }
 
         public void OnClickedRefreshPackages()
         {
-            AddBackgroundTask(RefreshPackagesAsync(), "Refreshing Packages");
+            _asyncProcessor.Process(RefreshPackagesAsync(), "Refreshing Packages");
         }
 
         public void OnClickedRefreshReleaseList()
         {
-            AddBackgroundTask(RefreshReleasesAsync(), "Refreshing Release List");
+            _asyncProcessor.Process(RefreshReleasesAsync(), "Refreshing Release List");
         }
 
         IEnumerator RefreshAll()
@@ -320,11 +308,7 @@ namespace Projeny
 
             // Do this last so all model updates get forwarded to view
             _viewModelSyncer.Update();
-
-            IsBlocked = _asyncProcessor.IsBlocking;
-
-            _view.IsBlocked = IsBlocked;
-            _view.ShowBlockedPopup = ShouldShowBlockedPopup();
+            _viewAsyncHandler.Update();
 
             _view.Update();
 
@@ -342,12 +326,6 @@ namespace Projeny
             //_view.BlockedStatusMessage = null;
             //_view.BlockedStatusTitle = null;
             //}
-        }
-
-        bool ShouldShowBlockedPopup()
-        {
-            // We only wnat to display the popup if enough time has passed to avoid short flashes for quick async tasks
-            return Time.realtimeSinceStartup - _isBlockedStartTime > _view.Skin.ProcessingPopupDelayTime;
         }
 
         //void UpdateBackgroundTask()
@@ -645,7 +623,7 @@ namespace Projeny
 
         void DeleteSelected()
         {
-            AddBackgroundTask(DeleteSelectedAsync(), "Deleting Packages");
+            _asyncProcessor.Process(DeleteSelectedAsync(), "Deleting Packages");
         }
 
         IEnumerator DeleteSelectedAsync()
@@ -673,7 +651,7 @@ namespace Projeny
 
                 //if (choice.Current == 0)
                 //{
-                //yield return ProcessUpmCommand("Deleting selected packages", UpmHelper.DeletePackagesAsync(infos));
+                //yield return _upmCommandHandler.ProcessUpmCommand("Deleting selected packages", UpmHelper.DeletePackagesAsync(infos));
                 //yield return RefreshPackagesAsync();
                 //}
                 //}
@@ -711,7 +689,8 @@ namespace Projeny
                     }
                     case InstallReleaseUserChoices.Install:
                     {
-                        yield return ProcessUpmCommand("Installing release '{0}'".Fmt(releaseInfo.Name), UpmHelper.InstallReleaseAsync(releaseInfo));
+                        yield return _upmCommandHandler.ProcessUpmCommand(
+                            "Installing release '{0}'".Fmt(releaseInfo.Name), UpmHelper.InstallReleaseAsync(releaseInfo));
                         break;
                     }
                     case InstallReleaseUserChoices.Skip:
@@ -827,63 +806,11 @@ namespace Projeny
 
         IEnumerator RefreshReleasesAsync()
         {
-            var response = ProcessUpmCommandForResult<List<ReleaseInfo>>("Looking up release list", UpmHelper.LookupReleaseListAsync());
+            var response = _upmCommandHandler.ProcessUpmCommandForResult<List<ReleaseInfo>>("Looking up release list", UpmHelper.LookupReleaseListAsync());
             yield return response;
 
             _model.SetReleases(response.Current);
             UpdateAvailableReleasesList();
-        }
-
-        IEnumerator<T> ProcessUpmCommandForResult<T>(string statusName, IEnumerator upmTask)
-        {
-            return CoRoutine.Wrap<T>(ProcessUpmCommand(statusName, upmTask));
-        }
-
-        IEnumerator ProcessUpmCommand(string statusName, IEnumerator upmTask)
-        {
-            Assert.IsNull(_view.BlockedStatusMessage);
-            _view.BlockedStatusMessage = statusName;
-
-            while (upmTask.MoveNext())
-            {
-                if (upmTask.Current is UpmHelperResponse)
-                {
-                    Assert.That(!upmTask.MoveNext());
-                    break;
-                }
-
-                if (upmTask.Current != null)
-                {
-                    Assert.IsType<List<string>>(upmTask.Current);
-                    var outputLines = (List<string>)upmTask.Current;
-
-                    if (outputLines.Count > 0)
-                    {
-                        _view.BlockedStatusMessage = outputLines.Last();
-                    }
-                }
-
-                yield return null;
-            }
-
-            Assert.IsType<UpmHelperResponse>(upmTask.Current);
-            var response = (UpmHelperResponse)upmTask.Current;
-
-            // Refresh assets regardless of what kind of UpmCommand this was
-            // This is good because many commands can affect the project
-            // Including installing a package, deleting a package, etc.
-            AssetDatabase.Refresh();
-
-            _view.BlockedStatusMessage = null;
-
-            if (response.Succeeded)
-            {
-                yield return response.Result;
-            }
-            else
-            {
-                throw new UpmCommandException(response.ErrorMessage);
-            }
         }
 
         void UpdateAvailableReleasesList()
@@ -903,24 +830,6 @@ namespace Projeny
             //_backgroundTaskInfo = null;
         }
 
-        void AddBackgroundTask(IEnumerator task, string title = null)
-        {
-            _asyncProcessor.Process(RunMainBackgroundTask(task, title));
-        }
-
-        IEnumerator RunMainBackgroundTask(IEnumerator task, string title)
-        {
-            Assert.IsNull(_view.BlockedStatusTitle);
-            Assert.IsNull(_view.BlockedStatusMessage);
-
-            _view.BlockedStatusTitle = title;
-
-            yield return task;
-
-            Assert.IsEqual(_view.BlockedStatusTitle, title);
-            _view.BlockedStatusTitle = null;
-        }
-
         IEnumerator CreateNewPackageAsync()
         {
             var userInput = _view.PromptForInput("Enter new package name:", "Untitled");
@@ -933,13 +842,13 @@ namespace Projeny
                 yield break;
             }
 
-            yield return ProcessUpmCommand("Creating Package '{0}'".Fmt(userInput.Current), UpmHelper.CreatePackageAsync(userInput.Current));
+            yield return _upmCommandHandler.ProcessUpmCommand("Creating Package '{0}'".Fmt(userInput.Current), UpmHelper.CreatePackageAsync(userInput.Current));
             yield return RefreshPackagesAsync();
         }
 
         IEnumerator RefreshPackagesAsync()
         {
-            var allPackages = ProcessUpmCommandForResult<List<PackageInfo>>("Looking up package list", UpmHelper.LookupPackagesListAsync());
+            var allPackages = _upmCommandHandler.ProcessUpmCommandForResult<List<PackageInfo>>("Looking up package list", UpmHelper.LookupPackagesListAsync());
             yield return allPackages;
 
             _model.SetPackages(allPackages.Current);
@@ -953,7 +862,8 @@ namespace Projeny
             // In those cases it will still be in the log and that's enough
             if (!_isDisplayingError)
             {
-                _asyncProcessor.Process(DisplayErrorInternal(message));
+                _asyncProcessor.Process(
+                    DisplayErrorInternal(message));
             }
         }
 
@@ -1010,14 +920,6 @@ namespace Projeny
                         break;
                     }
                 }
-            }
-        }
-
-        public class UpmCommandException : Exception
-        {
-            public UpmCommandException(string message)
-                : base(message)
-            {
             }
         }
 

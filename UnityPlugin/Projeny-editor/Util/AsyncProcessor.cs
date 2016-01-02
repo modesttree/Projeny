@@ -25,9 +25,6 @@ namespace Projeny.Internal
 
     public class AsyncProcessor
     {
-        public event Action BlockingLoadStarted = delegate {};
-        public event Action BlockingLoadComplete = delegate {};
-
         readonly List<CoroutineInfo> _newWorkers = new List<CoroutineInfo>();
         readonly LinkedList<CoroutineInfo> _workers = new LinkedList<CoroutineInfo>();
 
@@ -36,6 +33,14 @@ namespace Projeny.Internal
             get
             {
                 return _workers.Where(x => x.IsBlocking).Any() || _newWorkers.Where(x => x.IsBlocking).Any();
+            }
+        }
+
+        public string StatusTitle
+        {
+            get
+            {
+                return _workers.Where(x => x.IsBlocking).Select(x => x.StatusTitle).LastOrDefault();
             }
         }
 
@@ -95,35 +100,26 @@ namespace Projeny.Internal
 
             AdvanceFrameAll();
             AddNewWorkers(); //Added any workers that might have been added when the last worker was removed
-
-            if (_workers.Where(x => x.IsBlocking).IsEmpty())
-            {
-                BlockingLoadComplete();
-            }
         }
 
-        public IEnumerator Process(IEnumerator process, bool isBlocking = true, Action<Exception> exceptionHandler = null)
+        public IEnumerator Process(IEnumerator process, string statusTitle = null, bool isBlocking = true, Action<Exception> exceptionHandler = null)
         {
-            return ProcessInternal(process, isBlocking, exceptionHandler);
+            return ProcessInternal(process, statusTitle, isBlocking, exceptionHandler);
         }
 
-        public IEnumerator Process<T>(IEnumerator process, bool isBlocking = true, Action<Exception> exceptionHandler = null)
+        public IEnumerator Process<T>(IEnumerator process, string statusTitle = null, bool isBlocking = true, Action<Exception> exceptionHandler = null)
         {
-            return ProcessInternal(process, isBlocking, exceptionHandler);
+            return ProcessInternal(process, statusTitle, isBlocking, exceptionHandler);
         }
 
         IEnumerator ProcessInternal(
-            IEnumerator process, bool isBlocking = true, Action<Exception> exceptionHandler = null)
+            IEnumerator process, string statusTitle, bool isBlocking, Action<Exception> exceptionHandler)
         {
-            if (!IsBlocking && isBlocking)
-            {
-                BlockingLoadStarted();
-            }
-
             var data = new CoroutineInfo()
             {
                 CoRoutine = new CoRoutine(process),
                 IsBlocking = isBlocking,
+                StatusTitle = statusTitle,
                 ExceptionHandler = exceptionHandler,
             };
 
@@ -153,6 +149,7 @@ namespace Projeny.Internal
         {
             public CoRoutine CoRoutine;
             public Action<Exception> ExceptionHandler;
+            public string StatusTitle;
             public bool IsBlocking;
             public bool IsFinished;
         }

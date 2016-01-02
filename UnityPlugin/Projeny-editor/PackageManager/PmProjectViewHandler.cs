@@ -12,6 +12,7 @@ namespace Projeny
 {
     public class PmProjectViewHandler
     {
+        readonly UpmCommandHandler _upmCommandHandler;
         readonly AsyncProcessor _asyncProcessor;
         readonly PmModel _model;
         readonly PmView _view;
@@ -24,8 +25,10 @@ namespace Projeny
             PmModel model,
             PmView view,
             PmProjectHandler projectHandler,
-            AsyncProcessor asyncProcessor)
+            AsyncProcessor asyncProcessor,
+            UpmCommandHandler upmCommandHandler)
         {
+            _upmCommandHandler = upmCommandHandler;
             _asyncProcessor = asyncProcessor;
             _model = model;
             _view = view;
@@ -61,7 +64,8 @@ namespace Projeny
 
         public void OnClickedProjectType(ProjectConfigTypes desiredConfigType)
         {
-            _asyncProcessor.Process(TryChangeProjectType(desiredConfigType));
+            _asyncProcessor.Process(
+                TryChangeProjectType(desiredConfigType));
         }
 
         IEnumerator TryChangeProjectType(ProjectConfigTypes configType)
@@ -121,8 +125,9 @@ namespace Projeny
         {
             _projectHandler.OverwriteConfig();
 
-            Assert.Throw("TODO");
-            //AddBackgroundTask(ProcessUpmCommand("Updating directory links", UpmHelper.UpdateLinksAsync()), "Updating Links");
+            _asyncProcessor.Process(
+                _upmCommandHandler.ProcessUpmCommand(
+                    "Updating directory links", UpmHelper.UpdateLinksAsync()), "Updating Links");
         }
     }
 }
