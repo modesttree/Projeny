@@ -498,32 +498,6 @@ namespace Projeny
             //System.Diagnostics.Process.Start("explorer.exe", args);
         }
 
-        void EditPackageYamlSelected()
-        {
-            Assert.Throw("TODO");
-            //Assert.IsEqual(_selected.Count, 1);
-
-            //var info = (PackageInfo)_selected.Single().Tag;
-
-            //var configPath = Path.Combine(info.Path, ProjenyEditorUtil.PackageConfigFileName);
-
-            //Assert.That(File.Exists(configPath));
-
-            //InternalEditorUtility.OpenFileAtLineExternal(configPath, 1);
-        }
-
-        void OpenPackageFolderForSelected()
-        {
-            Assert.Throw("TODO");
-            //Assert.IsEqual(_selected.Count, 1);
-
-            //var info = (PackageInfo)_selected.Single().Tag;
-
-            //Assert.That(Directory.Exists(info.Path));
-
-            //System.Diagnostics.Process.Start(info.Path);
-        }
-
         void SelectAll()
         {
             Assert.Throw("TODO");

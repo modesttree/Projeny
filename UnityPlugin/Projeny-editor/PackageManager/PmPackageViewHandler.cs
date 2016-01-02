@@ -62,12 +62,28 @@ namespace Projeny
 
         void OnContextMenuEditPackageYamlSelected()
         {
-            Assert.Throw("TODO");
+            var selected = GetSelectedItems();
+            Assert.IsEqual(selected.Count, 1);
+
+            var info = selected.Single();
+
+            var configPath = Path.Combine(info.Path, ProjenyEditorUtil.PackageConfigFileName);
+
+            Assert.That(File.Exists(configPath));
+
+            InternalEditorUtility.OpenFileAtLineExternal(configPath, 1);
         }
 
         void OnContextMenuOpenPackageFolderForSelected()
         {
-            Assert.Throw("TODO");
+            var selected = GetSelectedItems();
+            Assert.IsEqual(selected.Count, 1);
+
+            var info = selected.Single();
+
+            Assert.That(Directory.Exists(info.Path));
+
+            System.Diagnostics.Process.Start(info.Path);
         }
 
         void OnContextMenuRenameSelected()
@@ -108,9 +124,9 @@ namespace Projeny
 
             yield return _packageHandler.RefreshPackagesAsync();
 
-            Assert.Throw("TODO");
-            //SelectInternal(_packagesList.Values
-            //.Where(x => x.Name == newPackageName.Current).Single());
+            _view.ClearSelected();
+            _view.GetList(ListTypes.Package).Values
+                .Where(x => ((PackageInfo)x.Model).Name == newPackageName.Current).Single().IsSelected = true;
         }
 
         void OnContextMenuDeleteSelected()

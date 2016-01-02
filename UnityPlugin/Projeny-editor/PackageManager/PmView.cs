@@ -294,7 +294,7 @@ namespace Projeny.Internal
             GetList(listType).SetItems(items);
         }
 
-        DraggableList GetList(ListTypes listType)
+        public DraggableList GetList(ListTypes listType)
         {
             return _lists[(int)listType];
         }

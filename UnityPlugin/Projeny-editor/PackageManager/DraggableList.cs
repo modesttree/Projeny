@@ -154,7 +154,7 @@ namespace Projeny.Internal
             }
         }
 
-        void Select(DraggableListEntry newEntry)
+        void ClickSelect(DraggableListEntry newEntry)
         {
             if (newEntry.IsSelected)
             {
@@ -329,7 +329,7 @@ namespace Projeny.Internal
                                 if (!Event.current.shift && !Event.current.control)
                                 {
                                     _manager.ClearSelected();
-                                    Select(entry);
+                                    ClickSelect(entry);
                                 }
                             }
 
@@ -343,7 +343,7 @@ namespace Projeny.Internal
                                 GUI.FocusControl(null);
 
                                 clickedItem = true;
-                                Select(entry);
+                                ClickSelect(entry);
 
                                 if (Event.current.button == 0)
                                 {
