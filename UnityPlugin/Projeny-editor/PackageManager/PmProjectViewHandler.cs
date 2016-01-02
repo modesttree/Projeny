@@ -184,13 +184,13 @@ namespace Projeny
                 }
             }
 
-            _model.ProjectConfigType = configType;
+            _view.ProjectConfigType = configType;
             _projectHandler.RefreshProject();
         }
 
         public void OnClickedProjectEditButton()
         {
-            var configPath = ProjenyEditorUtil.GetProjectConfigPath(_model.ProjectConfigType);
+            var configPath = ProjenyEditorUtil.GetProjectConfigPath(_view.ProjectConfigType);
             InternalEditorUtility.OpenFileAtLineExternal(configPath, 1);
         }
 

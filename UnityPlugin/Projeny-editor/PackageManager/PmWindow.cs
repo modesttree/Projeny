@@ -13,9 +13,10 @@ namespace Projeny
     // Pm = Package Manager
     public class PmWindow : EditorWindow
     {
-        // Note here that the model is the only thing that gets serialized,
+        // These model mclasses are the only things that get serialized,
         // the other classes get re-created every assembly reload
         PmModel _model;
+        PmView.Model _viewModel;
 
         bool _hasInitialized;
 
@@ -32,10 +33,18 @@ namespace Projeny
                 isFirstLoad = true;
 
                 Assert.IsNull(_model);
+                Assert.IsNull(_viewModel);
+
                 _model = new PmModel();
+                _viewModel = new PmView.Model();
+
+                for (int i = 0; i < (int)ListTypes.Count; i++)
+                {
+                    _viewModel.ListModels.Add(new DraggableList.Model());
+                }
             }
 
-            _controller = new PmController(_model);
+            _controller = new PmController(_model, _viewModel);
             _controller.Initialize();
 
             if (isFirstLoad)

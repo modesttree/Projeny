@@ -23,17 +23,26 @@ namespace Projeny.Internal
         readonly List<DraggableListEntry> _entryList = new List<DraggableListEntry>();
         readonly PmView _manager;
 
-        Vector2 _scrollPos;
+        readonly Model _model;
 
-        string _searchFilter = "";
-
-        ListTypes _listType;
+        readonly ListTypes _listType;
         static DraggableListSkin _skin;
 
-        public DraggableList(PmView manager, ListTypes listType)
+        public DraggableList(
+            PmView manager, ListTypes listType,
+            Model model)
         {
+            _model = model;
             _manager = manager;
             _listType = listType;
+        }
+
+        public ListTypes ListType
+        {
+            get
+            {
+                return _listType;
+            }
         }
 
         DraggableListSkin Skin
@@ -48,12 +57,12 @@ namespace Projeny.Internal
         {
             get
             {
-                return _searchFilter;
+                return _model.SearchFilter;
             }
             set
             {
                 Assert.IsNotNull(value);
-                _searchFilter = value;
+                _model.SearchFilter = value;
             }
         }
 
@@ -128,7 +137,7 @@ namespace Projeny.Internal
 
         public void Draw(Rect listRect)
         {
-            var searchFilter = _searchFilter.Trim().ToLowerInvariant();
+            var searchFilter = _model.SearchFilter.Trim().ToLowerInvariant();
             var visibleEntries = _entryList.Where(x => x.Name.ToLowerInvariant().Contains(searchFilter)).ToList();
 
             var viewRect = new Rect(0, 0, listRect.width - 30.0f, visibleEntries.Count * Skin.ItemHeight);
@@ -202,7 +211,7 @@ namespace Projeny.Internal
             bool clickedItem = false;
 
             float yPos = 0;
-            _scrollPos = GUI.BeginScrollView(listRect, _scrollPos, viewRect);
+            _model.ScrollPos = GUI.BeginScrollView(listRect, _model.ScrollPos, viewRect);
             {
                 foreach (var entry in visibleEntries)
                 {
@@ -298,6 +307,14 @@ namespace Projeny.Internal
         {
             public List<DraggableListEntry> Entries;
             public DraggableList SourceList;
+        }
+
+        // View data that needs to be saved and restored
+        [Serializable]
+        public class Model
+        {
+            public Vector2 ScrollPos;
+            public string SearchFilter = "";
         }
     }
 }

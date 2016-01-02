@@ -26,28 +26,24 @@ namespace Projeny.Internal
 
         public void Initialize()
         {
-            _model.ViewStateChanged += _eventManager.Add(OnViewStateChanged, EventQueueMode.LatestOnly);
             _model.PluginItemsChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
             _model.AssetItemsChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
             _model.PackagesChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
             _model.ReleasesChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
 
-            _model.ProjectConfigTypeChanged += _eventManager.Add(OnProjectConfigTypeChanged, EventQueueMode.LatestOnly);
+            _view.ViewStateChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
 
-            _eventManager.Trigger(OnViewStateChanged);
             _eventManager.Trigger(OnListDisplayValuesDirty);
-            _eventManager.Trigger(OnProjectConfigTypeChanged);
         }
 
         public void Dispose()
         {
-            _model.ViewStateChanged -= _eventManager.Remove(OnViewStateChanged);
             _model.PluginItemsChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
             _model.AssetItemsChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
             _model.PackagesChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
             _model.ReleasesChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
 
-            _model.ProjectConfigTypeChanged -= _eventManager.Remove(OnProjectConfigTypeChanged);
+            _view.ViewStateChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
 
             _eventManager.AssertIsEmpty();
         }
@@ -56,12 +52,6 @@ namespace Projeny.Internal
         {
             _eventManager.Flush();
         }
-
-        void OnProjectConfigTypeChanged()
-        {
-            _view.ConfigType = _model.ProjectConfigType;
-        }
-
 
         void OnListDisplayValuesDirty()
         {
@@ -86,7 +76,7 @@ namespace Projeny.Internal
         {
             string caption;
 
-            if (_model.ViewState == PmViewStates.PackagesAndProject)
+            if (_view.ViewState == PmViewStates.PackagesAndProject)
             {
                 caption = ImguiUtil.WrapWithColor(name, _view.Skin.Theme.DraggableItemAlreadyAddedColor);
             }
@@ -132,7 +122,7 @@ namespace Projeny.Internal
         {
             string caption;
 
-            if (_model.ViewState == PmViewStates.ReleasesAndPackages)
+            if (_view.ViewState == PmViewStates.ReleasesAndPackages)
             {
                 var releaseInfo = info.InstallInfo.ReleaseInfo;
                 if (!string.IsNullOrEmpty(releaseInfo.Name))
@@ -168,11 +158,6 @@ namespace Projeny.Internal
                 Caption = caption,
                 Tag = info
             };
-        }
-
-        void OnViewStateChanged()
-        {
-            _view.ViewState = _model.ViewState;
         }
     }
 }

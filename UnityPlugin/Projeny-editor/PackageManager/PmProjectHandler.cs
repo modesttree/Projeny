@@ -20,10 +20,14 @@ namespace Projeny.Internal
 
     public class PmProjectHandler
     {
+        readonly PmView _view;
         readonly PmModel _model;
 
-        public PmProjectHandler(PmModel model)
+        public PmProjectHandler(
+            PmModel model,
+            PmView view)
         {
+            _view = view;
             _model = model;
         }
 
@@ -45,7 +49,7 @@ namespace Projeny.Internal
         public void OverwriteConfig()
         {
             File.WriteAllText(
-                ProjenyEditorUtil.GetProjectConfigPath(_model.ProjectConfigType), GetSerializedProjectConfigFromLists());
+                ProjenyEditorUtil.GetProjectConfigPath(_view.ProjectConfigType), GetSerializedProjectConfigFromLists());
         }
 
         public void ResetProject()
@@ -69,7 +73,7 @@ namespace Projeny.Internal
 
         public bool HasProjectConfigChanged()
         {
-            var configPath = ProjenyEditorUtil.GetProjectConfigPath(_model.ProjectConfigType);
+            var configPath = ProjenyEditorUtil.GetProjectConfigPath(_view.ProjectConfigType);
 
             var currentConfig = GetProjectConfigFromLists();
 
@@ -104,7 +108,7 @@ namespace Projeny.Internal
 
         public void RefreshProject()
         {
-            var configPath = ProjenyEditorUtil.GetProjectConfigPath(_model.ProjectConfigType);
+            var configPath = ProjenyEditorUtil.GetProjectConfigPath(_view.ProjectConfigType);
 
             if (!File.Exists(configPath))
             {

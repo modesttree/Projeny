@@ -8,14 +8,15 @@ using System.Collections.Generic;
 using Projeny.Internal;
 using System.Linq;
 
-namespace Projeny
+namespace Projeny.Internal
 {
     public enum ListTypes
     {
         Package,
         Release,
         AssetItem,
-        PluginItem
+        PluginItem,
+        Count
     }
 
     public class ContextMenuItem
@@ -37,12 +38,9 @@ namespace Projeny
 
     public class PmView
     {
-        public class ListItemData
-        {
-            public string Caption;
-            public object Tag;
-        }
+        const string NotAvailableLabel = "N/A";
 
+        public event Action ViewStateChanged = delegate {};
         public event Action<ProjectConfigTypes> ClickedProjectType = delegate {};
         public event Action ClickedRefreshReleaseList = delegate {};
         public event Action ClickedRefreshPackages = delegate {};
@@ -51,8 +49,6 @@ namespace Projeny
         public event Action ClickedProjectRevertButton = delegate {};
         public event Action ClickedProjectSaveButton = delegate {};
         public event Action ClickedProjectEditButton = delegate {};
-        public event Action ClickedViewLeftButton = delegate {};
-        public event Action ClickedViewRightButton = delegate {};
         public event Action<Rect> ClickedReleasesSortMenu = delegate {};
         public event Action<DraggableList.DragData, DraggableList> DragDroppedListItem = delegate {};
 
@@ -60,7 +56,13 @@ namespace Projeny
 
         readonly Dictionary<ListTypes, Func<IEnumerable<ContextMenuItem>>> _contextMenuHandlers = new Dictionary<ListTypes, Func<IEnumerable<ContextMenuItem>>>();
 
-        const string NotAvailableLabel = "N/A";
+        readonly List<PopupInfo> _popupHandlers = new List<PopupInfo>();
+
+        readonly List<DraggableListEntry> _selected = new List<DraggableListEntry>();
+
+        readonly List<DraggableList> _lists = new List<DraggableList>();
+
+        readonly Model _model;
 
         float _split1 = 0;
         float _split2 = 0.5f;
@@ -69,24 +71,73 @@ namespace Projeny
 
         bool _doesConfigFileExist = true;
 
-        readonly List<PopupInfo> _popupHandlers = new List<PopupInfo>();
         int _popupIdCount;
-
-        readonly List<DraggableListEntry> _selected = new List<DraggableListEntry>();
-
-        readonly DraggableList _packagesList;
-        readonly DraggableList _releasesList;
-        readonly DraggableList _assetsList;
-        readonly DraggableList _pluginsList;
 
         PackageManagerWindowSkin _skin;
 
-        public PmView()
+        public PmView(Model model)
         {
-            _packagesList = new DraggableList(this, ListTypes.Package);
-            _releasesList = new DraggableList(this, ListTypes.Release);
-            _assetsList = new DraggableList(this, ListTypes.AssetItem);
-            _pluginsList = new DraggableList(this, ListTypes.PluginItem);
+            _model = model;
+
+            for (int i = 0; i < (int)ListTypes.Count; i++)
+            {
+                var list = new DraggableList(
+                    this, (ListTypes)i, _model.ListModels[i]);
+
+                _lists.Add(list);
+            }
+        }
+
+        public PmViewStates ViewState
+        {
+            get
+            {
+                return _model.ViewState;
+            }
+            set
+            {
+                if (_model.ViewState != value)
+                {
+                    _model.ViewState = value;
+                    ViewStateChanged();
+                }
+            }
+        }
+
+        public ProjectConfigTypes ProjectConfigType
+        {
+            get
+            {
+                return _model.ProjectConfigType;
+            }
+            set
+            {
+                _model.ProjectConfigType = value;
+            }
+        }
+
+        public ReleasesSortMethod ReleasesSortMethod
+        {
+            get
+            {
+                return _model.ReleasesSortMethod;
+            }
+            set
+            {
+                _model.ReleasesSortMethod = value;
+            }
+        }
+
+        public bool ReleaseSortAscending
+        {
+            get
+            {
+                return _model.ReleaseSortAscending;
+            }
+            set
+            {
+                _model.ReleaseSortAscending = value;
+            }
         }
 
         public IEnumerable<DraggableListEntry> Selected
@@ -95,18 +146,6 @@ namespace Projeny
             {
                 return _selected;
             }
-        }
-
-        public PmViewStates ViewState
-        {
-            get;
-            set;
-        }
-
-        public ProjectConfigTypes ConfigType
-        {
-            get;
-            set;
         }
 
         public string BlockedStatusMessage
@@ -231,36 +270,10 @@ namespace Projeny
             }
         }
 
-        ListTypes ClassifyList(DraggableList list)
-        {
-            if (list == _packagesList)
-            {
-                return ListTypes.Package;
-            }
-
-            if (list == _releasesList)
-            {
-                return ListTypes.Release;
-            }
-
-            if (list == _assetsList)
-            {
-                return ListTypes.AssetItem;
-            }
-
-            if (list == _pluginsList)
-            {
-                return ListTypes.PluginItem;
-            }
-
-            Assert.Throw();
-            return ListTypes.AssetItem;
-        }
-
         public List<DraggableListEntry> SortList(DraggableList list, List<DraggableListEntry> entries)
         {
             return entries.OrderBy(x => x.Name).ToList();
-            //switch (ClassifyList(list))
+            //switch (list.ListType)
             //{
                 //case ListTypes.Release:
                 //{
@@ -283,7 +296,7 @@ namespace Projeny
             Assert.Throw("TODO");
             //DrawListItem(rect, entry.Name);
 
-            //switch (ClassifyList(entry.ListOwner))
+            //switch (entry.ListOwner.ListType)
             //{
                 //case ListTypes.Release:
                 //{
@@ -349,34 +362,13 @@ namespace Projeny
 
         DraggableList GetList(ListTypes listType)
         {
-            switch (listType)
-            {
-                case ListTypes.Package:
-                {
-                    return _packagesList;
-                }
-                case ListTypes.Release:
-                {
-                    return _releasesList;
-                }
-                case ListTypes.AssetItem:
-                {
-                    return _assetsList;
-                }
-                case ListTypes.PluginItem:
-                {
-                    return _pluginsList;
-                }
-            }
-
-            Assert.Throw();
-            return null;
+            return _lists[(int)listType];
         }
 
         public bool IsDragAllowed(DraggableList.DragData data, DraggableList list)
         {
-            var sourceListType = ClassifyList(data.SourceList);
-            var dropListType = ClassifyList(list);
+            var sourceListType = data.SourceList.ListType;
+            var dropListType = list.ListType;
 
             if (sourceListType == dropListType)
             {
@@ -451,15 +443,15 @@ namespace Projeny
                 return;
             }
 
-            var sourceListType = ClassifyList(data.SourceList);
-            var dropListType = ClassifyList(dropList);
+            var sourceListType = data.SourceList.ListType;
+            var dropListType = dropList.ListType;
 
             DraggedDroppedListEntries(sourceListType, dropListType, data.Entries);
         }
 
         public void OpenContextMenu(DraggableList dropList)
         {
-            var itemGetter = _contextMenuHandlers.TryGetValue(ClassifyList(dropList));
+            var itemGetter = _contextMenuHandlers.TryGetValue(dropList.ListType);
 
             if (itemGetter == null)
             {
@@ -487,11 +479,11 @@ namespace Projeny
                 rect.yMax);
 
             var displayValues = GetConfigTypesDisplayValues();
-            var desiredConfigType = (ProjectConfigTypes)EditorGUI.Popup(dropDownRect, (int)ConfigType, displayValues, Skin.DropdownTextStyle);
+            var desiredConfigType = (ProjectConfigTypes)EditorGUI.Popup(dropDownRect, (int)_model.ProjectConfigType, displayValues, Skin.DropdownTextStyle);
 
             GUI.Button(dropDownRect, displayValues[(int)desiredConfigType]);
 
-            if (desiredConfigType != ConfigType)
+            if (desiredConfigType != _model.ProjectConfigType)
             {
                 ClickedProjectType(desiredConfigType);
             }
@@ -954,7 +946,7 @@ namespace Projeny
             {
                 if (GUI.Button(rect1, ""))
                 {
-                    ClickedViewLeftButton();
+                    ViewState = (PmViewStates)((int)ViewState - 1);
                 }
 
                 if (Skin.ArrowLeftTexture != null)
@@ -971,7 +963,7 @@ namespace Projeny
             {
                 if (GUI.Button(rect2, ""))
                 {
-                    ClickedViewRightButton();
+                    ViewState = (PmViewStates)((int)ViewState + 1);
                 }
 
                 if (Skin.ArrowRightTexture != null)
@@ -1011,7 +1003,7 @@ namespace Projeny
             startY = endY;
             endY = rect.yMax - Skin.ApplyButtonHeight - Skin.ApplyButtonTopPadding;
 
-            _releasesList.Draw(Rect.MinMaxRect(startX, startY, endX, endY));
+            GetList(ListTypes.Release).Draw(Rect.MinMaxRect(startX, startY, endX, endY));
 
             startY = endY + Skin.ApplyButtonTopPadding;
             endY = rect.yMax;
@@ -1043,8 +1035,10 @@ namespace Projeny
 
             GUI.Label(new Rect(startX + skin.SearchIconOffset.x, startY + skin.SearchIconOffset.y, skin.SearchIconSize.x, skin.SearchIconSize.y), skin.SearchIcon);
 
-            _releasesList.SearchFilter = GUI.TextField(
-                searchBarRect, _releasesList.SearchFilter, skin.SearchTextStyle);
+            var releaseList = GetList(ListTypes.Release);
+
+            releaseList.SearchFilter = GUI.TextField(
+                searchBarRect, releaseList.SearchFilter, skin.SearchTextStyle);
 
             startX = endX;
             endX = startX + skin.ButtonWidth;
@@ -1060,7 +1054,7 @@ namespace Projeny
                 {
                     Assert.Throw("TODO");
                     //_model.ReleaseSortAscending = !_model.ReleaseSortAscending;
-                    _releasesList.UpdateIndices();
+                    releaseList.UpdateIndices();
                 }
             }
             //GUI.DrawTexture(buttonRect, _model.ReleaseSortAscending ? skin.SortDirDownIcon : skin.SortDirUpIcon);
@@ -1130,8 +1124,8 @@ namespace Projeny
             var rect1 = new Rect(listRect.x, listRect.y, listRect.width, halfHeight - 0.5f * Skin.ListHorizontalSpacing);
             var rect2 = new Rect(listRect.x, listRect.y + halfHeight + 0.5f * Skin.ListHorizontalSpacing, listRect.width, listRect.height - halfHeight - 0.5f * Skin.ListHorizontalSpacing);
 
-            _assetsList.Draw(rect1);
-            _pluginsList.Draw(rect2);
+            GetList(ListTypes.AssetItem).Draw(rect1);
+            GetList(ListTypes.PluginItem).Draw(rect2);
 
             GUI.Label(Rect.MinMaxRect(rect1.xMin, rect1.yMax, rect1.xMax, rect2.yMin), "Plugins Folder", Skin.HeaderTextStyle);
         }
@@ -1158,7 +1152,7 @@ namespace Projeny
             startY = endY;
             endY = rect.yMax - Skin.ApplyButtonHeight - Skin.ApplyButtonTopPadding;
 
-            _packagesList.Draw(Rect.MinMaxRect(startX, startY, endX, endY));
+            GetList(ListTypes.Package).Draw(Rect.MinMaxRect(startX, startY, endX, endY));
 
             startY = endY + Skin.ApplyButtonTopPadding;
             endY = rect.yMax;
@@ -1209,6 +1203,23 @@ namespace Projeny
                 Id = id;
                 Handler = handler;
             }
+        }
+
+        // View data that needs to be saved and restored
+        [Serializable]
+        public class Model
+        {
+            public PmViewStates ViewState = PmViewStates.PackagesAndProject;
+            public ProjectConfigTypes ProjectConfigType = ProjectConfigTypes.LocalProject;
+            public ReleasesSortMethod ReleasesSortMethod;
+            public bool ReleaseSortAscending;
+            public List<DraggableList.Model> ListModels = new List<DraggableList.Model>();
+        }
+
+        public class ListItemData
+        {
+            public string Caption;
+            public object Tag;
         }
     }
 }

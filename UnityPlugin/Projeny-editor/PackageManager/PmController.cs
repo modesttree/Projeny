@@ -13,6 +13,7 @@ namespace Projeny
     public class PmController : IDisposable
     {
         readonly PmModel _model;
+        readonly PmView.Model _viewModel;
 
         PmView _view;
 
@@ -34,9 +35,10 @@ namespace Projeny
         PmPackageViewHandler _packageViewHandler;
         PmPackageHandler _packageHandler;
 
-        public PmController(PmModel model)
+        public PmController(PmModel model, PmView.Model viewModel)
         {
             _model = model;
+            _viewModel = viewModel;
         }
 
         public void Initialize()
@@ -63,20 +65,22 @@ namespace Projeny
             _asyncProcessor = new AsyncProcessor();
             _eventManager = new EventManager();
 
-            _view = new PmView();
+            _view = new PmView(_viewModel);
 
             _upmCommandHandler = new UpmCommandHandler(_view);
 
             _viewAsyncHandler = new PmViewAsyncHandler(_view, _asyncProcessor);
             _viewModelSyncer = new PmModelViewSyncer(_model, _view);
-            _projectHandler = new PmProjectHandler(_model);
+            _projectHandler = new PmProjectHandler(_model, _view);
             _releasesHandler = new PmReleasesHandler(_model, _upmCommandHandler);
             _viewErrorHandler = new PmViewErrorHandler(_view, _asyncProcessor);
             _packageHandler = new PmPackageHandler(_model, _upmCommandHandler);
             _packageViewHandler = new PmPackageViewHandler(_view, _asyncProcessor, _packageHandler);
 
             _projectViewHandler = new PmProjectViewHandler(
-                _model, _view, _projectHandler, _asyncProcessor, _upmCommandHandler, _viewErrorHandler);
+                _model, _view, _projectHandler, _asyncProcessor,
+                _upmCommandHandler, _viewErrorHandler);
+
             _releasesViewHandler = new PmReleasesViewHandler(_model, _view, _asyncProcessor, _releasesHandler);
         }
 
@@ -87,8 +91,6 @@ namespace Projeny
             // controls are rendered each pass
             _view.ClickedRefreshPackages += _eventManager.Add(OnClickedRefreshPackages, EventQueueMode.LatestOnly);
             _view.ClickedCreateNewPackage += _eventManager.Add(OnClickedCreateNewPackage, EventQueueMode.LatestOnly);
-            _view.ClickedViewRightButton += _eventManager.Add(OnClickedViewRightButton, EventQueueMode.LatestOnly);
-            _view.ClickedViewLeftButton += _eventManager.Add(OnClickedViewLeftButton, EventQueueMode.LatestOnly);
 
             _view.ClickedReleasesSortMenu += _eventManager.Add<Rect>(OnClickedReleasesSortMenu, EventQueueMode.LatestOnly);
 
@@ -99,24 +101,12 @@ namespace Projeny
         {
             _view.ClickedRefreshPackages -= _eventManager.Remove(OnClickedRefreshPackages);
             _view.ClickedCreateNewPackage -= _eventManager.Remove(OnClickedCreateNewPackage);
-            _view.ClickedViewRightButton -= _eventManager.Remove(OnClickedViewRightButton);
-            _view.ClickedViewLeftButton -= _eventManager.Remove(OnClickedViewLeftButton);
 
             _view.ClickedReleasesSortMenu -= _eventManager.Remove<Rect>(OnClickedReleasesSortMenu);
 
             _view.DraggedDroppedListEntries -= _eventManager.Remove<ListTypes, ListTypes, List<DraggableListEntry>>(OnDraggedDroppedListEntries);
 
             _eventManager.AssertIsEmpty();
-        }
-
-        void OnClickedViewLeftButton()
-        {
-            _model.ViewState = (PmViewStates)((int)_model.ViewState - 1);
-        }
-
-        void OnClickedViewRightButton()
-        {
-            _model.ViewState = (PmViewStates)((int)_model.ViewState + 1);
         }
 
         void OnDraggedDroppedListEntries(ListTypes sourceType, ListTypes dropType, List<DraggableListEntry> entries)
@@ -278,17 +268,17 @@ namespace Projeny
 
             contextMenu.AddItem(
                 new GUIContent("Order By Name"),
-                _model.ReleasesSortMethod == ReleasesSortMethod.Name,
+                _view.ReleasesSortMethod == ReleasesSortMethod.Name,
                 () => ChangeReleaseSortMethod(ReleasesSortMethod.Name));
 
             contextMenu.AddItem(
                 new GUIContent("Order By Size"),
-                _model.ReleasesSortMethod == ReleasesSortMethod.Size,
+                _view.ReleasesSortMethod == ReleasesSortMethod.Size,
                 () => ChangeReleaseSortMethod(ReleasesSortMethod.Size));
 
             contextMenu.AddItem(
                 new GUIContent("Order By Publish Date"),
-                _model.ReleasesSortMethod == ReleasesSortMethod.PublishDate,
+                _view.ReleasesSortMethod == ReleasesSortMethod.PublishDate,
                 () => ChangeReleaseSortMethod(ReleasesSortMethod.PublishDate));
 
             contextMenu.DropDown(new Rect(startPos.x, startPos.y, 0, 0));
@@ -296,7 +286,7 @@ namespace Projeny
 
         void ChangeReleaseSortMethod(ReleasesSortMethod sortMethod)
         {
-            _model.ReleasesSortMethod = sortMethod;
+            _view.ReleasesSortMethod = sortMethod;
             Assert.Throw("TODO");
             //_releasesList.ForceSort();
         }

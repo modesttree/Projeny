@@ -27,24 +27,10 @@ namespace Projeny
     [Serializable]
     public class PmModel
     {
-        public event Action ViewStateChanged = delegate {};
         public event Action PluginItemsChanged = delegate {};
         public event Action AssetItemsChanged = delegate {};
         public event Action PackagesChanged = delegate {};
         public event Action ReleasesChanged = delegate {};
-        public event Action ProjectConfigTypeChanged = delegate {};
-
-        [SerializeField]
-        PmViewStates _viewState = PmViewStates.PackagesAndProject;
-
-        [SerializeField]
-        ProjectConfigTypes _projectConfigType = ProjectConfigTypes.LocalProject;
-
-        [SerializeField]
-        ReleasesSortMethod _releasesSortMethod;
-
-        [SerializeField]
-        bool _releaseSortAscending;
 
         [SerializeField]
         List<PackageInfo> _packages = new List<PackageInfo>();
@@ -91,62 +77,6 @@ namespace Projeny
             get
             {
                 return _packages;
-            }
-        }
-
-        public bool ReleaseSortAscending
-        {
-            get
-            {
-                return _releaseSortAscending;
-            }
-            set
-            {
-                _releaseSortAscending = value;
-            }
-        }
-
-        public ReleasesSortMethod ReleasesSortMethod
-        {
-            get
-            {
-                return _releasesSortMethod;
-            }
-            set
-            {
-                _releasesSortMethod = value;
-            }
-        }
-
-        public ProjectConfigTypes ProjectConfigType
-        {
-            get
-            {
-                return _projectConfigType;
-            }
-            set
-            {
-                if (_projectConfigType != value)
-                {
-                    _projectConfigType = value;
-                    ProjectConfigTypeChanged();
-                }
-            }
-        }
-
-        public PmViewStates ViewState
-        {
-            get
-            {
-                return _viewState;
-            }
-            set
-            {
-                if (_viewState != value)
-                {
-                    _viewState = value;
-                    ViewStateChanged();
-                }
             }
         }
 
