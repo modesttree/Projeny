@@ -67,15 +67,20 @@ class ReleaseRegistryManager:
         self._log.heading('Found {0} Releases', self._getTotalReleaseCount())
 
         for release in self.lookupAllReleases():
-            self._log.info("{0} ({1})", release.Title, release.Version)
+            self._log.info("{0} ({1}) ({2})", release.name, release.version, release.versionCode)
 
     def lookupAllReleases(self):
         self._lazyInit()
+
+        result = []
         for registry in self._releaseRegistries:
             for release in registry.releases:
-                yield release
+                result.append(release)
+        result.sort(key = lambda x: x.name.lower())
+        return result
 
     def _findReleaseInfoAndRegistryByIdAndVersionCode(self, releaseId, releaseVersionCode):
+        assertIsType(releaseVersionCode, int)
         for registry in self._releaseRegistries:
             for release in registry.releases:
                 if release.id == releaseId and release.versionCode == releaseVersionCode:
@@ -107,6 +112,13 @@ class ReleaseRegistryManager:
 
     def installReleaseById(self, releaseId, releaseVersionCode, suppressPrompts = False):
 
+        self._log.info("Attempting to install release with ID '{0}' and version code '{1}'", releaseId, releaseVersionCode)
+
+        try:
+            releaseVersionCode = int(releaseVersionCode)
+        except ValueError:
+            assertThat(False, "Invalid version code '{0}' - must be convertable to an integer", releaseVersionCode)
+
         assertThat(releaseVersionCode, 'Invalid release version code supplied')
         assertThat(releaseId)
 
@@ -123,7 +135,7 @@ class ReleaseRegistryManager:
 
     def _installReleaseInternal(self, releaseInfo, registry, suppressPrompts = False):
 
-        self._log.heading("Attempting to install release '{0}' (version {1})", releaseInfo.name, releaseInfo.version)
+        self._log.heading("Installing release '{0}' (version {1})", releaseInfo.name, releaseInfo.version)
 
         installDirName = None
 

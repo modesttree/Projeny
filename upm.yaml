@@ -9,10 +9,6 @@ LinkToProjenyEditorDir: False
 
 Registries:
     - AssetStoreCache:
-    - LocalFolder:
-        Path: 'F:\Temp\UnityPackages'
-    - Remote:
-        ConfigUrl: 'http://internal.modest3d.com/UnityReleases/releaseRegistry.yaml'
 
 PathVars:
     TemplatesDir: '[ProjenyDir]/Templates'

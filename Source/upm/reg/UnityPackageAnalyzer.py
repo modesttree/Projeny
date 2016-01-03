@@ -4,6 +4,7 @@ from upm.util.Assert import *
 from upm.reg.ReleaseInfo import ReleaseInfo, AssetStoreInfo
 from pprint import pprint
 import binascii
+import re
 
 from datetime import datetime
 import json
@@ -34,15 +35,39 @@ class UnityPackageAnalyzer:
 
         if headerInfo:
             info.name = headerInfo['title']
-            info.versionCode = headerInfo['version_id']
+            info.versionCode = int(headerInfo['version_id'])
             info.version = headerInfo['version']
             info.id = headerInfo['id']
             info.assetStoreInfo = self._getAssetStoreInfo(headerInfo)
         else:
-            info.name = os.path.splitext(fileName)[0]
-            info.id = info.name
+            # If there are no headers, then we have to derive the info from the file name
+            info.id, info.name, info.versionCode, info.version = self._getInfoFromFileName(fileName)
 
         return info
+
+    def _getInfoFromFileName(self, fileName):
+        parts = os.path.splitext(fileName)
+        assertThat(parts[1].lower() == '.unitypackage')
+        baseName = parts[0].strip()
+
+        match = re.match('^(.*)@\s*(\d+\.?\d*)\s*$', baseName)
+
+        if match:
+            groups = match.groups()
+
+            name = groups[0]
+            versionStr = groups[1]
+
+            numDecimals = len(re.match('^\d+\.(\d*)$', versionStr).groups()[0])
+
+            assertThat(numDecimals <= 7, 'Projeny only supports up to 7 decimal points in the version number!')
+
+            # Need a flat int so we can do greater than/less than comparisons
+            versionCode = int(10000000 * float(groups[1]))
+
+            return (name, name, versionCode, versionStr)
+
+        return (baseName, baseName, None, None)
 
     def _getAssetStoreInfo(self, allInfo):
         info = AssetStoreInfo()
