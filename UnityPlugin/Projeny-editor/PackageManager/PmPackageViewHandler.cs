@@ -99,6 +99,23 @@ namespace Projeny
 
             yield return new ContextMenuItem(
                 selected.Count == 1 && HasPackageYaml(selected.Single()), "Edit " + ProjenyEditorUtil.PackageConfigFileName, false, OnContextMenuEditPackageYamlSelected);
+
+            yield return new ContextMenuItem(
+                true, "Refresh", false, OnContextMenuRefresh);
+
+            yield return new ContextMenuItem(
+                true, "New Package...", false, OnContextMenuNewPackage);
+        }
+
+        void OnContextMenuNewPackage()
+        {
+            _asyncProcessor.Process(CreateNewPackageAsync());
+        }
+
+        void OnContextMenuRefresh()
+        {
+            _asyncProcessor.Process(
+                _packageHandler.RefreshPackagesAsync(), "Refreshing Packages");
         }
 
         void OnContextMenuEditPackageYamlSelected()
