@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace Projeny.Internal
 {
-    public class PmController : IDisposable
+    public class PmCompositionRoot : IDisposable
     {
         readonly PmModel _model;
         readonly PmView.Model _viewModel;
@@ -37,7 +37,7 @@ namespace Projeny.Internal
         PmDragDropHandler _dragDropHandler;
         PmInputHandler _inputHandler;
 
-        public PmController(PmModel model, PmView.Model viewModel, bool isFirstLoad)
+        public PmCompositionRoot(PmModel model, PmView.Model viewModel, bool isFirstLoad)
         {
             _model = model;
             _viewModel = viewModel;
@@ -50,6 +50,14 @@ namespace Projeny.Internal
             Start();
         }
 
+        public void Dispose()
+        {
+            _viewModelSyncer.Dispose();
+            _releasesViewHandler.Dispose();
+            _dragDropHandler.Dispose();
+            _viewErrorHandler.Dispose();
+        }
+
         void Start()
         {
             _viewModelSyncer.Initialize();
@@ -57,10 +65,11 @@ namespace Projeny.Internal
             _packageViewHandler.Initialize();
             _releasesViewHandler.Initialize();
             _dragDropHandler.Initialize();
+            _viewErrorHandler.Initialize();
 
             if (_isFirstLoad)
             {
-                //_asyncProcessor.Process(RefreshAll(), "Refreshing Packages");
+                _asyncProcessor.Process(RefreshAll(), "Refreshing Packages");
             }
         }
 
@@ -99,13 +108,6 @@ namespace Projeny.Internal
 
             _releasesViewHandler = new PmReleasesViewHandler(
                 _model, _view, _asyncProcessor, _releasesHandler, _packageHandler, _upmCommandHandler);
-        }
-
-        public void Dispose()
-        {
-            _viewModelSyncer.Dispose();
-            _releasesViewHandler.Dispose();
-            _dragDropHandler.Dispose();
         }
 
         public void Update()

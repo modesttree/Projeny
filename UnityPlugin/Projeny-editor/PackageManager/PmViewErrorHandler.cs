@@ -24,20 +24,48 @@ namespace Projeny
             _asyncProcessor = asyncProcessor;
         }
 
+        public void Initialize()
+        {
+            _asyncProcessor.OnException += OnAsyncException;
+        }
+
+        public void Dispose()
+        {
+            _asyncProcessor.OnException -= OnAsyncException;
+        }
+
+        void OnAsyncException(Exception exception)
+        {
+            Log.ErrorException(exception);
+
+            if (exception is CoRoutineException)
+            {
+                // Don't bother showing the coroutine trace - it is in the log if you want it
+                var coroutineException = (CoRoutineException)exception;
+                exception = coroutineException.InnerException;
+            }
+
+            DisplayErrorInternal(exception.GetFullMessage());
+        }
+
         public void DisplayError(string message)
         {
             Log.Error("Projeny: " + message);
+            DisplayErrorInternal(message);
+        }
 
+        void DisplayErrorInternal(string message)
+        {
             // Do not display errors on top of each other
             // In those cases it will still be in the log and that's enough
             if (!_isDisplayingError)
             {
                 _asyncProcessor.Process(
-                    DisplayErrorInternal(message));
+                    DisplayErrorInternalAsync(message));
             }
         }
 
-        IEnumerator DisplayErrorInternal(string message)
+        IEnumerator DisplayErrorInternalAsync(string message)
         {
             Assert.That(!_isDisplayingError);
             _isDisplayingError = true;

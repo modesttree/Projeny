@@ -21,7 +21,7 @@ namespace Projeny
         bool _hasInitialized;
 
         [NonSerialized]
-        PmController _controller;
+        PmCompositionRoot _root;
 
         void OnEnable()
         {
@@ -44,20 +44,20 @@ namespace Projeny
                 }
             }
 
-            _controller = new PmController(_model, _viewModel, isFirstLoad);
-            _controller.Initialize();
+            _root = new PmCompositionRoot(_model, _viewModel, isFirstLoad);
+            _root.Initialize();
         }
 
         void OnDisable()
         {
-            Assert.IsNotNull(_controller);
-            _controller.Dispose();
-            _controller = null;
+            Assert.IsNotNull(_root);
+            _root.Dispose();
+            _root = null;
         }
 
         void Update()
         {
-            _controller.Update();
+            _root.Update();
 
             // Doesn't seem worth trying to detect changes, just redraw every frame
             Repaint();
@@ -66,7 +66,7 @@ namespace Projeny
         public void OnGUI()
         {
             var fullRect = new Rect(0, 0, this.position.width, this.position.height);
-            _controller.OnGUI(fullRect);
+            _root.OnGUI(fullRect);
         }
     }
 }

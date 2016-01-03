@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace Projeny.Internal
 {
@@ -21,6 +22,19 @@ namespace Projeny.Internal
         public static bool DerivesFrom<T>(this Type a)
         {
             return DerivesFrom(a, typeof(T));
+        }
+
+        public static string GetFullMessage(this Exception exception)
+        {
+            var stringBuilder = new StringBuilder();
+
+            while (exception != null)
+            {
+                stringBuilder.AppendLine(string.Format("{0}: {1}", exception.GetType().Name, exception.Message));
+                exception = exception.InnerException;
+            }
+
+            return stringBuilder.ToString();
         }
 
         public static bool IsLength<T>(this IEnumerable<T> enumerable, int amount)

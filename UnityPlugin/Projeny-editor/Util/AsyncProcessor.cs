@@ -25,6 +25,8 @@ namespace Projeny.Internal
 
     public class AsyncProcessor
     {
+        public event Action<Exception> OnException = delegate {};
+
         readonly List<CoroutineInfo> _newWorkers = new List<CoroutineInfo>();
         readonly LinkedList<CoroutineInfo> _workers = new LinkedList<CoroutineInfo>();
 
@@ -70,14 +72,7 @@ namespace Projeny.Internal
                 {
                     worker.IsFinished = true;
 
-                    if (worker.ExceptionHandler == null)
-                    {
-                        _workers.Remove(currentNode);
-                        throw new AsyncOperationException(
-                            "Error occurred during async operation", e);
-                    }
-
-                    worker.ExceptionHandler(e);
+                    OnException(e);
                 }
 
                 if (worker.IsFinished)
@@ -120,7 +115,6 @@ namespace Projeny.Internal
                 CoRoutine = new CoRoutine(process),
                 IsBlocking = isBlocking,
                 StatusTitle = statusTitle,
-                ExceptionHandler = exceptionHandler,
             };
 
             _newWorkers.Add(data);
@@ -148,7 +142,6 @@ namespace Projeny.Internal
         class CoroutineInfo
         {
             public CoRoutine CoRoutine;
-            public Action<Exception> ExceptionHandler;
             public string StatusTitle;
             public bool IsBlocking;
             public bool IsFinished;
