@@ -25,6 +25,9 @@ namespace Projeny.Internal
 
     public class DraggableList
     {
+        public event Action SortMethodChanged = delegate {};
+        public event Action SortDescendingChanged = delegate {};
+
         static readonly string DragId = "DraggableListData";
 
         readonly List<DraggableListEntry> _entries = new List<DraggableListEntry>();
@@ -32,8 +35,12 @@ namespace Projeny.Internal
 
         readonly Model _model;
 
+        PackageManagerWindowSkin _pmSkin;
+
         readonly ListTypes _listType;
         static DraggableListSkin _skin;
+
+        readonly List<string> _sortMethodCaptions = new List<string>();
 
         public DraggableList(
             PmView manager, ListTypes listType,
@@ -44,11 +51,67 @@ namespace Projeny.Internal
             _listType = listType;
         }
 
+        public bool ShowSortPane
+        {
+            get;
+            set;
+        }
+
+        public List<string> SortMethodCaptions
+        {
+            set
+            {
+                Assert.That(_sortMethodCaptions.IsEmpty());
+                _sortMethodCaptions.AddRange(value);
+            }
+        }
+
+        public int SortMethod
+        {
+            get
+            {
+                return _model.SortMethod;
+            }
+            set
+            {
+                if (_model.SortMethod != value)
+                {
+                    _model.SortMethod = value;
+                    SortMethodChanged();
+                }
+            }
+        }
+
+        public bool SortDescending
+        {
+            get
+            {
+                return _model.SortDescending;
+            }
+            set
+            {
+                if (_model.SortDescending != value)
+                {
+                    _model.SortDescending = value;
+                    SortDescendingChanged();
+                }
+            }
+        }
+
         public ListTypes ListType
         {
             get
             {
                 return _listType;
+            }
+        }
+
+        // Temporary
+        PackageManagerWindowSkin PmSkin
+        {
+            get
+            {
+                return _pmSkin ?? (_pmSkin = Resources.Load<PackageManagerWindowSkin>("Projeny/PackageManagerSkin"));
             }
         }
 
@@ -223,8 +286,98 @@ namespace Projeny.Internal
             return _entries.Where(x => x.IsSelected).ToList();
         }
 
-        public void Draw(Rect listRect)
+        void DrawSearchPane(Rect rect)
         {
+            Assert.That(ShowSortPane);
+
+            var startX = rect.xMin;
+            var endX = rect.xMax;
+            var startY = rect.yMin;
+            var endY = rect.yMax;
+
+            var skin = PmSkin.ReleasesPane;
+
+            ImguiUtil.DrawColoredQuad(rect, skin.IconRowBackgroundColor);
+
+            endX = rect.xMax - 2 * skin.ButtonWidth;
+
+            var searchBarRect = Rect.MinMaxRect(startX, startY, endX, endY);
+            if (searchBarRect.Contains(Event.current.mousePosition))
+            {
+                ImguiUtil.DrawColoredQuad(searchBarRect, skin.MouseOverBackgroundColor);
+            }
+
+            GUI.Label(new Rect(startX + skin.SearchIconOffset.x, startY + skin.SearchIconOffset.y, skin.SearchIconSize.x, skin.SearchIconSize.y), skin.SearchIcon);
+
+            this.SearchFilter = GUI.TextField(
+                searchBarRect, this.SearchFilter, skin.SearchTextStyle);
+
+            startX = endX;
+            endX = startX + skin.ButtonWidth;
+
+            Rect buttonRect;
+
+            buttonRect = Rect.MinMaxRect(startX, startY, endX, endY);
+            if (buttonRect.Contains(Event.current.mousePosition))
+            {
+                ImguiUtil.DrawColoredQuad(buttonRect, skin.MouseOverBackgroundColor);
+
+                if (Event.current.type == EventType.MouseDown)
+                {
+                    SortDescending = !SortDescending;
+                    this.UpdateIndices();
+                }
+            }
+            GUI.DrawTexture(buttonRect, SortDescending ? skin.SortDirUpIcon : skin.SortDirDownIcon);
+
+            startX = endX;
+            endX = startX + skin.ButtonWidth;
+
+            buttonRect = Rect.MinMaxRect(startX, startY, endX, endY);
+            if (buttonRect.Contains(Event.current.mousePosition))
+            {
+                ImguiUtil.DrawColoredQuad(buttonRect, skin.MouseOverBackgroundColor);
+
+                if (Event.current.type == EventType.MouseDown && !_sortMethodCaptions.IsEmpty())
+                {
+                    var startPos = new Vector2(buttonRect.xMin, buttonRect.yMax);
+                    ImguiUtil.OpenContextMenu(startPos, CreateSortMethodContextMenuItems());
+                }
+            }
+            GUI.DrawTexture(buttonRect, skin.SortIcon);
+        }
+
+        List<ContextMenuItem> CreateSortMethodContextMenuItems()
+        {
+            var result = new List<ContextMenuItem>();
+
+            for (int i = 0; i < _sortMethodCaptions.Count; i++)
+            {
+                var closedI = i;
+                result.Add(new ContextMenuItem(
+                    true, _sortMethodCaptions[i], _model.SortMethod == i, () => SortMethod = closedI));
+            }
+
+            return result;
+        }
+
+        public void Draw(Rect fullRect)
+        {
+            Rect listRect;
+            if (ShowSortPane)
+            {
+                var releaseSkin = PmSkin.ReleasesPane;
+                var searchRect = new Rect(fullRect.xMin, fullRect.yMin, fullRect.width, releaseSkin.IconRowHeight);
+                DrawSearchPane(searchRect);
+
+                listRect = Rect.MinMaxRect(
+                    fullRect.xMin, fullRect.yMin + releaseSkin.IconRowHeight, fullRect.xMax, fullRect.yMax);
+            }
+            else
+            {
+                listRect = fullRect;
+            }
+
             var searchFilter = _model.SearchFilter.Trim().ToLowerInvariant();
             var visibleEntries = _entries.Where(x => x.Name.ToLowerInvariant().Contains(searchFilter)).ToList();
 
@@ -403,7 +556,9 @@ namespace Projeny.Internal
         {
             public Vector2 ScrollPos;
             public string SearchFilter = "";
-            public List<int> SelectedIndices = new List<int>();
+
+            public int SortMethod;
+            public bool SortDescending;
         }
     }
 }

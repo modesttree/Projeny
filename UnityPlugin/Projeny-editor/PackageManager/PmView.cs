@@ -19,27 +19,8 @@ namespace Projeny.Internal
         Count
     }
 
-    public class ContextMenuItem
-    {
-        public readonly bool IsEnabled;
-        public readonly string Caption;
-        public readonly Action Handler;
-        public readonly bool IsChecked;
-
-        public ContextMenuItem(
-            bool isEnabled, string caption, bool isChecked, Action handler)
-        {
-            IsEnabled = isEnabled;
-            Caption = caption;
-            Handler = handler;
-            IsChecked = isChecked;
-        }
-    }
-
     public class PmView
     {
-        public event Action ReleasesSortMethodChanged = delegate {};
-        public event Action ReleaseSortAscendingChanged = delegate {};
         public event Action ViewStateChanged = delegate {};
         public event Action<ProjectConfigTypes> ClickedProjectType = delegate {};
         public event Action ClickedRefreshReleaseList = delegate {};
@@ -99,6 +80,14 @@ namespace Projeny.Internal
             }
         }
 
+        public IEnumerable<DraggableList> Lists
+        {
+            get
+            {
+                return _lists;
+            }
+        }
+
         public ProjectConfigTypes ProjectConfigType
         {
             get
@@ -108,38 +97,6 @@ namespace Projeny.Internal
             set
             {
                 _model.ProjectConfigType = value;
-            }
-        }
-
-        public ReleasesSortMethod ReleasesSortMethod
-        {
-            get
-            {
-                return _model.ReleasesSortMethod;
-            }
-            set
-            {
-                if (_model.ReleasesSortMethod != value)
-                {
-                    _model.ReleasesSortMethod = value;
-                    ReleasesSortMethodChanged();
-                }
-            }
-        }
-
-        public bool ReleaseSortAscending
-        {
-            get
-            {
-                return _model.ReleaseSortAscending;
-            }
-            set
-            {
-                if (_model.ReleaseSortAscending != value)
-                {
-                    _model.ReleaseSortAscending = value;
-                    ReleaseSortAscendingChanged();
-                }
             }
         }
 
@@ -371,21 +328,10 @@ namespace Projeny.Internal
         {
             var itemGetter = _contextMenuHandlers.TryGetValue(dropList.ListType);
 
-            if (itemGetter == null)
+            if (itemGetter != null)
             {
-                return;
+                ImguiUtil.OpenContextMenu(itemGetter());
             }
-
-            GenericMenu contextMenu = new GenericMenu();
-
-            foreach (var item in itemGetter())
-            {
-                var handler = item.Handler;
-                contextMenu.AddOptionalItem(
-                    item.IsEnabled, new GUIContent(item.Caption), item.IsChecked, () => handler());
-            }
-
-            contextMenu.ShowAsContext();
         }
 
         void DrawFileDropdown(Rect rect)
@@ -850,12 +796,6 @@ namespace Projeny.Internal
             var skin = Skin.ReleasesPane;
 
             startY = endY;
-            endY = startY + skin.IconRowHeight;
-
-            var iconRowRect = Rect.MinMaxRect(startX, startY, endX, endY);
-            DrawSearchPane(iconRowRect);
-
-            startY = endY;
             endY = rect.yMax - Skin.ApplyButtonHeight - Skin.ApplyButtonTopPadding;
 
             GetList(ListTypes.Release).Draw(Rect.MinMaxRect(startX, startY, endX, endY));
@@ -867,90 +807,6 @@ namespace Projeny.Internal
             {
                 ClickedRefreshReleaseList();
             }
-        }
-
-        void DrawSearchPane(Rect rect)
-        {
-            var startX = rect.xMin;
-            var endX = rect.xMax;
-            var startY = rect.yMin;
-            var endY = rect.yMax;
-
-            var skin = Skin.ReleasesPane;
-
-            ImguiUtil.DrawColoredQuad(rect, skin.IconRowBackgroundColor);
-
-            endX = rect.xMax - 2 * skin.ButtonWidth;
-
-            var searchBarRect = Rect.MinMaxRect(startX, startY, endX, endY);
-            if (searchBarRect.Contains(Event.current.mousePosition))
-            {
-                ImguiUtil.DrawColoredQuad(searchBarRect, skin.MouseOverBackgroundColor);
-            }
-
-            GUI.Label(new Rect(startX + skin.SearchIconOffset.x, startY + skin.SearchIconOffset.y, skin.SearchIconSize.x, skin.SearchIconSize.y), skin.SearchIcon);
-
-            var releaseList = GetList(ListTypes.Release);
-
-            releaseList.SearchFilter = GUI.TextField(
-                searchBarRect, releaseList.SearchFilter, skin.SearchTextStyle);
-
-            startX = endX;
-            endX = startX + skin.ButtonWidth;
-
-            Rect buttonRect;
-
-            buttonRect = Rect.MinMaxRect(startX, startY, endX, endY);
-            if (buttonRect.Contains(Event.current.mousePosition))
-            {
-                ImguiUtil.DrawColoredQuad(buttonRect, skin.MouseOverBackgroundColor);
-
-                if (Event.current.type == EventType.MouseDown)
-                {
-                    ReleaseSortAscending = !ReleaseSortAscending;
-                    releaseList.UpdateIndices();
-                }
-            }
-            GUI.DrawTexture(buttonRect, ReleaseSortAscending ? skin.SortDirDownIcon : skin.SortDirUpIcon);
-
-            startX = endX;
-            endX = startX + skin.ButtonWidth;
-
-            buttonRect = Rect.MinMaxRect(startX, startY, endX, endY);
-            if (buttonRect.Contains(Event.current.mousePosition))
-            {
-                ImguiUtil.DrawColoredQuad(buttonRect, skin.MouseOverBackgroundColor);
-
-                if (Event.current.type == EventType.MouseDown)
-                {
-                    ShowReleasesSortMenu(buttonRect);
-                }
-            }
-            GUI.DrawTexture(buttonRect, skin.SortIcon);
-        }
-
-        void ShowReleasesSortMenu(Rect buttonRect)
-        {
-            var startPos = new Vector2(buttonRect.xMin, buttonRect.yMax);
-
-            GenericMenu contextMenu = new GenericMenu();
-
-            contextMenu.AddItem(
-                new GUIContent("Order By Name"),
-                ReleasesSortMethod == ReleasesSortMethod.Name,
-                () => ReleasesSortMethod = ReleasesSortMethod.Name);
-
-            contextMenu.AddItem(
-                new GUIContent("Order By Size"),
-                ReleasesSortMethod == ReleasesSortMethod.Size,
-                () => ReleasesSortMethod = ReleasesSortMethod.Size);
-
-            contextMenu.AddItem(
-                new GUIContent("Order By Publish Date"),
-                ReleasesSortMethod == ReleasesSortMethod.PublishDate,
-                () => ReleasesSortMethod = ReleasesSortMethod.PublishDate);
-
-            contextMenu.DropDown(new Rect(startPos.x, startPos.y, 0, 0));
         }
 
         void DrawProjectPane(Rect windowRect)
@@ -1089,8 +945,6 @@ namespace Projeny.Internal
         {
             public PmViewStates ViewState = PmViewStates.PackagesAndProject;
             public ProjectConfigTypes ProjectConfigType = ProjectConfigTypes.LocalProject;
-            public ReleasesSortMethod ReleasesSortMethod;
-            public bool ReleaseSortAscending;
             public List<DraggableList.Model> ListModels = new List<DraggableList.Model>();
         }
     }

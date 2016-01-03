@@ -32,8 +32,34 @@ namespace Projeny.Internal
             _model.ReleasesChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
 
             _view.ViewStateChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
-            _view.ReleasesSortMethodChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
-            _view.ReleaseSortAscendingChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
+
+            foreach (var list in _view.Lists)
+            {
+                list.SortDescendingChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
+                list.SortMethodChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
+            }
+
+            // Don't bother showing the search pane for assets / plugins  - Or is that useful?
+
+            var releaseList = _view.GetList(ListTypes.Release);
+            releaseList.ShowSortPane = true;
+            releaseList.SortMethodCaptions = new List<string>()
+            {
+                // These should match ReleasesSortMethod
+                "Order By Name",
+                "Order By Size",
+                "Order By Publish Date"
+            };
+
+            var packagesList = _view.GetList(ListTypes.Package);
+            packagesList.ShowSortPane = true;
+            packagesList.SortMethodCaptions = new List<string>()
+            {
+                // These should match PackagesSortMethod
+                "Order By Name",
+                "Order By Install Date",
+                "Order By Release Publish Date"
+            };
 
             _eventManager.Trigger(OnListDisplayValuesDirty);
         }
@@ -45,9 +71,13 @@ namespace Projeny.Internal
             _model.PackagesChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
             _model.ReleasesChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
 
+            foreach (var list in _view.Lists)
+            {
+                list.SortDescendingChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
+                list.SortMethodChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
+            }
+
             _view.ViewStateChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
-            _view.ReleasesSortMethodChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
-            _view.ReleaseSortAscendingChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
 
             _eventManager.AssertIsEmpty();
         }
@@ -65,30 +95,82 @@ namespace Projeny.Internal
 
             _view.SetListItems(
                 ListTypes.PluginItem,
-                _model.PluginItems.OrderBy(x => x).Select(x => CreateListItemForProjectItem(x)).ToList());
+                OrderPluginItems().Select(x => CreateListItemForProjectItem(x)).ToList());
 
             _view.SetListItems(
                 ListTypes.AssetItem,
-                _model.AssetItems.OrderBy(x => x).Select(x => CreateListItemForProjectItem(x)).ToList());
+                OrderAssetItems().Select(x => CreateListItemForProjectItem(x)).ToList());
 
             _view.SetListItems(
                 ListTypes.Package,
-                _model.Packages.OrderBy(x => x.Name).Select(x => CreateListItem(x)).ToList());
+                OrderPackages().Select(x => CreateListItem(x)).ToList());
+        }
+
+        IEnumerable<string> OrderAssetItems()
+        {
+            if (_view.GetList(ListTypes.AssetItem).SortDescending)
+            {
+                return _model.AssetItems.OrderByDescending(x => x);
+            }
+
+            return _model.AssetItems.OrderBy(x => x);
+        }
+
+        IEnumerable<string> OrderPluginItems()
+        {
+            if (_view.GetList(ListTypes.PluginItem).SortDescending)
+            {
+                return _model.PluginItems.OrderByDescending(x => x);
+            }
+
+            return _model.PluginItems.OrderBy(x => x);
         }
 
         IEnumerable<ReleaseInfo> OrderReleases()
         {
-            if (_view.ReleaseSortAscending)
+            if (_view.GetList(ListTypes.Release).SortDescending)
             {
-                return _model.Releases.OrderBy(x => GetReleaseSortField(x));
+                return _model.Releases.OrderByDescending(x => GetReleaseSortField(x));
             }
 
-            return _model.Releases.OrderByDescending(x => GetReleaseSortField(x));
+            return _model.Releases.OrderBy(x => GetReleaseSortField(x));
+        }
+
+        IEnumerable<PackageInfo> OrderPackages()
+        {
+            if (_view.GetList(ListTypes.Package).SortDescending)
+            {
+                return _model.Packages.OrderByDescending(x => GetPackageSortField(x));
+            }
+
+            return _model.Packages.OrderBy(x => GetPackageSortField(x));
+        }
+
+        object GetPackageSortField(PackageInfo info)
+        {
+            switch ((PackagesSortMethod)_view.GetList(ListTypes.Package).SortMethod)
+            {
+                case PackagesSortMethod.Name:
+                {
+                    return info.Name;
+                }
+                case PackagesSortMethod.InstallDate:
+                {
+                    return info.InstallInfo.InstallDateTicks;
+                }
+                case PackagesSortMethod.ReleasePublishDate:
+                {
+                    return info.InstallInfo.ReleaseInfo.AssetStoreInfo.PublishDateTicks;
+                }
+            }
+
+            Assert.Throw();
+            return null;
         }
 
         object GetReleaseSortField(ReleaseInfo info)
         {
-            switch (_view.ReleasesSortMethod)
+            switch ((ReleasesSortMethod)_view.GetList(ListTypes.Release).SortMethod)
             {
                 case ReleasesSortMethod.Name:
                 {
@@ -194,6 +276,20 @@ namespace Projeny.Internal
                 Caption = caption,
                 Model = info
             };
+        }
+
+        public enum PackagesSortMethod
+        {
+            Name,
+            InstallDate,
+            ReleasePublishDate
+        }
+
+        public enum ReleasesSortMethod
+        {
+            Name,
+            Size,
+            PublishDate
         }
     }
 }

@@ -17,13 +17,6 @@ namespace Projeny
         Project,
     }
 
-    public enum ReleasesSortMethod
-    {
-        Name,
-        Size,
-        PublishDate
-    }
-
     [Serializable]
     public class PmModel
     {
