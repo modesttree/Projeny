@@ -16,7 +16,8 @@ import prj.util.MiscUtil as MiscUtil
 import prj.main.Prj as Prj
 
 ScriptDir = os.path.dirname(os.path.realpath(__file__))
-ProjenyRootDir = os.path.realpath(os.path.join(ScriptDir, '../../..'))
+PythonDir = os.path.realpath(os.path.join(ScriptDir, '../..'))
+ProjenyRootDir = os.path.realpath(os.path.join(PythonDir, '..'))
 
 class Runner:
     _sys = Inject('SystemHelper')
@@ -36,9 +37,11 @@ class Runner:
 
     def _runInternal(self):
         self._varMgr.add('OutRootDir', args.outDirectory)
-        self._varMgr.add('RootDir', ProjenyRootDir)
-        self._varMgr.add('DemoRootDir', '[RootDir]/Demo')
         self._varMgr.add('OutDir', '[OutRootDir]/Contents')
+
+        self._varMgr.add('PythonDir', PythonDir)
+        self._varMgr.add('RootDir', ProjenyRootDir)
+        #self._varMgr.add('DemoRootDir', '[RootDir]/Demo')
 
         if self._sys.directoryExists('[OutDir]'):
             if not self._args.suppressPrompts and not MiscUtil.confirmChoice('Override directory "{0}"? (y/n)'.format(self._varMgr.expand('[OutDir]'))):
@@ -52,39 +55,29 @@ class Runner:
         else:
             self._sys.createDirectory('[OutDir]')
 
-        self._log.heading('Clearing all generated files in Demo/UnityProjects folder')
-        self._packageMgr.clearAllProjectGeneratedFiles(False)
+        #self._log.heading('Clearing all generated files in Demo/UnityProjects folder')
+        #self._packageMgr.clearAllProjectGeneratedFiles(False)
 
-        self._log.heading('Copying UnityPackages directory')
-        self._sys.copyDirectory('[DemoRootDir]/UnityPackages', '[OutDir]/UnityPackages')
-
-        self._log.heading('Copying UnityProjects directory')
-        self._sys.copyDirectory('[DemoRootDir]/UnityProjects', '[OutDir]/UnityProjects')
+        #self._log.heading('Copying Demo Project')
+        #self._sys.copyDirectory('[DemoRootDir]', '[OutDir]/Demo')
 
         self._log.heading('Updating exe')
-        self._sys.executeAndWait('[PythonDir]/BuildExe.bat')
+        self._sys.executeAndWait('[PythonDir]/BuildAllExes.bat')
 
-        self._sys.copyDirectory('[RootDir]/Projeny/Bin', '[OutDir]/Projeny/Bin')
-        self._sys.copyDirectory('[RootDir]/Projeny/Source', '[OutDir]/Projeny/Source')
-        self._sys.copyDirectory('[RootDir]/Projeny/Templates', '[OutDir]/Projeny/Templates')
+        self._sys.createDirectory('[OutDir]/Bin')
 
-        self._sys.copyFile('[RootDir]/Projeny/{0}'.format(ConfigFileName), '[OutDir]/Projeny/{0}'.format(ConfigFileName))
+        #self._sys.copyDirectory('[RootDir]/Bin', '[OutDir]/Bin')
+        #self._sys.copyDirectory('[RootDir]/Source', '[OutDir]/Source')
+        self._sys.copyDirectory('[RootDir]/Templates', '[OutDir]/Templates')
 
-        self._sys.removeByRegex('[OutDir]/Projeny/Bin/ProjenyLog*')
-        self._sys.removeFile('[OutDir]/Projeny/Bin/.gitignore')
-        self._sys.removeFile('[OutDir]/UnityProjects/.gitignore')
+        self._sys.copyFile('[RootDir]/{0}'.format(ConfigFileName), '[OutDir]/{0}'.format(ConfigFileName))
 
-        self._sys.copyFile('[RootDir]/Prj.bat', '[OutDir]/Prj.bat')
+        self._sys.removeByRegex('[OutDir]/Bin/ProjenyLog*')
 
         versionStr = self._sys.readFileAsText('[ProjenyDir]/Version.txt').strip()
-        self._zipHelper.createZipFile('[OutDir]', '[OutRootDir]/Projeny-WithSamples-{0}.zip'.format(versionStr))
 
-        for packageName in self._sys.walkDir('[OutDir]/UnityPackages'):
-            if packageName != "Projeny":
-                self._sys.deleteDirectoryIfExists('[OutDir]/UnityPackages/{0}'.format(packageName))
-
-        self._sys.clearDirectoryContents('[OutDir]/UnityProjects')
-        self._zipHelper.createZipFile('[OutDir]', '[OutRootDir]/Projeny-{0}.zip'.format(versionStr))
+        #self._zipHelper.createZipFile('[OutDir]', '[OutRootDir]/Projeny-WithSamples-{0}.zip'.format(versionStr))
+        #self._zipHelper.createZipFile('[OutDir]', '[OutRootDir]/Projeny-{0}.zip'.format(versionStr))
 
 def addArguments(parser):
     parser.add_argument('-s', '--includeSamples', action='store_true', help='Set if you want to include sample projects')
