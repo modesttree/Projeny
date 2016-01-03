@@ -35,6 +35,7 @@ namespace Projeny.Internal
         PmPackageViewHandler _packageViewHandler;
         PmPackageHandler _packageHandler;
         PmDragDropHandler _dragDropHandler;
+        PmInputHandler _inputHandler;
 
         public PmController(PmModel model, PmView.Model viewModel, bool isFirstLoad)
         {
@@ -81,9 +82,10 @@ namespace Projeny.Internal
 
             _upmCommandHandler = new UpmCommandHandler(_view);
 
-            _packageHandler = new PmPackageHandler(_model, _upmCommandHandler);
+            _packageHandler = new PmPackageHandler(_model, _upmCommandHandler, _view);
             _releasesHandler = new PmReleasesHandler(_model, _upmCommandHandler);
 
+            _inputHandler = new PmInputHandler(_view, _model, _packageHandler, _asyncProcessor);
             _viewErrorHandler = new PmViewErrorHandler(_view, _asyncProcessor);
             _viewAsyncHandler = new PmViewAsyncHandler(_view, _asyncProcessor);
             _viewModelSyncer = new PmModelViewSyncer(_model, _view);
@@ -123,69 +125,11 @@ namespace Projeny.Internal
             _view.Update();
         }
 
-        void SelectAll()
-        {
-            Assert.Throw("TODO");
-            //if (_selected.IsEmpty())
-            //{
-            //return;
-            //}
-
-            //var listType = ClassifyList(_selected[0].ListOwner);
-
-            //Assert.That(_selected.All(x => ClassifyList(x.ListOwner) == listType));
-
-            //foreach (var entry in _selected[0].ListOwner.Values)
-            //{
-            //SelectInternal(entry);
-            //}
-        }
-
         public void OnGUI(Rect fullRect)
         {
             _view.OnGUI(fullRect);
 
-            //CheckForKeypresses();
-        }
-
-        void CheckForKeypresses()
-        {
-            Assert.Throw("TODO");
-            //if (!GUI.enabled)
-            //{
-                //// Popup visible
-                //return;
-            //}
-
-            //var e = Event.current;
-
-            //if (e.type == EventType.ValidateCommand)
-            //{
-                //if (e.commandName == "SelectAll")
-                //{
-                    //e.Use();
-                //}
-            //}
-            //else if (e.type == EventType.ExecuteCommand)
-            //{
-                //if (e.commandName == "SelectAll")
-                //{
-                    //SelectAll();
-                    //e.Use();
-                //}
-            //}
-            //else if (e.type == EventType.KeyDown)
-            //{
-                //switch (e.keyCode)
-                //{
-                    //case KeyCode.Delete:
-                    //{
-                        //DeleteSelected();
-                        //e.Use();
-                        //break;
-                    //}
-                //}
-            //}
+            _inputHandler.CheckForKeypresses();
         }
     }
 }

@@ -97,6 +97,14 @@ namespace Projeny.Internal
             }
         }
 
+        public void SelectAll()
+        {
+            foreach (var entry in _entries)
+            {
+                entry.IsSelected = true;
+            }
+        }
+
         public void Remove(DraggableListEntry entry)
         {
             _entries.RemoveWithConfirm(entry);

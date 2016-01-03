@@ -168,7 +168,19 @@ namespace Projeny.Internal
 
         public List<DraggableListEntry> GetSelected(ListTypes listType)
         {
-            return _lists[(int)listType].GetSelected();
+            var selected = GetSelected();
+
+            if (!selected.IsEmpty())
+            {
+                Assert.That(selected.All(x => x.ListType == selected[0].ListType));
+            }
+
+            return selected;
+        }
+
+        public List<DraggableListEntry> GetSelected()
+        {
+            return _lists.SelectMany(x => x.GetSelected()).ToList();
         }
 
         public void ClearOtherListSelected(ListTypes type)
