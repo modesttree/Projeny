@@ -39,7 +39,7 @@ namespace Projeny.Internal
 
             while (upmTask.MoveNext())
             {
-                if (upmTask.Current is UpmHelperResponse)
+                if (upmTask.Current is PrjHelperResponse)
                 {
                     Assert.That(!upmTask.MoveNext());
                     break;
@@ -59,8 +59,8 @@ namespace Projeny.Internal
                 yield return null;
             }
 
-            Assert.IsType<UpmHelperResponse>(upmTask.Current);
-            var response = (UpmHelperResponse)upmTask.Current;
+            Assert.IsType<PrjHelperResponse>(upmTask.Current);
+            var response = (PrjHelperResponse)upmTask.Current;
 
             // Refresh assets regardless of what kind of UpmCommand this was
             // This is good because many commands can affect the project

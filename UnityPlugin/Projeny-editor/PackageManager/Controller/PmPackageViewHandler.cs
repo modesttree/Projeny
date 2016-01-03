@@ -74,7 +74,7 @@ namespace Projeny.Internal
             }
 
             yield return _upmCommandHandler.ProcessUpmCommand(
-                "Creating Package '{0}'".Fmt(userInput.Current), UpmHelper.CreatePackageAsync(userInput.Current));
+                "Creating Package '{0}'".Fmt(userInput.Current), PrjHelper.CreatePackageAsync(userInput.Current));
             yield return _packageHandler.RefreshPackagesAsync();
         }
 

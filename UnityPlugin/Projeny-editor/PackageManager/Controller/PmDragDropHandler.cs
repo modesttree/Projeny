@@ -314,7 +314,7 @@ namespace Projeny.Internal
                     case InstallReleaseUserChoices.Install:
                     {
                         yield return _upmCommandHandler.ProcessUpmCommand(
-                            "Installing release '{0}'".Fmt(releaseInfo.Name), UpmHelper.InstallReleaseAsync(releaseInfo));
+                            "Installing release '{0}'".Fmt(releaseInfo.Name), PrjHelper.InstallReleaseAsync(releaseInfo));
                         break;
                     }
                     case InstallReleaseUserChoices.Skip:

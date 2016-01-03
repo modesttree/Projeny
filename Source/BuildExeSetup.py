@@ -6,7 +6,7 @@ import py2exe
 
 ScriptDir = os.path.dirname(os.path.realpath(__file__))
 
-outputPath = os.path.join(ScriptDir, '../Bin/Upm/Data')
+outputPath = os.path.join(ScriptDir, '../Bin/Prj/Data')
 
 if os.path.exists(outputPath):
     shutil.rmtree(outputPath)
@@ -14,7 +14,7 @@ if os.path.exists(outputPath):
 os.makedirs(outputPath)
 
 setup(
-    console=['upm/main/Upm.py'],
+    console=['prj/main/Prj.py'],
     options = {
         "py2exe": {
             "dist_dir": outputPath

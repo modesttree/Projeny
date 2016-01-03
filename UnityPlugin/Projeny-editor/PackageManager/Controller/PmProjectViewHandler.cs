@@ -210,7 +210,7 @@ namespace Projeny.Internal
 
             _asyncProcessor.Process(
                 _upmCommandHandler.ProcessUpmCommand(
-                    "Updating directory links", UpmHelper.UpdateLinksAsync()), "Updating Links");
+                    "Updating directory links", PrjHelper.UpdateLinksAsync()), "Updating Links");
         }
     }
 }

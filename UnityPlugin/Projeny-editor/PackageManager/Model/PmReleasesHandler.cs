@@ -26,7 +26,7 @@ namespace Projeny.Internal
         public IEnumerator RefreshReleasesAsync()
         {
             var response = _upmCommandHandler.ProcessUpmCommandForResult<List<ReleaseInfo>>(
-                "Looking up release list", UpmHelper.LookupReleaseListAsync());
+                "Looking up release list", PrjHelper.LookupReleaseListAsync());
             yield return response;
 
             _model.SetReleases(response.Current);

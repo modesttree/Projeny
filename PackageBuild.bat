@@ -2,4 +2,4 @@
 
 set PYTHONPATH=%~dp0\Source;%PYTHONPATH%
 cd %~dp0\Source
-python -m upm.main.PackageBuild %*
+python -m prj.main.PackageBuild %*

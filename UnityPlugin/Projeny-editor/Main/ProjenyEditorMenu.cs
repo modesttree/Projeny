@@ -24,7 +24,7 @@ namespace Projeny
         [MenuItem("Projeny/Update Links", false, 1)]
         public static void UpdateLinks()
         {
-            UpmHelper.UpdateLinks();
+            PrjHelper.UpdateLinks();
         }
 
         [MenuItem("Projeny/Package Manager...", false, 1)]
@@ -37,7 +37,7 @@ namespace Projeny
         [MenuItem("Projeny/Update C# Project", false, 6)]
         public static void UpdateCustomSolution()
         {
-            var response = UpmInterface.RunUpm(UpmInterface.CreateUpmRequest("updateCustomSolution"));
+            var response = PrjInterface.RunPrj(PrjInterface.CreatePrjRequest("updateCustomSolution"));
 
             if (response.Succeeded)
             {
@@ -45,7 +45,7 @@ namespace Projeny
             }
             else
             {
-                UpmHelper.DisplayUpmError(
+                PrjHelper.DisplayPrjError(
                     "Updating C# Project", response.ErrorMessage);
             }
         }
@@ -53,44 +53,43 @@ namespace Projeny
         [MenuItem("Projeny/Change Platform/Windows", false, 7)]
         public static void ChangePlatformWin()
         {
-            UpmHelper.ChangePlatform(BuildTarget.StandaloneWindows);
+            PrjHelper.ChangePlatform(BuildTarget.StandaloneWindows);
         }
 
         [MenuItem("Projeny/Change Platform/Webplayer", false, 7)]
         public static void ChangePlatformWebplayer()
         {
-            UpmHelper.ChangePlatform(BuildTarget.WebPlayer);
+            PrjHelper.ChangePlatform(BuildTarget.WebPlayer);
         }
 
         [MenuItem("Projeny/Change Platform/Android", false, 7)]
         public static void ChangePlatformAndroid()
         {
-            UpmHelper.ChangePlatform(BuildTarget.Android);
+            PrjHelper.ChangePlatform(BuildTarget.Android);
         }
 
         [MenuItem("Projeny/Change Platform/Web GL", false, 7)]
         public static void ChangePlatformWebGL()
         {
-            UpmHelper.ChangePlatform(BuildTarget.WebGL);
+            PrjHelper.ChangePlatform(BuildTarget.WebGL);
         }
 
         [MenuItem("Projeny/Change Platform/OsX", false, 7)]
         public static void ChangePlatformOsX()
         {
-            UpmHelper.ChangePlatform(BuildTarget.StandaloneOSXUniversal);
+            PrjHelper.ChangePlatform(BuildTarget.StandaloneOSXUniversal);
         }
 
         [MenuItem("Projeny/Change Platform/Linux", false, 7)]
         public static void ChangePlatformLinux()
         {
-            UpmHelper.ChangePlatform(BuildTarget.StandaloneLinux);
+            PrjHelper.ChangePlatform(BuildTarget.StandaloneLinux);
         }
 
         [MenuItem("Projeny/Change Platform/iOS", false, 7)]
         public static void ChangePlatformIos()
         {
-            UpmHelper.ChangePlatform(BuildTarget.iOS);
+            PrjHelper.ChangePlatform(BuildTarget.iOS);
         }
     }
 }
-

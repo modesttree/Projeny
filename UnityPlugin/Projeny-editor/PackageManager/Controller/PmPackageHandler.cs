@@ -37,7 +37,7 @@ namespace Projeny.Internal
             if (choice.Current == 0)
             {
                 yield return _upmCommandHandler.ProcessUpmCommand(
-                    "Deleting packages", UpmHelper.DeletePackagesAsync(packages));
+                    "Deleting packages", PrjHelper.DeletePackagesAsync(packages));
                 yield return RefreshPackagesAsync();
             }
         }
@@ -45,7 +45,7 @@ namespace Projeny.Internal
         public IEnumerator RefreshPackagesAsync()
         {
             var allPackages = _upmCommandHandler.ProcessUpmCommandForResult<List<PackageInfo>>(
-                "Looking up package list", UpmHelper.LookupPackagesListAsync());
+                "Looking up package list", PrjHelper.LookupPackagesListAsync());
             yield return allPackages;
 
             _model.SetPackages(allPackages.Current);

@@ -38,11 +38,11 @@ namespace Projeny.Internal
                 if (EditorUserBuildSettings.SwitchActiveBuildTarget(expectedPlatform))
                 {
                     EditorUtility.DisplayDialog(
-                        "Error", "Projeny has detected an unexpected platform change.\n\nPlatforms should only be changed through Projeny and never through Unity's normal Build Settings dialog.\n\nThis is necessary to allow Projeny to include platform specific packages, quick platform switching, etc.\n\nUPM has switched the platform back to '" + expectedPlatform.ToString() + "'", "Ok");
+                        "Error", "Projeny has detected an unexpected platform change.\n\nPlatforms should only be changed through Projeny and never through Unity's normal Build Settings dialog.\n\nThis is necessary to allow Projeny to include platform specific packages, quick platform switching, etc.\n\nProjeny has switched the platform back to '" + expectedPlatform.ToString() + "'", "Ok");
                 }
                 else
                 {
-                    UnityEngine.Debug.LogError("UPM - Unknown error occurred when attempting to switch platform to '" + expectedPlatform.ToString() + "'");
+                    UnityEngine.Debug.LogError("Projeny - Unknown error occurred when attempting to switch platform to '" + expectedPlatform.ToString() + "'");
                 }
             }
         }
