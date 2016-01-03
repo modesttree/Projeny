@@ -1,7 +1,7 @@
 
 from upm.ioc.Inject import Inject
 
-ConfigFileName = 'upm.yaml'
+ConfigFileName = 'Projeny.yaml'
 
 class CommonSettings:
     _config = Inject('Config')

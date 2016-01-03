@@ -29,7 +29,7 @@ from upm.ioc.Inject import Inject
 from upm.ioc.Inject import InjectMany
 import upm.ioc.IocAssertions as Assertions
 
-InstallInfoFileName = 'Install.yaml'
+InstallInfoFileName = 'ProjenyInstall.yaml'
 
 class PackageManager:
     """

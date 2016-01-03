@@ -11,7 +11,7 @@ using UnityEditorInternal;
 using UnityEngine;
 using Projeny.Internal;
 
-namespace Projeny.Internal
+namespace Projeny
 {
     public enum ProjectConfigTypes
     {
@@ -23,12 +23,12 @@ namespace Projeny.Internal
 
     public static class ProjenyEditorUtil
     {
-        public const string ConfigFileName = "Upm.yaml";
+        public const string ConfigFileName = "Projeny.yaml";
 
-        public const string ProjectConfigFileName = "Project.yaml";
-        public const string ProjectConfigUserFileName = "ProjectUser.yaml";
+        public const string ProjectConfigFileName = "ProjenyProject.yaml";
+        public const string ProjectConfigUserFileName = "ProjenyProjectCustom.yaml";
 
-        public const string PackageConfigFileName = "Package.yaml";
+        public const string PackageConfigFileName = "ProjenyPackage.yaml";
 
         public static string GetCurrentProjectName()
         {

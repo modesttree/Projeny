@@ -22,7 +22,7 @@ EditorProjectNameSuffix = "-editor"
 
 class VisualStudioSolutionGenerator:
     """
-    Handler for creating custom visual studio solutions based on project.yaml files
+    Handler for creating custom visual studio solutions based on ProjenyProject.yaml files
     """
     _log = Inject('Logger')
     _packageManager = Inject('PackageManager')

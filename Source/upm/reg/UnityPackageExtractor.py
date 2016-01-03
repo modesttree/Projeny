@@ -60,7 +60,7 @@ class UnityPackageExtractor:
             # This is nice for packages that assume some directory structure (eg. UnityTestTools)
             # Also, some packages have titles that aren't as nice as directories.  For example, Unity Test Tools uses the directory name UnityTestTools
             # which is a bit nicer (though adds a bit of confusion since the release name doesn't match)
-            # Note that for upgrading/downgrading, this doesn't matter because it uses the ID which is stored in the Install.yaml file
+            # Note that for upgrading/downgrading, this doesn't matter because it uses the ID which is stored in the ProjenyInstall.yaml file
             if not forcedName and (dirToCopyName.lower() != 'assets' and dirToCopyName.lower() != 'plugins'):
                 forcedName = dirToCopyName
 

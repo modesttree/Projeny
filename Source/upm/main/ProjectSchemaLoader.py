@@ -12,8 +12,8 @@ import upm.util.JunctionUtil as JunctionUtil
 from upm.config.Config import Config
 from upm.config.YamlConfigLoader import loadYamlFilesThatExist
 
-ProjectConfigFileName = 'project.yaml'
-ProjectUserConfigFileName = 'projectUser.yaml'
+ProjectConfigFileName = 'ProjenyProject.yaml'
+ProjectUserConfigFileName = 'ProjenyProjectCustom.yaml'
 
 class ProjectSchemaLoader:
     _varMgr = Inject('VarManager')
@@ -49,7 +49,7 @@ class ProjectSchemaLoader:
         # by default, put any dependencies that are not declared explicitly into the plugins folder
         for packageName in allDependencies:
 
-            configPath = self._varMgr.expandPath('[UnityPackagesDir]/{0}/package.yaml'.format(packageName))
+            configPath = self._varMgr.expandPath('[UnityPackagesDir]/{0}/ProjenyPackage.yaml'.format(packageName))
 
             if os.path.exists(configPath):
                 packageConfig = Config(loadYamlFilesThatExist(configPath))
