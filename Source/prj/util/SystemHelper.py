@@ -14,7 +14,6 @@ import time
 import os
 import shlex
 import subprocess
-import distutils.core
 import shutil
 import platform
 from glob import glob
@@ -241,7 +240,7 @@ class SystemHelper:
 
         self._log.debug("Copying directory '{0}' to '{1}'".format(fromPath, toPath))
 
-        distutils.dir_util.copy_tree(fromPath, toPath)
+        shutil.copytree(fromPath, toPath)
 
     def readFileAsText(self, path):
         with self.openInputFile(path) as f:

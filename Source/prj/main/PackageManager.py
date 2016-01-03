@@ -197,6 +197,7 @@ class PackageManager:
             self._junctionHelper.makeJunction('[ProjenyDir]/UnityPlugin/Projeny', '[PluginsDir]/Projeny/Editor')
         else:
             self._sys.copyFile('[ProjenyUnityEditorDllPath]', '[PluginsDir]/Projeny/Editor/Projeny.dll')
+            self._sys.copyDirectory('[ProjenyUnityEditorAssetsDirPath]', '[PluginsDir]/Projeny/Editor/Assets')
 
         with self._sys.openOutputFile('[PluginsDir]/Projeny/Placeholder.cs') as outFile:
             outFile.write(

@@ -20,6 +20,7 @@ PathVars:
     ProjectRootSvnIgnoreTemplate: '[TemplatesDir]/customProjectRootSvnIgnore'
 
     ProjenyUnityEditorDllPath: '[ProjenyDir]/Bin/UnityPlugin/Release/Projeny.dll'
+    ProjenyUnityEditorAssetsDirPath: '[ProjenyDir]/UnityPlugin/Projeny/Assets'
 
     # Guess this one
     MsBuildExePath: 'C:/Windows/Microsoft.NET/Framework/v4.0.30319/msbuild.exe'
