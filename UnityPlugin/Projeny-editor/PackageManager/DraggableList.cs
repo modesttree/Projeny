@@ -385,7 +385,7 @@ namespace Projeny.Internal
 
             var isListUnderMouse = listRect.Contains(Event.current.mousePosition);
 
-            ImguiUtil.DrawColoredQuad(listRect, GUI.enabled && isListUnderMouse ? Skin.Theme.ListHoverColor : Skin.Theme.ListColor);
+            ImguiUtil.DrawColoredQuad(listRect, GetListBackgroundColor(isListUnderMouse));
 
             switch (Event.current.type)
             {
@@ -542,6 +542,21 @@ namespace Projeny.Internal
 
                 _manager.ClearSelected();
             }
+        }
+
+        Color GetListBackgroundColor(bool isHover)
+        {
+            if (!GUI.enabled)
+            {
+                return Skin.Theme.ListColor;
+            }
+
+            if (_model.SearchFilter.Trim().Count() > 0)
+            {
+                return isHover ? Skin.Theme.FilteredListHoverColor : Skin.Theme.FilteredListColor;
+            }
+
+            return isHover ? Skin.Theme.ListHoverColor : Skin.Theme.ListColor;
         }
 
         public class DragData

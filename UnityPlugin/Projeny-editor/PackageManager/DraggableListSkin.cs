@@ -37,6 +37,9 @@ namespace Projeny
             public Color ListColor;
             public Color ListHoverColor;
 
+            public Color FilteredListColor;
+            public Color FilteredListHoverColor;
+
             public Color ListItemColor;
             public Color ListItemHoverColor;
             public Color ListItemSelectedColor;
