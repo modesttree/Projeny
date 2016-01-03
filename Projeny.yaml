@@ -4,7 +4,7 @@
 MaxProjectNameLength: 10
 
 # Set to true if you don't want to use the Projeny editor DLL and instead want to link directly
-# to UnityPlugin\Projeny-editor
+# to UnityPlugin\Projeny
 LinkToProjenyEditorDir: False
 
 Registries:
@@ -19,7 +19,7 @@ PathVars:
     ProjectRootGitIgnoreTemplate: '[TemplatesDir]/customProjectRootGitIgnore'
     ProjectRootSvnIgnoreTemplate: '[TemplatesDir]/customProjectRootSvnIgnore'
 
-    ProjenyUnityEditorDllPath: '[ProjenyDir]/Bin/UnityPlugin/Release/Projeny-editor.dll'
+    ProjenyUnityEditorDllPath: '[ProjenyDir]/Bin/UnityPlugin/Release/Projeny.dll'
 
     # Guess this one
     MsBuildExePath: 'C:/Windows/Microsoft.NET/Framework/v4.0.30319/msbuild.exe'

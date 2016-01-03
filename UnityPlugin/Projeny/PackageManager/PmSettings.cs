@@ -7,6 +7,7 @@ using System.Collections.Generic;
 
 namespace Projeny.Internal
 {
+    //[CreateAssetMenu]
     public class PmSettings : ScriptableObject
     {
         public GUISkin GUISkinDark;

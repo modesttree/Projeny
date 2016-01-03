@@ -1,0 +1,190 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{A8FDE485-31E0-4B40-8E7B-476E82374944}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>
+    </RootNamespace>
+    <AssemblyName>$(MSBuildProjectName)</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <DebugSymbols>true</DebugSymbols>
+    <IntermediateOutputPath>..\Temp\UnityPlugin\Debug</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>..\Temp\UnityPlugin\Debug</BaseIntermediateOutputPath>
+    <OutputPath>..\Bin\UnityPlugin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <GenerateSerializationAssemblies>On</GenerateSerializationAssemblies>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <IntermediateOutputPath>..\Temp\UnityPlugin\Release</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>..\Temp\UnityPlugin\Release</BaseIntermediateOutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\Bin\UnityPlugin\Release\</OutputPath>
+    <DefineConstants>
+    </DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <GenerateSerializationAssemblies>On</GenerateSerializationAssemblies>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="UnityEditor">
+      <HintPath>Libs\Unity\UnityEditor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>Libs\Unity\UnityEngine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Projeny\Main\Models\PackageInfo.cs" />
+    <Compile Include="Projeny\Main\Models\ProjectConfig.cs" />
+    <Compile Include="Projeny\Main\Models\ReleaseInfo.cs" />
+    <Compile Include="Projeny\Main\PrjHelper.cs" />
+    <Compile Include="Projeny\Main\PrjInterface.cs" />
+    <Compile Include="Projeny\Main\ProjenyConfigValidator.cs" />
+    <Compile Include="Projeny\Main\ProjenyEditorMenu.cs" />
+    <Compile Include="Projeny\Main\ProjenyEditorUtil.cs" />
+    <Compile Include="Projeny\Main\Serialization\PrjSerializer.cs" />
+    <Compile Include="Projeny\Main\Serialization\YamlSerializer.cs" />
+    <Compile Include="Projeny\PackageManager\Controller\PmDragDropHandler.cs" />
+    <Compile Include="Projeny\PackageManager\Controller\PmInputHandler.cs" />
+    <Compile Include="Projeny\PackageManager\Controller\PmModelViewSyncer.cs" />
+    <Compile Include="Projeny\PackageManager\Controller\PmPackageHandler.cs" />
+    <Compile Include="Projeny\PackageManager\Controller\PmPackageViewHandler.cs" />
+    <Compile Include="Projeny\PackageManager\Controller\PmProjectViewHandler.cs" />
+    <Compile Include="Projeny\PackageManager\Controller\PmReleasesViewHandler.cs" />
+    <Compile Include="Projeny\PackageManager\Controller\PmViewAsyncHandler.cs" />
+    <Compile Include="Projeny\PackageManager\Controller\PmViewErrorHandler.cs" />
+    <Compile Include="Projeny\PackageManager\Controller\PmViewHandlerCommon.cs" />
+    <Compile Include="Projeny\PackageManager\Model\PmModel.cs" />
+    <Compile Include="Projeny\PackageManager\Model\PmProjectHandler.cs" />
+    <Compile Include="Projeny\PackageManager\Model\PmReleasesHandler.cs" />
+    <Compile Include="Projeny\PackageManager\Model\UpmCommandHandler.cs" />
+    <Compile Include="Projeny\PackageManager\PmCompositionRoot.cs" />
+    <Compile Include="Projeny\PackageManager\PmSettings.cs" />
+    <Compile Include="Projeny\PackageManager\PmWindow.cs" />
+    <Compile Include="Projeny\PackageManager\View\DragList.cs" />
+    <Compile Include="Projeny\PackageManager\View\PmView.cs" />
+    <Compile Include="Projeny\Util\Assert.cs" />
+    <Compile Include="Projeny\Util\AsyncProcessor.cs" />
+    <Compile Include="Projeny\Util\Coroutine.cs" />
+    <Compile Include="Projeny\Util\CoroutineUtil.cs" />
+    <Compile Include="Projeny\Util\DateTimeUtil.cs" />
+    <Compile Include="Projeny\Util\DictionaryExtensions.cs" />
+    <Compile Include="Projeny\Util\Events\EventHandlerKey.cs" />
+    <Compile Include="Projeny\Util\Events\EventManager.cs" />
+    <Compile Include="Projeny\Util\Events\IFrameCounter.cs" />
+    <Compile Include="Projeny\Util\ImguiUtil.cs" />
+    <Compile Include="Projeny\Util\JunctionPoint.cs" />
+    <Compile Include="Projeny\Util\Log.cs" />
+    <Compile Include="Projeny\Util\MiscExtensions.cs" />
+    <Compile Include="Projeny\Util\MiscUtil.cs" />
+    <Compile Include="Projeny\Util\PathUtil.cs" />
+    <Compile Include="Projeny\Util\Tuple.cs" />
+    <Compile Include="Projeny\Util\UnityExtensions.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Projeny\PackageManager\View\Media\Resources\Projeny\Icon.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Dark\Sources\box.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Dark\Sources\button active.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Dark\Sources\button hover.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Dark\Sources\button on hover.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Dark\Sources\button on.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Dark\Sources\button.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Dark\Sources\horizontal scrollbar thumb.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Dark\Sources\horizontal scrollbar.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Dark\Sources\horizontalslider.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Dark\Sources\slider thumb active.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Dark\Sources\slider thumb.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Dark\Sources\slidert humb hover.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Dark\Sources\textfield hover.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Dark\Sources\textfield on.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Dark\Sources\textfield.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Dark\Sources\toggle active.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Dark\Sources\toggle hover.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Dark\Sources\toggle on active.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Dark\Sources\toggle on hover.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Dark\Sources\toggle on.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Dark\Sources\toggle.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Dark\Sources\vertical scrollbar thumb.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Dark\Sources\vertical scrollbar.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Dark\Sources\verticalslider.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Dark\Sources\window on.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Dark\Sources\window.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Light\Sources\box.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Light\Sources\button active.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Light\Sources\button hover.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Light\Sources\button on hover.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Light\Sources\button on.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Light\Sources\button.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Light\Sources\horizontal scrollbar thumb.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Light\Sources\horizontal scrollbar.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Light\Sources\horizontalslider.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Light\Sources\slider thumb active.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Light\Sources\slider thumb.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Light\Sources\slidert humb hover.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Light\Sources\textfield hover.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Light\Sources\textfield on.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Light\Sources\textfield.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Light\Sources\toggle active.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Light\Sources\toggle hover.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Light\Sources\toggle on active.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Light\Sources\toggle on hover.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Light\Sources\toggle on.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Light\Sources\toggle.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Light\Sources\vertical scrollbar thumb.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Light\Sources\vertical scrollbar.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Light\Sources\verticalslider.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Light\Sources\window on.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Skin\Light\Sources\window.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Textures\Clear.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Textures\Dark\Border.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Textures\Gray.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Textures\Light\ArrowLeft.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Textures\Light\ArrowRight.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Textures\Light\Border.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Textures\Light\DropdownArrow.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Textures\SearchIcon.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Textures\SortDirDown.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Textures\SortDirUp.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Textures\SortIcon.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Textures\SortIcon_Hover.png" />
+    <Content Include="Projeny\PackageManager\View\Media\Textures\White.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="Libs\YamlDotNet\YamlDotNet.csproj">
+      <Project>{463bdb34-890f-4375-a79f-37950f5457dc}</Project>
+      <Name>YamlDotNet</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+  </PropertyGroup>
+</Project>

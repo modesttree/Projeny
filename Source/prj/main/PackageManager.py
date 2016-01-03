@@ -194,7 +194,7 @@ class PackageManager:
         self._sys.deleteDirectoryIfExists('[PluginsDir]/Projeny')
 
         if self._config.getBool('LinkToProjenyEditorDir'):
-            self._junctionHelper.makeJunction('[ProjenyDir]/UnityPlugin/Projeny-editor', '[PluginsDir]/Projeny/Editor')
+            self._junctionHelper.makeJunction('[ProjenyDir]/UnityPlugin/Projeny', '[PluginsDir]/Projeny/Editor')
         else:
             self._sys.copyFile('[ProjenyUnityEditorDllPath]', '[PluginsDir]/Projeny/Editor/Projeny.dll')
 
