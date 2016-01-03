@@ -247,13 +247,13 @@ namespace Projeny.Internal
 
                 userChoice = _view.PromptForUserChoice(
                     "Package '{0}' is already installed with the same version ('{1}').  Would you like to re-install it anyway?  Note that any local changes you've made to the package will be reverted."
-                    .Fmt(packageReleaseInfo.Name, packageReleaseInfo.Version), new[] { "Overwrite", "Skip", "Cancel" });
+                    .Fmt(packageReleaseInfo.Name, packageReleaseInfo.Version), new[] { "Overwrite", "Skip", "Cancel" }, null, null, 0, 2);
             }
             else if (releaseInfo.VersionCode > packageReleaseInfo.VersionCode)
             {
                 userChoice = _view.PromptForUserChoice(
                     "Package '{0}' is already installed with version '{1}'. Would you like to UPGRADE it to version '{2}'?  Note that any local changes you've made to the package will be lost."
-                    .Fmt(releaseInfo.Name, packageReleaseInfo.Version, releaseInfo.Version), new[] { "Upgrade", "Skip", "Cancel" });
+                    .Fmt(releaseInfo.Name, packageReleaseInfo.Version, releaseInfo.Version), new[] { "Upgrade", "Skip", "Cancel" }, null, null, 0, 2);
             }
             else
             {
@@ -261,7 +261,7 @@ namespace Projeny.Internal
 
                 userChoice = _view.PromptForUserChoice(
                     "Package '{0}' is already installed with version '{1}'. Would you like to DOWNGRADE it to version '{2}'?  Note that any local changes you've made to the package will be lost."
-                    .Fmt(releaseInfo.Name, packageReleaseInfo.Version, releaseInfo.Version), new[] { "Downgrade", "Skip", "Cancel" });
+                    .Fmt(releaseInfo.Name, packageReleaseInfo.Version, releaseInfo.Version), new[] { "Downgrade", "Skip", "Cancel" }, null, null, 0, 2);
             }
 
             yield return userChoice;

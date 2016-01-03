@@ -155,7 +155,7 @@ namespace Projeny
             if (_projectHandler.HasProjectConfigChanged())
             {
                 var choice = _view.PromptForUserChoice(
-                    "Do you want to save changes to your project?", new[] { "Save", "Don't Save", "Cancel" });
+                    "Do you want to save changes to your project?", new[] { "Save", "Don't Save", "Cancel" }, null, null, 0, 2);
 
                 yield return choice;
 

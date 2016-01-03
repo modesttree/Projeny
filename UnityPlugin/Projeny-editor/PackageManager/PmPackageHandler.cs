@@ -29,8 +29,8 @@ namespace Projeny.Internal
         public IEnumerator DeletePackages(List<PackageInfo> packages)
         {
             var choice = _view.PromptForUserChoice(
-                "<color=yellow>Are you sure you wish to delete the following packages?</color>\n\n{0}\n\n<color=yellow>Please note the following:</color>\n\n- This change is not undoable\n- Any changes that you've made since installing will be lost\n- Any projects or other packages that still depend on this package may be put in an invalid state by deleting it".Fmt(packages.Select(x => "- " + x.Name).Join("\n")),
-                new[] { "Delete", "Cancel" }, null, "DeleteSelectedPopupTextStyle");
+                "<color=yellow>Are you sure you want to delete the following packages?</color>\n\n{0}\n\n<color=yellow>Please note the following:</color>\n\n- This change is not undoable\n- Any changes that you've made since installing will be lost\n- Any projects or other packages that still depend on this package may be put in an invalid state by deleting it".Fmt(packages.Select(x => "- " + x.Name).Join("\n")),
+                new[] { "Delete", "Cancel" }, null, "DeleteSelectedPopupTextStyle", 0, 1);
 
             yield return choice;
 

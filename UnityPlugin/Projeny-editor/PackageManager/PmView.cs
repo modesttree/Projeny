@@ -93,7 +93,6 @@ namespace Projeny.Internal
             {
                 if (_model.ViewState != value)
                 {
-                    Log.Trace("changed viewstate");
                     _model.ViewState = value;
                     ViewStateChanged();
                 }
@@ -449,13 +448,14 @@ namespace Projeny.Internal
 
         public IEnumerator AlertUser(string message, string title = null)
         {
-            return PromptForUserChoice(message, new[] { "Ok" }, title);
+            return PromptForUserChoice(message, new[] { "Ok" }, title, null, 0, 0);
         }
 
-        public IEnumerator<int> PromptForUserChoice(string question, string[] choices, string title = null, string styleOverride = null)
+        public IEnumerator<int> PromptForUserChoice(
+            string question, string[] choices, string title = null, string styleOverride = null, int enterChoice = -1, int exitChoice = -1)
         {
             return CoRoutine.Wrap<int>(
-                PromptForUserChoiceInternal(question, choices, title, styleOverride));
+                PromptForUserChoiceInternal(question, choices, title, styleOverride, enterChoice, exitChoice));
         }
 
         public int AddPopup(Action<Rect> handler)
@@ -476,7 +476,7 @@ namespace Projeny.Internal
         }
 
         public IEnumerator PromptForUserChoiceInternal(
-            string question, string[] choices, string title = null, string styleOverride = null)
+            string question, string[] choices, string title = null, string styleOverride = null, int enterChoice = -1, int escapeChoice = -1)
         {
             int choice = -1;
 
@@ -544,6 +544,31 @@ namespace Projeny.Internal
                     GUILayout.FlexibleSpace();
                 }
                 GUILayout.EndArea();
+
+                if (Event.current.type == EventType.KeyDown)
+                {
+                    switch (Event.current.keyCode)
+                    {
+                        case KeyCode.Return:
+                        {
+                            if (enterChoice >= 0)
+                            {
+                                Assert.That(enterChoice <= choices.Length-1);
+                                choice = enterChoice;
+                            }
+                            break;
+                        }
+                        case KeyCode.Escape:
+                        {
+                            if (escapeChoice >= 0)
+                            {
+                                Assert.That(escapeChoice <= choices.Length-1);
+                                choice = escapeChoice;
+                            }
+                            break;
+                        }
+                    }
+                }
             });
 
             while (choice == -1)
