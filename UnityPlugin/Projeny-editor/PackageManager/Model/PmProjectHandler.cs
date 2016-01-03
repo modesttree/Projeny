@@ -43,7 +43,7 @@ namespace Projeny.Internal
 
         string GetSerializedProjectConfigFromLists()
         {
-            return UpmSerializer.SerializeProjectConfig(GetProjectConfigFromLists());
+            return PrjSerializer.SerializeProjectConfig(GetProjectConfigFromLists());
         }
 
         public void OverwriteConfig()
@@ -62,7 +62,7 @@ namespace Projeny.Internal
         {
             try
             {
-                return UpmSerializer.DeserializeProjectConfig(File.ReadAllText(configPath));
+                return PrjSerializer.DeserializeProjectConfig(File.ReadAllText(configPath));
             }
             catch (Exception e)
             {

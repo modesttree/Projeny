@@ -12,7 +12,7 @@ namespace Projeny.Internal
 {
     public class PmPackageViewHandler
     {
-        readonly UpmCommandHandler _upmCommandHandler;
+        readonly PrjCommandHandler _prjCommandHandler;
         readonly PmPackageHandler _packageHandler;
         readonly AsyncProcessor _asyncProcessor;
         readonly PmView _view;
@@ -22,9 +22,9 @@ namespace Projeny.Internal
             PmView view,
             AsyncProcessor asyncProcessor,
             PmPackageHandler packageHandler,
-            UpmCommandHandler upmCommandHandler)
+            PrjCommandHandler prjCommandHandler)
         {
-            _upmCommandHandler = upmCommandHandler;
+            _prjCommandHandler = prjCommandHandler;
             _packageHandler = packageHandler;
             _asyncProcessor = asyncProcessor;
             _view = view;
@@ -73,7 +73,7 @@ namespace Projeny.Internal
                 yield break;
             }
 
-            yield return _upmCommandHandler.ProcessUpmCommand(
+            yield return _prjCommandHandler.ProcessPrjCommand(
                 "Creating Package '{0}'".Fmt(userInput.Current), PrjHelper.CreatePackageAsync(userInput.Current));
             yield return _packageHandler.RefreshPackagesAsync();
         }

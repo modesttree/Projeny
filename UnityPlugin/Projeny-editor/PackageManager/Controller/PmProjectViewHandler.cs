@@ -13,7 +13,7 @@ namespace Projeny.Internal
     public class PmProjectViewHandler
     {
         readonly PmViewErrorHandler _errorHandler;
-        readonly UpmCommandHandler _upmCommandHandler;
+        readonly PrjCommandHandler _prjCommandHandler;
         readonly AsyncProcessor _asyncProcessor;
         readonly PmModel _model;
         readonly PmView _view;
@@ -27,11 +27,11 @@ namespace Projeny.Internal
             PmView view,
             PmProjectHandler projectHandler,
             AsyncProcessor asyncProcessor,
-            UpmCommandHandler upmCommandHandler,
+            PrjCommandHandler prjCommandHandler,
             PmViewErrorHandler errorHandler)
         {
             _errorHandler = errorHandler;
-            _upmCommandHandler = upmCommandHandler;
+            _prjCommandHandler = prjCommandHandler;
             _asyncProcessor = asyncProcessor;
             _model = model;
             _view = view;
@@ -209,7 +209,7 @@ namespace Projeny.Internal
             _projectHandler.OverwriteConfig();
 
             _asyncProcessor.Process(
-                _upmCommandHandler.ProcessUpmCommand(
+                _prjCommandHandler.ProcessPrjCommand(
                     "Updating directory links", PrjHelper.UpdateLinksAsync()), "Updating Links");
         }
     }

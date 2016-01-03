@@ -10,45 +10,45 @@ using System.Linq;
 
 namespace Projeny.Internal
 {
-    public class UpmCommandException : Exception
+    public class PrjCommandException : Exception
     {
-        public UpmCommandException(string message)
+        public PrjCommandException(string message)
             : base(message)
         {
         }
     }
 
-    public class UpmCommandHandler
+    public class PrjCommandHandler
     {
         readonly PmView _view;
 
-        public UpmCommandHandler(PmView view)
+        public PrjCommandHandler(PmView view)
         {
             _view = view;
         }
 
-        public IEnumerator<T> ProcessUpmCommandForResult<T>(string statusName, IEnumerator upmTask)
+        public IEnumerator<T> ProcessPrjCommandForResult<T>(string statusName, IEnumerator prjTask)
         {
-            return CoRoutine.Wrap<T>(ProcessUpmCommand(statusName, upmTask));
+            return CoRoutine.Wrap<T>(ProcessPrjCommand(statusName, prjTask));
         }
 
-        public IEnumerator ProcessUpmCommand(string statusName, IEnumerator upmTask)
+        public IEnumerator ProcessPrjCommand(string statusName, IEnumerator prjTask)
         {
             Assert.IsNull(_view.BlockedStatusMessage);
             _view.BlockedStatusMessage = statusName;
 
-            while (upmTask.MoveNext())
+            while (prjTask.MoveNext())
             {
-                if (upmTask.Current is PrjHelperResponse)
+                if (prjTask.Current is PrjHelperResponse)
                 {
-                    Assert.That(!upmTask.MoveNext());
+                    Assert.That(!prjTask.MoveNext());
                     break;
                 }
 
-                if (upmTask.Current != null)
+                if (prjTask.Current != null)
                 {
-                    Assert.IsType<List<string>>(upmTask.Current);
-                    var outputLines = (List<string>)upmTask.Current;
+                    Assert.IsType<List<string>>(prjTask.Current);
+                    var outputLines = (List<string>)prjTask.Current;
 
                     if (outputLines.Count > 0)
                     {
@@ -59,10 +59,10 @@ namespace Projeny.Internal
                 yield return null;
             }
 
-            Assert.IsType<PrjHelperResponse>(upmTask.Current);
-            var response = (PrjHelperResponse)upmTask.Current;
+            Assert.IsType<PrjHelperResponse>(prjTask.Current);
+            var response = (PrjHelperResponse)prjTask.Current;
 
-            // Refresh assets regardless of what kind of UpmCommand this was
+            // Refresh assets regardless of what kind of PrjCommand this was
             // This is good because many commands can affect the project
             // Including installing a package, deleting a package, etc.
             AssetDatabase.Refresh();
@@ -75,7 +75,7 @@ namespace Projeny.Internal
             }
             else
             {
-                throw new UpmCommandException(response.ErrorMessage);
+                throw new PrjCommandException(response.ErrorMessage);
             }
         }
     }

@@ -13,16 +13,16 @@ namespace Projeny.Internal
     public class PmPackageHandler
     {
         readonly PmView _view;
-        readonly UpmCommandHandler _upmCommandHandler;
+        readonly PrjCommandHandler _prjCommandHandler;
         readonly PmModel _model;
 
         public PmPackageHandler(
             PmModel model,
-            UpmCommandHandler upmCommandHandler,
+            PrjCommandHandler prjCommandHandler,
             PmView view)
         {
             _view = view;
-            _upmCommandHandler = upmCommandHandler;
+            _prjCommandHandler = prjCommandHandler;
             _model = model;
         }
 
@@ -36,7 +36,7 @@ namespace Projeny.Internal
 
             if (choice.Current == 0)
             {
-                yield return _upmCommandHandler.ProcessUpmCommand(
+                yield return _prjCommandHandler.ProcessPrjCommand(
                     "Deleting packages", PrjHelper.DeletePackagesAsync(packages));
                 yield return RefreshPackagesAsync();
             }
@@ -44,7 +44,7 @@ namespace Projeny.Internal
 
         public IEnumerator RefreshPackagesAsync()
         {
-            var allPackages = _upmCommandHandler.ProcessUpmCommandForResult<List<PackageInfo>>(
+            var allPackages = _prjCommandHandler.ProcessPrjCommandForResult<List<PackageInfo>>(
                 "Looking up package list", PrjHelper.LookupPackagesListAsync());
             yield return allPackages;
 

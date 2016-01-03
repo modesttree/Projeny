@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Projeny.Internal
 {
-    public static class UpmSerializer
+    public static class PrjSerializer
     {
         public static string SerializeProjectConfig(ProjectConfig info)
         {

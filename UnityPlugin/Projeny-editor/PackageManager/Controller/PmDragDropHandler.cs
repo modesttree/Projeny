@@ -12,7 +12,7 @@ namespace Projeny.Internal
 {
     public class PmDragDropHandler
     {
-        readonly UpmCommandHandler _upmCommandHandler;
+        readonly PrjCommandHandler _prjCommandHandler;
         readonly PmPackageHandler _packageHandler;
         readonly AsyncProcessor _asyncProcessor;
         readonly PmView _view;
@@ -25,9 +25,9 @@ namespace Projeny.Internal
             PmView view,
             AsyncProcessor asyncProcessor,
             PmPackageHandler packageHandler,
-            UpmCommandHandler upmCommandHandler)
+            PrjCommandHandler prjCommandHandler)
         {
-            _upmCommandHandler = upmCommandHandler;
+            _prjCommandHandler = prjCommandHandler;
             _packageHandler = packageHandler;
             _asyncProcessor = asyncProcessor;
             _view = view;
@@ -313,7 +313,7 @@ namespace Projeny.Internal
                     }
                     case InstallReleaseUserChoices.Install:
                     {
-                        yield return _upmCommandHandler.ProcessUpmCommand(
+                        yield return _prjCommandHandler.ProcessPrjCommand(
                             "Installing release '{0}'".Fmt(releaseInfo.Name), PrjHelper.InstallReleaseAsync(releaseInfo));
                         break;
                     }

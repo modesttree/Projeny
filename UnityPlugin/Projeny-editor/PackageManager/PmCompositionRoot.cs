@@ -29,7 +29,7 @@ namespace Projeny.Internal
         PmReleasesHandler _releasesHandler;
         PmReleasesViewHandler _releasesViewHandler;
 
-        UpmCommandHandler _upmCommandHandler;
+        PrjCommandHandler _prjCommandHandler;
         PmViewAsyncHandler _viewAsyncHandler;
         PmViewErrorHandler _viewErrorHandler;
         PmPackageViewHandler _packageViewHandler;
@@ -91,25 +91,25 @@ namespace Projeny.Internal
             _settings = Resources.Load<PmSettings>("Projeny/PmSettings");
             _view = new PmView(_viewModel, _settings);
 
-            _upmCommandHandler = new UpmCommandHandler(_view);
+            _prjCommandHandler = new PrjCommandHandler(_view);
 
-            _packageHandler = new PmPackageHandler(_model, _upmCommandHandler, _view);
-            _releasesHandler = new PmReleasesHandler(_model, _upmCommandHandler);
+            _packageHandler = new PmPackageHandler(_model, _prjCommandHandler, _view);
+            _releasesHandler = new PmReleasesHandler(_model, _prjCommandHandler);
 
             _inputHandler = new PmInputHandler(_view, _model, _packageHandler, _asyncProcessor);
             _viewErrorHandler = new PmViewErrorHandler(_view, _asyncProcessor);
             _viewAsyncHandler = new PmViewAsyncHandler(_view, _asyncProcessor, _settings);
             _viewModelSyncer = new PmModelViewSyncer(_model, _view, _settings);
             _projectHandler = new PmProjectHandler(_model, _view);
-            _dragDropHandler = new PmDragDropHandler(_model, _view, _asyncProcessor, _packageHandler, _upmCommandHandler);
-            _packageViewHandler = new PmPackageViewHandler(_view, _asyncProcessor, _packageHandler, _upmCommandHandler);
+            _dragDropHandler = new PmDragDropHandler(_model, _view, _asyncProcessor, _packageHandler, _prjCommandHandler);
+            _packageViewHandler = new PmPackageViewHandler(_view, _asyncProcessor, _packageHandler, _prjCommandHandler);
 
             _projectViewHandler = new PmProjectViewHandler(
                 _model, _view, _projectHandler, _asyncProcessor,
-                _upmCommandHandler, _viewErrorHandler);
+                _prjCommandHandler, _viewErrorHandler);
 
             _releasesViewHandler = new PmReleasesViewHandler(
-                _model, _view, _asyncProcessor, _releasesHandler, _packageHandler, _upmCommandHandler, _settings);
+                _model, _view, _asyncProcessor, _releasesHandler, _packageHandler, _prjCommandHandler, _settings);
         }
 
         public void Update()

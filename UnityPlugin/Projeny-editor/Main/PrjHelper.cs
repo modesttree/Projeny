@@ -212,7 +212,7 @@ namespace Projeny
                 yield return PrjHelperResponse.Success(
                     docs.Select(x => x.Trim())
                         .Where(x => x.Length > 0)
-                        .Select(x => UpmSerializer.DeserializeReleaseInfo(x))
+                        .Select(x => PrjSerializer.DeserializeReleaseInfo(x))
                         .Where(x => x != null).ToList());
             }
             else
@@ -240,7 +240,7 @@ namespace Projeny
 
                 yield return PrjHelperResponse.Success(
                     docs
-                        .Select(x => UpmSerializer.DeserializePackageInfo(x))
+                        .Select(x => PrjSerializer.DeserializePackageInfo(x))
                         .Where(x => x != null).ToList());
             }
             else

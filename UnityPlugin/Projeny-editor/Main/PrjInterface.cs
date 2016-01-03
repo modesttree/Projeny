@@ -135,7 +135,7 @@ namespace Projeny
         }
 
         // This will yield string values that contain some status message
-        // until finally yielding a value of type UpmResponse with the final data
+        // until finally yielding a value of type PrjResponse with the final data
         public static IEnumerator RunPrjAsync(PrjRequest request)
         {
             Process proc = new Process();
@@ -203,7 +203,7 @@ namespace Projeny
             catch (FileNotFoundException)
             {
                 throw new PrjException(
-                    "Could not locate path to UPM.  Have you added 'projeny/Bin/Upm' to your environment PATH?  See documentation for details.");
+                    "Could not locate path to PRJ.bat.  Have you added 'projeny/Bin/Prj' to your environment PATH?  See documentation for details.");
             }
         }
 

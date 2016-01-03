@@ -15,7 +15,7 @@ namespace Projeny.Internal
         const string NotAvailableLabel = "N/A";
 
         readonly PmSettings _pmSettings;
-        readonly UpmCommandHandler _upmCommandHandler;
+        readonly PrjCommandHandler _prjCommandHandler;
         readonly PmPackageHandler _packageHandler;
         readonly PmReleasesHandler _releasesHandler;
         readonly AsyncProcessor _asyncProcessor;
@@ -29,11 +29,11 @@ namespace Projeny.Internal
             AsyncProcessor asyncProcessor,
             PmReleasesHandler releasesHandler,
             PmPackageHandler packageHandler,
-            UpmCommandHandler upmCommandHandler,
+            PrjCommandHandler prjCommandHandler,
             PmSettings pmSettings)
         {
             _pmSettings = pmSettings;
-            _upmCommandHandler = upmCommandHandler;
+            _prjCommandHandler = prjCommandHandler;
             _packageHandler = packageHandler;
             _releasesHandler = releasesHandler;
             _asyncProcessor = asyncProcessor;

@@ -12,20 +12,20 @@ namespace Projeny.Internal
 {
     public class PmReleasesHandler
     {
-        readonly UpmCommandHandler _upmCommandHandler;
+        readonly PrjCommandHandler _prjCommandHandler;
         readonly PmModel _model;
 
         public PmReleasesHandler(
             PmModel model,
-            UpmCommandHandler upmCommandHandler)
+            PrjCommandHandler prjCommandHandler)
         {
-            _upmCommandHandler = upmCommandHandler;
+            _prjCommandHandler = prjCommandHandler;
             _model = model;
         }
 
         public IEnumerator RefreshReleasesAsync()
         {
-            var response = _upmCommandHandler.ProcessUpmCommandForResult<List<ReleaseInfo>>(
+            var response = _prjCommandHandler.ProcessPrjCommandForResult<List<ReleaseInfo>>(
                 "Looking up release list", PrjHelper.LookupReleaseListAsync());
             yield return response;
 
