@@ -59,8 +59,6 @@ namespace Projeny.Internal
 
         void OnListDisplayValuesDirty()
         {
-            Log.Trace("OnListDisplayValuesDirty called");
-
             _view.SetListItems(
                 ListTypes.Release,
                 OrderReleases().Select(x => CreateListItem(x)).ToList());

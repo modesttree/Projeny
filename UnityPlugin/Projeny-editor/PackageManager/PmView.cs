@@ -38,8 +38,6 @@ namespace Projeny.Internal
 
     public class PmView
     {
-        const string NotAvailableLabel = "N/A";
-
         public event Action ReleasesSortMethodChanged = delegate {};
         public event Action ReleaseSortAscendingChanged = delegate {};
         public event Action ViewStateChanged = delegate {};
@@ -51,8 +49,6 @@ namespace Projeny.Internal
         public event Action ClickedProjectRevertButton = delegate {};
         public event Action ClickedProjectSaveButton = delegate {};
         public event Action ClickedProjectEditButton = delegate {};
-        public event Action<DraggableList.DragData, DraggableList> DragDroppedListItem = delegate {};
-
         public event Action<ListTypes, ListTypes, List<DraggableListEntry>> DraggedDroppedListEntries = delegate {};
 
         readonly Dictionary<ListTypes, Func<IEnumerable<ContextMenuItem>>> _contextMenuHandlers = new Dictionary<ListTypes, Func<IEnumerable<ContextMenuItem>>>();
@@ -331,7 +327,7 @@ namespace Projeny.Internal
             return 0;
         }
 
-        void DrawPopupCommon(Rect fullRect, Rect popupRect)
+        public void DrawPopupCommon(Rect fullRect, Rect popupRect)
         {
             ImguiUtil.DrawColoredQuad(popupRect, Skin.Theme.LoadingOverlapPopupColor);
         }
@@ -636,95 +632,6 @@ namespace Projeny.Internal
             {
                 // Just return null
             }
-        }
-
-        void DrawMoreInfoRow(PackageManagerWindowSkin.ReleaseInfoMoreInfoDialogProperties skin, string label, string value)
-        {
-            GUILayout.BeginHorizontal();
-            {
-                if (value == NotAvailableLabel)
-                {
-                    GUI.color = skin.NotAvailableColor;
-                }
-                GUILayout.Label(label + ":", skin.LabelStyle, GUILayout.Width(skin.LabelColumnWidth));
-                GUILayout.Space(skin.ColumnSpacing);
-                GUILayout.Label(value, skin.ValueStyle, GUILayout.Width(skin.ValueColumnWidth));
-                GUI.color = Color.white;
-            }
-            GUILayout.EndHorizontal();
-        }
-
-        IEnumerator OpenMoreInfoPopup(ReleaseInfo info)
-        {
-            bool isDone = false;
-
-            var skin = Skin.ReleaseMoreInfoDialog;
-            Vector2 scrollPos = Vector2.zero;
-
-            var popupId = AddPopup(delegate(Rect fullRect)
-            {
-                var popupRect = ImguiUtil.CenterRectInRect(fullRect, skin.PopupSize);
-
-                DrawPopupCommon(fullRect, popupRect);
-
-                var contentRect = ImguiUtil.CreateContentRectWithPadding(
-                    popupRect, skin.PanelPadding);
-
-                GUILayout.BeginArea(contentRect);
-                {
-                    GUILayout.Label("Release Info", skin.HeadingStyle);
-
-                    GUILayout.Space(skin.HeadingBottomPadding);
-
-                    scrollPos = GUILayout.BeginScrollView(scrollPos, false, true, GUI.skin.horizontalScrollbar, GUI.skin.verticalScrollbar, skin.ScrollViewStyle, GUILayout.Height(skin.ListHeight));
-                    {
-                        GUILayout.Space(skin.ListPaddingTop);
-
-                        DrawMoreInfoRow(skin, "Name", info.Name);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Version", string.IsNullOrEmpty(info.Version) ? NotAvailableLabel : info.Version);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Publish Date", info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.PublishDate) ? info.AssetStoreInfo.PublishDate : NotAvailableLabel);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Compressed Size", info.HasCompressedSize ? MiscUtil.ConvertByteSizeToDisplayValue(info.CompressedSize) : NotAvailableLabel);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Publisher", info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.PublisherLabel) ? info.AssetStoreInfo.PublisherLabel : NotAvailableLabel);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Category", info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.CategoryLabel) ? info.AssetStoreInfo.CategoryLabel : NotAvailableLabel);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Description", info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.Description) ? info.AssetStoreInfo.Description : NotAvailableLabel);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Unity Version", info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.UnityVersion) ? info.AssetStoreInfo.UnityVersion : NotAvailableLabel);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "ID", info.Id);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Publish Notes", info.AssetStoreInfo != null && !string.IsNullOrEmpty(info.AssetStoreInfo.PublishNotes) ? info.AssetStoreInfo.PublishNotes : NotAvailableLabel);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Version Code", info.HasVersionCode ? info.VersionCode.ToString() : NotAvailableLabel);
-                        GUILayout.Space(skin.RowSpacing);
-                    }
-                    GUI.EndScrollView();
-                }
-                GUILayout.EndArea();
-
-                var okButtonRect = new Rect(
-                    contentRect.xMin + 0.5f * contentRect.width - 0.5f * skin.OkButtonWidth,
-                    contentRect.yMax - skin.MarginBottom - skin.OkButtonHeight,
-                    skin.OkButtonWidth,
-                    skin.OkButtonHeight);
-
-                if (GUI.Button(okButtonRect, "Ok") || Event.current.keyCode == KeyCode.Escape)
-                {
-                    isDone = true;
-                }
-            });
-
-            while (!isDone)
-            {
-                yield return null;
-            }
-
-            RemovePopup(popupId);
         }
 
         float GetDesiredSplit2()

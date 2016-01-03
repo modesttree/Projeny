@@ -44,14 +44,8 @@ namespace Projeny
                 }
             }
 
-            _controller = new PmController(_model, _viewModel);
+            _controller = new PmController(_model, _viewModel, isFirstLoad);
             _controller.Initialize();
-
-            if (isFirstLoad)
-            {
-                Log.Trace("STEVETODO");
-                //AddBackgroundTask(RefreshAll(), "Refreshing Packages");
-            }
         }
 
         void OnDisable()

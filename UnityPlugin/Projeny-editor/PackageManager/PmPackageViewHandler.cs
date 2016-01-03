@@ -12,6 +12,7 @@ namespace Projeny
 {
     public class PmPackageViewHandler
     {
+        readonly UpmCommandHandler _upmCommandHandler;
         readonly PmPackageHandler _packageHandler;
         readonly AsyncProcessor _asyncProcessor;
         readonly PmView _view;
@@ -20,8 +21,10 @@ namespace Projeny
         public PmPackageViewHandler(
             PmView view,
             AsyncProcessor asyncProcessor,
-            PmPackageHandler packageHandler)
+            PmPackageHandler packageHandler,
+            UpmCommandHandler upmCommandHandler)
         {
+            _upmCommandHandler = upmCommandHandler;
             _packageHandler = packageHandler;
             _asyncProcessor = asyncProcessor;
             _view = view;
@@ -30,11 +33,49 @@ namespace Projeny
         public void Initialize()
         {
             _view.AddContextMenuHandler(ListTypes.Package, GetContextMenuItems);
+
+            // Use EventQueueMode.LatestOnly to ensure we don't execute anything during the OnGUI event
+            // This is important since OnGUI is called in multiple passes and we have to ensure that the same
+            // controls are rendered each pass
+            _view.ClickedRefreshPackages += _eventManager.Add(OnClickedRefreshPackages, EventQueueMode.LatestOnly);
+            _view.ClickedCreateNewPackage += _eventManager.Add(OnClickedCreateNewPackage, EventQueueMode.LatestOnly);
         }
 
         public void Dispose()
         {
             _view.RemoveContextMenuHandler(ListTypes.Package);
+
+            _view.ClickedRefreshPackages -= _eventManager.Remove(OnClickedRefreshPackages);
+            _view.ClickedCreateNewPackage -= _eventManager.Remove(OnClickedCreateNewPackage);
+
+            _eventManager.AssertIsEmpty();
+        }
+
+        public void OnClickedRefreshPackages()
+        {
+            _asyncProcessor.Process(_packageHandler.RefreshPackagesAsync(), "Refreshing Packages");
+        }
+
+        public void OnClickedCreateNewPackage()
+        {
+            _asyncProcessor.Process(CreateNewPackageAsync());
+        }
+
+        IEnumerator CreateNewPackageAsync()
+        {
+            var userInput = _view.PromptForInput("Enter new package name:", "Untitled");
+
+            yield return userInput;
+
+            if (userInput.Current == null)
+            {
+                // User Cancelled
+                yield break;
+            }
+
+            yield return _upmCommandHandler.ProcessUpmCommand(
+                "Creating Package '{0}'".Fmt(userInput.Current), UpmHelper.CreatePackageAsync(userInput.Current));
+            yield return _packageHandler.RefreshPackagesAsync();
         }
 
         List<PackageInfo> GetSelectedItems()
