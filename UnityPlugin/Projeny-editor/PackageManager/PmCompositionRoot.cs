@@ -102,7 +102,7 @@ namespace Projeny.Internal
             _viewModelSyncer = new PmModelViewSyncer(_model, _view, _settings);
             _projectHandler = new PmProjectHandler(_model, _view);
             _dragDropHandler = new PmDragDropHandler(_model, _view, _asyncProcessor, _packageHandler, _prjCommandHandler);
-            _packageViewHandler = new PmPackageViewHandler(_view, _asyncProcessor, _packageHandler, _prjCommandHandler);
+            _packageViewHandler = new PmPackageViewHandler(_view, _asyncProcessor, _packageHandler, _prjCommandHandler, _settings);
 
             _projectViewHandler = new PmProjectViewHandler(
                 _model, _view, _projectHandler, _asyncProcessor,

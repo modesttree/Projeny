@@ -20,9 +20,11 @@ from prj.util.CommonSettings import ConfigFileName
 import prj.util.MiscUtil as MiscUtil
 import prj.util.PlatformUtil as PlatformUtil
 
+from prj.reg.PackageInfo import PackageInstallInfo
 from prj.util.Assert import *
 from prj.reg.PackageInfo import PackageInfo
 
+from datetime import datetime
 import prj.util.YamlSerializer as YamlSerializer
 import prj.ioc.Container as Container
 from prj.ioc.Inject import Inject
@@ -140,6 +142,13 @@ class PackageManager:
 
         assertThat(not self._sys.directoryExists(newPath), "Found existing package at path '{0}'", newPath)
         self._sys.createDirectory(newPath)
+
+        newInstallInfo = PackageInstallInfo()
+        newInstallInfo.releaseInfo = None
+        newInstallInfo.installDate = datetime.utcnow()
+
+        yamlStr = YamlSerializer.serialize(newInstallInfo)
+        self._sys.writeFileAsText(os.path.join(newPath, InstallInfoFileName), yamlStr)
 
     def deletePackage(self, name):
         self._log.heading("Deleting package '{0}'", name)

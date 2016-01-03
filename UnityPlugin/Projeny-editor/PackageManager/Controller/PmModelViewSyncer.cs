@@ -62,7 +62,7 @@ namespace Projeny.Internal
                 // These should match PackagesSortMethod
                 "Order By Name",
                 "Order By Install Date",
-                "Order By Release Publish Date"
+                "Order By Release Date"
             };
 
             _eventManager.Trigger(OnListDisplayValuesDirty);

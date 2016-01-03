@@ -109,6 +109,7 @@ namespace Projeny.Internal
             public float MarginBottom;
             public float OkButtonWidth;
             public float OkButtonHeight;
+            public float OkButtonTopPadding;
             public Color NotAvailableColor;
 
             public Vector2 PopupSize;

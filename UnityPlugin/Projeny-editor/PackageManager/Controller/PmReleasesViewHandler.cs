@@ -12,8 +12,6 @@ namespace Projeny.Internal
 {
     public class PmReleasesViewHandler : IDisposable
     {
-        const string NotAvailableLabel = "N/A";
-
         readonly PmSettings _pmSettings;
         readonly PrjCommandHandler _prjCommandHandler;
         readonly PmPackageHandler _packageHandler;
@@ -103,8 +101,7 @@ namespace Projeny.Internal
 
             Assert.IsNotNull(assetStoreInfo);
 
-            var fullUrl = "https://www.assetstore.unity3d.com/#/{0}/{1}".Fmt(assetStoreInfo.LinkType, assetStoreInfo.LinkId);
-            Application.OpenURL(fullUrl);
+            PmViewHandlerCommon.OpenInAssetStore(assetStoreInfo.LinkType, assetStoreInfo.LinkId);
         }
 
         void OpenMoreInfoPopupForSelected()
@@ -143,30 +140,7 @@ namespace Projeny.Internal
                     {
                         GUILayout.Space(skin.ListPaddingTop);
 
-                        DrawMoreInfoRow(skin, "Name", info.Name);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Version", string.IsNullOrEmpty(info.Version) ? NotAvailableLabel : info.Version);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Publish Date", !string.IsNullOrEmpty(info.AssetStoreInfo.PublishDate) ? info.AssetStoreInfo.PublishDate : NotAvailableLabel);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Modification Date", !string.IsNullOrEmpty(info.FileModificationDate) ? info.FileModificationDate : NotAvailableLabel);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Compressed Size", info.HasCompressedSize ? MiscUtil.ConvertByteSizeToDisplayValue(info.CompressedSize) : NotAvailableLabel);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Publisher", !string.IsNullOrEmpty(info.AssetStoreInfo.PublisherLabel) ? info.AssetStoreInfo.PublisherLabel : NotAvailableLabel);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Category", !string.IsNullOrEmpty(info.AssetStoreInfo.CategoryLabel) ? info.AssetStoreInfo.CategoryLabel : NotAvailableLabel);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Description", !string.IsNullOrEmpty(info.AssetStoreInfo.Description) ? info.AssetStoreInfo.Description : NotAvailableLabel);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Unity Version", !string.IsNullOrEmpty(info.AssetStoreInfo.UnityVersion) ? info.AssetStoreInfo.UnityVersion : NotAvailableLabel);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "ID", info.Id);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Publish Notes", !string.IsNullOrEmpty(info.AssetStoreInfo.PublishNotes) ? info.AssetStoreInfo.PublishNotes : NotAvailableLabel);
-                        GUILayout.Space(skin.RowSpacing);
-                        DrawMoreInfoRow(skin, "Version Code", info.HasVersionCode ? info.VersionCode.ToString() : NotAvailableLabel);
-                        GUILayout.Space(skin.RowSpacing);
+                        PmViewHandlerCommon.AddReleaseInfoMoreInfoRows(info, skin);
                     }
                     GUI.EndScrollView();
                 }
@@ -190,22 +164,6 @@ namespace Projeny.Internal
             }
 
             _view.RemovePopup(popupId);
-        }
-
-        void DrawMoreInfoRow(PmSettings.ReleaseInfoMoreInfoDialogProperties skin, string label, string value)
-        {
-            GUILayout.BeginHorizontal();
-            {
-                if (value == NotAvailableLabel)
-                {
-                    GUI.color = skin.NotAvailableColor;
-                }
-                GUILayout.Label(label + ":", skin.LabelStyle, GUILayout.Width(skin.LabelColumnWidth));
-                GUILayout.Space(skin.ColumnSpacing);
-                GUILayout.Label(value, skin.ValueStyle, GUILayout.Width(skin.ValueColumnWidth));
-                GUI.color = Color.white;
-            }
-            GUILayout.EndHorizontal();
         }
 
         void OpenReleaseFolderForSelected()

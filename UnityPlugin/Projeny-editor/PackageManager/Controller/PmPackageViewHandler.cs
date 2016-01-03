@@ -12,6 +12,7 @@ namespace Projeny.Internal
 {
     public class PmPackageViewHandler
     {
+        readonly PmSettings _pmSettings;
         readonly PrjCommandHandler _prjCommandHandler;
         readonly PmPackageHandler _packageHandler;
         readonly AsyncProcessor _asyncProcessor;
@@ -22,8 +23,10 @@ namespace Projeny.Internal
             PmView view,
             AsyncProcessor asyncProcessor,
             PmPackageHandler packageHandler,
-            PrjCommandHandler prjCommandHandler)
+            PrjCommandHandler prjCommandHandler,
+            PmSettings pmSettings)
         {
+            _pmSettings = pmSettings;
             _prjCommandHandler = prjCommandHandler;
             _packageHandler = packageHandler;
             _asyncProcessor = asyncProcessor;
@@ -88,23 +91,133 @@ namespace Projeny.Internal
         {
             var selected = GetSelectedItems();
 
-            yield return new ContextMenuItem(
-                !selected.IsEmpty(), "Delete", false, OnContextMenuDeleteSelected);
+            if (selected.IsEmpty())
+            {
+                yield return new ContextMenuItem(
+                    true, "Refresh", false, OnContextMenuRefresh);
 
-            yield return new ContextMenuItem(
-                selected.Count == 1, "Rename", false, OnContextMenuRenameSelected);
+                yield return new ContextMenuItem(
+                    true, "New Package...", false, OnContextMenuNewPackage);
+            }
+            else
+            {
+                var singleInfo = selected.OnlyOrDefault();
 
-            yield return new ContextMenuItem(
-                selected.Count == 1, "Open Folder", false, OnContextMenuOpenPackageFolderForSelected);
+                yield return new ContextMenuItem(
+                    !selected.IsEmpty(), "Delete", false, OnContextMenuDeleteSelected);
 
-            yield return new ContextMenuItem(
-                selected.Count == 1 && HasPackageYaml(selected.Single()), "Edit " + ProjenyEditorUtil.PackageConfigFileName, false, OnContextMenuEditPackageYamlSelected);
+                yield return new ContextMenuItem(
+                    singleInfo != null, "Rename", false, OnContextMenuRenameSelected);
 
-            yield return new ContextMenuItem(
-                true, "Refresh", false, OnContextMenuRefresh);
+                yield return new ContextMenuItem(
+                    singleInfo != null, "Open Folder", false, OnContextMenuOpenPackageFolderForSelected);
 
-            yield return new ContextMenuItem(
-                true, "New Package...", false, OnContextMenuNewPackage);
+                yield return new ContextMenuItem(
+                    singleInfo != null && HasPackageYaml(selected.Single()), "Edit " + ProjenyEditorUtil.PackageConfigFileName, false, OnContextMenuEditPackageYamlSelected);
+
+                yield return new ContextMenuItem(
+                    singleInfo != null, "More Info...", false, OpenMoreInfoPopupForSelected);
+
+                yield return new ContextMenuItem(
+                    singleInfo != null && !string.IsNullOrEmpty(singleInfo.InstallInfo.ReleaseInfo.AssetStoreInfo.LinkId), "Open In Asset Store", false, OpenSelectedInAssetStore);
+            }
+        }
+
+        void OpenSelectedInAssetStore()
+        {
+            var selected = GetSelectedItems();
+
+            Assert.IsEqual(selected.Count, 1);
+
+            var info = selected.Single();
+
+            var assetStoreInfo = info.InstallInfo.ReleaseInfo.AssetStoreInfo;
+            PmViewHandlerCommon.OpenInAssetStore(assetStoreInfo.LinkType, assetStoreInfo.LinkId);
+        }
+
+        void OpenMoreInfoPopupForSelected()
+        {
+            var selected = GetSelectedItems();
+            Assert.IsEqual(selected.Count, 1);
+
+            var info = selected.Single();
+
+            _asyncProcessor.Process(OpenMoreInfoPopup(info));
+        }
+
+        IEnumerator OpenMoreInfoPopup(PackageInfo info)
+        {
+            bool isDone = false;
+
+            var skin = _pmSettings.ReleaseMoreInfoDialog;
+            Vector2 scrollPos = Vector2.zero;
+
+            var popupId = _view.AddPopup(delegate(Rect fullRect)
+            {
+                var popupRect = ImguiUtil.CenterRectInRect(fullRect, skin.PopupSize);
+
+                _view.DrawPopupCommon(fullRect, popupRect);
+
+                var contentRect = ImguiUtil.CreateContentRectWithPadding(
+                    popupRect, skin.PanelPadding);
+
+                var scrollViewRect = new Rect(
+                    contentRect.xMin, contentRect.yMin, contentRect.width, contentRect.height - skin.MarginBottom - skin.OkButtonHeight - skin.OkButtonTopPadding);
+
+                GUILayout.BeginArea(scrollViewRect);
+                {
+                    scrollPos = GUILayout.BeginScrollView(scrollPos, false, true, GUI.skin.horizontalScrollbar, GUI.skin.verticalScrollbar, skin.ScrollViewStyle, GUILayout.ExpandHeight(true));
+                    {
+                        GUILayout.Space(skin.ListPaddingTop);
+                        GUILayout.Label("Package Info", skin.HeadingStyle);
+                        GUILayout.Space(skin.HeadingBottomPadding);
+
+                        PmViewHandlerCommon.DrawMoreInfoRow(skin, "Name", info.Name);
+                        GUILayout.Space(skin.RowSpacing);
+                        PmViewHandlerCommon.DrawMoreInfoRow(skin, "Path", info.Path);
+                        GUILayout.Space(skin.RowSpacing);
+                        PmViewHandlerCommon.DrawMoreInfoRow(skin, "Creation Date", !string.IsNullOrEmpty(info.InstallInfo.InstallDate) ? info.InstallInfo.InstallDate : PmViewHandlerCommon.NotAvailableLabel);
+
+                        GUILayout.Space(skin.ListPaddingTop);
+                        GUILayout.Space(skin.ListPaddingTop);
+                        GUILayout.Label("Release Info", skin.HeadingStyle);
+                        GUILayout.Space(skin.HeadingBottomPadding);
+
+                        if (string.IsNullOrEmpty(info.InstallInfo.ReleaseInfo.Id))
+                        {
+                            GUI.color = skin.ValueStyle.normal.textColor;
+                            GUILayout.Label("No release is associated with this package", skin.HeadingStyle);
+                            GUI.color = Color.white;
+                        }
+                        else
+                        {
+                            PmViewHandlerCommon.AddReleaseInfoMoreInfoRows(info.InstallInfo.ReleaseInfo, skin);
+                        }
+
+                        GUILayout.Space(skin.RowSpacing);
+                    }
+                    GUI.EndScrollView();
+                }
+                GUILayout.EndArea();
+
+                var okButtonRect = new Rect(
+                    contentRect.xMin + 0.5f * contentRect.width - 0.5f * skin.OkButtonWidth,
+                    contentRect.yMax - skin.MarginBottom - skin.OkButtonHeight,
+                    skin.OkButtonWidth,
+                    skin.OkButtonHeight);
+
+                if (GUI.Button(okButtonRect, "Ok") || Event.current.keyCode == KeyCode.Escape)
+                {
+                    isDone = true;
+                }
+            });
+
+            while (!isDone)
+            {
+                yield return null;
+            }
+
+            _view.RemovePopup(popupId);
         }
 
         void OnContextMenuNewPackage()
