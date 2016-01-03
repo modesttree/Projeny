@@ -34,7 +34,9 @@ class UnityPackageExtractor:
         fileName = os.path.basename(unityPackagePath)
         packageName = os.path.splitext(fileName)[0]
 
-        self._log.heading("Extracting '{0}'", packageName)
+        self._log.heading("Extracting unity package")
+        self._log.debug("Extracting unity package at path '{0}'", unityPackagePath)
+
         tempDir = tempfile.mkdtemp()
         self._log.info("Using temp directory '{0}'", tempDir)
 
@@ -77,7 +79,7 @@ class UnityPackageExtractor:
 
             return newPackageName
         finally:
-            self._log.heading("Deleting temporary directory", tempDir)
+            self._log.debug("Deleting temporary directory", tempDir)
             shutil.rmtree(tempDir)
 
     def _isSpecialFolderName(self, dirName):

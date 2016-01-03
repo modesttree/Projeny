@@ -57,8 +57,8 @@ class ReleaseRegistryManager:
         if regType == 'AssetStoreCache':
             return AssetStoreCacheRegistry()
 
-        if regType == 'Remote':
-            return RemoteServerRegistry()
+        if regType == 'FileServer':
+            return RemoteServerRegistry(settings['ManifestUrl'])
 
         assertThat(False, "Could not find registry with type '{0}'", regType)
 

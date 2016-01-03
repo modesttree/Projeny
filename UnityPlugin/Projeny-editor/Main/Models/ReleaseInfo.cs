@@ -23,11 +23,14 @@ namespace Projeny
         public bool HasVersionCode;
         public int VersionCode;
 
-        // Can be null if package is not versioned
+        // Can be empty if package is not versioned
         public string Version;
 
-        // This will be null if the package was not pulled from a unity package on the local machine
+        // This will be empty if the package was not pulled from a unity package on the local machine
         public string LocalPath;
+
+        // This will be empty if the package was pulled from a local path
+        public string Url;
 
         public bool HasCompressedSize;
         public int CompressedSize;
@@ -35,7 +38,7 @@ namespace Projeny
         public string FileModificationDate;
         public long FileModificationDateTicks;
 
-        // Only non-null if this release is pulled from the asset store
+        // Only non-empty if this release is pulled from the asset store
         public AssetStoreInfo AssetStoreInfo;
     }
 

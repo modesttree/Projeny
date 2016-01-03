@@ -14,6 +14,8 @@ class ReleaseInfo:
         self.version = None
         # This will be null if the package was not pulled from a unity package on the local machine
         self.localPath = None
+        # This will be null if the package was not pulled from a remote file server
+        self.url = None
         # This will be null if the package was not pulled from the asset store cache
         self.assetStoreInfo = None
         self.fileModificationDate = None

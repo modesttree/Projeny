@@ -42,6 +42,8 @@ namespace Projeny.Internal
             GUILayout.Space(skin.RowSpacing);
             DrawMoreInfoRow(skin, "ID", info.Id);
             GUILayout.Space(skin.RowSpacing);
+            DrawMoreInfoRow(skin, "Source URL", string.IsNullOrEmpty(info.Url) ? NotAvailableLabel : info.Url);
+            GUILayout.Space(skin.RowSpacing);
             DrawMoreInfoRow(skin, "Publish Notes", !string.IsNullOrEmpty(info.AssetStoreInfo.PublishNotes) ? info.AssetStoreInfo.PublishNotes : NotAvailableLabel);
             GUILayout.Space(skin.RowSpacing);
             DrawMoreInfoRow(skin, "Version Code", info.HasVersionCode ? info.VersionCode.ToString() : NotAvailableLabel);

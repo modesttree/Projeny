@@ -116,6 +116,7 @@ namespace Projeny.Internal
 
             newInfo.Version = info.Version;
             newInfo.LocalPath = info.LocalPath;
+            newInfo.Url = info.Url;
 
             Assert.That(!string.IsNullOrEmpty(info.Id));
             newInfo.Id = info.Id;
@@ -196,6 +197,12 @@ namespace Projeny.Internal
             }
 
             public string LocalPath
+            {
+                get;
+                set;
+            }
+
+            public string Url
             {
                 get;
                 set;

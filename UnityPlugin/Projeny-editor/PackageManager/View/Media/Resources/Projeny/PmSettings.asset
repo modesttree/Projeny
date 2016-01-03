@@ -322,6 +322,7 @@ MonoBehaviour:
     MarginBottom: 0.7
     OkButtonWidth: 160.3
     OkButtonHeight: 30.92
+    OkButtonTopPadding: 12.84
     NotAvailableColor: {r: 0.44852942, g: 0.44852942, b: 0.44852942, a: 0.747}
     PopupSize: {x: 718.3, y: 346.5}
   GenericPromptDialog:
