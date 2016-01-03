@@ -38,20 +38,20 @@ namespace Projeny.Internal
 
         readonly Model _model;
 
-        PackageManagerWindowSkin _pmSkin;
-
         readonly DragListTypes _listType;
-        static DraggableListSkin _skin;
+        readonly PmSettings _pmSettings;
+        readonly PmSettings.DragListSettings _settings;
 
         readonly List<string> _sortMethodCaptions = new List<string>();
 
         public DragList(
-            PmView manager, DragListTypes listType,
-            Model model)
+            PmView manager, DragListTypes listType, Model model, PmSettings pmSettings)
         {
             _model = model;
             _manager = manager;
             _listType = listType;
+            _settings = pmSettings.DragList;
+            _pmSettings = pmSettings;
         }
 
         public bool ShowSortPane
@@ -106,23 +106,6 @@ namespace Projeny.Internal
             get
             {
                 return _listType;
-            }
-        }
-
-        // Temporary
-        PackageManagerWindowSkin PmSkin
-        {
-            get
-            {
-                return _pmSkin ?? (_pmSkin = Resources.Load<PackageManagerWindowSkin>("Projeny/PackageManagerSkin"));
-            }
-        }
-
-        DraggableListSkin Skin
-        {
-            get
-            {
-                return _skin ?? (_skin = Resources.Load<DraggableListSkin>("Projeny/DraggableListSkin"));
             }
         }
 
@@ -298,7 +281,7 @@ namespace Projeny.Internal
             var startY = rect.yMin;
             var endY = rect.yMax;
 
-            var skin = PmSkin.ReleasesPane;
+            var skin = _pmSettings.ReleasesPane;
 
             ImguiUtil.DrawColoredQuad(rect, skin.IconRowBackgroundColor);
 
@@ -369,7 +352,7 @@ namespace Projeny.Internal
             Rect listRect;
             if (ShowSortPane)
             {
-                var releaseSkin = PmSkin.ReleasesPane;
+                var releaseSkin = _pmSettings.ReleasesPane;
                 var searchRect = new Rect(fullRect.xMin, fullRect.yMin, fullRect.width, releaseSkin.IconRowHeight);
                 DrawSearchPane(searchRect);
 
@@ -384,7 +367,7 @@ namespace Projeny.Internal
             var searchFilter = _model.SearchFilter.Trim().ToLowerInvariant();
             var visibleEntries = _entries.Where(x => x.Name.ToLowerInvariant().Contains(searchFilter)).ToList();
 
-            var viewRect = new Rect(0, 0, listRect.width - 30.0f, visibleEntries.Count * Skin.ItemHeight);
+            var viewRect = new Rect(0, 0, listRect.width - 30.0f, visibleEntries.Count * _settings.ItemHeight);
 
             var isListUnderMouse = listRect.Contains(Event.current.mousePosition);
 
@@ -459,7 +442,7 @@ namespace Projeny.Internal
             {
                 foreach (var entry in visibleEntries)
                 {
-                    var labelRect = new Rect(0, yPos, listRect.width, Skin.ItemHeight);
+                    var labelRect = new Rect(0, yPos, listRect.width, _settings.ItemHeight);
 
                     bool isItemUnderMouse = labelRect.Contains(Event.current.mousePosition);
 
@@ -467,11 +450,11 @@ namespace Projeny.Internal
 
                     if (entry.IsSelected)
                     {
-                        itemColor = Skin.Theme.ListItemSelectedColor;
+                        itemColor = _settings.Theme.ListItemSelectedColor;
                     }
                     else
                     {
-                        itemColor = GUI.enabled && isItemUnderMouse ? Skin.Theme.ListItemHoverColor : Skin.Theme.ListItemColor;
+                        itemColor = GUI.enabled && isItemUnderMouse ? _settings.Theme.ListItemHoverColor : _settings.Theme.ListItemColor;
                     }
 
                     ImguiUtil.DrawColoredQuad(labelRect, itemColor);
@@ -531,9 +514,9 @@ namespace Projeny.Internal
                         }
                     }
 
-                    GUI.Label(labelRect, entry.Name, Skin.ItemTextStyle);
+                    GUI.Label(labelRect, entry.Name, _settings.ItemTextStyle);
 
-                    yPos += Skin.ItemHeight;
+                    yPos += _settings.ItemHeight;
                 }
             }
             GUI.EndScrollView();
@@ -551,15 +534,15 @@ namespace Projeny.Internal
         {
             if (!GUI.enabled)
             {
-                return Skin.Theme.ListColor;
+                return _settings.Theme.ListColor;
             }
 
             if (_model.SearchFilter.Trim().Count() > 0)
             {
-                return isHover ? Skin.Theme.FilteredListHoverColor : Skin.Theme.FilteredListColor;
+                return isHover ? _settings.Theme.FilteredListHoverColor : _settings.Theme.FilteredListColor;
             }
 
-            return isHover ? Skin.Theme.ListHoverColor : Skin.Theme.ListColor;
+            return isHover ? _settings.Theme.ListHoverColor : _settings.Theme.ListColor;
         }
 
         public class DragData

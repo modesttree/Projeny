@@ -12,14 +12,17 @@ namespace Projeny.Internal
 {
     public class PmModelViewSyncer : IDisposable
     {
+        readonly PmSettings _pmSettings;
         readonly PmModel _model;
         readonly PmView _view;
 
         readonly EventManager _eventManager = new EventManager();
 
         public PmModelViewSyncer(
-            PmModel model, PmView view)
+            PmModel model, PmView view,
+            PmSettings pmSettings)
         {
+            _pmSettings = pmSettings;
             _model = model;
             _view = view;
         }
@@ -201,7 +204,7 @@ namespace Projeny.Internal
 
             if (_view.ViewState == PmViewStates.PackagesAndProject)
             {
-                caption = ImguiUtil.WrapWithColor(name, _view.Skin.Theme.DraggableItemAlreadyAddedColor);
+                caption = ImguiUtil.WrapWithColor(name, _pmSettings.View.Theme.DraggableItemAlreadyAddedColor);
             }
             else
             {
@@ -224,7 +227,7 @@ namespace Projeny.Internal
             if (_model.IsReleaseInstalled(info))
             {
                 caption = ImguiUtil.WrapWithColor(
-                    info.Name, _view.Skin.Theme.DraggableItemAlreadyAddedColor);
+                    info.Name, _pmSettings.View.Theme.DraggableItemAlreadyAddedColor);
             }
             else
             {
@@ -232,7 +235,7 @@ namespace Projeny.Internal
             }
 
             caption = string.IsNullOrEmpty(info.Version) ? caption : "{0} {1}"
-                .Fmt(caption, ImguiUtil.WrapWithColor("v" + info.Version, _view.Skin.Theme.VersionColor));
+                .Fmt(caption, ImguiUtil.WrapWithColor("v" + info.Version, _pmSettings.View.Theme.VersionColor));
 
             return new DragList.ItemDescriptor()
             {
@@ -252,8 +255,8 @@ namespace Projeny.Internal
                 {
                     caption = "{0} ({1}{2})".Fmt(
                         info.Name,
-                        ImguiUtil.WrapWithColor(releaseInfo.Name, _view.Skin.Theme.DraggableItemAlreadyAddedColor),
-                        string.IsNullOrEmpty(releaseInfo.Version) ? "" : ImguiUtil.WrapWithColor(" v" + releaseInfo.Version, _view.Skin.Theme.VersionColor));
+                        ImguiUtil.WrapWithColor(releaseInfo.Name, _pmSettings.View.Theme.DraggableItemAlreadyAddedColor),
+                        string.IsNullOrEmpty(releaseInfo.Version) ? "" : ImguiUtil.WrapWithColor(" v" + releaseInfo.Version, _pmSettings.View.Theme.VersionColor));
                 }
                 else
                 {
@@ -268,7 +271,7 @@ namespace Projeny.Internal
                 if (_model.IsPackageAddedToProject(info.Name))
                 {
                     caption = ImguiUtil.WrapWithColor(
-                        info.Name, _view.Skin.Theme.DraggableItemAlreadyAddedColor);
+                        info.Name, _pmSettings.View.Theme.DraggableItemAlreadyAddedColor);
                 }
                 else
                 {

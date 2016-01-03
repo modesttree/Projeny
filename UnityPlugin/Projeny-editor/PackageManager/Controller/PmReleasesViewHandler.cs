@@ -14,6 +14,7 @@ namespace Projeny.Internal
     {
         const string NotAvailableLabel = "N/A";
 
+        readonly PmSettings _pmSettings;
         readonly UpmCommandHandler _upmCommandHandler;
         readonly PmPackageHandler _packageHandler;
         readonly PmReleasesHandler _releasesHandler;
@@ -28,8 +29,10 @@ namespace Projeny.Internal
             AsyncProcessor asyncProcessor,
             PmReleasesHandler releasesHandler,
             PmPackageHandler packageHandler,
-            UpmCommandHandler upmCommandHandler)
+            UpmCommandHandler upmCommandHandler,
+            PmSettings pmSettings)
         {
+            _pmSettings = pmSettings;
             _upmCommandHandler = upmCommandHandler;
             _packageHandler = packageHandler;
             _releasesHandler = releasesHandler;
@@ -118,7 +121,7 @@ namespace Projeny.Internal
         {
             bool isDone = false;
 
-            var skin = _view.Skin.ReleaseMoreInfoDialog;
+            var skin = _pmSettings.ReleaseMoreInfoDialog;
             Vector2 scrollPos = Vector2.zero;
 
             var popupId = _view.AddPopup(delegate(Rect fullRect)
@@ -189,7 +192,7 @@ namespace Projeny.Internal
             _view.RemovePopup(popupId);
         }
 
-        void DrawMoreInfoRow(PackageManagerWindowSkin.ReleaseInfoMoreInfoDialogProperties skin, string label, string value)
+        void DrawMoreInfoRow(PmSettings.ReleaseInfoMoreInfoDialogProperties skin, string label, string value)
         {
             GUILayout.BeginHorizontal();
             {

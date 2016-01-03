@@ -1,0 +1,355 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01fe9b81f68762b438dd4eecbcfe2900, type: 3}
+  m_Name: PmSettings
+  m_EditorClassIdentifier:
+  GUISkinDark: {fileID: 11400000, guid: 85dcafaa6e0300f4aa41e173500b6536, type: 2}
+  GUISkinLight: {fileID: 11400000, guid: bb6bdd539afbc5943a2696150cffa4ee, type: 2}
+  DragList:
+    ItemHeight: 25.48
+    Light:
+      ListColor: {r: 0.5441177, g: 0.5441177, b: 0.5441177, a: 1}
+      ListHoverColor: {r: 0.5588235, g: 0.5588235, b: 0.5588235, a: 1}
+      ListItemColor: {r: 0.44852942, g: 0.44852942, b: 0.44852942, a: 0}
+      ListItemHoverColor: {r: 0.44705886, g: 0.44705886, b: 0.44705886, a: 1}
+      ListItemSelectedColor: {r: 0.2509804, g: 0.3529412, b: 0.29411766, a: 1}
+      FilteredListColor: {r: 0, g: 0, b: 0, a: 0}
+      FilteredListHoverColor: {r: 0, g: 0, b: 0, a: 0}
+    Dark:
+      ListColor: {r: 0.28627452, g: 0.28627452, b: 0.28627452, a: 1}
+      ListHoverColor: {r: 0.27465397, g: 0.29411763, b: 0.2828886, a: 1}
+      ListItemColor: {r: 0.26666668, g: 0.26666668, b: 0.26666668, a: 0}
+      ListItemHoverColor: {r: 0.2509804, g: 0.3529412, b: 0.29411766, a: 1}
+      ListItemSelectedColor: {r: 0.048659172, g: 0.2647059, b: 0.1400635, a: 1}
+      FilteredListColor: {r: 0.25935337, g: 0.30147058, b: 0.27532887, a: 1}
+      FilteredListHoverColor: {r: 0.28028572, g: 0.327, b: 0.2972727, a: 1}
+  View:
+    InterpSpeed: 24.46
+    ProcessingPopupDelayTime: 0.2
+    HeaderHeight: 34
+    ListVerticalSpacing: 11.06
+    ListHorizontalSpacing: 37.28
+    MarginTop: 0
+    MarginBottom: 20.29
+    ArrowWidth: 32.3
+    ArrowHeight: 242.3
+    FileButtonsPadding: 7.36
+    FileButtonsPercentWidth: 0.5
+    ApplyButtonHeight: 44.2
+    ApplyButtonTopPadding: 22.61
+    ProjectButtonsPadding: 17.65
+    FileDropdownHeight: 36.45
+    FileDropdownArrow: {fileID: 2800000, guid: 107f1605cdeb67a409ee52cdf6517189, type: 3}
+    ArrowButtonIconWidth: 20.42
+    ArrowButtonIconHeight: 28.4
+    ArrowLeftTexture: {fileID: 2800000, guid: 05f863a6ca5ccc44b810a0c218e8b0df, type: 3}
+    ArrowRightTexture: {fileID: 2800000, guid: 68ec9c739eb9b5c4998f5971ae03e85f, type: 3}
+    ArrowSize: {x: 31.3, y: 20.4}
+    ArrowOffset: {x: -12.88, y: 7.3}
+    Light:
+      VersionColor: {r: 0, g: 0, b: 0, a: 0}
+      LoadingOverlayColor: {r: 0.5294118, g: 0.5294118, b: 0.5294118, a: 0.166}
+      LoadingOverlapPopupColor: {r: 0.83823526, g: 0.83823526, b: 0.83823526, a: 1}
+      DraggableItemAlreadyAddedColor: {r: 1, g: 1, b: 1, a: 1}
+      DropdownTextStyle:
+        m_Name:
+        m_Normal:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0.7352941, g: 0.7352941, b: 0.7352941, a: 1}
+        m_Hover:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Active:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Focused:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnNormal:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnHover:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnActive:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnFocused:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Border:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Margin:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Padding:
+          m_Left: 11
+          m_Right: 0
+          m_Top: 6
+          m_Bottom: 0
+        m_Overflow:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Font: {fileID: 0}
+        m_FontSize: 17
+        m_FontStyle: 0
+        m_Alignment: 0
+        m_WordWrap: 0
+        m_RichText: 1
+        m_TextClipping: 0
+        m_ImagePosition: 0
+        m_ContentOffset: {x: 0, y: 0}
+        m_FixedWidth: 0
+        m_FixedHeight: 0
+        m_StretchWidth: 1
+        m_StretchHeight: 0
+      HeaderTextStyle:
+        m_Name:
+        m_Normal:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0.74264705, g: 0.74264705, b: 0.74264705, a: 1}
+        m_Hover:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Active:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Focused:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnNormal:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnHover:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnActive:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnFocused:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Border:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Margin:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Padding:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Overflow:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Font: {fileID: 0}
+        m_FontSize: 17
+        m_FontStyle: 0
+        m_Alignment: 4
+        m_WordWrap: 0
+        m_RichText: 1
+        m_TextClipping: 0
+        m_ImagePosition: 0
+        m_ContentOffset: {x: 0, y: 0}
+        m_FixedWidth: 0
+        m_FixedHeight: 0
+        m_StretchWidth: 1
+        m_StretchHeight: 0
+    Dark:
+      VersionColor: {r: 0.5735294, g: 0.5735294, b: 0.5735294, a: 1}
+      LoadingOverlayColor: {r: 0.6102941, g: 0.6102941, b: 0.6102941, a: 0.303}
+      LoadingOverlapPopupColor: {r: 0.17647058, g: 0.17647058, b: 0.17647058, a: 1}
+      DraggableItemAlreadyAddedColor: {r: 0, g: 1, b: 0.46206903, a: 1}
+      DropdownTextStyle:
+        m_Name:
+        m_Normal:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0.7352941, g: 0.7352941, b: 0.7352941, a: 1}
+        m_Hover:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Active:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Focused:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnNormal:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnHover:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnActive:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnFocused:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Border:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Margin:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Padding:
+          m_Left: 11
+          m_Right: 0
+          m_Top: 6
+          m_Bottom: 0
+        m_Overflow:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Font: {fileID: 0}
+        m_FontSize: 17
+        m_FontStyle: 0
+        m_Alignment: 0
+        m_WordWrap: 0
+        m_RichText: 1
+        m_TextClipping: 0
+        m_ImagePosition: 0
+        m_ContentOffset: {x: 0, y: 0}
+        m_FixedWidth: 0
+        m_FixedHeight: 0
+        m_StretchWidth: 1
+        m_StretchHeight: 0
+      HeaderTextStyle:
+        m_Name:
+        m_Normal:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0.74264705, g: 0.74264705, b: 0.74264705, a: 1}
+        m_Hover:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Active:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Focused:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnNormal:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnHover:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnActive:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnFocused:
+          m_Background: {fileID: 0}
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Border:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Margin:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Padding:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Overflow:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Font: {fileID: 0}
+        m_FontSize: 17
+        m_FontStyle: 0
+        m_Alignment: 4
+        m_WordWrap: 0
+        m_RichText: 1
+        m_TextClipping: 0
+        m_ImagePosition: 0
+        m_ContentOffset: {x: 0, y: 0}
+        m_FixedWidth: 0
+        m_FixedHeight: 0
+        m_StretchWidth: 1
+        m_StretchHeight: 0
+  PackagesPane:
+    ButtonPadding: 28.83
+  InputDialog:
+    PanelPadding: 13.42
+    PopupSize: {x: 386.79, y: 148.94}
+  SavePromptDialog:
+    PanelPadding: 13.42
+    ButtonPadding: 13.37
+    ButtonTopPadding: 6.4
+    PopupSize: {x: 475.83, y: 91.3}
+  ReleaseMoreInfoDialog:
+    PanelPadding: 22.73
+    LabelColumnWidth: 179.9
+    ValueColumnWidth: 459.1
+    ColumnSpacing: 12.45
+    HeadingBottomPadding: 8.58
+    ListPaddingTop: 12.61
+    RowSpacing: 3.79
+    ListHeight: 222.2
+    MarginBottom: 0.7
+    OkButtonWidth: 160.3
+    OkButtonHeight: 30.92
+    NotAvailableColor: {r: 0.44852942, g: 0.44852942, b: 0.44852942, a: 0.747}
+    PopupSize: {x: 718.3, y: 346.5}
+  GenericPromptDialog:
+    PanelPadding: 20.8
+    ButtonTopPadding: 18.2
+    ButtonWidth: 133.2
+    ButtonSpacing: 27.18
+    TitleBottomPadding: 16.28
+    PopupWidth: 616.13
+  ReleasesPane:
+    ButtonSpacing: 0
+    ButtonWidth: 33
+    MouseOverBackgroundColor: {r: 0.18823531, g: 0.25882354, b: 0.21176472, a: 1}
+    IconRowBackgroundColor: {r: 0.19852942, g: 0.19852942, b: 0.19852942, a: 0.828}
+    IconRowHeight: 33.5
+    SortIconRightPadding: 5.61
+    TextFieldPaddingLeft: 0.29
+    TextFieldPaddingRight: 5.55
+    IconSize: {x: 26.8, y: 33.29}
+    SearchIconOffset: {x: 8.57, y: 9.39}
+    SortIcon: {fileID: 2800000, guid: e85386793ae40c243a8dc779f147329a, type: 3}
+    SortDirDownIcon: {fileID: 2800000, guid: 70954618e4f57284487989ecde62d2ce, type: 3}
+    SortDirUpIcon: {fileID: 2800000, guid: b516f2745403ff34596525c197a5a10d, type: 3}
+    SearchIcon: {fileID: 2800000, guid: 98b1b3ee0b35f1b4fa9794d0a565006d, type: 3}
+    SearchIconSize: {x: 13.5, y: 14.8}
+    IconRowBackgroundColorHover: {r: 0.18733782, g: 0.25735295, b: 0.21099809, a: 1}
+  AsyncPopupPane:
+    PanelPadding: 12.88
+    PopupSize: {x: 405.4, y: 129.22}
+    DotRepeatRate: 2
+    HeadingBottomPadding: 17.83

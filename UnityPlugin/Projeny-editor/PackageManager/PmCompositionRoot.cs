@@ -36,6 +36,7 @@ namespace Projeny.Internal
         PmPackageHandler _packageHandler;
         PmDragDropHandler _dragDropHandler;
         PmInputHandler _inputHandler;
+        PmSettings _settings;
 
         public PmCompositionRoot(PmModel model, PmView.Model viewModel, bool isFirstLoad)
         {
@@ -87,7 +88,8 @@ namespace Projeny.Internal
             // So just do poor man's DI instead
             _asyncProcessor = new AsyncProcessor();
 
-            _view = new PmView(_viewModel);
+            _settings = Resources.Load<PmSettings>("Projeny/PmSettings");
+            _view = new PmView(_viewModel, _settings);
 
             _upmCommandHandler = new UpmCommandHandler(_view);
 
@@ -96,8 +98,8 @@ namespace Projeny.Internal
 
             _inputHandler = new PmInputHandler(_view, _model, _packageHandler, _asyncProcessor);
             _viewErrorHandler = new PmViewErrorHandler(_view, _asyncProcessor);
-            _viewAsyncHandler = new PmViewAsyncHandler(_view, _asyncProcessor);
-            _viewModelSyncer = new PmModelViewSyncer(_model, _view);
+            _viewAsyncHandler = new PmViewAsyncHandler(_view, _asyncProcessor, _settings);
+            _viewModelSyncer = new PmModelViewSyncer(_model, _view, _settings);
             _projectHandler = new PmProjectHandler(_model, _view);
             _dragDropHandler = new PmDragDropHandler(_model, _view, _asyncProcessor, _packageHandler, _upmCommandHandler);
             _packageViewHandler = new PmPackageViewHandler(_view, _asyncProcessor, _packageHandler, _upmCommandHandler);
@@ -107,7 +109,7 @@ namespace Projeny.Internal
                 _upmCommandHandler, _viewErrorHandler);
 
             _releasesViewHandler = new PmReleasesViewHandler(
-                _model, _view, _asyncProcessor, _releasesHandler, _packageHandler, _upmCommandHandler);
+                _model, _view, _asyncProcessor, _releasesHandler, _packageHandler, _upmCommandHandler, _settings);
         }
 
         public void Update()

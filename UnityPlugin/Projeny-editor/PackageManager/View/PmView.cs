@@ -30,6 +30,8 @@ namespace Projeny.Internal
         readonly List<DragList> _lists = new List<DragList>();
 
         readonly Model _model;
+        readonly Settings _settings;
+        readonly PmSettings _pmSettings;
 
         float _split1 = 0;
         float _split2 = 0.5f;
@@ -40,16 +42,17 @@ namespace Projeny.Internal
 
         int _popupIdCount;
 
-        PackageManagerWindowSkin _skin;
-
-        public PmView(Model model)
+        public PmView(
+            Model model, PmSettings settings)
         {
+            _settings = settings.View;
+            _pmSettings = settings;
             _model = model;
 
             for (int i = 0; i < (int)DragListTypes.Count; i++)
             {
                 var list = new DragList(
-                    this, (DragListTypes)i, _model.ListModels[i]);
+                    this, (DragListTypes)i, _model.ListModels[i], settings);
 
                 _lists.Add(list);
             }
@@ -179,7 +182,7 @@ namespace Projeny.Internal
 
                     //if (_model.IsReleaseInstalled(info))
                     //{
-                        //labelStr = ImguiUtil.WrapWithColor(labelStr, Skin.Theme.DraggableItemAlreadyAddedColor);
+                        //labelStr = ImguiUtil.WrapWithColor(labelStr, _settings.Theme.DraggableItemAlreadyAddedColor);
                     //}
 
                     //DrawItemLabelWithVersion(rect, labelStr, info.Version);
@@ -198,14 +201,6 @@ namespace Projeny.Internal
                     //break;
                 //}
             //}
-        }
-
-        public PackageManagerWindowSkin Skin
-        {
-            get
-            {
-                return _skin ?? (_skin = Resources.Load<PackageManagerWindowSkin>("Projeny/PackageManagerSkin"));
-            }
         }
 
         public bool ShowBlockedPopup
@@ -270,7 +265,7 @@ namespace Projeny.Internal
             var deltaTime = Time.realtimeSinceStartup - _lastTime;
             _lastTime = Time.realtimeSinceStartup;
 
-            var px = Mathf.Clamp(deltaTime * Skin.InterpSpeed, 0, 1);
+            var px = Mathf.Clamp(deltaTime * _settings.InterpSpeed, 0, 1);
 
             _split1 = Mathf.Lerp(_split1, GetDesiredSplit1(), px);
             _split2 = Mathf.Lerp(_split2, GetDesiredSplit2(), px);
@@ -288,7 +283,7 @@ namespace Projeny.Internal
 
         public void DrawPopupCommon(Rect fullRect, Rect popupRect)
         {
-            ImguiUtil.DrawColoredQuad(popupRect, Skin.Theme.LoadingOverlapPopupColor);
+            ImguiUtil.DrawColoredQuad(popupRect, _settings.Theme.LoadingOverlapPopupColor);
         }
 
         string[] GetConfigTypesDisplayValues()
@@ -330,11 +325,11 @@ namespace Projeny.Internal
             var dropDownRect = Rect.MinMaxRect(
                 rect.xMin,
                 rect.yMin,
-                rect.xMax - Skin.FileButtonsPercentWidth * rect.width,
+                rect.xMax - _settings.FileButtonsPercentWidth * rect.width,
                 rect.yMax);
 
             var displayValues = GetConfigTypesDisplayValues();
-            var desiredConfigType = (ProjectConfigTypes)EditorGUI.Popup(dropDownRect, (int)_model.ProjectConfigType, displayValues, Skin.DropdownTextStyle);
+            var desiredConfigType = (ProjectConfigTypes)EditorGUI.Popup(dropDownRect, (int)_model.ProjectConfigType, displayValues, _settings.DropdownTextStyle);
 
             GUI.Button(dropDownRect, displayValues[(int)desiredConfigType]);
 
@@ -343,14 +338,14 @@ namespace Projeny.Internal
                 ClickedProjectType(desiredConfigType);
             }
 
-            GUI.DrawTexture(new Rect(dropDownRect.xMax - Skin.ArrowSize.x + Skin.ArrowOffset.x, dropDownRect.yMin + Skin.ArrowOffset.y, Skin.ArrowSize.x, Skin.ArrowSize.y), Skin.FileDropdownArrow);
+            GUI.DrawTexture(new Rect(dropDownRect.xMax - _settings.ArrowSize.x + _settings.ArrowOffset.x, dropDownRect.yMin + _settings.ArrowOffset.y, _settings.ArrowSize.x, _settings.ArrowSize.y), _settings.FileDropdownArrow);
 
-            var startX = rect.xMax - Skin.FileButtonsPercentWidth * rect.width;
+            var startX = rect.xMax - _settings.FileButtonsPercentWidth * rect.width;
             var startY = rect.yMin;
             var endX = rect.xMax;
             var endY = rect.yMax;
 
-            var buttonPadding = Skin.FileButtonsPadding;
+            var buttonPadding = _settings.FileButtonsPadding;
             var buttonWidth = ((endX - startX) - 3 * buttonPadding) / 3.0f;
             var buttonHeight = endY - startY;
 
@@ -417,7 +412,7 @@ namespace Projeny.Internal
         {
             int choice = -1;
 
-            var skin = Skin.GenericPromptDialog;
+            var skin = _pmSettings.GenericPromptDialog;
 
             var popupId = AddPopup(delegate(Rect fullRect)
             {
@@ -544,16 +539,16 @@ namespace Projeny.Internal
                     }
                 }
 
-                var popupRect = ImguiUtil.CenterRectInRect(fullRect, Skin.InputDialog.PopupSize);
+                var popupRect = ImguiUtil.CenterRectInRect(fullRect, _pmSettings.InputDialog.PopupSize);
 
                 DrawPopupCommon(fullRect, popupRect);
 
                 var contentRect = ImguiUtil.CreateContentRectWithPadding(
-                    popupRect, Skin.InputDialog.PanelPadding);
+                    popupRect, _pmSettings.InputDialog.PanelPadding);
 
                 GUILayout.BeginArea(contentRect);
                 {
-                    GUILayout.Label(label, Skin.InputDialog.LabelStyle);
+                    GUILayout.Label(label, _pmSettings.InputDialog.LabelStyle);
 
                     GUI.SetNextControlName("PopupTextField");
                     userInput = GUILayout.TextField(userInput, 100);
@@ -625,7 +620,7 @@ namespace Projeny.Internal
 
         public void OnGUI(Rect fullRect)
         {
-            GUI.skin = Skin.GUISkin;
+            GUI.skin = _pmSettings.GUISkin;
 
             if (IsBlocked)
             {
@@ -636,10 +631,10 @@ namespace Projeny.Internal
             DrawArrowColumns(fullRect);
 
             var windowRect = Rect.MinMaxRect(
-                Skin.ListVerticalSpacing + Skin.ArrowWidth,
-                Skin.MarginTop,
-                fullRect.width - Skin.ListVerticalSpacing - Skin.ArrowWidth,
-                fullRect.height - Skin.MarginBottom);
+                _settings.ListVerticalSpacing + _settings.ArrowWidth,
+                _settings.MarginTop,
+                fullRect.width - _settings.ListVerticalSpacing - _settings.ArrowWidth,
+                fullRect.height - _settings.MarginBottom);
 
             if (_split2 >= 0.1f)
             {
@@ -662,7 +657,7 @@ namespace Projeny.Internal
             {
                 if (ShowBlockedPopup || !_popupHandlers.IsEmpty())
                 {
-                    ImguiUtil.DrawColoredQuad(fullRect, Skin.Theme.LoadingOverlayColor);
+                    ImguiUtil.DrawColoredQuad(fullRect, _settings.Theme.LoadingOverlayColor);
 
                     if (_popupHandlers.IsEmpty())
                     {
@@ -681,7 +676,7 @@ namespace Projeny.Internal
 
         void DisplayGenericProcessingDialog(Rect fullRect)
         {
-            var skin = Skin.AsyncPopupPane;
+            var skin = _pmSettings.AsyncPopupPane;
             var popupRect = ImguiUtil.CenterRectInRect(fullRect, skin.PopupSize);
 
             DrawPopupCommon(fullRect, popupRect);
@@ -718,7 +713,7 @@ namespace Projeny.Internal
                     // This is very hacky but the only way I can figure out how to keep the message a fixed length
                     // so that the text doesn't jump around as the number of dots change
                     // I tried using spaces instead of _ but that didn't work
-                    statusMessage += ImguiUtil.WrapWithColor(new String('_', 3 - numExtraDots), Skin.Theme.LoadingOverlapPopupColor);
+                    statusMessage += ImguiUtil.WrapWithColor(new String('_', 3 - numExtraDots), _settings.Theme.LoadingOverlapPopupColor);
                 }
 
                 GUILayout.Label(statusMessage, skin.StatusMessageTextStyle, GUILayout.ExpandWidth(true));
@@ -732,7 +727,7 @@ namespace Projeny.Internal
             var halfHeight = 0.5f * fullRect.height;
 
             var rect1 = new Rect(
-                Skin.ListVerticalSpacing, halfHeight - 0.5f * Skin.ArrowHeight, Skin.ArrowWidth, Skin.ArrowHeight);
+                _settings.ListVerticalSpacing, halfHeight - 0.5f * _settings.ArrowHeight, _settings.ArrowWidth, _settings.ArrowHeight);
 
             if ((int)ViewState > 0)
             {
@@ -741,13 +736,13 @@ namespace Projeny.Internal
                     ViewState = (PmViewStates)((int)ViewState - 1);
                 }
 
-                if (Skin.ArrowLeftTexture != null)
+                if (_settings.ArrowLeftTexture != null)
                 {
-                    GUI.DrawTexture(new Rect(rect1.xMin + 0.5f * rect1.width - 0.5f * Skin.ArrowButtonIconWidth, rect1.yMin + 0.5f * rect1.height - 0.5f * Skin.ArrowButtonIconHeight, Skin.ArrowButtonIconWidth, Skin.ArrowButtonIconHeight), Skin.ArrowLeftTexture);
+                    GUI.DrawTexture(new Rect(rect1.xMin + 0.5f * rect1.width - 0.5f * _settings.ArrowButtonIconWidth, rect1.yMin + 0.5f * rect1.height - 0.5f * _settings.ArrowButtonIconHeight, _settings.ArrowButtonIconWidth, _settings.ArrowButtonIconHeight), _settings.ArrowLeftTexture);
                 }
             }
 
-            var rect2 = new Rect(fullRect.xMax - Skin.ListVerticalSpacing - Skin.ArrowWidth, halfHeight - 0.5f * Skin.ArrowHeight, Skin.ArrowWidth, Skin.ArrowHeight);
+            var rect2 = new Rect(fullRect.xMax - _settings.ListVerticalSpacing - _settings.ArrowWidth, halfHeight - 0.5f * _settings.ArrowHeight, _settings.ArrowWidth, _settings.ArrowHeight);
 
             var numValues = Enum.GetValues(typeof(PmViewStates)).Length;
 
@@ -758,9 +753,9 @@ namespace Projeny.Internal
                     ViewState = (PmViewStates)((int)ViewState + 1);
                 }
 
-                if (Skin.ArrowRightTexture != null)
+                if (_settings.ArrowRightTexture != null)
                 {
-                    GUI.DrawTexture(new Rect(rect2.xMin + 0.5f * rect2.width - 0.5f * Skin.ArrowButtonIconWidth, rect2.yMin + 0.5f * rect2.height - 0.5f * Skin.ArrowButtonIconHeight, Skin.ArrowButtonIconWidth, Skin.ArrowButtonIconHeight), Skin.ArrowRightTexture);
+                    GUI.DrawTexture(new Rect(rect2.xMin + 0.5f * rect2.width - 0.5f * _settings.ArrowButtonIconWidth, rect2.yMin + 0.5f * rect2.height - 0.5f * _settings.ArrowButtonIconHeight, _settings.ArrowButtonIconWidth, _settings.ArrowButtonIconHeight), _settings.ArrowRightTexture);
                 }
             }
         }
@@ -768,7 +763,7 @@ namespace Projeny.Internal
         void DrawReleasePane(Rect windowRect)
         {
             var startX = windowRect.xMin;
-            var endX = windowRect.xMin + _split1 * windowRect.width - Skin.ListVerticalSpacing;
+            var endX = windowRect.xMin + _split1 * windowRect.width - _settings.ListVerticalSpacing;
             var startY = windowRect.yMin;
             var endY = windowRect.yMax;
 
@@ -780,18 +775,18 @@ namespace Projeny.Internal
             var startX = rect.xMin;
             var endX = rect.xMax;
             var startY = rect.yMin;
-            var endY = startY + Skin.HeaderHeight;
+            var endY = startY + _settings.HeaderHeight;
 
-            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Releases", Skin.HeaderTextStyle);
+            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Releases", _settings.HeaderTextStyle);
 
-            var skin = Skin.ReleasesPane;
+            var skin = _pmSettings.ReleasesPane;
 
             startY = endY;
-            endY = rect.yMax - Skin.ApplyButtonHeight - Skin.ApplyButtonTopPadding;
+            endY = rect.yMax - _settings.ApplyButtonHeight - _settings.ApplyButtonTopPadding;
 
             GetList(DragListTypes.Release).Draw(Rect.MinMaxRect(startX, startY, endX, endY));
 
-            startY = endY + Skin.ApplyButtonTopPadding;
+            startY = endY + _settings.ApplyButtonTopPadding;
             endY = rect.yMax;
 
             if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh"))
@@ -802,8 +797,8 @@ namespace Projeny.Internal
 
         void DrawProjectPane(Rect windowRect)
         {
-            var startX = windowRect.xMin + _split2 * windowRect.width + Skin.ListVerticalSpacing;
-            var endX = windowRect.xMax - Skin.ListVerticalSpacing;
+            var startX = windowRect.xMin + _split2 * windowRect.width + _settings.ListVerticalSpacing;
+            var endX = windowRect.xMax - _settings.ListVerticalSpacing;
             var startY = windowRect.yMin;
             var endY = windowRect.yMax;
 
@@ -817,26 +812,26 @@ namespace Projeny.Internal
             var startX = rect.xMin;
             var endX = rect.xMax;
             var startY = rect.yMin;
-            var endY = startY + Skin.HeaderHeight;
+            var endY = startY + _settings.HeaderHeight;
 
-            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Project", Skin.HeaderTextStyle);
+            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Project", _settings.HeaderTextStyle);
 
             startY = endY;
-            endY = startY + Skin.FileDropdownHeight;
+            endY = startY + _settings.FileDropdownHeight;
 
             DrawFileDropdown(Rect.MinMaxRect(startX, startY, endX, endY));
 
             startY = endY;
-            endY = startY + Skin.HeaderHeight;
+            endY = startY + _settings.HeaderHeight;
 
-            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Assets Folder", Skin.HeaderTextStyle);
+            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Assets Folder", _settings.HeaderTextStyle);
 
             startY = endY;
-            endY = rect.yMax - Skin.ApplyButtonHeight - Skin.ApplyButtonTopPadding;
+            endY = rect.yMax - _settings.ApplyButtonHeight - _settings.ApplyButtonTopPadding;
 
             DrawProjectPane3(Rect.MinMaxRect(startX, startY, endX, endY));
 
-            startY = endY + Skin.ApplyButtonTopPadding;
+            startY = endY + _settings.ApplyButtonTopPadding;
             endY = rect.yMax;
 
             DrawProjectButtons(Rect.MinMaxRect(startX, startY, endX, endY));
@@ -846,19 +841,19 @@ namespace Projeny.Internal
         {
             var halfHeight = 0.5f * listRect.height;
 
-            var rect1 = new Rect(listRect.x, listRect.y, listRect.width, halfHeight - 0.5f * Skin.ListHorizontalSpacing);
-            var rect2 = new Rect(listRect.x, listRect.y + halfHeight + 0.5f * Skin.ListHorizontalSpacing, listRect.width, listRect.height - halfHeight - 0.5f * Skin.ListHorizontalSpacing);
+            var rect1 = new Rect(listRect.x, listRect.y, listRect.width, halfHeight - 0.5f * _settings.ListHorizontalSpacing);
+            var rect2 = new Rect(listRect.x, listRect.y + halfHeight + 0.5f * _settings.ListHorizontalSpacing, listRect.width, listRect.height - halfHeight - 0.5f * _settings.ListHorizontalSpacing);
 
             GetList(DragListTypes.AssetItem).Draw(rect1);
             GetList(DragListTypes.PluginItem).Draw(rect2);
 
-            GUI.Label(Rect.MinMaxRect(rect1.xMin, rect1.yMax, rect1.xMax, rect2.yMin), "Plugins Folder", Skin.HeaderTextStyle);
+            GUI.Label(Rect.MinMaxRect(rect1.xMin, rect1.yMax, rect1.xMax, rect2.yMin), "Plugins Folder", _settings.HeaderTextStyle);
         }
 
         void DrawPackagesPane(Rect windowRect)
         {
-            var startX = windowRect.xMin + _split1 * windowRect.width + Skin.ListVerticalSpacing;
-            var endX = windowRect.xMin + _split2 * windowRect.width - Skin.ListVerticalSpacing;
+            var startX = windowRect.xMin + _split1 * windowRect.width + _settings.ListVerticalSpacing;
+            var endX = windowRect.xMin + _split2 * windowRect.width - _settings.ListVerticalSpacing;
             var startY = windowRect.yMin;
             var endY = windowRect.yMax;
 
@@ -870,28 +865,28 @@ namespace Projeny.Internal
             var startX = rect.xMin;
             var endX = rect.xMax;
             var startY = rect.yMin;
-            var endY = startY + Skin.HeaderHeight;
+            var endY = startY + _settings.HeaderHeight;
 
-            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Packages", Skin.HeaderTextStyle);
+            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Packages", _settings.HeaderTextStyle);
 
             startY = endY;
-            endY = rect.yMax - Skin.ApplyButtonHeight - Skin.ApplyButtonTopPadding;
+            endY = rect.yMax - _settings.ApplyButtonHeight - _settings.ApplyButtonTopPadding;
 
             GetList(DragListTypes.Package).Draw(Rect.MinMaxRect(startX, startY, endX, endY));
 
-            startY = endY + Skin.ApplyButtonTopPadding;
+            startY = endY + _settings.ApplyButtonTopPadding;
             endY = rect.yMax;
 
             var horizMiddle = 0.5f * (rect.xMax + rect.xMin);
 
-            endX = horizMiddle - 0.5f * Skin.PackagesPane.ButtonPadding;
+            endX = horizMiddle - 0.5f * _pmSettings.PackagesPane.ButtonPadding;
 
             if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Refresh"))
             {
                 ClickedRefreshPackages();
             }
 
-            startX = endX + Skin.PackagesPane.ButtonPadding;
+            startX = endX + _pmSettings.PackagesPane.ButtonPadding;
             endX = rect.xMax;
 
             if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "New"))
@@ -903,7 +898,7 @@ namespace Projeny.Internal
         void DrawProjectButtons(Rect rect)
         {
             var halfWidth = rect.width * 0.5f;
-            var padding = 0.5f * Skin.ProjectButtonsPadding;
+            var padding = 0.5f * _settings.ProjectButtonsPadding;
 
             if (GUI.Button(Rect.MinMaxRect(rect.x + halfWidth + padding, rect.y, rect.xMax, rect.yMax), "Apply"))
             {
@@ -937,6 +932,81 @@ namespace Projeny.Internal
             public PmViewStates ViewState = PmViewStates.PackagesAndProject;
             public ProjectConfigTypes ProjectConfigType = ProjectConfigTypes.LocalProject;
             public List<DragList.Model> ListModels = new List<DragList.Model>();
+        }
+
+        [Serializable]
+        public class Settings
+        {
+            public float InterpSpeed;
+            public float ProcessingPopupDelayTime;
+
+            public float HeaderHeight;
+            public float ListVerticalSpacing;
+            public float ListHorizontalSpacing;
+
+            public float MarginTop;
+            public float MarginBottom;
+
+            public float ArrowWidth;
+            public float ArrowHeight;
+
+            public float FileButtonsPadding;
+            public float FileButtonsPercentWidth;
+
+            public float ApplyButtonHeight;
+            public float ApplyButtonTopPadding;
+            public float ProjectButtonsPadding;
+
+            public float FileDropdownHeight;
+
+            public Texture2D FileDropdownArrow;
+
+            public float ArrowButtonIconWidth;
+            public float ArrowButtonIconHeight;
+            public Texture2D ArrowLeftTexture;
+            public Texture2D ArrowRightTexture;
+
+            public Vector2 ArrowSize;
+            public Vector2 ArrowOffset;
+
+            public ThemeProperties Light;
+            public ThemeProperties Dark;
+
+            public ThemeProperties Theme
+            {
+                get
+                {
+                    return EditorGUIUtility.isProSkin ? Dark : Light;
+                }
+            }
+
+            [Serializable]
+            public class ThemeProperties
+            {
+                public Color VersionColor;
+                public Color LoadingOverlayColor;
+                public Color LoadingOverlapPopupColor;
+                public Color DraggableItemAlreadyAddedColor;
+
+                public GUIStyle DropdownTextStyle;
+                public GUIStyle HeaderTextStyle;
+            }
+
+            public GUIStyle HeaderTextStyle
+            {
+                get
+                {
+                    return GUI.skin.GetStyle("HeaderTextStyle");
+                }
+            }
+
+            public GUIStyle DropdownTextStyle
+            {
+                get
+                {
+                    return GUI.skin.GetStyle("DropdownTextStyle");
+                }
+            }
         }
     }
 }

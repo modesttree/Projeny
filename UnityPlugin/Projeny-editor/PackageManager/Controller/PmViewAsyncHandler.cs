@@ -12,6 +12,7 @@ namespace Projeny.Internal
 {
     public class PmViewAsyncHandler
     {
+        readonly PmSettings _pmSettings;
         readonly AsyncProcessor _asyncProcessor;
         readonly PmView _view;
 
@@ -20,8 +21,10 @@ namespace Projeny.Internal
 
         public PmViewAsyncHandler(
             PmView view,
-            AsyncProcessor asyncProcessor)
+            AsyncProcessor asyncProcessor,
+            PmSettings pmSettings)
         {
+            _pmSettings = pmSettings;
             _asyncProcessor = asyncProcessor;
             _view = view;
         }
@@ -57,7 +60,7 @@ namespace Projeny.Internal
         bool ShouldShowBlockedPopup()
         {
             // We only wnat to display the popup if enough time has passed to avoid short flashes for quick async tasks
-            return Time.realtimeSinceStartup - _isBlockedStartTime > _view.Skin.ProcessingPopupDelayTime;
+            return Time.realtimeSinceStartup - _isBlockedStartTime > _pmSettings.View.ProcessingPopupDelayTime;
         }
     }
 }
