@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using Projeny.Internal;
 using System.Linq;
 
-namespace Projeny
+namespace Projeny.Internal
 {
     public class PmPackageViewHandler
     {
@@ -32,7 +32,7 @@ namespace Projeny
 
         public void Initialize()
         {
-            _view.AddContextMenuHandler(ListTypes.Package, GetContextMenuItems);
+            _view.AddContextMenuHandler(DragListTypes.Package, GetContextMenuItems);
 
             // Use EventQueueMode.LatestOnly to ensure we don't execute anything during the OnGUI event
             // This is important since OnGUI is called in multiple passes and we have to ensure that the same
@@ -43,7 +43,7 @@ namespace Projeny
 
         public void Dispose()
         {
-            _view.RemoveContextMenuHandler(ListTypes.Package);
+            _view.RemoveContextMenuHandler(DragListTypes.Package);
 
             _view.ClickedRefreshPackages -= _eventManager.Remove(OnClickedRefreshPackages);
             _view.ClickedCreateNewPackage -= _eventManager.Remove(OnClickedCreateNewPackage);
@@ -80,7 +80,7 @@ namespace Projeny
 
         List<PackageInfo> GetSelectedItems()
         {
-            return _view.GetSelected(ListTypes.Package)
+            return _view.GetSelected(DragListTypes.Package)
                 .Select(x => (PackageInfo)x.Model).ToList();
         }
 
@@ -183,7 +183,7 @@ namespace Projeny
             yield return _packageHandler.RefreshPackagesAsync();
 
             _view.ClearSelected();
-            _view.GetList(ListTypes.Package).Values
+            _view.GetList(DragListTypes.Package).Values
                 .Where(x => ((PackageInfo)x.Model).Name == newPackageName.Current).Single().IsSelected = true;
         }
 

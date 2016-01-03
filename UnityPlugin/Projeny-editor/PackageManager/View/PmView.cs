@@ -10,15 +10,6 @@ using System.Linq;
 
 namespace Projeny.Internal
 {
-    public enum ListTypes
-    {
-        Package,
-        Release,
-        AssetItem,
-        PluginItem,
-        Count
-    }
-
     public class PmView
     {
         public event Action ViewStateChanged = delegate {};
@@ -30,13 +21,13 @@ namespace Projeny.Internal
         public event Action ClickedProjectRevertButton = delegate {};
         public event Action ClickedProjectSaveButton = delegate {};
         public event Action ClickedProjectEditButton = delegate {};
-        public event Action<ListTypes, ListTypes, List<DraggableListEntry>> DraggedDroppedListEntries = delegate {};
+        public event Action<DragListTypes, DragListTypes, List<DragListEntry>> DraggedDroppedListEntries = delegate {};
 
-        readonly Dictionary<ListTypes, Func<IEnumerable<ContextMenuItem>>> _contextMenuHandlers = new Dictionary<ListTypes, Func<IEnumerable<ContextMenuItem>>>();
+        readonly Dictionary<DragListTypes, Func<IEnumerable<ContextMenuItem>>> _contextMenuHandlers = new Dictionary<DragListTypes, Func<IEnumerable<ContextMenuItem>>>();
 
         readonly List<PopupInfo> _popupHandlers = new List<PopupInfo>();
 
-        readonly List<DraggableList> _lists = new List<DraggableList>();
+        readonly List<DragList> _lists = new List<DragList>();
 
         readonly Model _model;
 
@@ -55,10 +46,10 @@ namespace Projeny.Internal
         {
             _model = model;
 
-            for (int i = 0; i < (int)ListTypes.Count; i++)
+            for (int i = 0; i < (int)DragListTypes.Count; i++)
             {
-                var list = new DraggableList(
-                    this, (ListTypes)i, _model.ListModels[i]);
+                var list = new DragList(
+                    this, (DragListTypes)i, _model.ListModels[i]);
 
                 _lists.Add(list);
             }
@@ -80,7 +71,7 @@ namespace Projeny.Internal
             }
         }
 
-        public IEnumerable<DraggableList> Lists
+        public IEnumerable<DragList> Lists
         {
             get
             {
@@ -112,17 +103,17 @@ namespace Projeny.Internal
             set;
         }
 
-        public void AddContextMenuHandler(ListTypes listType, Func<IEnumerable<ContextMenuItem>> handler)
+        public void AddContextMenuHandler(DragListTypes listType, Func<IEnumerable<ContextMenuItem>> handler)
         {
             _contextMenuHandlers.Add(listType, handler);
         }
 
-        public void RemoveContextMenuHandler(ListTypes listType)
+        public void RemoveContextMenuHandler(DragListTypes listType)
         {
             _contextMenuHandlers.RemoveWithConfirm(listType);
         }
 
-        public List<DraggableListEntry> GetSelected(ListTypes listType)
+        public List<DragListEntry> GetSelected(DragListTypes listType)
         {
             var selected = GetSelected();
 
@@ -134,12 +125,12 @@ namespace Projeny.Internal
             return selected;
         }
 
-        public List<DraggableListEntry> GetSelected()
+        public List<DragListEntry> GetSelected()
         {
             return _lists.SelectMany(x => x.GetSelected()).ToList();
         }
 
-        public void ClearOtherListSelected(ListTypes type)
+        public void ClearOtherListSelected(DragListTypes type)
         {
             foreach (var list in _lists)
             {
@@ -158,12 +149,12 @@ namespace Projeny.Internal
             }
         }
 
-        public List<DraggableListEntry> SortList(DraggableList list, List<DraggableListEntry> entries)
+        public List<DragListEntry> SortList(DragList list, List<DragListEntry> entries)
         {
             return entries.OrderBy(x => x.Name).ToList();
             //switch (list.ListType)
             //{
-                //case ListTypes.Release:
+                //case DragListTypes.Release:
                 //{
                 //}
                 //default:
@@ -173,14 +164,14 @@ namespace Projeny.Internal
             //}
         }
 
-        public void DrawItemLabel(Rect rect, DraggableListEntry entry)
+        public void DrawItemLabel(Rect rect, DragListEntry entry)
         {
             Assert.Throw("TODO");
             //DrawListItem(rect, entry.Name);
 
             //switch (entry.ListOwner.ListType)
             //{
-                //case ListTypes.Release:
+                //case DragListTypes.Release:
                 //{
                     //var info = (ReleaseInfo)(entry.Tag);
 
@@ -194,11 +185,11 @@ namespace Projeny.Internal
                     //DrawItemLabelWithVersion(rect, labelStr, info.Version);
                     //break;
                 //}
-                //case ListTypes.Package:
+                //case DragListTypes.Package:
                 //{
                 //}
-                //case ListTypes.AssetItem:
-                //case ListTypes.PluginItem:
+                //case DragListTypes.AssetItem:
+                //case DragListTypes.PluginItem:
                 //{
                 //}
                 //default:
@@ -230,17 +221,17 @@ namespace Projeny.Internal
         }
 
         public void SetListItems(
-            ListTypes listType, List<ListItemData> items)
+            DragListTypes listType, List<DragList.ItemDescriptor> items)
         {
             GetList(listType).SetItems(items);
         }
 
-        public DraggableList GetList(ListTypes listType)
+        public DragList GetList(DragListTypes listType)
         {
             return _lists[(int)listType];
         }
 
-        public bool IsDragAllowed(DraggableList.DragData data, DraggableList list)
+        public bool IsDragAllowed(DragList.DragData data, DragList list)
         {
             var sourceListType = data.SourceList.ListType;
             var dropListType = list.ListType;
@@ -252,21 +243,21 @@ namespace Projeny.Internal
 
             switch (dropListType)
             {
-                case ListTypes.Package:
+                case DragListTypes.Package:
                 {
-                    return sourceListType == ListTypes.Release || sourceListType == ListTypes.AssetItem || sourceListType == ListTypes.PluginItem;
+                    return sourceListType == DragListTypes.Release || sourceListType == DragListTypes.AssetItem || sourceListType == DragListTypes.PluginItem;
                 }
-                case ListTypes.Release:
+                case DragListTypes.Release:
                 {
                     return false;
                 }
-                case ListTypes.AssetItem:
+                case DragListTypes.AssetItem:
                 {
-                    return sourceListType == ListTypes.Package || sourceListType == ListTypes.PluginItem;
+                    return sourceListType == DragListTypes.Package || sourceListType == DragListTypes.PluginItem;
                 }
-                case ListTypes.PluginItem:
+                case DragListTypes.PluginItem:
                 {
-                    return sourceListType == ListTypes.Package || sourceListType == ListTypes.AssetItem;
+                    return sourceListType == DragListTypes.Package || sourceListType == DragListTypes.AssetItem;
                 }
             }
 
@@ -311,7 +302,7 @@ namespace Projeny.Internal
             };
         }
 
-        public void OnDragDrop(DraggableList.DragData data, DraggableList dropList)
+        public void OnDragDrop(DragList.DragData data, DragList dropList)
         {
             if (data.SourceList == dropList || !IsDragAllowed(data, dropList))
             {
@@ -324,7 +315,7 @@ namespace Projeny.Internal
             DraggedDroppedListEntries(sourceListType, dropListType, data.Entries);
         }
 
-        public void OpenContextMenu(DraggableList dropList)
+        public void OpenContextMenu(DragList dropList)
         {
             var itemGetter = _contextMenuHandlers.TryGetValue(dropList.ListType);
 
@@ -798,7 +789,7 @@ namespace Projeny.Internal
             startY = endY;
             endY = rect.yMax - Skin.ApplyButtonHeight - Skin.ApplyButtonTopPadding;
 
-            GetList(ListTypes.Release).Draw(Rect.MinMaxRect(startX, startY, endX, endY));
+            GetList(DragListTypes.Release).Draw(Rect.MinMaxRect(startX, startY, endX, endY));
 
             startY = endY + Skin.ApplyButtonTopPadding;
             endY = rect.yMax;
@@ -858,8 +849,8 @@ namespace Projeny.Internal
             var rect1 = new Rect(listRect.x, listRect.y, listRect.width, halfHeight - 0.5f * Skin.ListHorizontalSpacing);
             var rect2 = new Rect(listRect.x, listRect.y + halfHeight + 0.5f * Skin.ListHorizontalSpacing, listRect.width, listRect.height - halfHeight - 0.5f * Skin.ListHorizontalSpacing);
 
-            GetList(ListTypes.AssetItem).Draw(rect1);
-            GetList(ListTypes.PluginItem).Draw(rect2);
+            GetList(DragListTypes.AssetItem).Draw(rect1);
+            GetList(DragListTypes.PluginItem).Draw(rect2);
 
             GUI.Label(Rect.MinMaxRect(rect1.xMin, rect1.yMax, rect1.xMax, rect2.yMin), "Plugins Folder", Skin.HeaderTextStyle);
         }
@@ -886,7 +877,7 @@ namespace Projeny.Internal
             startY = endY;
             endY = rect.yMax - Skin.ApplyButtonHeight - Skin.ApplyButtonTopPadding;
 
-            GetList(ListTypes.Package).Draw(Rect.MinMaxRect(startX, startY, endX, endY));
+            GetList(DragListTypes.Package).Draw(Rect.MinMaxRect(startX, startY, endX, endY));
 
             startY = endY + Skin.ApplyButtonTopPadding;
             endY = rect.yMax;
@@ -945,7 +936,7 @@ namespace Projeny.Internal
         {
             public PmViewStates ViewState = PmViewStates.PackagesAndProject;
             public ProjectConfigTypes ProjectConfigType = ProjectConfigTypes.LocalProject;
-            public List<DraggableList.Model> ListModels = new List<DraggableList.Model>();
+            public List<DragList.Model> ListModels = new List<DragList.Model>();
         }
     }
 }

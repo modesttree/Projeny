@@ -36,12 +36,12 @@ namespace Projeny.Internal
 
         public void Initialize()
         {
-            _view.DraggedDroppedListEntries += _eventManager.Add<ListTypes, ListTypes, List<DraggableListEntry>>(OnDraggedDroppedListEntries, EventQueueMode.LatestOnly);
+            _view.DraggedDroppedListEntries += _eventManager.Add<DragListTypes, DragListTypes, List<DragListEntry>>(OnDraggedDroppedListEntries, EventQueueMode.LatestOnly);
         }
 
         public void Dispose()
         {
-            _view.DraggedDroppedListEntries -= _eventManager.Remove<ListTypes, ListTypes, List<DraggableListEntry>>(OnDraggedDroppedListEntries);
+            _view.DraggedDroppedListEntries -= _eventManager.Remove<DragListTypes, DragListTypes, List<DragListEntry>>(OnDraggedDroppedListEntries);
             _eventManager.AssertIsEmpty();
         }
 
@@ -50,15 +50,15 @@ namespace Projeny.Internal
             _eventManager.Flush();
         }
 
-        void OnDraggedDroppedListEntries(ListTypes sourceType, ListTypes dropType, List<DraggableListEntry> entries)
+        void OnDraggedDroppedListEntries(DragListTypes sourceType, DragListTypes dropType, List<DragListEntry> entries)
         {
             switch (dropType)
             {
-                case ListTypes.Package:
+                case DragListTypes.Package:
                 {
                     switch (sourceType)
                     {
-                        case ListTypes.PluginItem:
+                        case DragListTypes.PluginItem:
                         {
                             foreach (var entry in entries)
                             {
@@ -67,7 +67,7 @@ namespace Projeny.Internal
                             }
                             break;
                         }
-                        case ListTypes.AssetItem:
+                        case DragListTypes.AssetItem:
                         {
                             foreach (var entry in entries)
                             {
@@ -76,7 +76,7 @@ namespace Projeny.Internal
                             }
                             break;
                         }
-                        case ListTypes.Release:
+                        case DragListTypes.Release:
                         {
                             _asyncProcessor.Process(
                                 InstallReleasesAsync(
@@ -92,11 +92,11 @@ namespace Projeny.Internal
 
                     break;
                 }
-                case ListTypes.PluginItem:
+                case DragListTypes.PluginItem:
                 {
                     switch (sourceType)
                     {
-                        case ListTypes.AssetItem:
+                        case DragListTypes.AssetItem:
                         {
                             foreach (var entry in entries)
                             {
@@ -107,12 +107,12 @@ namespace Projeny.Internal
 
                             break;
                         }
-                        case ListTypes.PluginItem:
+                        case DragListTypes.PluginItem:
                         {
                             // Do nothing
                             break;
                         }
-                        case ListTypes.Package:
+                        case DragListTypes.Package:
                         {
                             foreach (var entry in entries)
                             {
@@ -140,16 +140,16 @@ namespace Projeny.Internal
 
                     break;
                 }
-                case ListTypes.AssetItem:
+                case DragListTypes.AssetItem:
                 {
                     switch (sourceType)
                     {
-                        case ListTypes.AssetItem:
+                        case DragListTypes.AssetItem:
                         {
                             // Do nothing
                             break;
                         }
-                        case ListTypes.PluginItem:
+                        case DragListTypes.PluginItem:
                         {
                             foreach (var entry in entries)
                             {
@@ -161,7 +161,7 @@ namespace Projeny.Internal
 
                             break;
                         }
-                        case ListTypes.Package:
+                        case DragListTypes.Package:
                         {
                             foreach (var entry in entries)
                             {
@@ -189,7 +189,7 @@ namespace Projeny.Internal
 
                     break;
                 }
-                case ListTypes.Release:
+                case DragListTypes.Release:
                 {
                     // Nothing can drag here
                     break;

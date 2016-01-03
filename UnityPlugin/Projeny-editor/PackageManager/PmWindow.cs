@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using Projeny.Internal;
 using System.Linq;
 
-namespace Projeny
+namespace Projeny.Internal
 {
     // Pm = Package Manager
     public class PmWindow : EditorWindow
@@ -38,9 +38,9 @@ namespace Projeny
                 _model = new PmModel();
                 _viewModel = new PmView.Model();
 
-                for (int i = 0; i < (int)ListTypes.Count; i++)
+                for (int i = 0; i < (int)DragListTypes.Count; i++)
                 {
-                    _viewModel.ListModels.Add(new DraggableList.Model());
+                    _viewModel.ListModels.Add(new DragList.Model());
                 }
             }
 

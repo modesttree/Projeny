@@ -42,7 +42,7 @@ namespace Projeny.Internal
         {
             _view.ClickedRefreshReleaseList += _eventManager.Add(OnClickedRefreshReleaseList, EventQueueMode.LatestOnly);
 
-            _view.AddContextMenuHandler(ListTypes.Release, GetContextMenuItems);
+            _view.AddContextMenuHandler(DragListTypes.Release, GetContextMenuItems);
         }
 
         public void Dispose()
@@ -50,7 +50,7 @@ namespace Projeny.Internal
             _view.ClickedRefreshReleaseList -= _eventManager.Remove(OnClickedRefreshReleaseList);
             _eventManager.AssertIsEmpty();
 
-            _view.RemoveContextMenuHandler(ListTypes.Release);
+            _view.RemoveContextMenuHandler(DragListTypes.Release);
         }
 
         public void Update()
@@ -60,7 +60,7 @@ namespace Projeny.Internal
 
         List<ReleaseInfo> GetSelectedItems()
         {
-            return _view.GetSelected(ListTypes.Release)
+            return _view.GetSelected(DragListTypes.Release)
                 .Select(x => (ReleaseInfo)x.Model).ToList();
         }
 

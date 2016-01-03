@@ -4,7 +4,7 @@ using System.Text;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-namespace Projeny
+namespace Projeny.Internal
 {
     public static class YamlSerializer
     {

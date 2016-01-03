@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using Projeny.Internal;
 using System.Linq;
 
-namespace Projeny
+namespace Projeny.Internal
 {
     public class PmProjectViewHandler
     {
@@ -47,8 +47,8 @@ namespace Projeny
             _view.ClickedProjectSaveButton += _eventManager.Add(OnClickedProjectSaveButton, EventQueueMode.LatestOnly);
             _view.ClickedProjectEditButton += _eventManager.Add(OnClickedProjectEditButton, EventQueueMode.LatestOnly);
 
-            _view.AddContextMenuHandler(ListTypes.AssetItem, GetProjectItemContextMenu);
-            _view.AddContextMenuHandler(ListTypes.PluginItem, GetProjectItemContextMenu);
+            _view.AddContextMenuHandler(DragListTypes.AssetItem, GetProjectItemContextMenu);
+            _view.AddContextMenuHandler(DragListTypes.PluginItem, GetProjectItemContextMenu);
         }
 
         public void Dispose()
@@ -60,8 +60,8 @@ namespace Projeny
             _view.ClickedProjectSaveButton -= _eventManager.Remove(OnClickedProjectSaveButton);
             _view.ClickedProjectEditButton -= _eventManager.Remove(OnClickedProjectEditButton);
 
-            _view.RemoveContextMenuHandler(ListTypes.AssetItem);
-            _view.RemoveContextMenuHandler(ListTypes.PluginItem);
+            _view.RemoveContextMenuHandler(DragListTypes.AssetItem);
+            _view.RemoveContextMenuHandler(DragListTypes.PluginItem);
 
             _eventManager.AssertIsEmpty();
         }
@@ -79,7 +79,7 @@ namespace Projeny
 
         List<string> GetSelectedItems()
         {
-            return _view.GetSelected(ListTypes.AssetItem).Concat(_view.GetSelected(ListTypes.PluginItem))
+            return _view.GetSelected(DragListTypes.AssetItem).Concat(_view.GetSelected(DragListTypes.PluginItem))
                 .Select(x => (string)x.Model).ToList();
         }
 

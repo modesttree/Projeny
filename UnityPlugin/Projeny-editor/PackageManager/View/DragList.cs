@@ -7,43 +7,46 @@ using Projeny.Internal;
 
 namespace Projeny.Internal
 {
-    public class DraggableListEntry
+    public enum DragListTypes
+    {
+        Package,
+        Release,
+        AssetItem,
+        PluginItem,
+        Count
+    }
+
+    public class DragListEntry
     {
         public string Name;
         public object Model;
         public int Index;
-        public DraggableList ListOwner;
-        public ListTypes ListType;
+        public DragList ListOwner;
+        public DragListTypes ListType;
         public bool IsSelected;
     }
 
-    public class ListItemData
-    {
-        public string Caption;
-        public object Model;
-    }
-
-    public class DraggableList
+    public class DragList
     {
         public event Action SortMethodChanged = delegate {};
         public event Action SortDescendingChanged = delegate {};
 
-        static readonly string DragId = "DraggableListData";
+        static readonly string DragId = "DragListData";
 
-        readonly List<DraggableListEntry> _entries = new List<DraggableListEntry>();
+        readonly List<DragListEntry> _entries = new List<DragListEntry>();
         readonly PmView _manager;
 
         readonly Model _model;
 
         PackageManagerWindowSkin _pmSkin;
 
-        readonly ListTypes _listType;
+        readonly DragListTypes _listType;
         static DraggableListSkin _skin;
 
         readonly List<string> _sortMethodCaptions = new List<string>();
 
-        public DraggableList(
-            PmView manager, ListTypes listType,
+        public DragList(
+            PmView manager, DragListTypes listType,
             Model model)
         {
             _model = model;
@@ -98,7 +101,7 @@ namespace Projeny.Internal
             }
         }
 
-        public ListTypes ListType
+        public DragListTypes ListType
         {
             get
             {
@@ -136,7 +139,7 @@ namespace Projeny.Internal
             }
         }
 
-        public IEnumerable<DraggableListEntry> Values
+        public IEnumerable<DragListEntry> Values
         {
             get
             {
@@ -168,13 +171,13 @@ namespace Projeny.Internal
             }
         }
 
-        public void Remove(DraggableListEntry entry)
+        public void Remove(DragListEntry entry)
         {
             _entries.RemoveWithConfirm(entry);
             UpdateIndices();
         }
 
-        public void SetItems(List<ListItemData> newItems)
+        public void SetItems(List<ItemDescriptor> newItems)
         {
             var oldEntries = _entries.ToDictionary(x => x.Model, x => x);
 
@@ -184,7 +187,7 @@ namespace Projeny.Internal
             {
                 var item = newItems[i];
 
-                var entry = new DraggableListEntry()
+                var entry = new DragListEntry()
                 {
                     Name = item.Caption,
                     Model = item.Model,
@@ -204,7 +207,7 @@ namespace Projeny.Internal
             }
         }
 
-        public DraggableListEntry GetAtIndex(int index)
+        public DragListEntry GetAtIndex(int index)
         {
             return _entries[index];
         }
@@ -227,7 +230,7 @@ namespace Projeny.Internal
             }
         }
 
-        void ClickSelect(DraggableListEntry newEntry)
+        void ClickSelect(DragListEntry newEntry)
         {
             if (newEntry.IsSelected)
             {
@@ -281,7 +284,7 @@ namespace Projeny.Internal
             newEntry.IsSelected = true;
         }
 
-        public List<DraggableListEntry> GetSelected()
+        public List<DragListEntry> GetSelected()
         {
             return _entries.Where(x => x.IsSelected).ToList();
         }
@@ -561,8 +564,8 @@ namespace Projeny.Internal
 
         public class DragData
         {
-            public List<DraggableListEntry> Entries;
-            public DraggableList SourceList;
+            public List<DragListEntry> Entries;
+            public DragList SourceList;
         }
 
         // View data that needs to be saved and restored
@@ -574,6 +577,12 @@ namespace Projeny.Internal
 
             public int SortMethod;
             public bool SortDescending;
+        }
+
+        public class ItemDescriptor
+        {
+            public string Caption;
+            public object Model;
         }
     }
 }

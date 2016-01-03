@@ -41,7 +41,7 @@ namespace Projeny.Internal
 
             // Don't bother showing the search pane for assets / plugins  - Or is that useful?
 
-            var releaseList = _view.GetList(ListTypes.Release);
+            var releaseList = _view.GetList(DragListTypes.Release);
             releaseList.ShowSortPane = true;
             releaseList.SortMethodCaptions = new List<string>()
             {
@@ -52,7 +52,7 @@ namespace Projeny.Internal
                 "Order By Release Date"
             };
 
-            var packagesList = _view.GetList(ListTypes.Package);
+            var packagesList = _view.GetList(DragListTypes.Package);
             packagesList.ShowSortPane = true;
             packagesList.SortMethodCaptions = new List<string>()
             {
@@ -91,25 +91,25 @@ namespace Projeny.Internal
         void OnListDisplayValuesDirty()
         {
             _view.SetListItems(
-                ListTypes.Release,
+                DragListTypes.Release,
                 OrderReleases().Select(x => CreateListItem(x)).ToList());
 
             _view.SetListItems(
-                ListTypes.PluginItem,
+                DragListTypes.PluginItem,
                 OrderPluginItems().Select(x => CreateListItemForProjectItem(x)).ToList());
 
             _view.SetListItems(
-                ListTypes.AssetItem,
+                DragListTypes.AssetItem,
                 OrderAssetItems().Select(x => CreateListItemForProjectItem(x)).ToList());
 
             _view.SetListItems(
-                ListTypes.Package,
+                DragListTypes.Package,
                 OrderPackages().Select(x => CreateListItem(x)).ToList());
         }
 
         IEnumerable<string> OrderAssetItems()
         {
-            if (_view.GetList(ListTypes.AssetItem).SortDescending)
+            if (_view.GetList(DragListTypes.AssetItem).SortDescending)
             {
                 return _model.AssetItems.OrderByDescending(x => x);
             }
@@ -119,7 +119,7 @@ namespace Projeny.Internal
 
         IEnumerable<string> OrderPluginItems()
         {
-            if (_view.GetList(ListTypes.PluginItem).SortDescending)
+            if (_view.GetList(DragListTypes.PluginItem).SortDescending)
             {
                 return _model.PluginItems.OrderByDescending(x => x);
             }
@@ -129,7 +129,7 @@ namespace Projeny.Internal
 
         IEnumerable<ReleaseInfo> OrderReleases()
         {
-            if (_view.GetList(ListTypes.Release).SortDescending)
+            if (_view.GetList(DragListTypes.Release).SortDescending)
             {
                 return _model.Releases.OrderByDescending(x => GetReleaseSortField(x));
             }
@@ -139,7 +139,7 @@ namespace Projeny.Internal
 
         IEnumerable<PackageInfo> OrderPackages()
         {
-            if (_view.GetList(ListTypes.Package).SortDescending)
+            if (_view.GetList(DragListTypes.Package).SortDescending)
             {
                 return _model.Packages.OrderByDescending(x => GetPackageSortField(x));
             }
@@ -149,7 +149,7 @@ namespace Projeny.Internal
 
         object GetPackageSortField(PackageInfo info)
         {
-            switch ((PackagesSortMethod)_view.GetList(ListTypes.Package).SortMethod)
+            switch ((PackagesSortMethod)_view.GetList(DragListTypes.Package).SortMethod)
             {
                 case PackagesSortMethod.Name:
                 {
@@ -171,7 +171,7 @@ namespace Projeny.Internal
 
         object GetReleaseSortField(ReleaseInfo info)
         {
-            switch ((ReleasesSortMethod)_view.GetList(ListTypes.Release).SortMethod)
+            switch ((ReleasesSortMethod)_view.GetList(DragListTypes.Release).SortMethod)
             {
                 case ReleasesSortMethod.Name:
                 {
@@ -195,7 +195,7 @@ namespace Projeny.Internal
             return null;
         }
 
-        ListItemData CreateListItemForProjectItem(string name)
+        DragList.ItemDescriptor CreateListItemForProjectItem(string name)
         {
             string caption;
 
@@ -210,14 +210,14 @@ namespace Projeny.Internal
                 caption = name;
             }
 
-            return new ListItemData()
+            return new DragList.ItemDescriptor()
             {
                 Caption = caption,
                 Model = name
             };
         }
 
-        ListItemData CreateListItem(ReleaseInfo info)
+        DragList.ItemDescriptor CreateListItem(ReleaseInfo info)
         {
             string caption;
 
@@ -234,14 +234,14 @@ namespace Projeny.Internal
             caption = string.IsNullOrEmpty(info.Version) ? caption : "{0} {1}"
                 .Fmt(caption, ImguiUtil.WrapWithColor("v" + info.Version, _view.Skin.Theme.VersionColor));
 
-            return new ListItemData()
+            return new DragList.ItemDescriptor()
             {
                 Caption = caption,
                 Model = info,
             };
         }
 
-        ListItemData CreateListItem(PackageInfo info)
+        DragList.ItemDescriptor CreateListItem(PackageInfo info)
         {
             string caption;
 
@@ -276,7 +276,7 @@ namespace Projeny.Internal
                 }
             }
 
-            return new ListItemData()
+            return new DragList.ItemDescriptor()
             {
                 Caption = caption,
                 Model = info

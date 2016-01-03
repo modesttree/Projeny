@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using Projeny.Internal;
 using System.Linq;
 
-namespace Projeny
+namespace Projeny.Internal
 {
     public class PmViewErrorHandler
     {

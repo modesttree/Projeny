@@ -11,7 +11,7 @@ using UnityEditorInternal;
 using UnityEngine;
 using Projeny.Internal;
 
-namespace Projeny
+namespace Projeny.Internal
 {
     public class ProjenyConfigValidator : AssetPostprocessor
     {

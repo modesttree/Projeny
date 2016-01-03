@@ -35,7 +35,7 @@ namespace Projeny.Internal
             {
                 switch (group.Key)
                 {
-                    case ListTypes.AssetItem:
+                    case DragListTypes.AssetItem:
                     {
                         foreach (var entry in group)
                         {
@@ -43,7 +43,7 @@ namespace Projeny.Internal
                         }
                         break;
                     }
-                    case ListTypes.PluginItem:
+                    case DragListTypes.PluginItem:
                     {
                         foreach (var entry in group)
                         {
@@ -51,7 +51,7 @@ namespace Projeny.Internal
                         }
                         break;
                     }
-                    case ListTypes.Package:
+                    case DragListTypes.Package:
                     {
                         _asyncProcessor.Process(
                             _packageHandler.DeletePackages(group.Select(x => (PackageInfo)x.Model).ToList()), "Deleting Packages");
