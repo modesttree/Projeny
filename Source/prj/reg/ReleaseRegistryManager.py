@@ -144,19 +144,21 @@ class ReleaseRegistryManager:
 
             if installInfo and installInfo.releaseInfo and installInfo.releaseInfo.id == releaseInfo.id:
                 if installInfo.releaseInfo.versionCode == releaseInfo.versionCode:
-                    self._log.info("Release '{0}' (version {1}) is already installed.  Installation aborted.", releaseInfo.name, releaseInfo.version)
-                    return
+                    if not suppressPrompts:
+                        shouldContinue = MiscUtil.confirmChoice(
+                            "Release '{0}' (version {1}) is already installed.  Would you like to re-install anyway?  Note that this will overwrite any local changes you've made to it.".format(releaseInfo.name, releaseInfo.version))
 
-                print("\nFound release '{0}' already installed with version '{1}'".format(releaseInfo.name, releaseInfo.version), end='')
+                        assertThat(shouldContinue, 'User aborted')
+                else:
+                    print("\nFound release '{0}' already installed with version '{1}'".format(releaseInfo.name, releaseInfo.version), end='')
 
-                installDirection = 'UPGRADE' if releaseInfo.versionCode > installInfo.releaseInfo.versionCode else 'DOWNGRADE'
+                    installDirection = 'UPGRADE' if releaseInfo.versionCode > installInfo.releaseInfo.versionCode else 'DOWNGRADE'
 
-                if not suppressPrompts:
-                    shouldContinue = MiscUtil.confirmChoice("Are you sure you want to {0} '{1}' from version '{2}' to version '{3}'? (y/n)".format(installDirection, releaseInfo.name, installInfo.releaseInfo.version, releaseInfo.version))
-                    assertThat(shouldContinue, 'User aborted')
+                    if not suppressPrompts:
+                        shouldContinue = MiscUtil.confirmChoice("Are you sure you want to {0} '{1}' from version '{2}' to version '{3}'? (y/n)".format(installDirection, releaseInfo.name, installInfo.releaseInfo.version, releaseInfo.version))
+                        assertThat(shouldContinue, 'User aborted')
 
                 self._packageManager.deletePackage(packageInfo.name)
-
                 # Retain original directory name in case it is referenced by other packages
                 installDirName = packageInfo.name
 
