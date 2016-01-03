@@ -93,7 +93,7 @@ def getProjenyDir():
 def getExtraUserConfigPaths():
     return [os.path.join(os.path.expanduser('~'), ConfigFileName)]
 
-def installBindings(mainConfigPath):
+def installBindings(mainConfigPath = None):
 
     projenyDir = getProjenyDir()
     projenyConfigPath = os.path.join(projenyDir, ConfigFileName)
@@ -102,6 +102,7 @@ def installBindings(mainConfigPath):
     configPaths = [projenyConfigPath]
 
     if mainConfigPath:
+        assertThat(os.path.isfile(mainConfigPath), 'Could not find file at "{0}"', mainConfigPath)
         configPaths += [mainConfigPath]
 
     configPaths += getExtraUserConfigPaths()

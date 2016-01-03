@@ -1,15 +1,22 @@
 import sys
 import argparse
 
+from prj.log.LogStreamFile import LogStreamFile
+import os
 import prj.ioc.Container as Container
 from prj.ioc.Inject import Inject
 from prj.ioc.Inject import InjectOptional
 import prj.ioc.IocAssertions as Assertions
 
+from prj.config.Config import Config
+from prj.log.LogStreamConsole import LogStreamConsole
 from prj.util.CommonSettings import ConfigFileName
 import prj.util.MiscUtil as MiscUtil
 
 import prj.main.Prj as Prj
+
+ScriptDir = os.path.dirname(os.path.realpath(__file__))
+ProjenyRootDir = os.path.realpath(os.path.join(ScriptDir, '../../..'))
 
 class Runner:
     _sys = Inject('SystemHelper')
@@ -29,6 +36,8 @@ class Runner:
 
     def _runInternal(self):
         self._varMgr.add('OutRootDir', args.outDirectory)
+        self._varMgr.add('RootDir', ProjenyRootDir)
+        self._varMgr.add('DemoRootDir', '[RootDir]/Demo')
         self._varMgr.add('OutDir', '[OutRootDir]/Contents')
 
         if self._sys.directoryExists('[OutDir]'):
@@ -43,14 +52,14 @@ class Runner:
         else:
             self._sys.createDirectory('[OutDir]')
 
-        self._log.heading('Clearing all generated files in UnityProjects folder')
+        self._log.heading('Clearing all generated files in Demo/UnityProjects folder')
         self._packageMgr.clearAllProjectGeneratedFiles(False)
 
         self._log.heading('Copying UnityPackages directory')
-        self._sys.copyDirectory('[RootDir]/UnityPackages', '[OutDir]/UnityPackages')
+        self._sys.copyDirectory('[DemoRootDir]/UnityPackages', '[OutDir]/UnityPackages')
 
         self._log.heading('Copying UnityProjects directory')
-        self._sys.copyDirectory('[RootDir]/UnityProjects', '[OutDir]/UnityProjects')
+        self._sys.copyDirectory('[DemoRootDir]/UnityProjects', '[OutDir]/UnityProjects')
 
         self._log.heading('Updating exe')
         self._sys.executeAndWait('[PythonDir]/BuildExe.bat')
@@ -83,8 +92,12 @@ def addArguments(parser):
     parser.add_argument('-o', '--outDirectory', metavar='OUT_DIRECTORY', type=str, help="")
 
 def installBindings(args):
-    Container.bind('LogStream').toSingle(LogStreamConsole, False, False)
-    Prj.installBindings()
+
+    Container.bind('LogStream').toSingle(LogStreamFile)
+    Container.bind('LogStream').toSingle(LogStreamConsole, True, False)
+
+    demoConfig = os.path.realpath(os.path.join(ProjenyRootDir, 'Demo/Projeny.yaml'))
+    Prj.installBindings(demoConfig)
 
 if __name__ == '__main__':
     if (sys.version_info < (3, 0)):

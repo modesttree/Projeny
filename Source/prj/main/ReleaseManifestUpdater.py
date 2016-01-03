@@ -110,12 +110,13 @@ def addArguments(parser):
 
 def installBindings():
 
-    config = {
-        'PathVars': {
-            'LogPath': 'C:/Temp/ProjenyLog.txt',
-        }
-    }
-    Container.bind('Config').toSingle(Config, [config])
+    #config = {
+        #'PathVars': {
+            #'LogPath': 'C:/Temp/ProjenyLog.txt',
+        #}
+    #}
+    #Container.bind('Config').toSingle(Config, [config])
+    Container.bind('Config').toSingle(Config, [])
 
     Container.bind('LogStream').toSingle(LogStreamFile)
     Container.bind('LogStream').toSingle(LogStreamConsole, True, False)
