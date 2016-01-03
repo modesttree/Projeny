@@ -10,14 +10,12 @@ from prj.ioc.Inject import Inject
 from prj.ioc.Inject import InjectMany
 import prj.ioc.IocAssertions as Assertions
 
-import stat
 from prj.util.ScriptRunner import ScriptRunner
 from prj.util.VarManager import VarManager
 from prj.config.Config import Config
 
 import shutil
 
-import tarfile
 import os
 
 from prj.util.ProcessRunner import ProcessRunner
@@ -32,7 +30,7 @@ class UnityPackageExtractor:
     def extractUnityPackage(self, unityPackagePath, fallbackName, forcedName):
 
         fileName = os.path.basename(unityPackagePath)
-        packageName = os.path.splitext(fileName)[0]
+        os.path.splitext(fileName)[0]
 
         self._log.heading("Extracting unity package")
         self._log.debug("Extracting unity package at path '{0}'", unityPackagePath)

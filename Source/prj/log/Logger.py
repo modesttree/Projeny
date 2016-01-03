@@ -1,7 +1,5 @@
 
-import sys
 
-import os
 from datetime import datetime
 
 from prj.util.VarManager import VarManager
@@ -9,9 +7,9 @@ from prj.util.VarManager import VarManager
 import prj.util.Util as Util
 
 import prj.ioc.Container as Container
-from prj.ioc.Inject import Inject, InjectMany
+from prj.ioc.Inject import Inject
+from prj.ioc.Inject import InjectMany
 
-import time
 
 class LogType:
     Info = 0

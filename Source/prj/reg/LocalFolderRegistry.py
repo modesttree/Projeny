@@ -3,11 +3,9 @@ from prj.ioc.Inject import Inject
 from prj.ioc.Inject import InjectMany
 import prj.ioc.IocAssertions as Assertions
 
-import time
 from prj.reg.ReleaseInfo import ReleaseInfo
 import prj.reg.UnityPackageAnalyzer as UnityPackageAnalyzer
 
-import os
 
 from prj.util.Assert import *
 

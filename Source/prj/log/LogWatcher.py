@@ -1,8 +1,10 @@
 
 import sys
 import time
-import subprocess, signal, os, threading, errno
-from contextlib import contextmanager
+import errno
+import os
+import signal
+import threading
 import msvcrt
 
 class LogWatcher:

@@ -1,5 +1,4 @@
 import collections
-import os
 from prj.util.Assert import *
 
 _providers = {}

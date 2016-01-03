@@ -1,7 +1,8 @@
 
 from prj.util.Assert import *
 
-from prj.ioc.Inject import Inject, InjectOptional
+from prj.ioc.Inject import Inject
+from prj.ioc.Inject import InjectOptional
 
 class ConfigLoaderHardCoded:
     def __init__(self, config):

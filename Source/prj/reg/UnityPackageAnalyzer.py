@@ -2,15 +2,12 @@
 import os
 from prj.util.Assert import *
 from prj.reg.ReleaseInfo import ReleaseInfo, AssetStoreInfo
-from pprint import pprint
 import binascii
 import re
 
 from datetime import datetime
 import json
 
-import time
-import calendar
 
 from prj.ioc.Inject import Inject
 from prj.ioc.Inject import InjectMany
@@ -99,7 +96,7 @@ class UnityPackageAnalyzer:
             flag1 = headerString[0:4]
 
             unixTimeStamp = (headerBytes[7] << 24) + (headerBytes[6] << 16) + (headerBytes[5] << 8) + headerBytes[4]
-            timeStamp = datetime.utcfromtimestamp(unixTimeStamp)
+            datetime.utcfromtimestamp(unixTimeStamp)
 
             flag2 = headerString[6:8]
             flag3 = headerString[24:28]

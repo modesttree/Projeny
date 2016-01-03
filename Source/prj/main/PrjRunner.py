@@ -1,5 +1,4 @@
 
-import configparser
 import sys
 import os
 import webbrowser
@@ -12,7 +11,9 @@ from prj.util.PlatformUtil import Platforms
 from prj.util.CommonSettings import ConfigFileName
 
 import prj.ioc.Container as Container
-from prj.ioc.Inject import Inject, InjectOptional, InjectMany
+from prj.ioc.Inject import Inject
+from prj.ioc.Inject import InjectMany
+from prj.ioc.Inject import InjectOptional
 import prj.ioc.IocAssertions as Assertions
 
 from prj.main.ProjectSchemaLoader import ProjectConfigFileName

@@ -1,7 +1,5 @@
 
 import os
-import sys
-from datetime import datetime
 from prj.ioc.Inject import Inject
 from prj.log.Logger import LogType
 

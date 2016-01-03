@@ -1,5 +1,4 @@
 
-import os
 from prj.util.Assert import *
 
 class PackageInfo:

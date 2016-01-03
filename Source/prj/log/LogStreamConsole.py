@@ -2,8 +2,6 @@
 import os
 import re
 import sys
-from datetime import datetime
-import traceback
 from prj.ioc.Inject import Inject
 import prj.util.Util as Util
 from prj.log.Logger import LogType

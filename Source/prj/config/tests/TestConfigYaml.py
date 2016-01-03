@@ -1,6 +1,5 @@
 
 import os
-import sys
 import unittest
 import yaml
 from prj.util.Assert import *

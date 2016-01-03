@@ -1,8 +1,5 @@
 
-import re
 import os
-import sys
-import argparse
 
 from prj.util.VarManager import VarManager
 from prj.log.Logger import Logger
@@ -14,7 +11,6 @@ from prj.main.ProjectSchemaLoader import FolderTypes
 from prj.util.PlatformUtil import Platforms
 
 import shutil
-import traceback
 
 from prj.util.CommonSettings import ConfigFileName
 import prj.util.MiscUtil as MiscUtil

@@ -1,22 +1,21 @@
-import sys
 
 from prj.log.Logger import Logger
 from prj.util.VarManager import VarManager
-from prj.util.ProcessRunner import ProcessRunner, ResultType
+from prj.util.ProcessRunner import ProcessRunner
+from prj.util.ProcessRunner import ResultType
 
 import fnmatch
 from prj.util.Assert import *
 import prj.ioc.Container as Container
-from prj.ioc.Inject import Inject, InjectOptional
+from prj.ioc.Inject import Inject
+from prj.ioc.Inject import InjectOptional
 
 import time
 import os
 import shlex
 import subprocess
 import distutils.core
-import datetime
 import shutil
-import argparse
 import platform
 from glob import glob
 

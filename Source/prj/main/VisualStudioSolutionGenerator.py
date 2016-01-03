@@ -5,7 +5,6 @@ from xml.dom import minidom
 import uuid
 import re
 import os
-import sys
 
 import prj.ioc.Container as Container
 from prj.ioc.Inject import Inject

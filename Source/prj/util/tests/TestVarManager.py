@@ -1,6 +1,4 @@
 
-import sys
-import os
 import unittest
 
 import prj.ioc.Container as Container

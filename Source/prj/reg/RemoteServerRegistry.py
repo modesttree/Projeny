@@ -3,7 +3,6 @@ from prj.ioc.Inject import Inject
 from prj.ioc.Inject import InjectMany
 import prj.ioc.IocAssertions as Assertions
 
-import time
 import os
 import urllib.parse
 import urllib.request

@@ -1,8 +1,8 @@
 import subprocess
 from subprocess import Popen, PIPE
-import signal, os, threading, errno
-import sys
-from contextlib import contextmanager
+import errno
+import signal
+import threading
 import time
 import shlex
 from prj.ioc.Inject import Inject

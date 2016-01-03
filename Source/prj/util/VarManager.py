@@ -1,12 +1,11 @@
 
-import re
-import sys
 import os
 
 import prj.util.MiscUtil as MiscUtil
 
 import prj.ioc.Container as Container
-from prj.ioc.Inject import Inject, InjectOptional
+from prj.ioc.Inject import Inject
+from prj.ioc.Inject import InjectOptional
 import prj.ioc.IocAssertions as Assertions
 
 from prj.util.Assert import *

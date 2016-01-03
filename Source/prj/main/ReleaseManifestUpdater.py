@@ -2,7 +2,6 @@
 import traceback
 import sys
 import os
-import fnmatch
 import argparse
 
 import prj.util.MiscUtil as MiscUtil
@@ -62,7 +61,7 @@ class Runner:
     def run(self, args):
         self._args = args
         self._args.directory = self._sys.canonicalizePath(self._args.directory)
-        success = self._scriptRunner.runWrapper(self._runInternal)
+        self._scriptRunner.runWrapper(self._runInternal)
 
     def _runInternal(self):
         self._log.debug("Started ReleaseManifestUpdater with arguments: {0}".format(" ".join(sys.argv[1:])))

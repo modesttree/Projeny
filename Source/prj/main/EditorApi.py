@@ -5,7 +5,6 @@ import prj.main.Prj as Prj
 
 import prj.util.YamlSerializer as YamlSerializer
 from prj.log.LogStreamConsoleHeadingsOnly import LogStreamConsoleHeadingsOnly
-import os
 import prj.ioc.Container as Container
 from prj.ioc.Inject import Inject
 import prj.ioc.IocAssertions as Assertions
@@ -15,7 +14,6 @@ import prj.util.MiscUtil as MiscUtil
 from prj.util.PlatformUtil import Platforms
 import prj.util.PlatformUtil as PlatformUtil
 from prj.util.Assert import *
-import time
 
 class Runner:
     _log = Inject('Logger')

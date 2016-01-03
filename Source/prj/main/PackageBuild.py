@@ -1,9 +1,9 @@
 import sys
 import argparse
-import os
 
 import prj.ioc.Container as Container
-from prj.ioc.Inject import Inject, InjectOptional
+from prj.ioc.Inject import Inject
+from prj.ioc.Inject import InjectOptional
 import prj.ioc.IocAssertions as Assertions
 
 from prj.util.CommonSettings import ConfigFileName
