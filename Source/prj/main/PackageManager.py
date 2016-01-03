@@ -188,6 +188,13 @@ class PackageManager:
             except Exception as e:
                 self._log.warn('Failed to initialize project "{0}": {1}'.format(projectName, e))
 
+    def _createPlaceholderCsFile(self, path):
+        with self._sys.openOutputFile(path) as outFile:
+            outFile.write(
+"""
+    // This file exists purely as a way to force unity to generate the MonoDevelop csproj files so that Projeny can read the settings from it
+""")
+
     def _updateDirLinksForSchema(self, schema):
         self._removePackageJunctions()
 
@@ -196,14 +203,21 @@ class PackageManager:
         if self._config.getBool('LinkToProjenyEditorDir'):
             self._junctionHelper.makeJunction('[ProjenyDir]/UnityPlugin/Projeny', '[PluginsDir]/Projeny/Editor')
         else:
-            self._sys.copyFile('[ProjenyUnityEditorDllPath]', '[PluginsDir]/Projeny/Editor/Projeny.dll')
-            self._sys.copyDirectory('[ProjenyUnityEditorAssetsDirPath]', '[PluginsDir]/Projeny/Editor/Assets')
+            dllOutPath = '[PluginsDir]/Projeny/Editor/Projeny.dll'
+            self._sys.copyFile('[ProjenyUnityEditorDllPath]', dllOutPath)
+            self._sys.copyFile('[ProjenyUnityEditorDllMetaFilePath]', dllOutPath + '.meta')
 
-        with self._sys.openOutputFile('[PluginsDir]/Projeny/Placeholder.cs') as outFile:
-            outFile.write(
-"""
-    // This file exists purely as a way to force unity to generate the MonoDevelop csproj files so that Projeny can read the settings from it
-""")
+            self._sys.copyFile('[YamlDotNetDllPath]', '[PluginsDir]/Projeny/Editor/YamlDotNet.dll')
+
+            assetsOutPath = '[PluginsDir]/Projeny/Editor/Assets'
+            self._sys.copyDirectory('[ProjenyUnityEditorAssetsDirPath]', assetsOutPath)
+            settingsFileOutPath = os.path.join(assetsOutPath, 'Resources/Projeny/PmSettings.asset')
+            self._sys.writeFileAsText(settingsFileOutPath, self._sys.readFileAsText(settingsFileOutPath).replace(
+                'm_Script: {fileID: 11500000, guid: 01fe9b81f68762b438dd4eecbcfe2900, type: 3}',
+                'm_Script: {fileID: 1582608718, guid: b7b2ba04b543d234aa4225d91c60af2b, type: 3}'))
+
+        self._createPlaceholderCsFile('[PluginsDir]/Projeny/Placeholder.cs')
+        self._createPlaceholderCsFile('[PluginsDir]/Projeny/Editor/Placeholder.cs')
 
         for packageInfo in schema.packages.values():
 

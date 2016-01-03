@@ -20,7 +20,7 @@ namespace Projeny.Internal
             VerifyProjenyConfig();
         }
 
-        [MenuItem("Projeny/Verify Config")]
+        //[MenuItem("Projeny/Verify Config")]
         public static void VerifyProjenyConfig()
         {
             VerifyThatAllDirectoriesAreValidJunctions();
