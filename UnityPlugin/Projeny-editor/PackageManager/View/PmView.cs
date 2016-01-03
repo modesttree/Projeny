@@ -22,6 +22,7 @@ namespace Projeny.Internal
         public event Action ClickedProjectSaveButton = delegate {};
         public event Action ClickedProjectEditButton = delegate {};
         public event Action<DragListTypes, DragListTypes, List<DragListEntry>> DraggedDroppedListEntries = delegate {};
+        public event Action ProjectConfigTypeChanged = delegate {};
 
         readonly Dictionary<DragListTypes, Func<IEnumerable<ContextMenuItem>>> _contextMenuHandlers = new Dictionary<DragListTypes, Func<IEnumerable<ContextMenuItem>>>();
 
@@ -37,8 +38,6 @@ namespace Projeny.Internal
         float _split2 = 0.5f;
 
         float _lastTime = 0.5f;
-
-        bool _doesConfigFileExist = true;
 
         int _popupIdCount;
 
@@ -56,6 +55,24 @@ namespace Projeny.Internal
 
                 _lists.Add(list);
             }
+        }
+
+        public bool IsSaveEnabled
+        {
+            get;
+            set;
+        }
+
+        public bool IsRevertEnabled
+        {
+            get;
+            set;
+        }
+
+        public bool IsEditEnabled
+        {
+            get;
+            set;
         }
 
         public PmViewStates ViewState
@@ -90,7 +107,11 @@ namespace Projeny.Internal
             }
             set
             {
-                _model.ProjectConfigType = value;
+                if (_model.ProjectConfigType != value)
+                {
+                    _model.ProjectConfigType = value;
+                    ProjectConfigTypeChanged();
+                }
             }
         }
 
@@ -331,7 +352,7 @@ namespace Projeny.Internal
             var displayValues = GetConfigTypesDisplayValues();
             var desiredConfigType = (ProjectConfigTypes)EditorGUI.Popup(dropDownRect, (int)_model.ProjectConfigType, displayValues, _settings.DropdownTextStyle);
 
-            GUI.Button(dropDownRect, displayValues[(int)desiredConfigType]);
+            GUI.Button(dropDownRect, displayValues[(int)desiredConfigType], _settings.DropdownTextButtonStyle);
 
             if (desiredConfigType != _model.ProjectConfigType)
             {
@@ -353,7 +374,7 @@ namespace Projeny.Internal
 
             bool wasEnabled;
             wasEnabled = GUI.enabled;
-            GUI.enabled = _doesConfigFileExist;
+            GUI.enabled = IsRevertEnabled;
             if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "Revert"))
             {
                 ClickedProjectRevertButton();
@@ -362,15 +383,18 @@ namespace Projeny.Internal
 
             startX = startX + buttonWidth + buttonPadding;
 
+            wasEnabled = GUI.enabled;
+            GUI.enabled = IsSaveEnabled;
             if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "Save"))
             {
                 ClickedProjectSaveButton();
             }
+            GUI.enabled = wasEnabled;
 
             startX = startX + buttonWidth + buttonPadding;
 
             wasEnabled = GUI.enabled;
-            GUI.enabled = _doesConfigFileExist;
+            GUI.enabled = IsEditEnabled;
             if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "Edit"))
             {
                 ClickedProjectEditButton();
@@ -1005,6 +1029,14 @@ namespace Projeny.Internal
                 get
                 {
                     return GUI.skin.GetStyle("DropdownTextStyle");
+                }
+            }
+
+            public GUIStyle DropdownTextButtonStyle
+            {
+                get
+                {
+                    return GUI.skin.GetStyle("DropdownTextButtonStyle");
                 }
             }
         }

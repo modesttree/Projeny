@@ -43,12 +43,21 @@ namespace Projeny.Internal
             _view.ClickedProjectType += _eventManager.Add<ProjectConfigTypes>(OnClickedProjectType, EventQueueMode.LatestOnly);
 
             _view.ClickedProjectApplyButton += _eventManager.Add(OnClickedProjectApplyButton, EventQueueMode.LatestOnly);
+
             _view.ClickedProjectRevertButton += _eventManager.Add(OnClickedProjectRevertButton, EventQueueMode.LatestOnly);
             _view.ClickedProjectSaveButton += _eventManager.Add(OnClickedProjectSaveButton, EventQueueMode.LatestOnly);
             _view.ClickedProjectEditButton += _eventManager.Add(OnClickedProjectEditButton, EventQueueMode.LatestOnly);
 
             _view.AddContextMenuHandler(DragListTypes.AssetItem, GetProjectItemContextMenu);
             _view.AddContextMenuHandler(DragListTypes.PluginItem, GetProjectItemContextMenu);
+
+            _model.PluginItemsChanged += _eventManager.Add(OnProjectConfigDirty, EventQueueMode.LatestOnly);
+            _model.AssetItemsChanged += _eventManager.Add(OnProjectConfigDirty, EventQueueMode.LatestOnly);
+            _model.PackagesChanged += _eventManager.Add(OnProjectConfigDirty, EventQueueMode.LatestOnly);
+            _model.ReleasesChanged += _eventManager.Add(OnProjectConfigDirty, EventQueueMode.LatestOnly);
+
+            _projectHandler.SavedConfigFile += _eventManager.Add(OnSavedConfigFile, EventQueueMode.LatestOnly);
+            _projectHandler.LoadedConfigFile += _eventManager.Add(OnLoadedConfigFile, EventQueueMode.LatestOnly);
         }
 
         public void Dispose()
@@ -60,10 +69,33 @@ namespace Projeny.Internal
             _view.ClickedProjectSaveButton -= _eventManager.Remove(OnClickedProjectSaveButton);
             _view.ClickedProjectEditButton -= _eventManager.Remove(OnClickedProjectEditButton);
 
+            _model.PluginItemsChanged -= _eventManager.Remove(OnProjectConfigDirty);
+            _model.AssetItemsChanged -= _eventManager.Remove(OnProjectConfigDirty);
+            _model.PackagesChanged -= _eventManager.Remove(OnProjectConfigDirty);
+            _model.ReleasesChanged -= _eventManager.Remove(OnProjectConfigDirty);
+
+            _projectHandler.SavedConfigFile -= _eventManager.Remove(OnSavedConfigFile);
+            _projectHandler.LoadedConfigFile -= _eventManager.Remove(OnLoadedConfigFile);
+
             _view.RemoveContextMenuHandler(DragListTypes.AssetItem);
             _view.RemoveContextMenuHandler(DragListTypes.PluginItem);
 
             _eventManager.AssertIsEmpty();
+        }
+
+        void OnLoadedConfigFile()
+        {
+            _view.IsSaveEnabled = false;
+        }
+
+        void OnSavedConfigFile()
+        {
+            _view.IsSaveEnabled = false;
+        }
+
+        void OnProjectConfigDirty()
+        {
+            _view.IsSaveEnabled = true;
         }
 
         IEnumerable<ContextMenuItem> GetProjectItemContextMenu()
@@ -142,6 +174,16 @@ namespace Projeny.Internal
         public void Update()
         {
             _eventManager.Flush();
+
+            var configFileExists = File.Exists(ProjenyEditorUtil.GetProjectConfigPath(_view.ProjectConfigType));
+
+            if (!configFileExists)
+            {
+                _view.IsSaveEnabled = true;
+            }
+
+            _view.IsRevertEnabled = _view.IsSaveEnabled && configFileExists;
+            _view.IsEditEnabled = configFileExists;
         }
 
         public void OnClickedProjectType(ProjectConfigTypes desiredConfigType)

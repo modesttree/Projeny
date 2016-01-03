@@ -20,6 +20,9 @@ namespace Projeny.Internal
 
     public class PmProjectHandler
     {
+        public event Action SavedConfigFile = delegate {};
+        public event Action LoadedConfigFile = delegate {};
+
         readonly PmView _view;
         readonly PmModel _model;
 
@@ -50,6 +53,7 @@ namespace Projeny.Internal
         {
             File.WriteAllText(
                 ProjenyEditorUtil.GetProjectConfigPath(_view.ProjectConfigType), GetSerializedProjectConfigFromLists());
+            SavedConfigFile();
         }
 
         public void ResetProject()
@@ -137,6 +141,7 @@ namespace Projeny.Internal
             else
             {
                 PopulateModelFromConfig(savedConfig);
+                LoadedConfigFile();
             }
         }
 
