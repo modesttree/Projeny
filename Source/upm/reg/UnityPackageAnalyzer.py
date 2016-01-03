@@ -32,6 +32,7 @@ class UnityPackageAnalyzer:
         headerInfo = self._tryGetAssetStoreInfoFromHeader(unityPackagePath)
 
         info.compressedSize = os.path.getsize(unityPackagePath)
+        info.fileModificationDate = datetime.utcfromtimestamp(os.path.getmtime(unityPackagePath))
 
         if headerInfo:
             info.name = headerInfo['title']

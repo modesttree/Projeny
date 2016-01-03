@@ -302,7 +302,7 @@ namespace Projeny.Internal
             endX = rect.xMax - 2 * skin.ButtonWidth;
 
             var searchBarRect = Rect.MinMaxRect(startX, startY, endX, endY);
-            if (searchBarRect.Contains(Event.current.mousePosition))
+            if (GUI.enabled && searchBarRect.Contains(Event.current.mousePosition))
             {
                 ImguiUtil.DrawColoredQuad(searchBarRect, skin.MouseOverBackgroundColor);
             }

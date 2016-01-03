@@ -32,6 +32,9 @@ namespace Projeny
         public bool HasCompressedSize;
         public int CompressedSize;
 
+        public string FileModificationDate;
+        public long FileModificationDateTicks;
+
         // Only non-null if this release is pulled from the asset store
         public AssetStoreInfo AssetStoreInfo;
     }
@@ -53,5 +56,3 @@ namespace Projeny
         public string LinkType;
     }
 }
-
-

@@ -154,8 +154,9 @@ namespace Projeny
         {
             if (_projectHandler.HasProjectConfigChanged())
             {
+                var fileName = Path.GetFileName(ProjenyEditorUtil.GetProjectConfigPath(_view.ProjectConfigType));
                 var choice = _view.PromptForUserChoice(
-                    "Do you want to save changes to your project?", new[] { "Save", "Don't Save", "Cancel" }, null, null, 0, 2);
+                    "Do you want to save changes to {0}?".Fmt(fileName), new[] { "Save", "Don't Save", "Cancel" }, null, null, 0, 2);
 
                 yield return choice;
 

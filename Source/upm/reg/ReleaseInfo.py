@@ -16,6 +16,7 @@ class ReleaseInfo:
         self.localPath = None
         # This will be null if the package was not pulled from the asset store cache
         self.assetStoreInfo = None
+        self.fileModificationDate = None
 
         # This is null if not known
         self.compressedSize = None

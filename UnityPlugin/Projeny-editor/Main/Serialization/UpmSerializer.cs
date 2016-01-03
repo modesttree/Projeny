@@ -120,6 +120,9 @@ namespace Projeny.Internal
             Assert.That(!string.IsNullOrEmpty(info.Id));
             newInfo.Id = info.Id;
 
+            newInfo.FileModificationDate = info.FileModificationDate.HasValue ? DateTimeToString(info.FileModificationDate.Value) : null;
+            newInfo.FileModificationDateTicks = info.FileModificationDate.HasValue ? info.FileModificationDate.Value.Ticks : 0;
+
             newInfo.AssetStoreInfo = ConvertToPublic(info.AssetStoreInfo);
 
             return newInfo;
@@ -142,8 +145,10 @@ namespace Projeny.Internal
             newInfo.CategoryLabel = info.CategoryLabel;
             newInfo.UploadId = info.UploadId;
             newInfo.Description = info.Description;
+
             newInfo.PublishDate = info.PublishDate.HasValue ? DateTimeToString(info.PublishDate.Value) : null;
             newInfo.PublishDateTicks = info.PublishDate.HasValue ? info.PublishDate.Value.Ticks : 0;
+
             newInfo.UnityVersion = info.UnityVersion;
             newInfo.LinkId = info.LinkId;
             newInfo.LinkType = info.LinkType;
@@ -191,6 +196,12 @@ namespace Projeny.Internal
             }
 
             public string LocalPath
+            {
+                get;
+                set;
+            }
+
+            public DateTime? FileModificationDate
             {
                 get;
                 set;

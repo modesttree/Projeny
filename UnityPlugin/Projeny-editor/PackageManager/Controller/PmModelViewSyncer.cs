@@ -47,8 +47,9 @@ namespace Projeny.Internal
             {
                 // These should match ReleasesSortMethod
                 "Order By Name",
+                "Order By File Modification Time",
                 "Order By Size",
-                "Order By Publish Date"
+                "Order By Release Date"
             };
 
             var packagesList = _view.GetList(ListTypes.Package);
@@ -176,13 +177,17 @@ namespace Projeny.Internal
                 {
                     return info.Name;
                 }
+                case ReleasesSortMethod.FileModificationDate:
+                {
+                    return info.FileModificationDateTicks;
+                }
                 case ReleasesSortMethod.Size:
                 {
                     return info.CompressedSize;
                 }
-                case ReleasesSortMethod.PublishDate:
+                case ReleasesSortMethod.ReleaseDate:
                 {
-                    return info.AssetStoreInfo == null ? 0 : info.AssetStoreInfo.PublishDateTicks;
+                    return info.AssetStoreInfo.PublishDateTicks;
                 }
             }
 
@@ -288,8 +293,9 @@ namespace Projeny.Internal
         public enum ReleasesSortMethod
         {
             Name,
+            FileModificationDate,
             Size,
-            PublishDate
+            ReleaseDate
         }
     }
 }
