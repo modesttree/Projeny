@@ -31,8 +31,7 @@ class Runner:
     _zipHelper = Inject('ZipHelper')
     _vsSolutionHelper = Inject('VisualStudioHelper')
 
-    def run(self, args):
-        self._args = args
+    def run(self):
         success = self._scriptRunner.runWrapper(self._runInternal)
 
         if not success:
@@ -65,10 +64,6 @@ class Runner:
     def _updateBuildDirectory(self):
 
         if self._sys.directoryExists('[OutDir]'):
-            if not self._args.suppressPrompts and not MiscUtil.confirmChoice('Override directory "{0}"? (y/n)'.format(self._varMgr.expand('[OutDir]'))):
-                self._log.warn('User aborted\n')
-                sys.exit(1)
-
             self._log.heading('Clearing output directory')
             self._sys.clearDirectoryContents('[OutDir]')
         else:
@@ -90,11 +85,7 @@ class Runner:
         self._sys.removeByRegex('[OutDir]/Bin/UnityPlugin/Release/*.pdb')
         self._sys.deleteDirectory('[OutDir]/Bin/UnityPlugin/Debug')
 
-def addArguments(parser):
-    parser.add_argument('-s', '--includeSamples', action='store_true', help='Set if you want to include sample projects')
-    parser.add_argument('-sp', '--suppressPrompts', action='store_true', help='If unset, confirmation prompts will be displayed for important operations.')
-
-def installBindings(args):
+def installBindings():
 
     Container.bind('LogStream').toSingle(LogStreamFile)
     Container.bind('LogStream').toSingle(LogStreamConsole, True, False)
@@ -107,14 +98,6 @@ if __name__ == '__main__':
         print('Wrong version of python!  Install python 3 and try again')
         sys.exit(2)
 
-    argv = sys.argv[1:]
-
-    parser = argparse.ArgumentParser(description='Projeny Build Packager')
-    addArguments(parser)
-
-    args = parser.parse_args(sys.argv[1:])
-
-    installBindings(args)
-
-    Runner().run(args)
+    installBindings()
+    Runner().run()
 
