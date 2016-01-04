@@ -38,16 +38,13 @@ class Runner:
         majorNumber = int(groups[0])
         minorNumber = int(groups[1])
 
-        self._log.info("Major = {0}", majorNumber)
-        self._log.info("Minor = {0}", minorNumber)
-
         minorNumber += 1
 
         self._sys.executeAndReturnOutput("git tag -a v{0}.{1} -m 'Version {0}.{1}'".format(majorNumber, minorNumber))
 
         self._sys.writeFileAsText('[PythonDir]/Version.txt', '{0}.{1}'.format(majorNumber, minorNumber))
 
-        self._log.info("Now commit and then run 'git push --tags'")
+        self._log.info("Incremented version to {0}.{1}. Now commit and then run 'git push --tags'", majorNumber, minorNumber)
 
 def installBindings():
 

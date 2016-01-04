@@ -48,7 +48,20 @@ NOTE: Projeny requires Unity3D 5.3.1 or higher, since it makes use of the `-buil
 
 ## <a id="installation"></a>Installation
 
-TBD
+You can either run Projeny directly from source (requires python) or simply download the latest binary.  Note that Projeny is currently only supported on Windows.
+
+- From Binary
+
+    - Go to the [releases](https://github.com/modesttree/projeny/releases) section and download the latest ProjenyInstaller.exe
+    - Note that after installation completes, you will need to add the [Install Directory]/Bin directory to your windows path.
+    - Follow the rest of the instructions below
+
+- From Source
+
+    - Clone this repo to a place on your hard drive
+    - Make sure python 3.x is installed
+    - Open UnityPlugin/Projeny.sln in Visual Studio
+    - Build in Release Mode
 
 ## <a id="overview"></a>Overview
 
