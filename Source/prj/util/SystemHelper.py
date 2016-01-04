@@ -279,6 +279,9 @@ class SystemHelper:
                     filename = os.path.join(root, basename)
                     yield filename
 
+    def renameFile(self, currentName, newName):
+        os.rename(self._varManager.expand(currentName), self._varManager.expand(newName))
+
     def removeFileWaitIfNecessary(self, fileName):
         outputPath = self._varManager.expand(fileName)
 

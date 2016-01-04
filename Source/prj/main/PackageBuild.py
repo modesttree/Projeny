@@ -50,24 +50,30 @@ class Runner:
         self._varMgr.add('OutDir', '[InstallerDir]/Build')
         self._varMgr.add('DistDir', '[InstallerDir]/Dist')
 
-        self._updateBuildDirectory()
-        self._createInstaller()
-        self._createSamplesZip()
+        self._sys.clearDirectoryContents('[DistDir]')
+        self._sys.clearDirectoryContents('[OutDir]')
 
-    def _createSamplesZip(self):
+        versionStr = 'v' + self._sys.readFileAsText('[InstallerDir]/Version.txt').strip()
+
+        self._updateBuildDirectory()
+        self._createInstaller(versionStr)
+        self._createSamplesZip(versionStr)
+
+    def _createSamplesZip(self, versionStr):
         self._log.heading('Clearing all generated files in Demo/UnityProjects folder')
         self._packageMgr.clearAllProjectGeneratedFiles(False)
 
         self._log.heading('Zipping up demo project')
-        versionStr = self._sys.readFileAsText('[InstallerDir]/Version.txt').strip()
-        self._zipHelper.createZipFile('[ProjenyDir]/Demo', '[DistDir]/Projeny-Samples-{0}.zip'.format(versionStr))
+        self._zipHelper.createZipFile('[ProjenyDir]/Demo', '[DistDir]/ProjenySamples-{0}.zip'.format(versionStr))
 
-    def _createInstaller(self):
+    def _createInstaller(self, versionStr):
         self._log.heading('Creating installer exe')
         assertThat(self._sys.directoryExists(NsisPath))
 
         self._sys.createDirectory('[DistDir]')
         self._sys.executeAndWait('"{0}" "[InstallerDir]/CreateInstaller.nsi"'.format(NsisPath))
+
+        self._sys.renameFile('[DistDir]/ProjenyInstaller.exe', '[DistDir]/ProjenyInstaller-{0}.exe'.format(versionStr))
 
     def _updateBuildDirectory(self):
 
