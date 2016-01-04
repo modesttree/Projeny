@@ -1,4 +1,4 @@
 
-To run the source directly instead of using the compiled Upm.exe, open up Projeny/Bin/Upm.bat, comment out Option B and uncomment Option A.
+To run the source directly instead of using the compiled exe files, just add projeny/source/bin to your path instead of projeny/bin
 
 Note that you will need to use Python 3.x for this to work

@@ -1,6 +1,6 @@
 @echo off
 
-set PYTHONPATH=%~dp0\..\Source;%PYTHONPATH%
+set PYTHONPATH=%~dp0\..;%PYTHONPATH%
 python -m prj.main.OpenInVisualStudio %1 %2
 
 if errorlevel 1 goto onerror

@@ -25,8 +25,8 @@ class Runner:
     _log = Inject('Logger')
     _scriptRunner = Inject('ScriptRunner')
     _packageMgr = Inject('PackageManager')
-    _junctionHelper = Inject('JunctionHelper')
     _zipHelper = Inject('ZipHelper')
+    _vsSolutionHelper = Inject('VisualStudioHelper')
 
     def run(self, args):
         self._args = args
@@ -35,13 +35,18 @@ class Runner:
         if not success:
             sys.exit(1)
 
+    def _copyDir(self, relativePath):
+        self._sys.copyDirectory('[RootDir]/' + relativePath, '[OutDir]/' + relativePath)
+
+    def _copyFile(self, relativePath):
+        self._sys.copyFile('[RootDir]/' + relativePath, '[OutDir]/' + relativePath)
+
     def _runInternal(self):
         self._varMgr.add('OutRootDir', args.outDirectory)
         self._varMgr.add('OutDir', '[OutRootDir]/Contents')
 
         self._varMgr.add('PythonDir', PythonDir)
         self._varMgr.add('RootDir', ProjenyRootDir)
-        #self._varMgr.add('DemoRootDir', '[RootDir]/Demo')
 
         if self._sys.directoryExists('[OutDir]'):
             if not self._args.suppressPrompts and not MiscUtil.confirmChoice('Override directory "{0}"? (y/n)'.format(self._varMgr.expand('[OutDir]'))):
@@ -49,33 +54,27 @@ class Runner:
                 sys.exit(1)
 
             self._log.heading('Clearing output directory')
-
-            self._junctionHelper.removeJunctionsInDirectory('[OutDir]', True)
             self._sys.clearDirectoryContents('[OutDir]')
         else:
             self._sys.createDirectory('[OutDir]')
 
-        #self._log.heading('Clearing all generated files in Demo/UnityProjects folder')
-        #self._packageMgr.clearAllProjectGeneratedFiles(False)
-
-        #self._log.heading('Copying Demo Project')
-        #self._sys.copyDirectory('[DemoRootDir]', '[OutDir]/Demo')
-
-        self._log.heading('Updating exe')
+        self._log.heading('Building exes')
         self._sys.executeAndWait('[PythonDir]/BuildAllExes.bat')
 
-        self._sys.createDirectory('[OutDir]/Bin')
+        self._log.heading('Building unity plugin dlls')
+        self._vsSolutionHelper.buildVisualStudioProject('[RootDir]/UnityPlugin/Projeny.sln', 'Release')
 
-        #self._sys.copyDirectory('[RootDir]/Bin', '[OutDir]/Bin')
-        #self._sys.copyDirectory('[RootDir]/Source', '[OutDir]/Source')
-        self._sys.copyDirectory('[RootDir]/Templates', '[OutDir]/Templates')
+        self._copyDir('UnityPlugin/Projeny/Assets')
+        self._copyDir('Templates')
+        self._copyFile(ConfigFileName)
+        self._copyDir('Bin')
 
-        self._sys.copyFile('[RootDir]/{0}'.format(ConfigFileName), '[OutDir]/{0}'.format(ConfigFileName))
+        self._sys.removeFile('[OutDir]/Bin/.gitignore')
 
-        self._sys.removeByRegex('[OutDir]/Bin/ProjenyLog*')
+        self._sys.removeByRegex('[OutDir]/Bin/UnityPlugin/Release/*.pdb')
+        self._sys.deleteDirectory('[OutDir]/Bin/UnityPlugin/Debug')
 
-        versionStr = self._sys.readFileAsText('[ProjenyDir]/Version.txt').strip()
-
+        #versionStr = self._sys.readFileAsText('[ProjenyDir]/Version.txt').strip()
         #self._zipHelper.createZipFile('[OutDir]', '[OutRootDir]/Projeny-WithSamples-{0}.zip'.format(versionStr))
         #self._zipHelper.createZipFile('[OutDir]', '[OutRootDir]/Projeny-{0}.zip'.format(versionStr))
 

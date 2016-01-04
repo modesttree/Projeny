@@ -5,7 +5,7 @@ from distutils.core import setup
 import py2exe
 
 ScriptDir = os.path.dirname(os.path.realpath(__file__))
-OutputDataDir = os.path.join(ScriptDir, '../PackageData/Bin/Data')
+OutputDataDir = os.path.join(ScriptDir, '../Bin/Data')
 
 def buildPrjExe():
     outputPath = os.path.join(OutputDataDir, 'Prj')
