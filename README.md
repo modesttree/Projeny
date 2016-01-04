@@ -1,5 +1,5 @@
 
-<img src="Projeny/Documentation/LogoWhiteWithText.png?raw=true" alt="Projeny" width="250px" height="246px"/>
+<img src="Docs/LogoWhiteWithText.png?raw=true" alt="Projeny" width="250px" height="246px"/>
 ## Project and Package Manager for Unity3D
 
 ### <a id="introduction"></a>Introduction ###
