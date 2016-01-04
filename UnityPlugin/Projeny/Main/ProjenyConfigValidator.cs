@@ -97,7 +97,7 @@ namespace Projeny.Internal
                 var badDirectoriesStr = string.Join("\n", badDirectories.Select(x => "Assets/" + x.FullName.Substring(Application.dataPath.Length + 1)).ToArray());
 
                 EditorUtility.DisplayDialog(
-                    "Projeny Error", "Projeny validation failed.  Found some directories that were not created by Projeny.  This could cause data loss.  All user data in Projeny should reside in the UnityPackages directory. See documentation for details.  \n\nThe directories in question are the following: \n\n{0}".Fmt(badDirectoriesStr), "Ok");
+                    "Projeny Error", "Projeny validation failed.\n\nThere are directories in your project that were not created by Projeny.  This could cause data loss.  All user data in Projeny should reside in the UnityPackages directory.  See documentation for details.  \n\nThe directories in question are the following: \n\n{0}".Fmt(badDirectoriesStr), "Ok");
             }
 
             if (brokenJunctions.Any())
@@ -105,7 +105,7 @@ namespace Projeny.Internal
                 var brokenJunctionsStr = string.Join("\n", brokenJunctions.Select(x => "Assets/" + x.Substring(Application.dataPath.Length + 1)).ToArray());
 
                 EditorUtility.DisplayDialog(
-                    "Projeny Error", "Projeny validation failed.  Found some broken directory links.  You may have deleted a package without removing the package from the project.  You can fix this by entering package manager and removing the missing packages from your project. See documentation for details.  \n\nThe directories in question are the following: \n\n{0}".Fmt(brokenJunctionsStr), "Ok");
+                    "Projeny Error", "Projeny validation failed.\n\nThere are broken directory links in your project.  You may have deleted a package without removing the package from the project.  You can fix this by entering package manager and removing the missing packages from your project. See documentation for details.  \n\nThe directories in question are the following: \n\n{0}".Fmt(brokenJunctionsStr), "Ok");
             }
         }
     }

@@ -139,12 +139,15 @@ class PackageManager:
         assertThat(not self._sys.directoryExists(newPath), "Found existing package at path '{0}'", newPath)
         self._sys.createDirectory(newPath)
 
-        newInstallInfo = PackageInstallInfo()
-        newInstallInfo.releaseInfo = None
-        newInstallInfo.installDate = datetime.utcnow()
+        # This can be nice when sorting packages by install date, but it adds noise to the directory
+        # Seems nicer to just leave the directory empty for custom packages
 
-        yamlStr = YamlSerializer.serialize(newInstallInfo)
-        self._sys.writeFileAsText(os.path.join(newPath, InstallInfoFileName), yamlStr)
+        #newInstallInfo = PackageInstallInfo()
+        #newInstallInfo.releaseInfo = None
+        #newInstallInfo.installDate = datetime.utcnow()
+
+        #yamlStr = YamlSerializer.serialize(newInstallInfo)
+        #self._sys.writeFileAsText(os.path.join(newPath, InstallInfoFileName), yamlStr)
 
     def deletePackage(self, name):
         self._log.heading("Deleting package '{0}'", name)
