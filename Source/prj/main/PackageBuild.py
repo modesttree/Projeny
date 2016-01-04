@@ -13,11 +13,14 @@ from prj.log.LogStreamConsole import LogStreamConsole
 from prj.util.CommonSettings import ConfigFileName
 import prj.util.MiscUtil as MiscUtil
 
+from prj.util.Assert import *
 import prj.main.Prj as Prj
 
 ScriptDir = os.path.dirname(os.path.realpath(__file__))
 PythonDir = os.path.realpath(os.path.join(ScriptDir, '../..'))
 ProjenyRootDir = os.path.realpath(os.path.join(PythonDir, '..'))
+
+NsisPath = "C:/Utils/NSIS/Bin/makensis.exe"
 
 class Runner:
     _sys = Inject('SystemHelper')
@@ -42,11 +45,24 @@ class Runner:
         self._sys.copyFile('[RootDir]/' + relativePath, '[OutDir]/' + relativePath)
 
     def _runInternal(self):
-        self._varMgr.add('OutRootDir', args.outDirectory)
-        self._varMgr.add('OutDir', '[OutRootDir]/Contents')
+        self._varMgr.add('OutDir', os.path.join(ProjenyRootDir, 'Installer/Build'))
 
         self._varMgr.add('PythonDir', PythonDir)
         self._varMgr.add('RootDir', ProjenyRootDir)
+
+        self._updateBuildDirectory()
+        self._createInstaller()
+
+        #versionStr = self._sys.readFileAsText('[ProjenyDir]/Version.txt').strip()
+        #self._zipHelper.createZipFile('[OutDir]', '[OutRootDir]/Projeny-WithSamples-{0}.zip'.format(versionStr))
+        #self._zipHelper.createZipFile('[OutDir]', '[OutRootDir]/Projeny-{0}.zip'.format(versionStr))
+
+    def _createInstaller(self):
+        self._log.heading('Creating installer exe')
+        assertThat(self._sys.directoryExists(NsisPath))
+        self._sys.executeAndWait('"{0}" "[RootDir]/Installer/CreateInstaller.nsi"'.format(NsisPath))
+
+    def _updateBuildDirectory(self):
 
         if self._sys.directoryExists('[OutDir]'):
             if not self._args.suppressPrompts and not MiscUtil.confirmChoice('Override directory "{0}"? (y/n)'.format(self._varMgr.expand('[OutDir]'))):
@@ -74,14 +90,9 @@ class Runner:
         self._sys.removeByRegex('[OutDir]/Bin/UnityPlugin/Release/*.pdb')
         self._sys.deleteDirectory('[OutDir]/Bin/UnityPlugin/Debug')
 
-        #versionStr = self._sys.readFileAsText('[ProjenyDir]/Version.txt').strip()
-        #self._zipHelper.createZipFile('[OutDir]', '[OutRootDir]/Projeny-WithSamples-{0}.zip'.format(versionStr))
-        #self._zipHelper.createZipFile('[OutDir]', '[OutRootDir]/Projeny-{0}.zip'.format(versionStr))
-
 def addArguments(parser):
     parser.add_argument('-s', '--includeSamples', action='store_true', help='Set if you want to include sample projects')
     parser.add_argument('-sp', '--suppressPrompts', action='store_true', help='If unset, confirmation prompts will be displayed for important operations.')
-    parser.add_argument('-o', '--outDirectory', metavar='OUT_DIRECTORY', type=str, help="")
 
 def installBindings(args):
 
@@ -100,10 +111,6 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Projeny Build Packager')
     addArguments(parser)
-
-    if len(argv) == 0:
-        parser.print_help()
-        sys.exit(2)
 
     args = parser.parse_args(sys.argv[1:])
 
