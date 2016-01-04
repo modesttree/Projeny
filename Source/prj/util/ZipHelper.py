@@ -11,15 +11,18 @@ from prj.util.Assert import *
 class ZipHelper:
     _sys = Inject('SystemHelper')
     _varMgr = Inject('VarManager')
+    _log = Inject('Logger')
 
     def createZipFile(self, dirPath, zipFilePath):
         assertThat(zipFilePath.endswith('.zip'))
 
+        dirPath = self._varMgr.expandPath(dirPath)
         zipFilePath = self._varMgr.expandPath(zipFilePath)
 
         self._sys.makeMissingDirectoriesInPath(zipFilePath)
         self._sys.removeFileIfExists(zipFilePath)
 
+        self._log.debug("Writing directory '{0}' to zip at '{1}'", dirPath, zipFilePath)
         self._writeDirectoryToZipFile(zipFilePath, dirPath)
 
     def _writeDirectoryToZipFile(self, zipFilePath, dirPath):

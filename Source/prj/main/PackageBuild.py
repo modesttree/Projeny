@@ -18,7 +18,7 @@ import prj.main.Prj as Prj
 
 ScriptDir = os.path.dirname(os.path.realpath(__file__))
 PythonDir = os.path.realpath(os.path.join(ScriptDir, '../..'))
-ProjenyRootDir = os.path.realpath(os.path.join(PythonDir, '..'))
+ProjenyDir = os.path.realpath(os.path.join(PythonDir, '..'))
 
 NsisPath = "C:/Utils/NSIS/Bin/makensis.exe"
 
@@ -38,30 +38,36 @@ class Runner:
             sys.exit(1)
 
     def _copyDir(self, relativePath):
-        self._sys.copyDirectory('[RootDir]/' + relativePath, '[OutDir]/' + relativePath)
+        self._sys.copyDirectory('[ProjenyDir]/' + relativePath, '[OutDir]/' + relativePath)
 
     def _copyFile(self, relativePath):
-        self._sys.copyFile('[RootDir]/' + relativePath, '[OutDir]/' + relativePath)
+        self._sys.copyFile('[ProjenyDir]/' + relativePath, '[OutDir]/' + relativePath)
 
     def _runInternal(self):
-        self._varMgr.add('OutDir', os.path.join(ProjenyRootDir, 'Installer/Build'))
-
         self._varMgr.add('PythonDir', PythonDir)
-        self._varMgr.add('RootDir', ProjenyRootDir)
+        self._varMgr.add('ProjenyDir', ProjenyDir)
+        self._varMgr.add('InstallerDir', '[ProjenyDir]/Installer')
+        self._varMgr.add('OutDir', '[InstallerDir]/Build')
+        self._varMgr.add('DistDir', '[InstallerDir]/Dist')
 
         self._updateBuildDirectory()
         self._createInstaller()
+        self._createSamplesZip()
 
-        #versionStr = self._sys.readFileAsText('[ProjenyDir]/Version.txt').strip()
-        #self._zipHelper.createZipFile('[OutDir]', '[OutRootDir]/Projeny-WithSamples-{0}.zip'.format(versionStr))
-        #self._zipHelper.createZipFile('[OutDir]', '[OutRootDir]/Projeny-{0}.zip'.format(versionStr))
+    def _createSamplesZip(self):
+        self._log.heading('Clearing all generated files in Demo/UnityProjects folder')
+        self._packageMgr.clearAllProjectGeneratedFiles(False)
+
+        self._log.heading('Zipping up demo project')
+        versionStr = self._sys.readFileAsText('[InstallerDir]/Version.txt').strip()
+        self._zipHelper.createZipFile('[ProjenyDir]/Demo', '[DistDir]/Projeny-Samples-{0}.zip'.format(versionStr))
 
     def _createInstaller(self):
         self._log.heading('Creating installer exe')
         assertThat(self._sys.directoryExists(NsisPath))
 
-        self._sys.createDirectory('[RootDir]/Installer/Dist')
-        self._sys.executeAndWait('"{0}" "[RootDir]/Installer/CreateInstaller.nsi"'.format(NsisPath))
+        self._sys.createDirectory('[DistDir]')
+        self._sys.executeAndWait('"{0}" "[InstallerDir]/CreateInstaller.nsi"'.format(NsisPath))
 
     def _updateBuildDirectory(self):
 
@@ -75,7 +81,7 @@ class Runner:
         self._sys.executeAndWait('[PythonDir]/BuildAllExes.bat')
 
         self._log.heading('Building unity plugin dlls')
-        self._vsSolutionHelper.buildVisualStudioProject('[RootDir]/UnityPlugin/Projeny.sln', 'Release')
+        self._vsSolutionHelper.buildVisualStudioProject('[ProjenyDir]/UnityPlugin/Projeny.sln', 'Release')
 
         self._copyDir('UnityPlugin/Projeny/Assets')
         self._copyDir('Templates')
@@ -92,7 +98,7 @@ def installBindings():
     Container.bind('LogStream').toSingle(LogStreamFile)
     Container.bind('LogStream').toSingle(LogStreamConsole, True, False)
 
-    demoConfig = os.path.realpath(os.path.join(ProjenyRootDir, 'Demo/Projeny.yaml'))
+    demoConfig = os.path.realpath(os.path.join(ProjenyDir, 'Demo/Projeny.yaml'))
     Prj.installBindings(demoConfig)
 
 if __name__ == '__main__':
