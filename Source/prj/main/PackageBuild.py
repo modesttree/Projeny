@@ -59,6 +59,8 @@ class Runner:
     def _createInstaller(self):
         self._log.heading('Creating installer exe')
         assertThat(self._sys.directoryExists(NsisPath))
+
+        self._sys.createDirectory('[RootDir]/Installer/Dist')
         self._sys.executeAndWait('"{0}" "[RootDir]/Installer/CreateInstaller.nsi"'.format(NsisPath))
 
     def _updateBuildDirectory(self):
@@ -83,7 +85,7 @@ class Runner:
         self._sys.removeFile('[OutDir]/Bin/.gitignore')
 
         self._sys.removeByRegex('[OutDir]/Bin/UnityPlugin/Release/*.pdb')
-        self._sys.deleteDirectory('[OutDir]/Bin/UnityPlugin/Debug')
+        self._sys.deleteDirectoryIfExists('[OutDir]/Bin/UnityPlugin/Debug')
 
 def installBindings():
 
