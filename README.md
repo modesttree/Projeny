@@ -4,22 +4,27 @@
 
 ### <a id="introduction"></a>Introduction ###
 
-The purpose of Projeny is to allow your Unity3D project to easily scale in size without heavily impacting development time.  It offers the following features:
+The purpose of Projeny is to allow your Unity3D project to easily scale in size without heavily impacting development time.
 
-* Allows you to split up your project into discrete packages
+Projeny allows you to:
+
+* Share any unity assets (code, scenes, prefabs, etc.) across multiple different unity projects without copy and pasting
+* Instantly switch between platforms
 * Easily upgrade or downgrade installed asset store packages
-* Adds ability to share any unity assets (code, scenes, prefabs, etc.) across multiple different unity projects
-* Adds ability to optimize compile time of your project by using Unity's Plugins folder
-* Near instant switching between platforms
-* Declare dependencies between packages and always get the packages you need
-* Battle tested for stability through several internal projects at ModestTree.
+* Optimize compile time of your project by getting Unity to only recompile the code that changes most often
+* Split up your project into discrete packages, so that you can manage the dependencies between each, instead of having one giant unity project of inter-related files
+* Declare dependencies between packages, so that you always get the packages that you need without needing to hunt down missing libraries or broken links
+* Generate a more intelligent Visual Studio solution than the Unity default, using package dependencies to create csproj dependencies
 
-This project is open source.  If you're interested in helping, great!  There's still a number of features we'd like to eventually implement (in particular we need help with supporting OSX).  See <a href="#feature-ideas">this section</a> for the full list.
+See below for details on how Projeny achieves all these features.
+
+This project is open source.  If you're interested in helping, great!  There's still a number of features we'd like to support eventually (in particular we need help with supporting OSX!).  See <a href="#feature-ideas">this section</a> for the full list.
 
 NOTE: Projeny requires Unity3D 5.3.1 or higher, since it makes use of the `-buildTarget` command line switch is only fixed in 5.3.1
 
 ## Table Of Contents
 
+* <a href="#installation">Installation</a>
 * <a href="#introduction">Introduction</a>
 * Theory
     * <a href="#overview">Overview</a>
@@ -41,11 +46,17 @@ NOTE: Projeny requires Unity3D 5.3.1 or higher, since it makes use of the `-buil
 * <a href="#release-notes">Release Notes</a>
 * <a href="#license">License</a>
 
+## <a id="installation"></a>Installation
+
+TBD
+
 ## <a id="overview"></a>Overview
 
 Projeny works by composing your Unity3D projects based on directory links (aka windows junctions aka symbolic links).
 
-This is best shown with an example.  After downloading the project and extracting/cloning it to your hard drive, you should see the following directory structure:
+This is best shown with an example.  After 
+
+downloading the project and extracting/cloning it to your hard drive, you should see the following directory structure:
 
 * UnityPackages
     * AllMovers
