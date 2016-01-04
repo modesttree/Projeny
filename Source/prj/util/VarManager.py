@@ -1,5 +1,6 @@
 
 import os
+import re
 
 import prj.util.MiscUtil as MiscUtil
 
@@ -21,28 +22,32 @@ class VarManager:
         self._params['StartCurrentDir'] = os.getcwd()
         self._params['ExecDir'] = MiscUtil.getExecDirectory().replace('\\', '/')
 
-        configPaths = self._config.tryGetDictionary({}, 'PathVars')
+        # We could just call self._config.getDictionary('PathVars') here but
+        # then we wouldn't be able to use fallback (?) and override (!) characters in
+        # our config
 
-        for key, value in configPaths.items():
-            assertThat(not key in self._params.keys())
-            self._params[key] = value
+        self._regex = re.compile('^([^\[]*)(\[[^\]]*\])(.*)$')
 
     def hasKey(self, key):
-        return key in self._params
+        return key in self._params or self._config.tryGet('PathVars', key) != None
 
     def get(self, key):
-        assertThat(key in self._params, 'Missing variable "{0}"'.format(key))
-        return self._params[key]
+        if key in self._params:
+            return self._params[key]
+
+        return self._config.getString('PathVars', key)
+
+    def tryGet(self, key):
+        if key in self._params:
+            return self._params[key]
+
+        return self._config.tryGetString(None, 'PathVars', key)
 
     def add(self, key, value):
-        assertThat(not key in self._params)
         self._params[key] = value
 
     def set(self, key, value):
         self._params[key] = value
-
-    def tryGet(self, key):
-        return self._params.get(key)
 
     def expandPath(self, text, extraVars = None):
         ''' Same as expand() except it cleans up the path to remove ../ '''
@@ -56,12 +61,24 @@ class VarManager:
         allArgs = self._params.copy()
         allArgs.update(extraVars)
 
-        lastText = None
+        while True:
+            match = self._regex.match(text)
 
-        while '[' in text and lastText != text:
-            lastText = text
-            for arg in allArgs.items():
-                text = text.replace('[' + arg[0] + ']', arg[1])
+            if not match:
+                break
+
+            prefix = match.group(1)
+            var = match.group(2)
+            suffix = match.group(3)
+
+            var = var[1:-1]
+
+            if var in allArgs:
+                replacement = allArgs[var]
+            else:
+                replacement = self.get(var)
+
+            text = prefix + replacement + suffix
 
         if '[' in text:
             raise Exception("Unable to find all keys in path '{0}'".format(text))
