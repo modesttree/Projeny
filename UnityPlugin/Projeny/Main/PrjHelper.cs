@@ -57,6 +57,33 @@ namespace Projeny
             return true;
         }
 
+        public static void ChangeProject(string projectName)
+        {
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            {
+                // They hit cancel in the save dialog
+                return;
+            }
+
+            var result = PrjInterface.RunPrj(PrjInterface.CreatePrjRequestForProject("updateLinks", projectName));
+
+            if (result.Succeeded)
+            {
+                result = PrjInterface.RunPrj(PrjInterface.CreatePrjRequestForProject("openUnity", projectName));
+            }
+
+            if (result.Succeeded)
+            {
+                EditorApplication.Exit(0);
+            }
+            else
+            {
+                DisplayPrjError(
+                    "Changing project to '{0}'"
+                    .Fmt(projectName), result.ErrorMessage);
+            }
+        }
+
         public static void ChangePlatform(BuildTarget desiredPlatform)
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())

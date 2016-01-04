@@ -18,7 +18,7 @@ Projeny allows you to:
 
 See below for details on how Projeny achieves all these features.
 
-This project is open source.  If you're interested in helping, great!  There's still a number of features we'd like to support eventually (in particular we need help with supporting OSX!).  See <a href="#feature-ideas">this section</a> for the full list.
+This project is open source.  If you're interested in helping, great!  There's still a number of features we'd like to support eventually (in particular we need help with supporting OSX!).
 
 NOTE: Projeny requires Unity3D 5.3.1 or higher, since it makes use of the `-buildTarget` command line switch is only fixed in 5.3.1
 
@@ -62,21 +62,20 @@ You can either run Projeny directly from source (requires python) or simply down
     - Make sure python 3.x is installed
     - Open UnityPlugin/Projeny.sln in Visual Studio
     - Build in Release Mode
+    - Add the projeny/Source/bin to your windows path.  NOTE:  This is projeny/Source/bin not projeny/bin (the latter is used for exe builds)
 
 ## <a id="overview"></a>Overview
 
 Projeny works by composing your Unity3D projects based on directory links (aka windows junctions aka symbolic links).
 
-This is best shown with an example.  After 
+This is best shown with an example.  After installing Projeny, [download the sample project](https://github.com/modesttree/projeny/releases) from the releases page and extract it to a new folder on your hard drive.  The folder structure should appear like this:
 
-downloading the project and extracting/cloning it to your hard drive, you should see the following directory structure:
-
+* Projeny.yaml
 * UnityPackages
     * AllMovers
     * CommonShapeMover
     * CubeMover
     * SphereMover
-    * Projeny
 * UnityProjects
     * AllMovers
         * ProjectSettings
@@ -84,7 +83,6 @@ downloading the project and extracting/cloning it to your hard drive, you should
         * ProjectSettings
     * SphereMover
         * ProjectSettings
-* Projeny
 
 Each folder in the UnityProjects directory represents an actual Unity3D project.  Note that they each have the familiar ProjectSettings directory but they do not yet have an Assets directory.  This is because these projects have not been initialized yet.
 
@@ -570,13 +568,6 @@ The `updateUnitySolution` option will instruct Projeny to run Unity to general t
 The `updateCustomSolution` option will instruct Projeny to create this solution file.  This will always occur after generating the unity solution file.
 
 NOTE: In order for this command to work, Projeny must be able to find the path to Unity.exe, so that it can run unity with the given project and then generate the unity solution file.  By default, Projeny will look at the default install directory of Unity but if you installed it somewhere else you will have to specify it in the ProjenyConfig.xml file in the root directory (search for 'UnityExePath')
-
-## <a id="feature-ideas"></a>Feature Ideas
-
-* OSX Support
-* GUI interface to editor the project.ini directly from within Unity. Allow adding/removing packages or selecting from the full list.
-* Ability to fetch packages from online repositories, similar to how the node.js NPM utility works.  Could allow entering full URL's and otherwise fallback to using github.com/[PacakgeName]
-* Other NPM-like features
 
 Feel free to submit any other ideas as github issues
 

@@ -59,6 +59,15 @@ namespace Projeny
                 ProjenyEditorUtil.GetPlatformFromDirectoryName());
         }
 
+        public static PrjRequest CreatePrjRequestForProject(
+            string requestId, string project)
+        {
+            return CreatePrjRequestForProjectAndPlatform(
+                requestId,
+                project,
+                ProjenyEditorUtil.GetPlatformFromDirectoryName());
+        }
+
         public static PrjRequest CreatePrjRequestForPlatform(
             string requestId, BuildTarget platform)
         {

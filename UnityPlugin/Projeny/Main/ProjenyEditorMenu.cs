@@ -21,7 +21,7 @@ namespace Projeny
             Application.OpenURL("https://github.com/modesttree/projeny");
         }
 
-        [MenuItem("Projeny/Update Links", false, 1)]
+        [MenuItem("Projeny/Update Links", false, 2)]
         public static void UpdateLinks()
         {
             PrjHelper.UpdateLinks();

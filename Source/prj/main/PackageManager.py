@@ -198,6 +198,41 @@ class PackageManager:
     // This file exists purely as a way to force unity to generate the MonoDevelop csproj files so that Projeny can read the settings from it
 """)
 
+    def _createSwitchProjectMenuScript(self):
+
+        menuFile = """
+using UnityEditor;
+using Projeny.Internal;
+
+namespace Projeny
+{
+    public static class ProjenyChangeProjectMenu
+    {"""
+        projIndex = 1
+        for projName in self.getAllProjectNames():
+            menuFile += """
+        [MenuItem("Projeny/Change Project/{0}", false, 9)]""".format(projName)
+
+            menuFile += """
+        public static void ChangeProject{0}()""".format(projIndex)
+
+            menuFile += """
+        {"""
+
+            menuFile += """
+            PrjHelper.ChangeProject("{0}");""".format(projName)
+
+            menuFile += """
+        }
+"""
+            projIndex += 1
+
+        menuFile += """
+    }
+}
+"""
+        self._sys.writeFileAsText('[PluginsDir]/Projeny/Editor/ProjenyChangeProjectMenu.cs', menuFile)
+
     def _updateDirLinksForSchema(self, schema):
         self._removePackageJunctions()
 
@@ -218,6 +253,8 @@ class PackageManager:
             self._sys.writeFileAsText(settingsFileOutPath, self._sys.readFileAsText(settingsFileOutPath).replace(
                 'm_Script: {fileID: 11500000, guid: 01fe9b81f68762b438dd4eecbcfe2900, type: 3}',
                 'm_Script: {fileID: 1582608718, guid: b7b2ba04b543d234aa4225d91c60af2b, type: 3}'))
+
+            self._createSwitchProjectMenuScript()
 
         self._createPlaceholderCsFile('[PluginsDir]/Projeny/Placeholder.cs')
         self._createPlaceholderCsFile('[PluginsDir]/Projeny/Editor/Placeholder.cs')
