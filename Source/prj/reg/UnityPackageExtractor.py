@@ -30,9 +30,8 @@ class UnityPackageExtractor:
     def extractUnityPackage(self, unityPackagePath, fallbackName, forcedName):
 
         fileName = os.path.basename(unityPackagePath)
-        os.path.splitext(fileName)[0]
 
-        self._log.heading("Extracting unity package")
+        self._log.heading("Extracting '{0}'", fileName)
         self._log.debug("Extracting unity package at path '{0}'", unityPackagePath)
 
         tempDir = tempfile.mkdtemp()

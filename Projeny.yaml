@@ -24,8 +24,9 @@ PathVars:
     ProjenyUnityEditorDllMetaFilePath: '[TemplatesDir]/Projeny.dll.meta'
     ProjenyUnityEditorAssetsDirPath: '[ProjenyDir]/UnityPlugin/Projeny/Assets'
 
-    # Guess this one
+    # Note that these are defaults, and can be overridden in any other Projeny.yaml file
     MsBuildExePath: 'C:/Windows/Microsoft.NET/Framework/v4.0.30319/msbuild.exe'
+    UnityExePath: 'C:/Program Files/Unity/Editor/Unity.exe'
 
 Console:
     UseColors: False
