@@ -85,19 +85,10 @@ class PackageManager:
     def _createProject(self, projName):
         self._log.heading('Initializing new project "{0}"', projName)
 
-        sourceControlType = self._findSourceControl()
-
         projDirPath = self._varMgr.expand('[UnityProjectsDir]/{0}'.format(projName))
         assertThat(not self._sys.directoryExists(projDirPath), "Cannot initialize new project '{0}', found existing project at '{1}'", projName, projDirPath)
 
         self._sys.createDirectory(projDirPath)
-
-        if sourceControlType == SourceControlTypes.Git:
-            self._sys.copyFile('[ProjectRootGitIgnoreTemplate]', os.path.join(projDirPath, '.gitignore'))
-        elif sourceControlType == SourceControlTypes.Subversion:
-            self._sys.copyFile('[ProjectRootSvnIgnoreTemplate]', os.path.join(projDirPath, '.svnignore'))
-        else:
-            self._log.warn('Warning: Could not determine source control in use!  An ignore file will not be added for your project.  If you add this project to source control later be careful to create an ignore file - the generated project directory should _never_ be stored in source control.')
 
         with self._sys.openOutputFile(os.path.join(projDirPath, ProjectConfigFileName)) as outFile:
             outFile.write(
@@ -138,7 +129,26 @@ class PackageManager:
         schema = self._schemaLoader.loadSchema(projectName, platform)
         self._updateDirLinksForSchema(schema)
 
+        self._checkForVersionControlIgnore()
+
         self._log.good('Finished updating packages for project "{0}"'.format(schema.name))
+
+    def _checkForVersionControlIgnore(self):
+        sourceControlType = self._findSourceControl()
+
+        if sourceControlType == SourceControlTypes.Git:
+            self._log.heading('Detected git repository.  Making sure generated project folders are ignored by git...')
+            if not self._sys.fileExists('[ProjectRootGitIgnoreTemplate]'):
+                self._log.heading('Adding missing git ignore file to project root')
+                self._sys.copyFile('[ProjectRootGitIgnoreTemplate]', os.path.join(projDirPath, '.gitignore'))
+        elif sourceControlType == SourceControlTypes.Subversion:
+            self._log.info('Detected subversion repository. Making sure generated project folders are ignored by SVN...')
+            try:
+                self._sys.executeAndWait('svn propset svn:ignore -F [ProjectRootSvnIgnoreTemplate] .', '[ProjectRoot]')
+            except Exception as e:
+                self._log.warn("Warning: Failed to add generated project directories to SVN ignore!  This may be caused by 'svn' not being available on the command line.  Details: " + str(e))
+        #else:
+            #self._log.warn('Warning: Could not determine source control in use!  An ignore file will not be added for your project.')
 
     def getAllPackageInfos(self):
         if not self._packageInfos:
