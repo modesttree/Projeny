@@ -42,7 +42,7 @@ namespace Projeny.Internal
         {
             get
             {
-                return _workers.Where(x => x.IsBlocking).Select(x => x.StatusTitle).LastOrDefault();
+                return _workers.Where(x => x.IsBlocking).Select(x => x.StatusTitle).FirstOrDefault();
             }
         }
 

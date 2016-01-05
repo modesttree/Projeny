@@ -38,6 +38,7 @@ namespace Projeny.Internal
         PmInputHandler _inputHandler;
         PmSettings _settings;
         PmCreateNewProjectPopupHandler _createNewProjectHandler;
+        PmWindowInitializer _windowInitializer;
 
         public PmCompositionRoot(PmModel model, PmView.Model viewModel, bool isFirstLoad)
         {
@@ -76,15 +77,8 @@ namespace Projeny.Internal
 
             if (_isFirstLoad)
             {
-                _asyncProcessor.Process(RefreshAll(), "Refreshing Packages");
+                _windowInitializer.Initialize();
             }
-        }
-
-        IEnumerator RefreshAll()
-        {
-            _projectHandler.RefreshProject();
-            yield return _packageHandler.RefreshPackagesAsync();
-            yield return _releasesHandler.RefreshReleasesAsync();
         }
 
         void SetupDependencies()
@@ -110,7 +104,8 @@ namespace Projeny.Internal
             _dragDropHandler = new PmDragDropHandler(_model, _view, _asyncProcessor, _packageHandler, _prjCommandHandler);
             _packageViewHandler = new PmPackageViewHandler(_view, _asyncProcessor, _packageHandler, _prjCommandHandler, _settings);
 
-            _createNewProjectHandler = new PmCreateNewProjectPopupHandler(_view, _asyncProcessor, _prjCommandHandler);
+            _windowInitializer = new PmWindowInitializer(_projectHandler, _packageHandler, _releasesHandler, _asyncProcessor);
+            _createNewProjectHandler = new PmCreateNewProjectPopupHandler(_view, _asyncProcessor, _prjCommandHandler, _windowInitializer);
 
             _projectViewHandler = new PmProjectViewHandler(
                 _model, _view, _projectHandler, _asyncProcessor,

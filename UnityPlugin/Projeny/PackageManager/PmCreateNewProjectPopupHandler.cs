@@ -12,6 +12,7 @@ namespace Projeny.Internal
 {
     public class PmCreateNewProjectPopupHandler
     {
+        readonly PmWindowInitializer _windowInitializer;
         readonly PrjCommandHandler _commandHandler;
         readonly AsyncProcessor _asyncProcessor;
         readonly PmView _view;
@@ -19,8 +20,10 @@ namespace Projeny.Internal
         public PmCreateNewProjectPopupHandler(
             PmView view,
             AsyncProcessor asyncProcessor,
-            PrjCommandHandler commandHandler)
+            PrjCommandHandler commandHandler,
+            PmWindowInitializer windowInitializer)
         {
+            _windowInitializer = windowInitializer;
             _commandHandler = commandHandler;
             _asyncProcessor = asyncProcessor;
             _view = view;
@@ -33,6 +36,11 @@ namespace Projeny.Internal
 
         IEnumerator ShowCreateNewProjectPopupAsync()
         {
+            while (!_windowInitializer.IsInitialized)
+            {
+                yield return null;
+            }
+
             var userInput = _view.PromptForInput("Enter new project name:", "Untitled");
 
             yield return userInput;
