@@ -31,7 +31,8 @@ class Runner:
     _zipHelper = Inject('ZipHelper')
     _vsSolutionHelper = Inject('VisualStudioHelper')
 
-    def run(self):
+    def run(self, args):
+        self._args = args
         success = self._scriptRunner.runWrapper(self._runInternal)
 
         if not success:
@@ -53,11 +54,16 @@ class Runner:
         self._sys.clearDirectoryContents('[DistDir]')
         self._sys.clearDirectoryContents('[OutDir]')
 
-        versionStr = 'v' + self._sys.readFileAsText('[InstallerDir]/Version.txt').strip()
-
         self._updateBuildDirectory()
-        self._createInstaller(versionStr)
+
+        versionStr = 'v' + self._sys.readFileAsText('[InstallerDir]/Version.txt').strip()
+        installerOutputPath = '[DistDir]/ProjenyInstaller-{0}.exe'.format(versionStr)
+
+        self._createInstaller(installerOutputPath)
         self._createSamplesZip(versionStr)
+
+        if self._args.runInstallerAfter:
+            self._sys.executeNoWait(installerOutputPath)
 
     def _createSamplesZip(self, versionStr):
         self._log.heading('Clearing all generated files in Demo/UnityProjects folder')
@@ -66,14 +72,14 @@ class Runner:
         self._log.heading('Zipping up demo project')
         self._zipHelper.createZipFile('[ProjenyDir]/Demo', '[DistDir]/ProjenySamples-{0}.zip'.format(versionStr))
 
-    def _createInstaller(self, versionStr):
+    def _createInstaller(self, installerOutputPath):
         self._log.heading('Creating installer exe')
         assertThat(self._sys.directoryExists(NsisPath))
 
         self._sys.createDirectory('[DistDir]')
         self._sys.executeAndWait('"{0}" "[InstallerDir]/CreateInstaller.nsi"'.format(NsisPath))
 
-        self._sys.renameFile('[DistDir]/ProjenyInstaller.exe', '[DistDir]/ProjenyInstaller-{0}.exe'.format(versionStr))
+        self._sys.renameFile('[DistDir]/ProjenyInstaller.exe', installerOutputPath)
 
     def _updateBuildDirectory(self):
 
@@ -112,6 +118,10 @@ if __name__ == '__main__':
         print('Wrong version of python!  Install python 3 and try again')
         sys.exit(2)
 
+    parser = argparse.ArgumentParser(description='Projeny build packager')
+    parser.add_argument('-r', '--runInstallerAfter', action='store_true', help='')
+    args = parser.parse_args(sys.argv[1:])
+
     installBindings()
-    Runner().run()
+    Runner().run(args)
 
