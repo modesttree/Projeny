@@ -15,7 +15,7 @@ namespace Projeny
 {
     public static class ProjenyEditorMenu
     {
-        [MenuItem("Projeny/Help...", false, 9)]
+        [MenuItem("Projeny/Help...", false, 10)]
         public static void OpenHelp()
         {
             Application.OpenURL("https://github.com/modesttree/projeny");
@@ -30,8 +30,20 @@ namespace Projeny
         [MenuItem("Projeny/Package Manager...", false, 1)]
         public static void OpenPackageManager()
         {
+            GetEditorWindow();
+        }
+
+        static PmWindow GetEditorWindow()
+        {
             var window = EditorWindow.GetWindow<PmWindow>();
             window.titleContent = new GUIContent("  Projeny", Resources.Load<Texture2D>("Projeny/Icon"));
+            return window;
+        }
+
+        [MenuItem("Projeny/Change Project/New...", false, 9)]
+        public static void CreateNewProject()
+        {
+            GetEditorWindow().ShowCreateNewProjectPopup();
         }
 
         [MenuItem("Projeny/Update C# Project", false, 6)]

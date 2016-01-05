@@ -23,6 +23,11 @@ namespace Projeny.Internal
         [NonSerialized]
         PmCompositionRoot _root;
 
+        public void ShowCreateNewProjectPopup()
+        {
+            _root.ShowCreateNewProjectPopup();
+        }
+
         void OnEnable()
         {
             bool isFirstLoad = false;

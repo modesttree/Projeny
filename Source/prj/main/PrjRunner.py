@@ -18,12 +18,6 @@ import prj.ioc.IocAssertions as Assertions
 
 from prj.main.ProjectSchemaLoader import ProjectConfigFileName
 
-class SourceControlTypes:
-    Git = 'Git'
-    Subversion = 'Subversion'
-    # TODO - how to detect?
-    #Perforce = 'Perforce'
-
 class PrjRunner:
     _scriptRunner = Inject('ScriptRunner')
     _config = Inject('Config')
@@ -128,7 +122,7 @@ class PrjRunner:
             self._createConfig()
 
         if self._args.createProject:
-            self._createProject(self._args.createProject)
+            self._packageMgr._createProject(self._args.project)
 
         if self._args.createPackage:
             self._packageMgr.createPackage(self._args.createPackage)
@@ -136,40 +130,6 @@ class PrjRunner:
         self._runPreBuild()
         self._runBuild()
         self._runPostBuild()
-
-    def _createProject(self, projName):
-        self._log.heading('Initializing new project "{0}"', projName)
-
-        sourceControlType = self._findSourceControl()
-
-        projDirPath = self._varMgr.expand('[UnityProjectsDir]/{0}'.format(projName))
-        assertThat(not self._sys.directoryExists(projDirPath), "Cannot initialize new project '{0}', found existing project at '{1}'", projName, projDirPath)
-
-        self._sys.createDirectory(projDirPath)
-
-        if sourceControlType == SourceControlTypes.Git:
-            self._sys.copyFile('[ProjectRootGitIgnoreTemplate]', os.path.join(projDirPath, '.gitignore'))
-        elif sourceControlType == SourceControlTypes.Subversion:
-            self._sys.copyFile('[ProjectRootSvnIgnoreTemplate]', os.path.join(projDirPath, '.svnignore'))
-        else:
-            self._log.warn('Could not determine source control in use!  An ignore file will not be added for your project.  If you add this project to source control later be careful to create an ignore file - the generated project directory should _never_ be stored in source control.')
-
-        with self._sys.openOutputFile(os.path.join(projDirPath, ProjectConfigFileName)) as outFile:
-            outFile.write(
-"""
-#packages:
-    # Uncomment and Add package names here
-""")
-
-    def _findSourceControl(self):
-        for dirPath in self._sys.getParentDirectoriesWithSelf('[ConfigDir]'):
-            if self._sys.directoryExists(os.path.join(dirPath, '.git')):
-                return SourceControlTypes.Git
-
-            if self._sys.directoryExists(os.path.join(dirPath, '.svn')):
-                return SourceControlTypes.Subversion
-
-        return None
 
     def _createConfig(self):
         self._log.heading('Initializing new projeny config')
@@ -201,7 +161,7 @@ PathVars:
         if not self._project:
             self._project = self._config.tryGetString(None, 'Projeny', 'DefaultProject')
 
-        if self._project and not self._packageMgr.projectExists(self._project):
+        if self._project and not self._packageMgr.projectExists(self._project) and not self._args.createProject:
             self._project = self._packageMgr.getProjectFromAlias(self._project)
 
         if not self._project and self._varMgr.hasKey('UnityProjectsDir'):
@@ -218,7 +178,7 @@ PathVars:
            or self._args.updateCustomSolution or self._args.buildCustomSolution \
            or self._args.clearProjectGeneratedFiles or self._args.buildFull \
            or self._args.openUnity or self._args.openCustomSolution \
-           or self._args.editProjectYaml
+           or self._args.editProjectYaml or self._args.createProject
 
         if requiresProject and not self._project:
             assertThat(False, "Cannot execute the given arguments without a project specified, or a default project defined in the {0} file", ConfigFileName)

@@ -37,12 +37,18 @@ namespace Projeny.Internal
         PmDragDropHandler _dragDropHandler;
         PmInputHandler _inputHandler;
         PmSettings _settings;
+        PmCreateNewProjectPopupHandler _createNewProjectHandler;
 
         public PmCompositionRoot(PmModel model, PmView.Model viewModel, bool isFirstLoad)
         {
             _model = model;
             _viewModel = viewModel;
             _isFirstLoad = isFirstLoad;
+        }
+
+        public void ShowCreateNewProjectPopup()
+        {
+            _createNewProjectHandler.ShowCreateNewProjectPopup();
         }
 
         public void Initialize()
@@ -103,6 +109,8 @@ namespace Projeny.Internal
             _projectHandler = new PmProjectHandler(_model, _view);
             _dragDropHandler = new PmDragDropHandler(_model, _view, _asyncProcessor, _packageHandler, _prjCommandHandler);
             _packageViewHandler = new PmPackageViewHandler(_view, _asyncProcessor, _packageHandler, _prjCommandHandler, _settings);
+
+            _createNewProjectHandler = new PmCreateNewProjectPopupHandler(_view, _asyncProcessor, _prjCommandHandler);
 
             _projectViewHandler = new PmProjectViewHandler(
                 _model, _view, _projectHandler, _asyncProcessor,

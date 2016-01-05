@@ -70,13 +70,14 @@ namespace Projeny
             if (result.Succeeded)
             {
                 result = PrjInterface.RunPrj(PrjInterface.CreatePrjRequestForProject("openUnity", projectName));
+
+                if (result.Succeeded)
+                {
+                    EditorApplication.Exit(0);
+                }
             }
 
-            if (result.Succeeded)
-            {
-                EditorApplication.Exit(0);
-            }
-            else
+            if (!result.Succeeded)
             {
                 DisplayPrjError(
                     "Changing project to '{0}'"
@@ -124,11 +125,34 @@ namespace Projeny
             EditorUtility.DisplayDialog("Error", errorMessage, "Ok");
         }
 
+        public static IEnumerator OpenUnityForProjectAsync(string projectName)
+        {
+            var runner = PrjInterface.RunPrjAsync(
+                PrjInterface.CreatePrjRequestForProject("openUnity", projectName));
+
+            while (runner.MoveNext() && !(runner.Current is PrjResponse))
+            {
+                yield return runner.Current;
+            }
+
+            yield return CreateStandardResponse((PrjResponse)runner.Current);
+        }
+
         // NOTE: It's up to the caller to call AssetDatabase.Refresh()
         public static IEnumerator UpdateLinksAsync()
         {
-            var req = PrjInterface.CreatePrjRequest("updateLinks");
+            return UpdateLinksAsyncInternal(
+                PrjInterface.CreatePrjRequest("updateLinks"));
+        }
 
+        public static IEnumerator UpdateLinksAsyncForProject(string projectName)
+        {
+            return UpdateLinksAsyncInternal(
+                PrjInterface.CreatePrjRequestForProject("updateLinks", projectName));
+        }
+
+        static IEnumerator UpdateLinksAsyncInternal(PrjRequest req)
+        {
             var runner = PrjInterface.RunPrjAsync(req);
 
             while (runner.MoveNext() && !(runner.Current is PrjResponse))
@@ -167,6 +191,19 @@ namespace Projeny
             }
 
             return PrjHelperResponse.Error(response.ErrorMessage);
+        }
+
+        public static IEnumerator CreateProjectAsync(string projectName)
+        {
+            var runner = PrjInterface.RunPrjAsync(
+                PrjInterface.CreatePrjRequestForProject("createProject", projectName));
+
+            while (runner.MoveNext() && !(runner.Current is PrjResponse))
+            {
+                yield return runner.Current;
+            }
+
+            yield return CreateStandardResponse((PrjResponse)runner.Current);
         }
 
         public static IEnumerator CreatePackageAsync(string name)

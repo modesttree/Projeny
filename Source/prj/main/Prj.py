@@ -79,7 +79,7 @@ def addArguments(parser):
     parser.add_argument('-ocs', '--openCustomSolution', action='store_true', help='Open the solution for the given project/platform')
 
     parser.add_argument('-cco', '--createConfig', action='store_true', help='')
-    parser.add_argument('-cpr', '--createProject', metavar='NEW_PROJECT_NAME', type=str, help="")
+    parser.add_argument('-cpr', '--createProject', action='store_true', help='')
     parser.add_argument('-cpa', '--createPackage', metavar='NEW_PACKAGE_NAME', type=str, help="")
 
     parser.add_argument('-epy', '--editProjectYaml', action='store_true', help='')

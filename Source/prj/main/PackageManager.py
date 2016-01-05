@@ -29,6 +29,14 @@ import prj.ioc.IocAssertions as Assertions
 
 InstallInfoFileName = 'ProjenyInstall.yaml'
 
+from prj.main.ProjectSchemaLoader import ProjectConfigFileName
+
+class SourceControlTypes:
+    Git = 'Git'
+    Subversion = 'Subversion'
+    # TODO - how to detect?
+    #Perforce = 'Perforce'
+
 class PackageManager:
     """
     Main interface for Modest Package Manager
@@ -63,6 +71,40 @@ class PackageManager:
         self._log.info("Found {0} Packages:".format(len(packagesNames)))
         for packageName in packagesNames:
             self._log.info("  " + packageName)
+
+    def _findSourceControl(self):
+        for dirPath in self._sys.getParentDirectoriesWithSelf('[ConfigDir]'):
+            if self._sys.directoryExists(os.path.join(dirPath, '.git')):
+                return SourceControlTypes.Git
+
+            if self._sys.directoryExists(os.path.join(dirPath, '.svn')):
+                return SourceControlTypes.Subversion
+
+        return None
+
+    def _createProject(self, projName):
+        self._log.heading('Initializing new project "{0}"', projName)
+
+        sourceControlType = self._findSourceControl()
+
+        projDirPath = self._varMgr.expand('[UnityProjectsDir]/{0}'.format(projName))
+        assertThat(not self._sys.directoryExists(projDirPath), "Cannot initialize new project '{0}', found existing project at '{1}'", projName, projDirPath)
+
+        self._sys.createDirectory(projDirPath)
+
+        if sourceControlType == SourceControlTypes.Git:
+            self._sys.copyFile('[ProjectRootGitIgnoreTemplate]', os.path.join(projDirPath, '.gitignore'))
+        elif sourceControlType == SourceControlTypes.Subversion:
+            self._sys.copyFile('[ProjectRootSvnIgnoreTemplate]', os.path.join(projDirPath, '.svnignore'))
+        else:
+            self._log.warn('Warning: Could not determine source control in use!  An ignore file will not be added for your project.  If you add this project to source control later be careful to create an ignore file - the generated project directory should _never_ be stored in source control.')
+
+        with self._sys.openOutputFile(os.path.join(projDirPath, ProjectConfigFileName)) as outFile:
+            outFile.write(
+"""
+#packages:
+    # Uncomment and Add package names here
+""")
 
     def getProjectFromAlias(self, alias):
         aliasMap = self._config.tryGetDictionary({}, 'ProjectAliases')
@@ -198,8 +240,9 @@ class PackageManager:
     // This file exists purely as a way to force unity to generate the MonoDevelop csproj files so that Projeny can read the settings from it
 """)
 
-    def _createSwitchProjectMenuScript(self):
+    def _createSwitchProjectMenuScript(self, currentProjName, outputPath):
 
+        foundCurrent = False
         menuFile = """
 using UnityEditor;
 using Projeny.Internal;
@@ -211,7 +254,7 @@ namespace Projeny
         projIndex = 1
         for projName in self.getAllProjectNames():
             menuFile += """
-        [MenuItem("Projeny/Change Project/{0}", false, 9)]""".format(projName)
+        [MenuItem("Projeny/Change Project/{0}", false, 8)]""".format(projName)
 
             menuFile += """
         public static void ChangeProject{0}()""".format(projIndex)
@@ -225,13 +268,26 @@ namespace Projeny
             menuFile += """
         }
 """
+            if projName == currentProjName:
+                assertThat(not foundCurrent)
+                foundCurrent = True
+                menuFile += """
+        [MenuItem("Projeny/Change Project/{0}", true, 8)]""".format(currentProjName)
+                menuFile += """
+        public static bool ChangeProject{0}Validate()""".format(projIndex)
+                menuFile += """
+        {
+            return false;
+        }"""
+
             projIndex += 1
 
         menuFile += """
     }
 }
 """
-        self._sys.writeFileAsText('[PluginsDir]/Projeny/Editor/ProjenyChangeProjectMenu.cs', menuFile)
+        assertThat(foundCurrent)
+        self._sys.writeFileAsText(outputPath, menuFile)
 
     def _updateDirLinksForSchema(self, schema):
         self._removePackageJunctions()
@@ -239,7 +295,7 @@ namespace Projeny
         self._sys.deleteDirectoryIfExists('[PluginsDir]/Projeny')
 
         if self._config.getBool('LinkToProjenyEditorDir'):
-            self._junctionHelper.makeJunction('[ProjenyDir]/UnityPlugin/Projeny', '[PluginsDir]/Projeny/Editor')
+            self._junctionHelper.makeJunction('[ProjenyDir]/UnityPlugin/Projeny', '[PluginsDir]/Projeny/Editor/Source')
         else:
             dllOutPath = '[PluginsDir]/Projeny/Editor/Projeny.dll'
             self._sys.copyFile('[ProjenyUnityEditorDllPath]', dllOutPath)
@@ -254,7 +310,7 @@ namespace Projeny
                 'm_Script: {fileID: 11500000, guid: 01fe9b81f68762b438dd4eecbcfe2900, type: 3}',
                 'm_Script: {fileID: 1582608718, guid: b7b2ba04b543d234aa4225d91c60af2b, type: 3}'))
 
-            self._createSwitchProjectMenuScript()
+        self._createSwitchProjectMenuScript(schema.name, '[PluginsDir]/Projeny/Editor/ProjenyChangeProjectMenu.cs')
 
         self._createPlaceholderCsFile('[PluginsDir]/Projeny/Placeholder.cs')
         self._createPlaceholderCsFile('[PluginsDir]/Projeny/Editor/Placeholder.cs')

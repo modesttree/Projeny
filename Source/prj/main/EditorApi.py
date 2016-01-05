@@ -91,6 +91,10 @@ class Runner:
             self._log.info("Installing release '{0}' version code '{1}'", self._param1, self._param2)
             self._releaseRegistryManager.installReleaseById(self._param1, self._param2, True)
 
+        elif self._requestId == 'createProject':
+            self._log.info("Creating new project '{0}'", self._project)
+            self._packageMgr._createProject(self._project)
+
         else:
             assertThat(False, "Invalid request id '{0}'", self._requestId)
 
@@ -106,7 +110,7 @@ def main():
     parser.add_argument("configPath", help="")
     parser.add_argument("project", help="")
     parser.add_argument('platform', type=str, choices=[x.lower() for x in Platforms.All], help='')
-    parser.add_argument('requestId', type=str, choices=['createPackage', 'deletePackage', 'installRelease', 'listReleases', 'listProjects', 'listPackages', 'updateLinks', 'updateCustomSolution', 'openCustomSolution', 'openUnity'], help='')
+    parser.add_argument('requestId', type=str, choices=['createProject', 'createPackage', 'deletePackage', 'installRelease', 'listReleases', 'listProjects', 'listPackages', 'updateLinks', 'updateCustomSolution', 'openCustomSolution', 'openUnity'], help='')
     parser.add_argument("param1", nargs='?', help="")
     parser.add_argument("param2", nargs='?', help="")
 
