@@ -140,7 +140,7 @@ class PrjRunner:
         curDir = os.getcwd()
         configPath = os.path.join(curDir, ConfigFileName)
 
-        assertThat(not os.path.isfile(configPath))
+        assertThat(not os.path.isfile(configPath), "Found existing projeny config at '{0}'.  Has the configuration already been created?", configPath)
 
         self._sys.createDirectory(os.path.join(curDir, 'UnityPackages'))
         self._sys.createDirectory(os.path.join(curDir, 'UnityProjects'))

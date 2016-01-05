@@ -88,8 +88,10 @@
     <Compile Include="Projeny\PackageManager\Model\PmReleasesHandler.cs" />
     <Compile Include="Projeny\PackageManager\Model\UpmCommandHandler.cs" />
     <Compile Include="Projeny\PackageManager\PmCompositionRoot.cs" />
+    <Compile Include="Projeny\PackageManager\PmCreateNewProjectPopupHandler.cs" />
     <Compile Include="Projeny\PackageManager\PmSettings.cs" />
     <Compile Include="Projeny\PackageManager\PmWindow.cs" />
+    <Compile Include="Projeny\PackageManager\PmWindowInitializer.cs" />
     <Compile Include="Projeny\PackageManager\View\DragList.cs" />
     <Compile Include="Projeny\PackageManager\View\PmView.cs" />
     <Compile Include="Projeny\Util\Assert.cs" />
