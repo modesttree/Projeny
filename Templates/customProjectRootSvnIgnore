@@ -1,8 +1,9 @@
-/*-And
-/*-Web*
-/*-Lin
-/*-OSX
-/*-iOS
-/*-Win
-/*.sln
-/projectCustom.ini
+*-Android
+*-Webplayer
+*-WebGL
+*-Linux
+*-OSX
+*-iOS
+*-Windows
+*.sln
+ProjectCustom.yaml
