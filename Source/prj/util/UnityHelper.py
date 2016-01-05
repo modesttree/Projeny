@@ -103,8 +103,6 @@ class UnityHelper:
 
         except:
             raise UnityUnknownErrorException("Unknown error occurred while running Unity!")
-            # Forward stack trace info as well
-            raise
         finally:
             logWatcher.stop()
 

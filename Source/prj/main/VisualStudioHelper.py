@@ -5,8 +5,6 @@ from prj.ioc.Inject import InjectMany
 import prj.ioc.IocAssertions as Assertions
 import prj.util.MiscUtil as MiscUtil
 
-from prj.util.CommonSettings import ConfigFileName
-
 import win32api
 import win32com.client
 

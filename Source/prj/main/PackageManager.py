@@ -93,7 +93,7 @@ class PackageManager:
         with self._sys.openOutputFile(os.path.join(projDirPath, ProjectConfigFileName)) as outFile:
             outFile.write(
 """
-#packages:
+#Packages:
     # Uncomment and Add package names here
 """)
 
@@ -304,7 +304,7 @@ namespace Projeny
 
         self._sys.deleteDirectoryIfExists('[PluginsDir]/Projeny')
 
-        if self._config.getBool('LinkToProjenyEditorDir'):
+        if self._config.getBool('LinkToProjenyEditorDir') and not MiscUtil.isRunningAsExe():
             self._junctionHelper.makeJunction('[ProjenyDir]/UnityPlugin/Projeny', '[PluginsDir]/Projeny/Editor/Source')
         else:
             dllOutPath = '[PluginsDir]/Projeny/Editor/Projeny.dll'

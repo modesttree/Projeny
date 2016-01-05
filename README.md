@@ -102,7 +102,7 @@ Now if we look at our CubeMover project again, we see that some new folders have
 
 The CubeMover-Windows folder is new, and now has the familiar Assets directory.  It also contains a bunch of folders within it such as CubeMover, CommonShapeMover, etc.
 
-To actually run our project, open the CubeMover-Windows folder in Unity and then open the scene at CubeMover/CubeMain.  After running it you should see the cube move around while changing colors.
+To actually run our project, open the CubeMover-Windows folder in Unity (or run `prj --project CubeMover --openUnity`) and then open the scene at CubeMover/CubeMain.  After running it you should see the cube move around while changing colors.
 
 So where did all these files come from?  The answer is directory links (aka windows junctions aka symbolic links).  All of these new folders are not really folders in themselves but instead they are simply links to existing folders somewhere else.
 
