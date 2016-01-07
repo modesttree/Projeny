@@ -2,3 +2,4 @@
 PathVars:
     UnityPackagesDir: '[ConfigDir]/UnityPackages'
     UnityProjectsDir: '[ConfigDir]/UnityProjects'
+    LogPath: '[ConfigDir]/PrjLog.txt'

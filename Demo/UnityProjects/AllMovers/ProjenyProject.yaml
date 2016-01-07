@@ -1,0 +1,6 @@
+AssetsFolder:
+- AllMovers
+PluginsFolder:
+- CommonShapeMover
+- CubeMover
+- SphereMover
