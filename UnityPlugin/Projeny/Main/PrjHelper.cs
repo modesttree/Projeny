@@ -163,6 +163,21 @@ namespace Projeny
             yield return CreateStandardResponse((PrjResponse)runner.Current);
         }
 
+        public static IEnumerator UpdateCustomSolutionAsync()
+        {
+            // Need the unity solution for defines and references
+            ProjenyEditorUtil.ForceGenerateUnitySolution();
+
+            var runner = PrjInterface.RunPrjAsync(PrjInterface.CreatePrjRequest("updateCustomSolution"));
+
+            while (runner.MoveNext() && !(runner.Current is PrjResponse))
+            {
+                yield return runner.Current;
+            }
+
+            yield return CreateStandardResponse((PrjResponse)runner.Current);
+        }
+
         public static IEnumerator InstallReleaseAsync(ReleaseInfo info)
         {
             var req = PrjInterface.CreatePrjRequest("installRelease");

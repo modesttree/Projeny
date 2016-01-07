@@ -92,4 +92,4 @@ class VisualStudioHelper:
 
         # This will generate the unity csproj files which we need to generate Modest3d.sln correctly
         # It's also necessary to run this first on clean checkouts to initialize unity properly
-        self._unityHelper.runEditorFunction(projectName, platform, 'Projeny.ProjenyEditorUtil.UpdateMonodevelopProject')
+        self._unityHelper.runEditorFunction(projectName, platform, 'Projeny.ProjenyEditorUtil.ForceGenerateUnitySolution')

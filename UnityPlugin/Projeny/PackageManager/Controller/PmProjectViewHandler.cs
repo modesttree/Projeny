@@ -252,11 +252,18 @@ namespace Projeny.Internal
 
         public void OnClickedProjectApplyButton()
         {
+            _asyncProcessor.Process(ApplyProjectChangeAsync(), "Updating Links");
+        }
+
+        IEnumerator ApplyProjectChangeAsync()
+        {
             _projectHandler.OverwriteConfig();
 
-            _asyncProcessor.Process(
-                _prjCommandHandler.ProcessPrjCommand(
-                    "Updating directory links", PrjHelper.UpdateLinksAsync()), "Updating Links");
+            yield return _prjCommandHandler.ProcessPrjCommand(
+                "Updating directory links", PrjHelper.UpdateLinksAsync());
+
+            yield return _prjCommandHandler.ProcessPrjCommand(
+                "Updating custom solution", PrjHelper.UpdateCustomSolutionAsync());
         }
     }
 }

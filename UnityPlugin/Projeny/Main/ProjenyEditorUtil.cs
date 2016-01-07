@@ -68,11 +68,23 @@ namespace Projeny
             return null;
         }
 
-        // This is called by the build script to generate the monodevelop solution
-        // because it uses that when generating its own custom solution
-        public static void UpdateMonodevelopProject()
+        public static void ForceGenerateUnitySolution()
         {
-            EditorApplication.ExecuteMenuItem("Assets/Open C# Project");
+            if (UnityEditorInternal.InternalEditorUtility.inBatchMode)
+            {
+                // This is called by the build script to generate the monodevelop solution
+                // because it uses that when generating its own custom solution
+                EditorApplication.ExecuteMenuItem("Assets/Open C# Project");
+            }
+            else
+            {
+                // Unfortunately we can't use the above method when not in batch mode,
+                // because then it will always open up visual studio/monodevelop
+                // This works though - let's just hope Unity maintains support for this
+                System.Type T = System.Type.GetType("UnityEditor.SyncVS,UnityEditor");
+                System.Reflection.MethodInfo SyncSolution = T.GetMethod("SyncSolution", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                SyncSolution.Invoke(null, null);
+            }
         }
 
         public static ProjectInfo GetCurrentProjectInfo()

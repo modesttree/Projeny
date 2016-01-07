@@ -63,8 +63,8 @@ namespace Projeny
         [MenuItem("Projeny/Update C# Project", false, 6)]
         public static void UpdateCustomSolution()
         {
-            // Need to do this every time in case the user changes the defines in the player settings
-            SyntaxTree.VisualStudio.Unity.Bridge.ProjectFilesGenerator.GenerateProject();
+            // Need the unity solution for defines and references
+            ProjenyEditorUtil.ForceGenerateUnitySolution();
 
             var response = PrjInterface.RunPrj(PrjInterface.CreatePrjRequest("updateCustomSolution"));
 
