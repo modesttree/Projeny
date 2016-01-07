@@ -46,9 +46,25 @@ namespace Projeny
             GetEditorWindow().ShowCreateNewProjectPopup();
         }
 
+        [MenuItem("Projeny/Open C# Project", false, 6)]
+        public static void OpenCustomSolution()
+        {
+            UpdateCustomSolution();
+
+            var response = PrjInterface.RunPrj(PrjInterface.CreatePrjRequest("openCustomSolution"));
+
+            if (!response.Succeeded)
+            {
+                PrjHelper.DisplayPrjError(
+                    "Opening C# Project", response.ErrorMessage);
+            }
+        }
+
         [MenuItem("Projeny/Update C# Project", false, 6)]
         public static void UpdateCustomSolution()
         {
+            EnsureMonoDevelopSolutionExists();
+
             var response = PrjInterface.RunPrj(PrjInterface.CreatePrjRequest("updateCustomSolution"));
 
             if (response.Succeeded)
@@ -60,6 +76,17 @@ namespace Projeny
                 PrjHelper.DisplayPrjError(
                     "Updating C# Project", response.ErrorMessage);
             }
+        }
+
+        static void EnsureMonoDevelopSolutionExists()
+        {
+            if (Directory.GetFiles(Path.Combine(Application.dataPath, "..")).Where(filePath => filePath.EndsWith(".sln")).Any())
+            {
+                // Already generated
+                return;
+            }
+
+            SyntaxTree.VisualStudio.Unity.Bridge.ProjectFilesGenerator.GenerateProject();
         }
 
         [MenuItem("Projeny/Change Platform/Windows", false, 7)]

@@ -50,6 +50,7 @@ class PackageManager:
     _projectInitHandlers = InjectMany('ProjectInitHandlers')
     _schemaLoader = Inject('ProjectSchemaLoader')
     _commonSettings = Inject('CommonSettings')
+    _vsSolutionHelper = Inject('VisualStudioHelper')
 
     def __init__(self):
         self._packageInfos = None

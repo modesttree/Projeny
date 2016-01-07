@@ -258,6 +258,8 @@ This tells Projeny that whenever the AllMovers package is added to a project, th
 
 Projeny can also take advantage of the dependency information between packages to generate a better Visual Studio project.
 
+To see this in action, 
+
 In the sample project, Projeny can generate a custom solution file that contains a C# project for each package in the project:
 
 * AllMovers
