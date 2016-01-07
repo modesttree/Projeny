@@ -41,50 +41,49 @@ from prj.ioc.Inject import Inject
 from prj.util.UnityHelper import UnityHelper
 
 def addArguments(parser):
-    parser.add_argument('-cfg', '--configPath', metavar='CONFIG_PATH', type=str, help="TBD")
 
-    parser.add_argument('-sp', '--suppressPrompts', action='store_true', help='If unset, confirmation prompts will be displayed for important operations.')
-
+    # Core
+    parser.add_argument('-in', '--init', action='store_true', help='Initializes the windows directory links for all projects')
     parser.add_argument('-p', '--project', metavar='PROJECT_NAME', type=str, help="The project to apply changes to.")
     parser.add_argument('-pl', '--platform', type=str, default='win', choices=['win', 'webp', 'webgl', 'and', 'osx', 'ios', 'lin'], help='The platform to use.  If unspecified, windows is assumed.')
 
-    parser.add_argument('-ul', '--updateLinks', action='store_true', help='Updates directory links for the given project using package manager')
-
-    parser.add_argument('-lpr', '--listProjects', action='store_true', help='Display the list of all projects that are in the UnityProjects directory')
-    parser.add_argument('-lpa', '--listPackages', action='store_true', help='')
-
-    parser.add_argument('-lr', '--listReleases', action='store_true', help='')
-
-    parser.add_argument('-uus', '--updateUnitySolution', action='store_true', help='Equivalent to executing the menu option "Assets/Sync MonoDevelop Project" in unity')
-    parser.add_argument('-ucs', '--updateCustomSolution', action='store_true', help='Updates the custom solution for the given project with the files found in the Assets/ folder.  It will also take settings from the generated unity solution such as defines, and references.')
+    # Script settinsg
+    parser.add_argument('-cfg', '--configPath', metavar='CONFIG_PATH', type=str, help="TBD")
 
     parser.add_argument('-v', '--verbose', action='store_true', help='Output debug-level logging')
     parser.add_argument('-vv', '--veryVerbose', action='store_true', help='If set, detailed logging will be output to stdout rather than file')
+    parser.add_argument('-sp', '--suppressPrompts', action='store_true', help='If unset, confirmation prompts will be displayed for important operations.')
 
-    parser.add_argument('-b', '--buildCustomSolution', action='store_true', help='Build the generated custom solution for the given project')
-    parser.add_argument('-d', '--openDocumentation', action='store_true', help='Opens the documentation page in a web browser')
-
+    # Projects
+    parser.add_argument('-lpr', '--listProjects', action='store_true', help='Display the list of all projects that are in the UnityProjects directory')
+    parser.add_argument('-cpr', '--createProject', action='store_true', help='')
+    parser.add_argument('-ul', '--updateLinks', action='store_true', help='Updates directory links for the given project using package manager')
     parser.add_argument('-clp', '--clearProjectGeneratedFiles', action='store_true', help='Remove the generated files for the given project')
     parser.add_argument('-cla', '--clearAllProjectGeneratedFiles', action='store_true', help='Remove all the generated files for all projects')
-
     parser.add_argument('-dal', '--deleteAllLinks', action='store_true', help='Delete all directory links for all projects')
     parser.add_argument('-dpr', '--deleteProject', metavar='PROJECT_NAME', type=str, help="")
+
+    # Packages
+    parser.add_argument('-cpa', '--createPackage', metavar='NEW_PACKAGE_NAME', type=str, help="")
+    parser.add_argument('-lpa', '--listPackages', action='store_true', help='')
     parser.add_argument('-dpa', '--deletePackage', metavar='PACKAGE_NAME', type=str, help="")
 
-    parser.add_argument('-ula', '--updateLinksAllProjects', action='store_true', help='Updates the directory links for all projects')
+    # Releases
+    parser.add_argument('-ins', '--installRelease', type=str, nargs=2, metavar=('RELEASE_NAME', 'RELEASE_VERSION'), help="")
+    parser.add_argument('-lr', '--listReleases', action='store_true', help='')
 
+    # Visual Studio solution stuff
+    parser.add_argument('-uus', '--updateUnitySolution', action='store_true', help='Equivalent to executing the menu option "Assets/Sync MonoDevelop Project" in unity')
+    parser.add_argument('-ucs', '--updateCustomSolution', action='store_true', help='Updates the custom solution for the given project with the files found in the Assets/ folder.  It will also take settings from the generated unity solution such as defines, and references.')
+    parser.add_argument('-b', '--buildCustomSolution', action='store_true', help='Build the generated custom solution for the given project')
+    parser.add_argument('-ocs', '--openCustomSolution', action='store_true', help='Open the solution for the given project/platform')
     parser.add_argument('-bf', '--buildFull', action='store_true', help='Perform a full build of the given project')
 
-    parser.add_argument('-ou', '--openUnity', action='store_true', help='Open unity for the given project')
-    parser.add_argument('-ocs', '--openCustomSolution', action='store_true', help='Open the solution for the given project/platform')
-
-    parser.add_argument('-cco', '--createConfig', action='store_true', help='')
-    parser.add_argument('-cpr', '--createProject', action='store_true', help='')
-    parser.add_argument('-cpa', '--createPackage', metavar='NEW_PACKAGE_NAME', type=str, help="")
-
+    # Misc
     parser.add_argument('-epy', '--editProjectYaml', action='store_true', help='')
-
-    parser.add_argument('-ins', '--installRelease', type=str, nargs=2, metavar=('RELEASE_NAME', 'RELEASE_VERSION'), help="")
+    parser.add_argument('-cco', '--createConfig', action='store_true', help='')
+    parser.add_argument('-ou', '--openUnity', action='store_true', help='Open unity for the given project')
+    parser.add_argument('-d', '--openDocumentation', action='store_true', help='Opens the documentation page in a web browser')
 
 def getProjenyDir():
     # This works for both exe builds (Bin/Prj/Data/Prj.exe) and running from source (Source/prj/main/Prj.py) by coincidence

@@ -67,7 +67,7 @@ class PrjRunner:
             releaseName, releaseVersion = self._args.installRelease
             self._releaseRegistryManager.installReleaseByName(releaseName, releaseVersion)
 
-        if self._args.updateLinksAllProjects:
+        if self._args.init:
             self._packageMgr.updateLinksForAllProjects()
 
         if self._args.updateLinks:

@@ -40,7 +40,7 @@ NOTE: Projeny requires Unity3D 5.3.1 or higher, since it makes use of the `-buil
     * <a href="#command-line-reference">Command Line Reference</a>
     * <a href="#gotchas">Gotchas / Miscellaneous Tips and Tricks</a>
     * <a href="#projectini">Project.ini reference</a>
-    * <a href="#packageini">Package.ini reference</a>
+    * <a href="#package-yaml">Package.ini reference</a>
     * <a href="#visual-studio-generation-usage">Visual Studio Solution Generation</a>
 * <a href="#appendix">Appendix</a>
 * <a href="#release-notes">Release Notes</a>
@@ -65,7 +65,7 @@ You can either run Projeny directly from source (requires python) or simply down
 
 ## <a id="overview"></a>Overview
 
-Projeny works by composing your Unity3D projects based on directory links (aka windows junctions aka symbolic links).
+Projeny works by composing your Unity3D projects based on 'directory links' (aka windows junctions aka symbolic links).
 
 This is best shown with an example.  After installing Projeny, [download the sample project](https://github.com/modesttree/projeny/releases) from the releases page and extract it to a new folder on your hard drive.  The folder structure should appear like this:
 
@@ -83,11 +83,11 @@ This is best shown with an example.  After installing Projeny, [download the sam
     * SphereMover
         * ProjectSettings
 
-Each folder in the UnityProjects directory represents an actual Unity3D project.  Note that they each have the familiar ProjectSettings directory but they do not yet have an Assets directory.  This is because these projects have not been initialized yet by Projeny.  You'll also notice a file named Projeny.yaml at the root of the folder structure.  This is a simple text file that is used to specify Projeny configuration settings
+Each folder in the UnityProjects directory represents an actual Unity3D project.  Note that they each have the familiar ProjectSettings directory but they do not yet have an Assets directory.  This is because these projects have not been initialized yet by Projeny.  You'll also notice a file named Projeny.yaml at the root of the folder structure.  This is a simple text file that is used to specify Projeny configuration settings.
 
-To initialize one of these unity projects we must run projeny from the command line.  Open up command prompt or powershell and navigate to the root directory (the same directory where you will find Projeny.yaml).  Then execute `prj --project CubeMover --updateLinks` (or the shortened form `prj -p CubeMover -ul`).  If the prj command is not found, check that it has been added to your windows PATH variable, as mentioned in the <a href="#installation">install instructions</a>.
+To initialize these unity projects we must run projeny from the command line.  Open up command prompt or powershell and navigate to the root directory (the same directory where you will find Projeny.yaml).  Then execute `prj --init`.  If the prj command is not found, check that it has been added to your windows PATH variable, as mentioned in the <a href="#installation">install instructions</a>.  All this command does is initialize some of the the directory links for these projects.
 
-Now if we look at our CubeMover project again, we see that some new folders have been added
+If we look at our project folders again, we see that a bunch of new folders appear to have been added.  Let's look at the CubeMover project in particular:
 
 * UnityProjects
     * CubeMover
@@ -102,62 +102,62 @@ Now if we look at our CubeMover project again, we see that some new folders have
 
 The CubeMover-Windows folder is new, and now has the familiar Assets directory.  It also contains a bunch of folders within it such as CubeMover, CommonShapeMover, etc.
 
-To actually run our project, open the CubeMover-Windows folder in Unity (or run `prj --project CubeMover --openUnity`) and then open the scene at CubeMover/CubeMain.  After running it you should see the cube move around while changing colors.
+To actually run our project, open the CubeMover-Windows folder in Unity and then open the scene at CubeMover/CubeMain.  After running it you should see the cube move around while changing colors.
 
-So where did all these files come from?  The answer is directory links (aka windows junctions aka symbolic links).  All of these new folders are not really folders in themselves but instead they are simply links to existing folders somewhere else.
+So where did all these files come from?  The answer is 'directory links' (aka windows junctions aka symbolic links).  All of these new folders are not really folders in themselves but instead they are simply links to existing folders somewhere else.
 
-In fact, if you're using source control, the entire CubeMover-Windows directory should be excluded from it (by using a .gitignore file, a .svnignore, .p4ignore, or whatever ignore method applies to the source control you're using).  See the sample projects for an example .gitignore file, or [here](https://github.com/modesttree/projeny/blob/master/Templates/customProjectRootSvnIgnore) for an example subversion ignore file
+In fact, if you're using source control, the entire CubeMover-Windows directory should be excluded from it (by using a .gitignore file, a .svnignore, .p4ignore, or whatever ignore method applies to the source control you're using).  If you're using subversion or git, this will happen automatically when you initialize your project (otherwise, you will have to make sure to add the ignore files yourself).
 
-We do this because the contents of the CubeMover-Windows folder does not itself contain any real content.  It simply contains temporary files generated by unity (such as the Library folder) and directory links to other directories that actually contain the content.
+We do this because the contents of the CubeMover-Windows folder does not itself contain any real content.  It simply contains temporary files generated by Unity (such as the Library folder) and directory links to other directories that actually do contain content.
 
-The directories containing the actual content can be found in the UnityPackages directory.  This is where you will find the CubeMover, CommonShapeMover, and Projeny folders that we see linked to underneath the assets directory.
+The directories containing the actual content can be found in the UnityPackages directory.  This is where you will find the CubeMover and CommonShapeMover folders that we see linked to underneath the assets directory.
 
-But how does Projeny know which packages to use for the CubeMover project?  For this it reads from a configuration file which can be found at CubeMover/Project.yaml.  If you open this file it should read as follows:
+But how does Projeny know which packages to use for the CubeMover project?  For this it reads from a configuration text file, which can be found at CubeMover/ProjenyProject.yaml.  If you open this file it should read as follows:
 
 ```
-[Config]
-    packages:
-        CubeMover
-        CommonShapeMover
+AssetsFolder:
+    - CubeMover
+    - CommonShapeMover
 ```
 
-Here we see the list of packages to include for this project underneath the "packages" setting.  This file is all that's required to create a new project with Projeny.  You simply need to add a new directory underneath the UnityProjects directory with the name of your new project, then create a Project.yaml file that contains the list of packages that you wish to include in this project  (also, if you're using source control, don't forget to include the ignore file to avoid submitting the generated folders)
+Here we see the list of packages to include for this project underneath the setting "AssetsFolder".
+
+Most of the time however, you will not need to edit this file directly.  Instead, you can use projeny's built-in unity plugin to manipulate this file.  You can try this by opening the CubeMover project in Unity, then clicking the menu item `Projeny -> Package Manager...`.  This window will be be explained in more detail in the following sections.
 
 ## <a id="advantages"></a>Advantages of Using Projeny
 
 #### <a id="shared-files"></a>1 - Shared files between projects
 
-By using directory links, you can have multiple unity projects all using the same package folders, without needing to copy and paste each package per project.  You can change a file such as a prefab or a C# file, and that change will apply to all other projects that are using it as well
+By using directory links, you can have multiple unity projects all using the same package folders, without needing to copy and paste each package per project.  You can change a file such as a prefab or a C# file, and that change will be applied to all other projects that are using it as well
 
 Previously, the best way to share code between different unity projects was to put the code into a DLL and then output that DLL to all the Unity Projects that you want to use it in.  This works ok but has a number of <a href="#dllgotchas">gotchas</a> that make this approach difficult to do correctly.
 
 Want to just test one part of your game without needing to fire up the entire project?  Just create another unity project and reference only the parts of the game you want to test.
 
 To see this in action, do the following:
-* Execute `upm --project SphereMover --updateLinks` (or the shortened form `upm -p SphereMover -ul`)
 * Open unity then open the project at UnityProjects/SphereMover/SphereMover-Windows
-* Open the scene named SphereMain
-* Run this - you should see the sphere move around and change colors.
+* Open another copy of unity then open the project at UnityProjects/CubeMover/CubeMover-Windows
+* Open the scene named SphereMain in the first unity and the scene CubeMain in the second unity
+* If you run them you should see the shapes move and change colors
 * The script used here to move both the Sphere here and the Cube in the CubeMover project is the same, and can be found in the shared package CommonShapeMover.
-
-Or as another (more interesting) example:
-* Execute `upm --project AllMovers --updateLinks` (or the shortened form `upm -p AllMovers -ul`)
-* Open up the unity project at UnityProjects/AllMovers/AllMovers-Windows
+* Then, as a further example, open up the unity project at UnityProjects/AllMovers/AllMovers-Windows
 * Run the scene AllMovers
-* You should see both the cube and sphere in the same scene.
-* This is achieved by sharing the prefab for both the cube and the sphere across all these projects.
+* You should see both the cube and sphere in the same scene
+* This works because these three projects all have some shared packages.  Note that this allows sharing code as well prefabs (ie. the cube and the sphere prefabs), scenes, etc.
 
-#### <a id="organization"></a>2 - Organization and re-usability
+#### <a id="organization"></a>2 - Package Organization and Asset Store integration
 
-You can more easily manage many different unity packages that you've created yourself, but also those packages that you've installed through the asset store.  You can build up a big collection of packages that you've purchased through the asset store and placed in your UnityPackages directory, and then easily include or exclude those in your Unity projects by simply selecting or not selecting them in the Project.yaml file for each project.
+Projeny allows you to much more easily manage many different unity packages that you've created yourself, but also those packages that you've installed through the asset store. 
+
+You can build up a big collection of packages that you've purchased through the asset store and added to your UnityPackages directory, and then easily include or exclude those in your purchased assets by simply selecting or not selecting them in each project.  Projeny can also be used to easily upgrade/downgrade installed asset store packages all through a simple GUI interface.  See <a href="#managing-assetstore-assets">this section</a> for more details on managing asset store packages through projeny.
 
 #### <a id="platform-switching"></a>3 - Near instant platform switching
 
-You might also have noticed above that there is multiple ProjectSettings folders.  One underneath CubeMover and another underneath CubeMover-Windows.
+You might be wondering why the projects that you've been dealing with are all marked with the suffix '-Windows'.  Or why there are multiple ProjectSettings folders that appear after you run the --init command as described above (One underneath CubeMover and another underneath CubeMover-Windows)
 
-The reason for this is to allow Projeny to create separate unity project directories for each platform, so that we can jump instantly from one platform to another without needing to wait for unity to process all the assets.
+The reason for this is to allow Projeny to create entirely separate unity project directories for each platform.  This allows us to jump instantly from one platform to another without needing to wait for unity to process all the assets.
 
-In the example above, we have only initialized the windows unity project "CubeMover-Windows" but we can also create "CubeMover-iOS", "CubeMover-Android", etc. by opening these platforms for this project.
+In the examples above, we have only initialized the windows unity project "CubeMover-Windows" but we can also create "CubeMover-iOS", "CubeMover-Android", etc. by opening these platforms for this project.
 
 When that occurs, Projeny will create a directory link to the main ProjectSettings directory so that we can have all these different platform-specific projects use the same unity project settings.
 
@@ -165,32 +165,45 @@ To see this in action, open up the CubeMover project in Unity then select the me
 
 #### <a id="compilation-time-optimization"></a>4 - Compile time optimization
 
-Unity compiles your project in multiple passes.  The first pass compiles all C# files that are in the Plugins/ directory and the second pass covers all other C# files.  If Unity does not detect any changes in the Plugins/ directory then Unity will skip this first pass and only execute the second pass.  (Note: This is a bit of a simplification - see [here](http://docs.unity3d.com/Manual/ScriptCompileOrderFolders.html) for full details)
+Unity compiles your project in multiple passes.  The first pass compiles all C# files that are in the Plugins/ directory and the second pass compiles all other C# files.  If Unity does not detect any changes in the Plugins/ directory then Unity will skip this first pass and only execute the second pass.  (Note: This is a bit of a simplification - see [here](http://docs.unity3d.com/Manual/ScriptCompileOrderFolders.html) for full details)
 
 We can take advantage of this by always putting all stable packages (such as those obtained through asset store) into the Plugins folder and putting the packages that we change frequently directly underneath the Assets folder.
 
-And because we are using directory links, and the entire CubeMover-Windows folder is ignored by source control, changing the location of these directory links is trivial.  You can modify this directory structure multiple times per day based on what you're working on, by simply modifying a few lines in your Project.yaml file.
+And because we are using directory links, and the entire CubeMover-Windows folder is ignored by source control, changing the location of these directory links is trivial.  You can modify this directory structure multiple times per day based on what you're working on, by simply using changing a few things in the Projeny Package Manager window.
 
-For example, if you change the CubeMover/Project.yaml file from this:
+To see this in action, open up the AllMovers-Windows project.
 
-```
-[Config]
-    packages:
-        CubeMover
-        CommonShapeMover
-```
+By default, the assets folder should appear as follows:
 
-To this:
+* AllMovers
+* CommonShapeMover
+* CubeMover
+* Plugins
+    * Projeny
+* SphereMover
 
-```
-[Config]
-    packages:
-        CubeMover
-    pluginPackages:
-        CommonShapeMover
-```
+If we are only working within the AllMovers project, there is no reason we need to be recompiling CommonShapeMover, CubeMover, and SphereMover projects every time a script changes.  So these projects can be moved to be underneath the Plugins folder.
 
-Then the CommonShapeMover package will be placed in the Plugins directory.  Any changes we make to source files within the CubeMover directory will be compiled more quickly since it will not need to re-compile the source files inside CommonShapeMover
+To do this, open up the package manager by clicking on the menu item `Projeny -> Package Manager...`.  You should see something like this:
+
+<img src="Docs/Screen1.png?raw=true" alt="Package Manager" />
+
+If you click on the Edit button you should see the ProjenyProject.yaml file that we saw previously.  This screen is simply an easier way to edit this through a graphical interface.
+
+Now, drag the CommonShapeMover, CubeMover, and SphereMover projects to the Plugins folder, so that it looks like this:
+
+<img src="Docs/Screen2.png?raw=true" alt="Package Manager" />
+
+Then click the "Apply" button.  This will update the ProjenyProject.yaml file and also update the directory links in our project to match.  After Unity refreshes, if you look at the Assets tab, it should now appear how we want:
+
+* AllMovers
+* Plugins
+    * CommonShapeMover
+    * CubeMover
+    * Projeny
+    * SphereMover
+
+Now we can continue coding within the AllMovers project and benefit from faster compile times.
 
 #### <a id="platform-specific-folders"></a>5 - Platform specific package folders
 
@@ -202,43 +215,50 @@ One example use for this is if you had a large Resources folder that contained a
 
 This can also make things easier when it comes to code.  You can have entire package folders be platform specific, then you no longer need to add #ifdef's around entire files to avoid the compile errors on other platforms.
 
+For more details on how to use this feature, see <a href="#package-yaml">the section on package configuration</a>.
+
 #### <a id="dependency-management"></a>6 - Dependency Management of Packages
 
 When adding a package to the UnityPackages directory, you can also specify the packages that this package depends on.  Then, when Projeny is generating your unity project directory, it can automatically figure out which packages you need.
 
 This is very powerful, because often when working on a new project you want to just be able to ask for package X, and you don't want to have to think about what other packages this package requires.
 
-For example, if you look at the Project.yaml for the included sample project AllMovers, it reads as follows:
+To see this in action, open up the AllMovers-Windows project again.  Then open the package manager by clicking `Projeny -> Package Manager...`.  In the Project section, try deleting the projects CommonShapeMover, CubeMover, and SphereMover.  You can do this by either clicking them and hitting delete, or right clicking and selecting Remove.  The package manager should then look like this:
 
-```
-[Config]
-    packages:
-        AllMovers
-```
+<img src="Docs/Screen3.png?raw=true" alt="Package Manager" />
 
-But if you look at the generated directory structure of the unity project you see the following:
+Then hit Apply.  If you then look at the Assets tab, you should see the following directory structure:
 
 * AllMovers
-* CubeMover
 * Plugins
     * CommonShapeMover
+    * CubeMover
     * Projeny
-* SphereMover
+    * SphereMover
 
-How does Projeny know to add all these extra directory links?  It knows this because when it goes to add the AllMovers package, it inspects the package configuration file for it, which you can find at UnityPackages/AllMovers/package.ini and reads as follows:
+So the question is, why were the SphereMover, CommonShapeMover, and CubeMover packages added even when not specified in the ProjenyProject.yaml file?
 
-```
-[Config]
+The reason for this is that the AllMovers package has its own set up dependencies.
+
+To see this, click the arrow on the far left side in the Package Manager window.  This will show change the view to show the full list of packages that are available for use in your project, in addition to the previous screen that showed the current ProjenyProject.yaml configuration settings.
+
+Now, right click on the AllMovers package in the Packages list and select "Edit ProjenyPackage.yaml", as shown here:
+
+<img src="Docs/Screen4.png?raw=true" alt="Package Manager" />
+
+This will open up the file at UnityPackages/AllMovers/ProjenyPackage.yaml.  It should appear as follows:
+
     Dependencies:
-        CubeMover
-        SphereMover
-```
+        - CubeMover
+        - SphereMover
 
-This tells Projeny that whenever the AllMovers package is added to a project, the SphereMover and CubeMover packages should be added as well.  This process repeats recursively for the SphereMover and CubeMover packages.  In this case, it find that it also needs to add the CommonShapeMover package, which both SphereMover and CubeMover depend on.
+This tells Projeny that whenever the AllMovers package is added to a project, the SphereMover and CubeMover packages should be added as well.  Once projeny processes the ProjenyPackage.yaml file for the AllMovers project, it will then look at the ProjenyPackage.yaml for the CubeMover and the SphereMover projects, and then repeat again for those dependencies, etc.  (The CubeMover and SphereMover packages are what contain the reference to CommonShapeMover).
 
 #### <a id="visual-studio-generation"></a>7 - More intelligent Visual Studio Solution generation
 
-Projeny can also take advantage of the dependency information between packages to generate a better Visual Studio project.  In the sample project, Projeny can generate a custom solution file that contains a C# project for each package in the project:
+Projeny can also take advantage of the dependency information between packages to generate a better Visual Studio project.
+
+In the sample project, Projeny can generate a custom solution file that contains a C# project for each package in the project:
 
 * AllMovers
 * CubeMover
@@ -253,6 +273,10 @@ For example, it is common to build up a library of re-usable utility functions t
 
 For usage details on this feature see <a href="#visual-studio-generation-usage">this section</a>
 
+## <a id="managing-assetstore-assets"></a>Managing Asset Store Assets
+
+TBD
+
 ## <a id="common-workflows"></a>Common Workflows
 
 #### <a id="workflow-create-package"></a>1. Create a new package
@@ -261,7 +285,7 @@ For usage details on this feature see <a href="#visual-studio-generation-usage">
 * Done. You can now refer to this package by its folder name
 * (optional) Add a package.ini file to your new folder
     * This can be used to declare some dependencies for this package, or flag it for use with only specific platforms, etc.
-    * See <a href="#packageini">here</a> for the full package.ini reference
+    * See <a href="#package-yaml">here</a> for the full package.ini reference
 
 #### <a id="workflow-create-project"></a>2. Create a new project
 * Go to the UnityProjects directory
@@ -397,7 +421,7 @@ The format of the Project.yaml is as follows:
         packages:
             {PackageName}
             {PackageName}
-        packagesPlugins:
+        PluginsFolder:
             {PackageName}
             {PackageName}
             {PackageName}
@@ -413,14 +437,14 @@ The format of the Project.yaml is as follows:
 
 * The `{PackageName}` items above would be replaced with names of directories that are below your UnityPackages directory.
 * Packages that are listed underneath the `packages` category will be placed directly underneath the Assets/ directory of your project
-* Packages that are listed underneath the `packagesPlugins` category will be placed directly underneath the Assets/Plugins directory of your project
+* Packages that are listed underneath the `PluginsFolder` category will be placed directly underneath the Assets/Plugins directory of your project
 * All packages underneath the `solutionProjects` category will have their own .csproj file generated, when running `Project -> Custom Solution -> Update` from within unity or executing the <a href="##commandline-updateCustomSolution">`-ucs` command line option</a>
     * Note that in this case you can also use a regular expression instead of explitly listing every package you want a project for
     * It is common to want a csproj file generated for every package in your project, in which case you can add the line `/.*` which will match everything
 * You can also optionally add folders to the generated solution, to organize related projects together.  Each folder has one regex pattern that is used to filter the full list of projects.
 * Note that the regex used here following the regex rules defined for python (more details <a href="https://docs.python.org/2/library/re.html">here</a>)
 
-## <a id="packageini"></a>Package.ini reference
+## <a id="package-yaml"></a>Package.ini reference
 
 In most cases your package.ini will simply list the other packages that this package depends on.  It will look like this:
 
@@ -503,7 +527,7 @@ As you can see, by default Projeny generates a very similar solution file to the
 [Config]
     packages:
         AllMovers
-    packagesPlugins:
+    PluginsFolder:
         CubeMover
         SphereMover
     solutionProjects:
@@ -529,7 +553,7 @@ In many cases you might want to just create a project for every package in your 
 [Config]
     packages:
         AllMovers
-    packagesPlugins:
+    PluginsFolder:
         CubeMover
         SphereMover
     solutionProjects:
