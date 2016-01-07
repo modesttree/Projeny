@@ -63,7 +63,8 @@ namespace Projeny
         [MenuItem("Projeny/Update C# Project", false, 6)]
         public static void UpdateCustomSolution()
         {
-            EnsureMonoDevelopSolutionExists();
+            // Need to do this every time in case the user changes the defines in the player settings
+            SyntaxTree.VisualStudio.Unity.Bridge.ProjectFilesGenerator.GenerateProject();
 
             var response = PrjInterface.RunPrj(PrjInterface.CreatePrjRequest("updateCustomSolution"));
 
@@ -76,17 +77,6 @@ namespace Projeny
                 PrjHelper.DisplayPrjError(
                     "Updating C# Project", response.ErrorMessage);
             }
-        }
-
-        static void EnsureMonoDevelopSolutionExists()
-        {
-            if (Directory.GetFiles(Path.Combine(Application.dataPath, "..")).Where(filePath => filePath.EndsWith(".sln")).Any())
-            {
-                // Already generated
-                return;
-            }
-
-            SyntaxTree.VisualStudio.Unity.Bridge.ProjectFilesGenerator.GenerateProject();
         }
 
         [MenuItem("Projeny/Change Platform/Windows", false, 7)]
