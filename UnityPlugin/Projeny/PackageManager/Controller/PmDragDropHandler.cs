@@ -191,7 +191,24 @@ namespace Projeny.Internal
                 }
                 case DragListTypes.Release:
                 {
-                    // Nothing can drag here
+                    // nothing can drag to releases
+                    break;
+                }
+                case DragListTypes.VsSolution:
+                {
+                    if (sourceType == DragListTypes.AssetItem || sourceType == DragListTypes.PluginItem)
+                    {
+                        foreach (var entry in entries)
+                        {
+                            var name = (string)entry.Model;
+
+                            if (!_model.HasVsProject(name))
+                            {
+                                _model.AddVsProject(name);
+                            }
+                        }
+                    }
+
                     break;
                 }
                 default:

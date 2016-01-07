@@ -420,7 +420,7 @@ However, we are not doing any of the things that Unity warns about here so this 
 The format of the Project.yaml is as follows:
 
     [Config]
-        packages:
+        AssetsFolder:
             {PackageName}
             {PackageName}
         PluginsFolder:
@@ -527,7 +527,7 @@ As you can see, by default Projeny generates a very similar solution file to the
 
 ```
 [Config]
-    packages:
+    AssetsFolder:
         AllMovers
     PluginsFolder:
         CubeMover
@@ -553,7 +553,7 @@ In many cases you might want to just create a project for every package in your 
 
 ```
 [Config]
-    packages:
+    AssetsFolder:
         AllMovers
     PluginsFolder:
         CubeMover

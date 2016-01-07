@@ -24,6 +24,7 @@ namespace Projeny.Internal
         AsyncProcessor _asyncProcessor;
 
         PmProjectViewHandler _projectViewHandler;
+        PmVsSolutionViewHandler _solutionViewHandler;
         PmProjectHandler _projectHandler;
 
         PmReleasesHandler _releasesHandler;
@@ -70,6 +71,7 @@ namespace Projeny.Internal
         {
             _viewModelSyncer.Initialize();
             _projectViewHandler.Initialize();
+            _solutionViewHandler.Initialize();
             _packageViewHandler.Initialize();
             _releasesViewHandler.Initialize();
             _dragDropHandler.Initialize();
@@ -111,6 +113,10 @@ namespace Projeny.Internal
                 _model, _view, _projectHandler, _asyncProcessor,
                 _prjCommandHandler, _viewErrorHandler);
 
+            _solutionViewHandler = new PmVsSolutionViewHandler(
+                _model, _view, _asyncProcessor,
+                _prjCommandHandler, _viewErrorHandler);
+
             _releasesViewHandler = new PmReleasesViewHandler(
                 _model, _view, _asyncProcessor, _releasesHandler, _packageHandler, _prjCommandHandler, _settings);
         }
@@ -120,6 +126,7 @@ namespace Projeny.Internal
             _asyncProcessor.Tick();
 
             _projectViewHandler.Update();
+            _solutionViewHandler.Update();
             _packageViewHandler.Update();
 
             _viewAsyncHandler.Update();

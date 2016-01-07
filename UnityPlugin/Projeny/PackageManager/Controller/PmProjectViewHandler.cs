@@ -55,6 +55,7 @@ namespace Projeny.Internal
             _model.AssetItemsChanged += _eventManager.Add(OnProjectConfigDirty, EventQueueMode.LatestOnly);
             _model.PackagesChanged += _eventManager.Add(OnProjectConfigDirty, EventQueueMode.LatestOnly);
             _model.ReleasesChanged += _eventManager.Add(OnProjectConfigDirty, EventQueueMode.LatestOnly);
+            _model.VsProjectsChanged += _eventManager.Add(OnProjectConfigDirty, EventQueueMode.LatestOnly);
 
             _projectHandler.SavedConfigFile += _eventManager.Add(OnSavedConfigFile, EventQueueMode.LatestOnly);
             _projectHandler.LoadedConfigFile += _eventManager.Add(OnLoadedConfigFile, EventQueueMode.LatestOnly);
@@ -73,6 +74,7 @@ namespace Projeny.Internal
             _model.AssetItemsChanged -= _eventManager.Remove(OnProjectConfigDirty);
             _model.PackagesChanged -= _eventManager.Remove(OnProjectConfigDirty);
             _model.ReleasesChanged -= _eventManager.Remove(OnProjectConfigDirty);
+            _model.VsProjectsChanged -= _eventManager.Remove(OnProjectConfigDirty);
 
             _projectHandler.SavedConfigFile -= _eventManager.Remove(OnSavedConfigFile);
             _projectHandler.LoadedConfigFile -= _eventManager.Remove(OnLoadedConfigFile);

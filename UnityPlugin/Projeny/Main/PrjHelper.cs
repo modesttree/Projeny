@@ -163,6 +163,19 @@ namespace Projeny
             yield return CreateStandardResponse((PrjResponse)runner.Current);
         }
 
+        // NOTE: It's up to the calling code to update the solution first
+        public static IEnumerator OpenCustomSolutionAsync()
+        {
+            var runner = PrjInterface.RunPrjAsync(PrjInterface.CreatePrjRequest("openCustomSolution"));
+
+            while (runner.MoveNext() && !(runner.Current is PrjResponse))
+            {
+                yield return runner.Current;
+            }
+
+            yield return CreateStandardResponse((PrjResponse)runner.Current);
+        }
+
         public static IEnumerator UpdateCustomSolutionAsync()
         {
             // Need the unity solution for defines and references

@@ -33,6 +33,7 @@ namespace Projeny.Internal
             _model.AssetItemsChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
             _model.PackagesChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
             _model.ReleasesChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
+            _model.VsProjectsChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
 
             _view.ViewStateChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
 
@@ -74,6 +75,7 @@ namespace Projeny.Internal
             _model.AssetItemsChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
             _model.PackagesChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
             _model.ReleasesChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
+            _model.VsProjectsChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
 
             foreach (var list in _view.Lists)
             {
@@ -108,6 +110,20 @@ namespace Projeny.Internal
             _view.SetListItems(
                 DragListTypes.Package,
                 OrderPackages().Select(x => CreateListItem(x)).ToList());
+
+            _view.SetListItems(
+                DragListTypes.VsSolution,
+                OrderVsProjects().Select(x => CreateListItemForVsProject(x)).ToList());
+        }
+
+        IEnumerable<string> OrderVsProjects()
+        {
+            if (_view.GetList(DragListTypes.VsSolution).SortDescending)
+            {
+                return _model.VsProjects.OrderByDescending(x => x);
+            }
+
+            return _model.VsProjects.OrderBy(x => x);
         }
 
         IEnumerable<string> OrderAssetItems()
@@ -198,11 +214,33 @@ namespace Projeny.Internal
             return null;
         }
 
+        DragList.ItemDescriptor CreateListItemForVsProject(string name)
+        {
+            string caption;
+
+            if (_model.HasAssetItem(name) || _model.HasPluginItem(name))
+            {
+                caption = ImguiUtil.WrapWithColor(
+                    name, _pmSettings.View.Theme.DraggableItemAlreadyAddedColor);
+            }
+            else
+            {
+                caption = name;
+            }
+
+            return new DragList.ItemDescriptor()
+            {
+                Caption = caption,
+                Model = name
+            };
+        }
+
         DragList.ItemDescriptor CreateListItemForProjectItem(string name)
         {
             string caption;
 
-            if (_view.ViewState == PmViewStates.PackagesAndProject)
+            if (_view.ViewState == PmViewStates.PackagesAndProject
+                || (_view.ViewState == PmViewStates.ProjectAndVisualStudio && _model.HasVsProject(name)))
             {
                 caption = ImguiUtil.WrapWithColor(name, _pmSettings.View.Theme.DraggableItemAlreadyAddedColor);
             }

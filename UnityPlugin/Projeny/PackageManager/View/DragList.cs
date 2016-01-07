@@ -13,6 +13,7 @@ namespace Projeny.Internal
         Release,
         AssetItem,
         PluginItem,
+        VsSolution,
         Count
     }
 

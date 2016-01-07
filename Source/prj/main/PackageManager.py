@@ -94,7 +94,7 @@ class PackageManager:
         with self._sys.openOutputFile(os.path.join(projDirPath, ProjectConfigFileName)) as outFile:
             outFile.write(
 """
-#Packages:
+#AssetsFolder:
     # Uncomment and Add package names here
 """)
 

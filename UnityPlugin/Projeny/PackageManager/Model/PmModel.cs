@@ -15,6 +15,7 @@ namespace Projeny.Internal
         ReleasesAndPackages,
         PackagesAndProject,
         Project,
+        ProjectAndVisualStudio,
     }
 
     [Serializable]
@@ -24,6 +25,7 @@ namespace Projeny.Internal
         public event Action AssetItemsChanged = delegate {};
         public event Action PackagesChanged = delegate {};
         public event Action ReleasesChanged = delegate {};
+        public event Action VsProjectsChanged = delegate {};
 
         [SerializeField]
         List<PackageInfo> _packages = new List<PackageInfo>();
@@ -36,6 +38,9 @@ namespace Projeny.Internal
 
         [SerializeField]
         List<string> _pluginItems = new List<string>();
+
+        [SerializeField]
+        List<string> _vsProjects = new List<string>();
 
         public PmModel()
         {
@@ -73,10 +78,24 @@ namespace Projeny.Internal
             }
         }
 
+        public IEnumerable<string> VsProjects
+        {
+            get
+            {
+                return _vsProjects;
+            }
+        }
+
         public void ClearAssetItems()
         {
             _assetItems.Clear();
             AssetItemsChanged();
+        }
+
+        public void RemoveVsProject(string name)
+        {
+            _vsProjects.RemoveWithConfirm(name);
+            VsProjectsChanged();
         }
 
         public void RemoveAssetItem(string name)
@@ -90,6 +109,11 @@ namespace Projeny.Internal
             return _assetItems.Contains(name);
         }
 
+        public bool HasVsProject(string name)
+        {
+            return _vsProjects.Contains(name);
+        }
+
         public bool HasPluginItem(string name)
         {
             return _pluginItems.Contains(name);
@@ -99,6 +123,12 @@ namespace Projeny.Internal
         {
             _pluginItems.RemoveWithConfirm(name);
             PluginItemsChanged();
+        }
+
+        public void AddVsProject(string name)
+        {
+            _vsProjects.Add(name);
+            VsProjectsChanged();
         }
 
         public void AddAssetItem(string name)

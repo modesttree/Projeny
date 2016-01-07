@@ -21,6 +21,8 @@ namespace Projeny.Internal
         public event Action ClickedProjectRevertButton = delegate {};
         public event Action ClickedProjectSaveButton = delegate {};
         public event Action ClickedProjectEditButton = delegate {};
+        public event Action ClickedUpdateSolution = delegate {};
+        public event Action ClickedOpenSolution = delegate {};
         public event Action<DragListTypes, DragListTypes, List<DragListEntry>> DraggedDroppedListEntries = delegate {};
         public event Action ProjectConfigTypeChanged = delegate {};
 
@@ -36,6 +38,7 @@ namespace Projeny.Internal
 
         float _split1 = 0;
         float _split2 = 0.5f;
+        float _split3 = 1.0f;
 
         float _lastTime = 0.5f;
 
@@ -275,6 +278,10 @@ namespace Projeny.Internal
                 {
                     return sourceListType == DragListTypes.Package || sourceListType == DragListTypes.AssetItem;
                 }
+                case DragListTypes.VsSolution:
+                {
+                    return sourceListType == DragListTypes.AssetItem || sourceListType == DragListTypes.PluginItem;
+                }
             }
 
             Assert.Throw();
@@ -290,6 +297,23 @@ namespace Projeny.Internal
 
             _split1 = Mathf.Lerp(_split1, GetDesiredSplit1(), px);
             _split2 = Mathf.Lerp(_split2, GetDesiredSplit2(), px);
+            _split3 = Mathf.Lerp(_split3, GetDesiredSplit3(), px);
+        }
+
+        float GetDesiredSplit2()
+        {
+            if (ViewState == PmViewStates.ReleasesAndPackages)
+            {
+                return 1.0f;
+            }
+
+            if (ViewState == PmViewStates.PackagesAndProject)
+            {
+                return 0.4f;
+            }
+
+            Assert.That(ViewState == PmViewStates.Project || ViewState == PmViewStates.ProjectAndVisualStudio);
+            return 0;
         }
 
         float GetDesiredSplit1()
@@ -300,6 +324,16 @@ namespace Projeny.Internal
             }
 
             return 0;
+        }
+
+        float GetDesiredSplit3()
+        {
+            if (ViewState == PmViewStates.ProjectAndVisualStudio)
+            {
+                return 0.5f;
+            }
+
+            return 1.0f;
         }
 
         public void DrawPopupCommon(Rect fullRect, Rect popupRect)
@@ -627,21 +661,6 @@ namespace Projeny.Internal
             }
         }
 
-        float GetDesiredSplit2()
-        {
-            if (ViewState == PmViewStates.ReleasesAndPackages)
-            {
-                return 1.0f;
-            }
-
-            if (ViewState == PmViewStates.Project)
-            {
-                return 0;
-            }
-
-            return 0.4f;
-        }
-
         public void OnGUI(Rect fullRect)
         {
             GUI.skin = _pmSettings.GUISkin;
@@ -660,6 +679,11 @@ namespace Projeny.Internal
                 fullRect.width - _settings.ListVerticalSpacing - _settings.ArrowWidth,
                 fullRect.height - _settings.MarginBottom);
 
+            if (_split1 >= 0.1f)
+            {
+                DrawReleasePane(windowRect);
+            }
+
             if (_split2 >= 0.1f)
             {
                 DrawPackagesPane(windowRect);
@@ -668,11 +692,6 @@ namespace Projeny.Internal
             if (_split2 <= 0.92f)
             {
                 DrawProjectPane(windowRect);
-            }
-
-            if (_split1 >= 0.1f)
-            {
-                DrawReleasePane(windowRect);
             }
 
             GUI.enabled = true;
@@ -819,6 +838,53 @@ namespace Projeny.Internal
             }
         }
 
+        void DrawVisualStudioPane(Rect windowRect)
+        {
+            var startX = windowRect.xMin + _split3 * windowRect.width + _settings.ListVerticalSpacing;
+            var endX = windowRect.xMax - _settings.ListVerticalSpacing;
+            var startY = windowRect.yMin + 2 * _settings.HeaderHeight;
+            var endY = windowRect.yMax;
+
+            var rect = Rect.MinMaxRect(startX, startY, endX, endY);
+
+            DrawVisualStudioPane2(rect);
+        }
+
+        void DrawVisualStudioPane2(Rect rect)
+        {
+            var startX = rect.xMin;
+            var endX = rect.xMax;
+            var startY = rect.yMin;
+            var endY = startY + _settings.HeaderHeight;
+
+            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Visual Studio Solution", _settings.HeaderTextStyle);
+
+            startY = endY;
+            endY = rect.yMax - _settings.ApplyButtonHeight - _settings.ApplyButtonTopPadding;
+
+            GetList(DragListTypes.VsSolution).Draw(Rect.MinMaxRect(startX, startY, endX, endY));
+
+            startY = endY + _settings.ApplyButtonTopPadding;
+            endY = rect.yMax;
+
+            var horizMiddle = 0.5f * (rect.xMax + rect.xMin);
+
+            endX = horizMiddle - 0.5f * _pmSettings.PackagesPane.ButtonPadding;
+
+            if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Update Solution"))
+            {
+                ClickedUpdateSolution();
+            }
+
+            startX = endX + _pmSettings.PackagesPane.ButtonPadding;
+            endX = rect.xMax;
+
+            if (GUI.Button(Rect.MinMaxRect(startX, startY, endX, endY), "Open Solution"))
+            {
+                ClickedOpenSolution();
+            }
+        }
+
         void DrawProjectPane(Rect windowRect)
         {
             var startX = windowRect.xMin + _split2 * windowRect.width + _settings.ListVerticalSpacing;
@@ -826,39 +892,46 @@ namespace Projeny.Internal
             var startY = windowRect.yMin;
             var endY = windowRect.yMax;
 
-            var rect = Rect.MinMaxRect(startX, startY, endX, endY);
+            var headerRect = Rect.MinMaxRect(startX, startY, endX, endY);
 
-            DrawProjectPane2(rect);
+            endX = windowRect.xMin + _split3 * windowRect.width - _settings.ListVerticalSpacing;
+
+            var contentRect = Rect.MinMaxRect(startX, startY, endX, endY);
+
+            DrawProjectPane2(headerRect, contentRect);
+
+            if (_split3 <= 0.92f)
+            {
+                DrawVisualStudioPane(windowRect);
+            }
         }
 
-        void DrawProjectPane2(Rect rect)
+        void DrawProjectPane2(Rect headerRect, Rect contentRect)
         {
-            var startX = rect.xMin;
-            var endX = rect.xMax;
-            var startY = rect.yMin;
+            var startY = headerRect.yMin;
             var endY = startY + _settings.HeaderHeight;
 
-            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Project", _settings.HeaderTextStyle);
+            GUI.Label(Rect.MinMaxRect(headerRect.xMin, startY, headerRect.xMax, endY), "Project", _settings.HeaderTextStyle);
 
             startY = endY;
             endY = startY + _settings.FileDropdownHeight;
 
-            DrawFileDropdown(Rect.MinMaxRect(startX, startY, endX, endY));
+            DrawFileDropdown(Rect.MinMaxRect(headerRect.xMin, startY, headerRect.xMax, endY));
 
             startY = endY;
             endY = startY + _settings.HeaderHeight;
 
-            GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Assets Folder", _settings.HeaderTextStyle);
+            GUI.Label(Rect.MinMaxRect(contentRect.xMin, startY, contentRect.xMax, endY), "Assets Folder", _settings.HeaderTextStyle);
 
             startY = endY;
-            endY = rect.yMax - _settings.ApplyButtonHeight - _settings.ApplyButtonTopPadding;
+            endY = contentRect.yMax - _settings.ApplyButtonHeight - _settings.ApplyButtonTopPadding;
 
-            DrawProjectPane3(Rect.MinMaxRect(startX, startY, endX, endY));
+            DrawProjectPane3(Rect.MinMaxRect(contentRect.xMin, startY, contentRect.xMax, endY));
 
             startY = endY + _settings.ApplyButtonTopPadding;
-            endY = rect.yMax;
+            endY = contentRect.yMax;
 
-            DrawProjectButtons(Rect.MinMaxRect(startX, startY, endX, endY));
+            DrawProjectButtons(Rect.MinMaxRect(contentRect.xMin, startY, contentRect.xMax, endY));
         }
 
         void DrawProjectPane3(Rect listRect)
