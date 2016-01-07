@@ -38,8 +38,8 @@ namespace Projeny.Internal
         {
             var config = new ProjectConfig();
 
-            config.Packages = _model.AssetItems.ToList();
-            config.PackagesPlugins = _model.PluginItems.ToList();
+            config.AssetsFolder = _model.AssetItems.ToList();
+            config.PluginsFolder = _model.PluginItems.ToList();
 
             return config;
         }
@@ -83,7 +83,7 @@ namespace Projeny.Internal
 
             if (!File.Exists(configPath))
             {
-                return !currentConfig.Packages.IsEmpty() || !currentConfig.PackagesPlugins.IsEmpty();
+                return !currentConfig.AssetsFolder.IsEmpty() || !currentConfig.PluginsFolder.IsEmpty();
             }
 
             ProjectConfig savedConfig;
@@ -103,11 +103,11 @@ namespace Projeny.Internal
 
             if (savedConfig == null)
             {
-                return !currentConfig.Packages.IsEmpty() || !currentConfig.PackagesPlugins.IsEmpty();
+                return !currentConfig.AssetsFolder.IsEmpty() || !currentConfig.PluginsFolder.IsEmpty();
             }
 
-            return !Enumerable.SequenceEqual(currentConfig.Packages.OrderBy(t => t), savedConfig.Packages.OrderBy(t => t))
-                || !Enumerable.SequenceEqual(currentConfig.PackagesPlugins.OrderBy(t => t), savedConfig.PackagesPlugins.OrderBy(t => t));
+            return !Enumerable.SequenceEqual(currentConfig.AssetsFolder.OrderBy(t => t), savedConfig.AssetsFolder.OrderBy(t => t))
+                || !Enumerable.SequenceEqual(currentConfig.PluginsFolder.OrderBy(t => t), savedConfig.PluginsFolder.OrderBy(t => t));
         }
 
         public void RefreshProject()
@@ -149,14 +149,14 @@ namespace Projeny.Internal
         {
             _model.ClearPluginItems();
 
-            foreach (var name in config.PackagesPlugins)
+            foreach (var name in config.PluginsFolder)
             {
                 _model.AddPluginItem(name);
             }
 
             _model.ClearAssetItems();
 
-            foreach (var name in config.Packages)
+            foreach (var name in config.AssetsFolder)
             {
                 _model.AddAssetItem(name);
             }

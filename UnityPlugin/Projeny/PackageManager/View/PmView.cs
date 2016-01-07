@@ -953,7 +953,7 @@ namespace Projeny.Internal
         [Serializable]
         public class Model
         {
-            public PmViewStates ViewState = PmViewStates.PackagesAndProject;
+            public PmViewStates ViewState = PmViewStates.Project;
             public ProjectConfigTypes ProjectConfigType = ProjectConfigTypes.LocalProject;
             public List<DragList.Model> ListModels = new List<DragList.Model>();
         }

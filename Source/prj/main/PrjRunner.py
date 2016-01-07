@@ -159,7 +159,7 @@ PathVars:
         self._project = self._args.project
 
         if not self._project:
-            self._project = self._config.tryGetString(None, 'Projeny', 'DefaultProject')
+            self._project = self._config.tryGetString(None, 'DefaultProject')
 
         if self._project and not self._packageMgr.projectExists(self._project) and not self._args.createProject:
             self._project = self._packageMgr.getProjectFromAlias(self._project)

@@ -177,12 +177,16 @@ namespace Projeny.Internal
 
             var configFileExists = File.Exists(ProjenyEditorUtil.GetProjectConfigPath(_view.ProjectConfigType));
 
-            if (!configFileExists)
+            if (configFileExists)
+            {
+                _view.IsRevertEnabled = true;
+            }
+            else
             {
                 _view.IsSaveEnabled = true;
+                _view.IsRevertEnabled = false;
             }
 
-            _view.IsRevertEnabled = _view.IsSaveEnabled && configFileExists;
             _view.IsEditEnabled = configFileExists;
         }
 

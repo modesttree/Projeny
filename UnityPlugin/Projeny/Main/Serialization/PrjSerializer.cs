@@ -31,8 +31,8 @@ namespace Projeny.Internal
         {
             return new ProjectConfigInternal()
             {
-                Packages = info.Packages.ToList(),
-                PackagesPlugins = info.PackagesPlugins.ToList(),
+                AssetsFolder = info.AssetsFolder.ToList(),
+                PluginsFolder = info.PluginsFolder.ToList(),
             };
         }
 
@@ -43,11 +43,19 @@ namespace Projeny.Internal
                 return null;
             }
 
-            return new ProjectConfig()
+            var newInfo = new ProjectConfig();
+
+            if (info.AssetsFolder != null)
             {
-                Packages = info.Packages.ToList(),
-                PackagesPlugins = info.PackagesPlugins.ToList(),
-            };
+                newInfo.AssetsFolder = info.AssetsFolder.ToList();
+            }
+
+            if (info.PluginsFolder != null)
+            {
+                newInfo.PluginsFolder = info.PluginsFolder.ToList();
+            }
+
+            return newInfo;
         }
 
         static PackageInfo ConvertToPublic(PackageInfoInternal info)
@@ -223,13 +231,13 @@ namespace Projeny.Internal
 
         class ProjectConfigInternal
         {
-            public List<string> Packages
+            public List<string> AssetsFolder
             {
                 get;
                 set;
             }
 
-            public List<string> PackagesPlugins
+            public List<string> PluginsFolder
             {
                 get;
                 set;

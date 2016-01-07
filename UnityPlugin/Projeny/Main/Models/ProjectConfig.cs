@@ -8,8 +8,8 @@ namespace Projeny
 {
     public class ProjectConfig
     {
-        public List<string> Packages;
-        public List<string> PackagesPlugins;
+        public List<string> AssetsFolder = new List<string>();
+        public List<string> PluginsFolder = new List<string>();
     }
 }
 
