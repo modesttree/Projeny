@@ -228,8 +228,13 @@ class ProjectSchemaLoader:
 
         # Allow regex's!
         for projPattern in customProjects:
-            if projPattern.startswith('/') and re.match(projPattern[1:], packageName):
-                return True
+            if projPattern.startswith('/'):
+                projPattern = projPattern[1:]
+                try:
+                    if re.match(projPattern, packageName):
+                        return True
+                except Exception as e:
+                    raise Exception("Failed while parsing project regex '/{0}' from {1}/{2}.  Details: {3}".format(projPattern, self._varMgr.expand('ProjectName'), ProjectConfigFileName, str(e)))
 
         return False
 

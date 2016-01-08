@@ -70,8 +70,38 @@ namespace Projeny.Internal
         {
             var selected = GetSelectedItems();
 
-            yield return new ContextMenuItem(
-                !selected.IsEmpty(), "Remove", false, OnContextMenuDeleteSelected);
+            if (selected.IsEmpty())
+            {
+                yield return new ContextMenuItem(
+                    selected.IsEmpty(), "Add As Regex...", false, OnContextMenuAddAsRegex);
+            }
+            else
+            {
+                yield return new ContextMenuItem(
+                    !selected.IsEmpty(), "Remove", false, OnContextMenuDeleteSelected);
+            }
+        }
+
+        void OnContextMenuAddAsRegex()
+        {
+            _asyncProcessor.Process(AddAsRegexAsync());
+        }
+
+        IEnumerator AddAsRegexAsync()
+        {
+            var userInput = _view.PromptForInput("Enter Python Regex below.\n (note: see python documentation for reference)", ".*");
+
+            yield return userInput;
+
+            if (userInput.Current == null)
+            {
+                // User Cancelled
+                yield break;
+            }
+
+            Assert.That(!userInput.Current.StartsWith("/"), "When entering the regex, you do not need to prefix it with a slash");
+
+            _model.AddVsProject("/" + userInput.Current);
         }
 
         void OnContextMenuDeleteSelected()

@@ -434,6 +434,16 @@ namespace Projeny.Internal
 
                     break;
                 }
+                case EventType.ContextClick:
+                {
+                    if (isListUnderMouse)
+                    {
+                        _manager.OpenContextMenu(this);
+                        Event.current.Use();
+                    }
+
+                    break;
+                }
             }
 
             bool clickedItem = false;
@@ -462,16 +472,6 @@ namespace Projeny.Internal
 
                     switch (Event.current.type)
                     {
-                        case EventType.ContextClick:
-                        {
-                            if (isListUnderMouse)
-                            {
-                                _manager.OpenContextMenu(this);
-                                Event.current.Use();
-                            }
-
-                            break;
-                        }
                         case EventType.MouseUp:
                         {
                             if (isItemUnderMouse && Event.current.button == 0)
