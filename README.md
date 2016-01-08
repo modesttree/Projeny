@@ -342,21 +342,13 @@ If you don't want to use a network share for this, you can also define a FileSer
 
 ## <a id="file-server-release-source"></a>File Server Release Source
 
-If you want to share Projeny releases over the network, you can do so by declaring a file server release source.  First, you have to host a static web site that simply contains a flat list of `.unitypackage` files.  Then you need to run
+If you want to share Projeny releases over the network, you can do so by declaring a file server release source.  First, you have to host a static web site that simply contains a flat list of `.unitypackage` files.  Then you need to run `PrjUpdateReleaseManifest [directory]` with the path to the directory you want to scan (or simply `.` for current directory).  This will result in a file being created in this same directory called `ProjenyReleaseManifest.txt`
 
-File Server release sources can be 
-
-File Server release sources are declared within one of your `Projeny.yaml` config files as follows:
+Then you can declare your release source in one of your `Projeny.yaml` as follows:
 
     ReleaseSources:
         - FileServer:
             ManifestUrl: 'http://mysharedserver/ProjenyReleaseManifest.txt'
-
-The `ManifestUrl` should resolve to a text file that is generated
-
-### 1. Local Folders
-
-### 2. File Server (LAN or remote)
 
 ## <a id="faq"></a>Frequently Asked Questions
 
