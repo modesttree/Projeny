@@ -11,6 +11,7 @@ namespace Projeny
         public List<string> AssetsFolder = new List<string>();
         public List<string> PluginsFolder = new List<string>();
         public List<string> SolutionProjects = new List<string>();
+        public Dictionary<string, string> SolutionFolders = new Dictionary<string, string>();
     }
 }
 

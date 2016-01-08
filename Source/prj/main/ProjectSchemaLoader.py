@@ -1,4 +1,5 @@
 
+import sys
 import re
 import os
 
@@ -31,7 +32,7 @@ class ProjectSchemaLoader:
         pluginDependencies = config.tryGetList([], 'PluginsFolder')
         scriptsDependencies = config.tryGetList([], 'AssetsFolder')
         customProjects = config.tryGetList([], 'SolutionProjects')
-        customFolders = config.tryGetDictionary({}, 'ProjectFolders')
+        customFolders = config.tryGetDictionary({}, 'SolutionFolders')
         prebuiltProjects = config.tryGetList([], 'Prebuilt')
 
         # Remove duplicates

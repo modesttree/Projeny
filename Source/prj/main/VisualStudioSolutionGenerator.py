@@ -230,7 +230,9 @@ class VisualStudioSolutionGenerator:
 
     def _getFolderName(self, packageName, customFolders):
 
-        for folderName, pattern in customFolders:
+        for item in customFolders.items():
+            folderName = item[0]
+            pattern = item[1]
             if packageName == pattern or (pattern.startswith('/') and re.match(pattern[1:], packageName)):
                 return folderName
 
@@ -345,9 +347,7 @@ class VisualStudioSolutionGenerator:
 
         folderIds = {}
 
-        folderNames = [x[0] for x in customFolderMap]
-
-        for folderName in folderNames:
+        for folderName in customFolderMap:
             folderId = self._createProjectGuid()
             folderIds[folderName] = folderId
             projectFolderStr += 'Project("{{{0}}}") = "{1}", "{2}", "{{{3}}}"\nEndProject\n' \
@@ -536,7 +536,7 @@ class VisualStudioSolutionGenerator:
         return minidom.parseString(ET.tostring(doc)).toprettyxml(indent="    ")
 
     def _shouldIgnoreCsProjFile(self, fullPath):
-        if self._config.getBool('IncludeProjenyInGeneratedSolution'):
+        if self._config.getBool('LinkToProjenyEditorDir'):
             return False
 
         return ProjenyDirectoryIgnorePattern.match(fullPath)

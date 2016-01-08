@@ -41,6 +41,7 @@ namespace Projeny.Internal
             config.AssetsFolder = _model.AssetItems.ToList();
             config.PluginsFolder = _model.PluginItems.ToList();
             config.SolutionProjects = _model.VsProjects.ToList();
+            config.SolutionFolders = _model.VsSolutionFolders.ToDictionary(x => x.Key, x => x.Value);
 
             return config;
         }
@@ -149,17 +150,27 @@ namespace Projeny.Internal
         void PopulateModelFromConfig(ProjectConfig config)
         {
             _model.ClearPluginItems();
-
             foreach (var name in config.PluginsFolder)
             {
                 _model.AddPluginItem(name);
             }
 
             _model.ClearAssetItems();
-
             foreach (var name in config.AssetsFolder)
             {
                 _model.AddAssetItem(name);
+            }
+
+            _model.ClearSolutionProjects();
+            foreach (var name in config.SolutionProjects)
+            {
+                _model.AddVsProject(name);
+            }
+
+            _model.ClearSolutionFolders();
+            foreach (var pair in config.SolutionFolders)
+            {
+                _model.AddSolutionFolder(pair.Key, pair.Value);
             }
         }
     }

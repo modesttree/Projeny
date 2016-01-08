@@ -42,6 +42,9 @@ namespace Projeny.Internal
         [SerializeField]
         List<string> _vsProjects = new List<string>();
 
+        [SerializeField]
+        Dictionary<string, string> _solutionFolders = new Dictionary<string, string>();
+
         public PmModel()
         {
         }
@@ -84,6 +87,25 @@ namespace Projeny.Internal
             {
                 return _vsProjects;
             }
+        }
+
+        public IEnumerable<KeyValuePair<string, string>> VsSolutionFolders
+        {
+            get
+            {
+                return _solutionFolders;
+            }
+        }
+
+        public void ClearSolutionFolders()
+        {
+            _solutionFolders.Clear();
+        }
+
+        public void ClearSolutionProjects()
+        {
+            _vsProjects.Clear();
+            VsProjectsChanged();
         }
 
         public void ClearAssetItems()
@@ -129,6 +151,11 @@ namespace Projeny.Internal
         {
             _vsProjects.Add(name);
             VsProjectsChanged();
+        }
+
+        public void AddSolutionFolder(string key, string value)
+        {
+            _solutionFolders.Add(key, value);
         }
 
         public void AddAssetItem(string name)
