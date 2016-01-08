@@ -51,8 +51,8 @@ class Runner:
         self._varMgr.add('OutDir', '[InstallerDir]/Build')
         self._varMgr.add('DistDir', '[InstallerDir]/Dist')
 
-        self._sys.clearDirectoryContents('[DistDir]')
-        self._sys.clearDirectoryContents('[OutDir]')
+        self._sys.deleteAndReCreateDirectory('[DistDir]')
+        self._sys.deleteAndReCreateDirectory('[OutDir]')
 
         try:
             self._updateBuildDirectory()
@@ -87,8 +87,7 @@ class Runner:
 
     def _updateBuildDirectory(self):
 
-        self._sys.deleteDirectoryIfExists('[OutDir]')
-        self._sys.createDirectory('[OutDir]')
+        self._sys.deleteAndReCreateDirectory('[OutDir]')
 
         self._log.heading('Building exes')
         self._sys.executeAndWait('[PythonDir]/BuildAllExes.bat')

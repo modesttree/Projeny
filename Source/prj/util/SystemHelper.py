@@ -184,6 +184,10 @@ class SystemHelper:
         dirPath = self._varManager.expand(dirPath)
         shutil.rmtree(dirPath)
 
+    def deleteAndReCreateDirectory(self, dirPath):
+        self.deleteDirectoryIfExists(dirPath)
+        self.createDirectory(dirPath)
+
     def deleteDirectoryIfExists(self, dirPath):
         dirPath = self._varManager.expand(dirPath)
 
