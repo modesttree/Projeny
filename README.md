@@ -320,13 +320,39 @@ Also note that this list is generated partially from your asset store cache, so 
 
 ## <a id="custom-release-registries"></a>Custom Release Sources
 
-A mentioned in the <a href="#managing-assetstore-assets">above section</a>, the list of releases _usually_ corresponds to your list of asset store purchases, however it supports other sources as well.  These sources are called release registries.
+A mentioned in the <a href="#managing-assetstore-assets">above section</a>, the list of releases _usually_ corresponds to your list of asset store purchases, however it supports other sources as well.  
 
-In every case though, it is simply a collection of 
+Every source is ultimately just a collection of unity packages.  This is also what unity stores in the asset store cache, so even in that case, it is just a list of unity packages.
 
-For example, you might have some
+For example, to add a new local folder source, open up one of your projeny config files (Projeny.yaml) and include the following:
 
-These include the following:
+    ReleaseSources:
+        - LocalFolder:
+            Path: 'C:/MyLocalFolderSource'
+
+One convenient place that you might want to put this is in the system wide projeny config, which can be found in your user home directory at `C:/Users/[Your User Name]/Projeny.yaml`.  This is convenient because these releases will then be available for any unity project on your computer.
+
+Now, if you copy and paste `.unitypackage` files into this folder, and click the Refresh button in the Package Manager (accessed within unity through the menu at `Projeny -> Package Manager`) then these `.unitypackage` files will be displayed in the Releases list.
+
+Note that you can add multiple local folder sources using different paths, including those on a network share.
+
+Sharing a release source over a network can be very useful when working in an office environment that has its own LAN.   Your organization can build up a big collection of "releases" and anyone in the organization can have access to.
+
+If you don't want to use a network share for this, you can also define a FileServer release source, which is declared using a URL.  You can then run a static web site that can serve out the unity packages to anyone on the network.  For more details on FileServer release sources, see <a href="#file-server-release-source">this section</a>
+
+## <a id="file-server-release-source"></a>File Server Release Source
+
+If you want to share Projeny releases over the network, you can do so by declaring a file server release source.  First, you have to host a static web site that simply contains a flat list of `.unitypackage` files.  Then you need to run 
+
+File Server release sources can be 
+
+File Server release sources are declared within one of your `Projeny.yaml` config files as follows:
+
+    ReleaseSources:
+        - FileServer:
+            ManifestUrl: 'http://mysharedserver/ProjenyReleaseManifest.txt'
+
+The `ManifestUrl` should resolve to a text file that is generated
 
 ### 1. Local Folders
 
