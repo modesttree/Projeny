@@ -11,7 +11,7 @@ import prj.util.YamlSerializer as YamlSerializer
 
 import tempfile
 
-class RemoteServerRegistry:
+class RemoteServerReleaseSource:
     _log = Inject('Logger')
     _sys = Inject('SystemHelper')
     _packageExtractor = Inject('UnityPackageExtractor')
@@ -25,8 +25,8 @@ class RemoteServerRegistry:
         return self._releaseInfos
 
     def init(self):
-        self._log.heading("Initializing remote server release registry")
-        self._log.debug("Initializing remote server release registry with URL '{0}'", self._manifestUrl)
+        self._log.heading("Initializing remote server release source")
+        self._log.debug("Initializing remote server release source with URL '{0}'", self._manifestUrl)
 
         response = urllib.request.urlopen(self._manifestUrl)
         manifestData = response.read().decode('utf-8')

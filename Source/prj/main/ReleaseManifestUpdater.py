@@ -26,7 +26,7 @@ from prj.reg.UnityPackageExtractor import UnityPackageExtractor
 from prj.reg.UnityPackageAnalyzer import UnityPackageAnalyzer
 
 from prj.util.CommonSettings import ConfigFileName
-from prj.reg.ReleaseRegistryManager import ReleaseRegistryManager
+from prj.reg.ReleaseSourceManager import ReleaseSourceManager
 
 import prj.util.YamlSerializer as YamlSerializer
 

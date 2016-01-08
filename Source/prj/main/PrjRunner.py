@@ -28,7 +28,7 @@ class PrjRunner:
     _mainConfig = InjectOptional('MainConfigPath', None)
     _sys = Inject('SystemHelper')
     _vsSolutionHelper = Inject('VisualStudioHelper')
-    _releaseRegistryManager = Inject('ReleaseRegistryManager')
+    _releaseSourceManager = Inject('ReleaseSourceManager')
 
     def run(self, args):
         self._args = args
@@ -65,7 +65,7 @@ class PrjRunner:
 
         if self._args.installRelease:
             releaseName, releaseVersion = self._args.installRelease
-            self._releaseRegistryManager.installReleaseByName(releaseName, releaseVersion)
+            self._releaseSourceManager.installReleaseByName(releaseName, releaseVersion)
 
         if self._args.init:
             self._packageMgr.updateLinksForAllProjects()
@@ -89,7 +89,7 @@ class PrjRunner:
     def _runPostBuild(self):
 
         if self._args.listReleases:
-            self._releaseRegistryManager.listAllReleases()
+            self._releaseSourceManager.listAllReleases()
 
         if self._args.listProjects:
             self._packageMgr.listAllProjects()

@@ -7,7 +7,7 @@ MaxProjectNameLength: 10
 # to UnityPlugin\Projeny
 LinkToProjenyEditorDir: False
 
-Registries:
+ReleaseSources:
     - AssetStoreCache:
 
 PathVars:

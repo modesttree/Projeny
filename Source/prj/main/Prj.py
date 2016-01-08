@@ -26,7 +26,7 @@ from prj.reg.UnityPackageExtractor import UnityPackageExtractor
 from prj.reg.UnityPackageAnalyzer import UnityPackageAnalyzer
 
 from prj.util.CommonSettings import ConfigFileName
-from prj.reg.ReleaseRegistryManager import ReleaseRegistryManager
+from prj.reg.ReleaseSourceManager import ReleaseSourceManager
 
 from prj.main.PrjRunner import PrjRunner
 
@@ -132,7 +132,7 @@ def installBindings(mainConfigPath = None):
     Container.bind('ZipHelper').toSingle(ZipHelper)
     Container.bind('UnityPackageAnalyzer').toSingle(UnityPackageAnalyzer)
 
-    Container.bind('ReleaseRegistryManager').toSingle(ReleaseRegistryManager)
+    Container.bind('ReleaseSourceManager').toSingle(ReleaseSourceManager)
 
 def processArgs(args):
     if args.buildFull:

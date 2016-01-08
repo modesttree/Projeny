@@ -20,7 +20,7 @@ class Runner:
     _packageMgr = Inject('PackageManager')
     _unityHelper = Inject('UnityHelper')
     _vsSolutionHelper = Inject('VisualStudioHelper')
-    _releaseRegistryManager = Inject('ReleaseRegistryManager')
+    _releaseSourceManager = Inject('ReleaseSourceManager')
 
     def run(self, project, platform, requestId, param1, param2):
         self._log.debug("Started EditorApi with arguments: {0}".format(" ".join(sys.argv[1:])))
@@ -75,7 +75,7 @@ class Runner:
                 sys.stderr.write(projName + '\n')
 
         elif self._requestId == 'listReleases':
-            for release in self._releaseRegistryManager.lookupAllReleases():
+            for release in self._releaseSourceManager.lookupAllReleases():
                 sys.stderr.write('---\n')
                 sys.stderr.write(YamlSerializer.serialize(release) + '\n')
 
@@ -89,7 +89,7 @@ class Runner:
 
         elif self._requestId == 'installRelease':
             self._log.info("Installing release '{0}' version code '{1}'", self._param1, self._param2)
-            self._releaseRegistryManager.installReleaseById(self._param1, self._param2, True)
+            self._releaseSourceManager.installReleaseById(self._param1, self._param2, True)
 
         elif self._requestId == 'createProject':
             self._log.info("Creating new project '{0}'", self._project)

@@ -6,9 +6,9 @@ import prj.ioc.IocAssertions as Assertions
 
 from prj.util.Assert import *
 
-from prj.reg.LocalFolderRegistry import LocalFolderRegistry
-from prj.reg.AssetStoreCacheRegistry import AssetStoreCacheRegistry
-from prj.reg.RemoteServerRegistry import RemoteServerRegistry
+from prj.reg.LocalFolderReleaseSource import LocalFolderReleaseSource
+from prj.reg.AssetStoreCacheReleaseSource import AssetStoreCacheReleaseSource
+from prj.reg.RemoteServerReleaseSource import RemoteServerReleaseSource
 
 import prj.util.MiscUtil as MiscUtil
 
@@ -19,7 +19,7 @@ import prj.util.YamlSerializer as YamlSerializer
 
 from prj.main.PackageManager import InstallInfoFileName
 
-class ReleaseRegistryManager:
+class ReleaseSourceManager:
     _varMgr = Inject('VarManager')
     _log = Inject('Logger')
     _config = Inject('Config')
@@ -28,39 +28,39 @@ class ReleaseRegistryManager:
 
     def __init__(self):
         self._hasInitialized = False
-        self._releaseRegistries = []
+        self._releaseSources = []
 
     def _lazyInit(self):
         if self._hasInitialized:
             return
 
         self._hasInitialized = True
-        for regSettings in self._config.getList('Registries'):
+        for regSettings in self._config.getList('ReleaseSources'):
             for pair in regSettings.items():
-                reg = self._createRegistry(pair[0], pair[1])
+                reg = self._createReleaseSource(pair[0], pair[1])
                 reg.init()
-                self._releaseRegistries.append(reg)
+                self._releaseSources.append(reg)
 
-        self._log.info("Finished initializing Release Registry Manager, found {0} releases in total", self._getTotalReleaseCount())
+        self._log.info("Finished initializing Release Source Manager, found {0} releases in total", self._getTotalReleaseCount())
 
     def _getTotalReleaseCount(self):
         total = 0
-        for reg in self._releaseRegistries:
+        for reg in self._releaseSources:
             total += len(reg.releases)
         return total
 
-    def _createRegistry(self, regType, settings):
+    def _createReleaseSource(self, regType, settings):
         if regType == 'LocalFolder':
             folderPath = self._varMgr.expand(settings['Path']).replace("\\", "/")
-            return LocalFolderRegistry(folderPath)
+            return LocalFolderReleaseSource(folderPath)
 
         if regType == 'AssetStoreCache':
-            return AssetStoreCacheRegistry()
+            return AssetStoreCacheReleaseSource()
 
         if regType == 'FileServer':
-            return RemoteServerRegistry(settings['ManifestUrl'])
+            return RemoteServerReleaseSource(settings['ManifestUrl'])
 
-        assertThat(False, "Could not find registry with type '{0}'", regType)
+        assertThat(False, "Could not find release source with type '{0}'", regType)
 
     def listAllReleases(self):
         self._lazyInit()
@@ -73,25 +73,25 @@ class ReleaseRegistryManager:
         self._lazyInit()
 
         result = []
-        for registry in self._releaseRegistries:
-            for release in registry.releases:
+        for source in self._releaseSources:
+            for release in source.releases:
                 result.append(release)
         result.sort(key = lambda x: x.name.lower())
         return result
 
-    def _findReleaseInfoAndRegistryByIdAndVersionCode(self, releaseId, releaseVersionCode):
+    def _findReleaseInfoAndSourceByIdAndVersionCode(self, releaseId, releaseVersionCode):
         assertIsType(releaseVersionCode, int)
-        for registry in self._releaseRegistries:
-            for release in registry.releases:
+        for source in self._releaseSources:
+            for release in source.releases:
                 if release.id == releaseId and release.versionCode == releaseVersionCode:
-                    return (release, registry)
+                    return (release, source)
         return (None, None)
 
-    def _findReleaseInfoAndRegistryByNameAndVersion(self, releaseName, releaseVersion):
-        for registry in self._releaseRegistries:
-            for release in registry.releases:
+    def _findReleaseInfoAndSourceByNameAndVersion(self, releaseName, releaseVersion):
+        for source in self._releaseSources:
+            for release in source.releases:
                 if release.name == releaseName and release.version == releaseVersion:
-                    return (release, registry)
+                    return (release, source)
         return (None, None)
 
     def installReleaseByName(self, releaseName, releaseVersion, suppressPrompts = False):
@@ -101,14 +101,14 @@ class ReleaseRegistryManager:
         self._lazyInit()
         self._log.heading("Attempting to install release '{0}' (version '{1}')", releaseName, releaseVersion)
 
-        assertThat(len(self._releaseRegistries) > 0, "Could not find any registries to search for the given release")
+        assertThat(len(self._releaseSources) > 0, "Could not find any release sources to search for the given release")
 
-        releaseInfo, registry = self._findReleaseInfoAndRegistryByNameAndVersion(releaseName, releaseVersion)
+        releaseInfo, releaseSource = self._findReleaseInfoAndSourceByNameAndVersion(releaseName, releaseVersion)
 
-        assertThat(releaseInfo, "Failed to install release '{0}' (version {1}) - could not find it in any of the release registries.\nRegistries checked: \n  {2}\nTry listing all available release with the -lr command"
-           .format(releaseName, releaseVersion, "\n  ".join([x.getName() for x in self._releaseRegistries])))
+        assertThat(releaseInfo, "Failed to install release '{0}' (version {1}) - could not find it in any of the release sources.\nSources checked: \n  {2}\nTry listing all available release with the -lr command"
+           .format(releaseName, releaseVersion, "\n  ".join([x.getName() for x in self._releaseSources])))
 
-        self._installReleaseInternal(releaseInfo, registry, suppressPrompts)
+        self._installReleaseInternal(releaseInfo, releaseSource, suppressPrompts)
 
     def installReleaseById(self, releaseId, releaseVersionCode, suppressPrompts = False):
 
@@ -124,16 +124,16 @@ class ReleaseRegistryManager:
 
         self._lazyInit()
 
-        assertThat(len(self._releaseRegistries) > 0, "Could not find any registries to search for the given release")
+        assertThat(len(self._releaseSources) > 0, "Could not find any release sources to search for the given release")
 
-        releaseInfo, registry = self._findReleaseInfoAndRegistryByIdAndVersionCode(releaseId, releaseVersionCode)
+        releaseInfo, releaseSource = self._findReleaseInfoAndSourceByIdAndVersionCode(releaseId, releaseVersionCode)
 
-        assertThat(releaseInfo, "Failed to install release '{0}' - could not find it in any of the release registries.\nRegistries checked: \n  {1}\nTry listing all available release with the -lr command"
-           .format(releaseId, "\n  ".join([x.getName() for x in self._releaseRegistries])))
+        assertThat(releaseInfo, "Failed to install release '{0}' - could not find it in any of the release sources.\nSources checked: \n  {1}\nTry listing all available release with the -lr command"
+           .format(releaseId, "\n  ".join([x.getName() for x in self._releaseSources])))
 
-        self._installReleaseInternal(releaseInfo, registry, suppressPrompts)
+        self._installReleaseInternal(releaseInfo, releaseSource, suppressPrompts)
 
-    def _installReleaseInternal(self, releaseInfo, registry, suppressPrompts = False):
+    def _installReleaseInternal(self, releaseInfo, releaseSource, suppressPrompts = False):
 
         self._log.heading("Installing release '{0}' (version {1})", releaseInfo.name, releaseInfo.version)
 
@@ -162,7 +162,7 @@ class ReleaseRegistryManager:
                 # Retain original directory name in case it is referenced by other packages
                 installDirName = packageInfo.name
 
-        installDirName = registry.installRelease(releaseInfo, installDirName)
+        installDirName = releaseSource.installRelease(releaseInfo, installDirName)
 
         destDir = self._varMgr.expand('[UnityPackagesDir]/{0}'.format(installDirName))
 

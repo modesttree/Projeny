@@ -39,7 +39,7 @@ NOTE: Projeny requires Unity3D 5.3.1 or higher, since it makes use of the `-buil
     * <a href="#common-workflows">Common Workflows</a>
     * <a href="#command-line-reference">Command Line Reference</a>
     * <a href="#gotchas">Gotchas / Miscellaneous Tips and Tricks</a>
-    * <a href="#projectini">Project.ini reference</a>
+    * <a href="#projectini">ProjenyProject.yaml reference</a>
     * <a href="#package-yaml">Package.ini reference</a>
     * <a href="#visual-studio-generation-usage">Visual Studio Solution Generation</a>
 * <a href="#appendix">Appendix</a>
@@ -290,9 +290,47 @@ These C# project dependencies are generated based on the dependencies that are d
 
 For more details on visual studio solution generation see <a href="#visual-studio-generation-usage">this section</a>
 
-## <a id="managing-assetstore-assets"></a>Managing Asset Store Assets
+## <a id="managing-assetstore-assets"></a>Managing Asset Store Assets / Releases
 
-TBD
+If you open the menu item `Projeny -> Package Manager` and click the left arrow all the way to the left, you should see something similar to the following:
+
+<img src="Docs/Screen8.png?raw=true" alt="Package Manager" />
+
+This is the list of "releases".  A "Release" refers to an external collection of assets, often with an associated version number.  In most cases, these refer to items that you've downloaded through the asset store but they can also be retrieved from other sources (such as a local folder or a remote file server).
+
+By default, Projeny will scan your asset store cache to populate this list, so you will likely see some familiar assets listed here.
+
+As an example, choose one of these assets and drag it into the Packages list on the right.  I'm going to choose Asset Store Tools.  After Projeny finishes creating the new package you should see something like the following:
+
+<img src="Docs/Screen9.png?raw=true" alt="Package Manager" />
+
+You'll notice that the name of the package does not necessarily correspond exactly to the name of the release.  This is because by default, Projeny will use the extracted folder name as the package name.  This is necessary in some cases because some assets might require a specific folder name.  Note that you can rename the package to whatever you want after adding it (through right click menu) if the default name is not ideal.
+
+You'll also notice that the actual release name is displayed in green.  Every time you install a release, projeny adds a file named ProjenyInstall.yaml to the new package folder.  This file contains information about where the package came from, what version it is, etc.  This file is how Projeny is able to recognize which packages have a corresponding release.  Note that in many cases there is none, and the package was simply created by itself (eg. AllMovers, CubeMover, etc.)
+
+This file is also what Projeny uses to detect when you are upgrading or downgrading a package.  For example, if I now drag in Asset Store Tools again, but this time I choose version "4.0.5", you will get the following popup:
+
+<img src="Docs/Screen10.png?raw=true" alt="Package Manager" />
+
+This same popup will be displayed when downgrading a package as well.  This can be very useful, because you do not have to be afraid of upgrading and potentially introducing new issues to your project.  You can rest assured that the previous versions will remain in the Releases list in case you ever need to downgrade (which isn't possible using the asset store)
+
+Note also that after you add the release as a package, you will also have to add it to your project, to actually have it appear in unity.
+
+Also note that this list is generated partially from your asset store cache, so in order to have new asset store items listed here you will have to purchase them through the asset store, click download, and then immediately cancel the import popup.   After that, you can hit the refresh button underneath the Releases list to have your newly purchases asset ready for use.
+
+## <a id="custom-release-registries"></a>Custom Release Sources
+
+A mentioned in the <a href="#managing-assetstore-assets">above section</a>, the list of releases _usually_ corresponds to your list of asset store purchases, however it supports other sources as well.  These sources are called release registries.
+
+In every case though, it is simply a collection of 
+
+For example, you might have some
+
+These include the following:
+
+### 1. Local Folders
+
+### 2. File Server (LAN or remote)
 
 ## <a id="faq"></a>Frequently Asked Questions
 
@@ -300,7 +338,7 @@ TBD
 
 * Method 1 - Using the Package Manager
     * Click the menu item `Projeny -> Package Manager`
-    * Go to the Packages section by pressing left arrow
+    * Go to the Packages section by pressing the arrow button the left
     * Click the new button
     * Enter name for your package
     * Add your package to your project by dragging it to either Assets or Plugins on the right
@@ -308,17 +346,18 @@ TBD
 * Method 2 - Manually
     * Go to the UnityPackages directory
     * Create a new folder with the name of your package
-    * Done. You can now refer to this package by its folder name
-    * (optional) Add a ProjenyPackage.yaml file to your new folder
-        * This can be used to declare some dependencies for this package, or flag it for use with only specific platforms, etc.
-        * See <a href="#package-yaml">here</a> for the full ProjenyPackage.yaml reference
+    * Done. You can now refer to this package by its folder name in ProjenyPackage.yaml or ProjenyProject.yaml files
+
+* (optional) Add a ProjenyPackage.yaml file to your new package folder
+    * This can be used to declare some dependencies for this package, or flag it for use with only specific platforms, etc.
+    * See <a href="#package-yaml">here</a> for the full ProjenyPackage.yaml reference
 
 #### <a id="workflow-create-project"></a>How do I create a new project?
 
 * Method 1 - Within Unity
     * Click the menu item `Projeny -> Change Project -> New...`
     * Enter the name for your new project
-    * Open the Package Manager again to add packages
+    * After the new project loads, open the Package Manager again to add packages, etc.
     * Done
 
 * Method 2 - Command Line
@@ -329,7 +368,9 @@ TBD
 
 ## <a id="command-line-reference"></a>Command Line Reference
 
-What follows is the full list of command line parameters that you can pass to Upm.bat.  Note that you can pass any combination of these and Upm.bat will execute them in a reasonable order.
+Almost all operations in projeny can be executed within unity using the Projeny menu or the Package Manager.  However, it can also be useful to be able to drive it from the command line, especially if you want to automate any projeny operations yourself.
+
+What follows is the full list of command line parameters that you can pass to the `Prj` command.  Note that you can pass any combination of these and Prj will execute them in a reasonable order.
 
 * #### <a id="commandline-openDocumentation"></a>`--openDocumentation` / `-d`
     * Opens up the documentation page that you are reading
@@ -418,7 +459,7 @@ What follows is the full list of command line parameters that you can pass to Up
 
 However, we are not doing any of the things that Unity warns about here so this warning can be ignored.
 
-## <a id="projectini"></a>Project.ini reference
+## <a id="projectini"></a>ProjenyProject.yaml reference
 
 The format of the Project.yaml is as follows:
 
@@ -448,6 +489,10 @@ The format of the Project.yaml is as follows:
     * It is common to want a csproj file generated for every package in your project, in which case you can add the line `/.*` which will match everything
 * You can also optionally add folders to the generated solution, to organize related projects together.  Each folder has one regex pattern that is used to filter the full list of projects.
 * Note that the regex used here following the regex rules defined for python (more details <a href="https://docs.python.org/2/library/re.html">here</a>)
+
+## <a id="projeny-yaml"></a>Projeny.yaml reference
+
+TBD
 
 ## <a id="package-yaml"></a>Package.ini reference
 

@@ -14,7 +14,7 @@ class FileInfo:
         self.path = path
         self.release = release
 
-class LocalFolderRegistry:
+class LocalFolderReleaseSource:
     _log = Inject('Logger')
     _sys = Inject('SystemHelper')
     _extractor = Inject('UnityPackageExtractor')
@@ -29,8 +29,8 @@ class LocalFolderRegistry:
         return [x.release for x in self._files]
 
     def init(self):
-        self._log.heading('Initializing registry for local folder')
-        self._log.debug('Initializing registry for local folder "{0}"', self._folderPath)
+        self._log.heading('Initializing release source for local folder')
+        self._log.debug('Initializing release source for local folder "{0}"', self._folderPath)
 
         for path in self._sys.findFilesByPattern(self._folderPath, '*.unitypackage'):
             release = self._packageAnalyzer.getReleaseInfoFromUnityPackage(path)
