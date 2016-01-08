@@ -60,13 +60,3 @@ class JunctionHelper:
                 if recursive:
                     self.removeJunctionsInDirectory(fullPath, True)
 
-if __name__ == '__main__':
-
-    import mtm.build.BuildCommon as BuildCommon
-    BuildCommon.installBindings(True, True)
-    helper = Container.resolve('JunctionHelper')
-
-    #helper.makeJunction('F:/Temp/JunctionTest/Source', 'F:/Temp/JunctionTest/Junction')
-
-    helper.removeJunction('F:/Temp/JunctionTest/Junction')
-

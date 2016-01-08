@@ -72,6 +72,7 @@ class Runner:
             self._sys.executeAndWait("git tag -a v{0} -m 'Version {0}'".format(versionStr))
 
         if self._args.runInstallerAfter:
+            self._sys.deleteDirectoryIfExists('C:/Program Files (x86)/Projeny')
             self._sys.executeNoWait(installerOutputPath)
 
     def _createSamplesZip(self, versionStr):
