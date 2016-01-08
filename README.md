@@ -453,8 +453,8 @@ Here is the full list of configuration settings.  Note that you don't need to in
         # This value is required when UseDevenv setting (see below) is set to true
         VisualStudioCommandLinePath: 'C:/Program Files (x86)/Microsoft Visual Studio 12.0/Common7/IDE/devenv.com'
 
-        # This value is required for the button "Open Solution" in package manager
-        # , or the equivalent command line option `prj -ocs`
+        # This value is required for the button "Open Solution" in package manager,
+        # or the equivalent command line option `prj -ocs`
         VisualStudioIdePath: 'C:/Program Files (x86)/Microsoft Visual Studio 12.0/Common7/IDE/devenv.exe'
 
         # This value will determine where the `prj` command outputs 
@@ -526,7 +526,7 @@ Where:
 Note the following:
 * Packages that are listed underneath the `AssetsFolder` category will be placed directly underneath the `Assets/` directory of your project
 * Packages that are listed underneath the `PluginsFolder` category will be placed directly underneath the `Assets/Plugins` directory of your project
-* All packages underneath the `SolutionProjects` category will have their own .csproj file generated, when running `Project -> Update C# Project` or when hitting the "Update Solution" button within the package manager
+* All packages underneath the `SolutionProjects` category will have their own .csproj file generated, when running `Project -> Update C# Project` or when hitting the `Update Solution` button within the package manager
     * Note that you can also use a regular expression instead of explitly listing the full package name. For example, if you want to create a C# project for every package in your project add the line `/.*` which will match everything
 * You can also optionally add folders to the generated solution, to organize related projects together.  Each folder has one regex pattern that is used to filter the full list of projects, and must also be prefixed with a forward slash
 * All the regexes used in the package files follows the regex rules defined for python (more details <a href="https://docs.python.org/2/library/re.html">here</a>)
@@ -543,7 +543,7 @@ In most cases your `ProjenyPackage.yaml` will simply list the other packages tha
 
 This is taken from the demo project (at `UnityPackages/AllMovers/ProjenyPackage.yaml`).
 
-You do not need to specify a `ProjenyPackage.yaml` file for each package.  When not added to your package, your package will be assumed to have zero dependencies.
+Note that this file is optional.  When not added to your package, your package will just be assumed to have zero dependencies.
 
 There are a number of other options here for less common cases.  The full format of the `ProjenyPackage.yaml` is as follows:
 
@@ -569,9 +569,8 @@ There are a number of other options here for less common cases.  The full format
 Notes:
 * `{PackageName}` represents the name of a directory that is below your `UnityPackages` directory.
 * Any packages that are listed under `Dependencies` or `Extras` will always be added to every project that includes this package
-    * The only difference between Dependencies and Extras is that Projeny will create a csproj dependency for packages under Dependencies whereas it will not for those packages under Extras.  Most of the time you will want to only add to Dependencies, however in some cases it can be useful to use Extras.  For example, if you have split out a bunch of unit tests for your package into its own separate package, and you want to always include those with your package, you would add them to the Extras list.  You would not want to add them under Dependencies because this would create a circular dependency and Projeny will display an error.
-* By default, Projeny will assume that your package is applicable to all platforms.  However, if the `Platforms` list is set, Projeny will skip this package for all platforms except those listed, and this directory will only show up in the Unity Projects for those platforms.
-* `{PlatformName}` can be one of the following:
+    * The only difference between Dependencies and Extras is that Projeny will create a csproj dependency for packages under Dependencies whereas it will not for those packages under Extras.  Most of the time you will want to only add to Dependencies, however in some rare cases it can be useful to use Extras.  For example, if you have split out a bunch of unit tests for your package into its own separate package, and you want to always include those with your package, you would add them to the Extras list.  You would not want to add them under Dependencies because this would create a circular dependency and Projeny will display an error.
+* By default, Projeny will assume that your package is applicable to all platforms.  However, if the `Platforms` list is set, Projeny will skip this package for all platforms except those listed, and this directory will only show up in the Unity Projects for those platforms.  `{PlatformName}` can be one of the following:
     * Windows
     * WebPlayer
     * Android
@@ -613,19 +612,19 @@ For example, to add a new local folder source, open up one of your Projeny confi
         - LocalFolder:
             Path: 'C:/MyLocalFolderSource'
 
-One convenient place that you might want to put this is in the system wide Projeny config, which can be found in your user home directory at `C:/Users/[Your User Name]/Projeny.yaml`.  This is convenient because these releases will then be available for any Unity project on your computer.
+One convenient place that you might want to put this is in the system wide Projeny config, which can be found in your user home directory at `C:/Users/[Your User Name]/Projeny.yaml`.  This is convenient because these releases will then be available for any Unity project that you create through Projeny on your computer.
 
 Now, if you copy and paste `.unitypackage` files into this folder, and click the Refresh button in the Package Manager (accessed within Unity through the menu at `Projeny -> Package Manager`) then these `.unitypackage` files will be displayed in the Releases list.
 
 Note that you can add multiple local folder sources using different paths, including those on a network share.
 
-Sharing a release source over a network can be very useful when working in an office environment that has its own LAN.   Your organization can build up a big collection of "releases" and anyone in the organization can have access to.
+Sharing a release source over a network can be very useful when working in an office environment that has its own LAN.   Your organization can build up a big collection of "releases" that anyone in the organization can have access to.
 
 If you don't want to use a network share for this, you can also define a FileServer release source, which is declared using a URL.  You can then run a static web site that can serve out the Unity packages to anyone on the network.
 
-First, you have to host a static web site that simply contains a flat list of `.unitypackage` files.  Then you need to run `PrjUpdateReleaseManifest [directory]` with the path to the directory you want to scan (or simply `.` for current directory).  This will result in a file being created in this same directory called `ProjenyReleaseManifest.txt`
+First, you have to host a static web site that simply contains a flat list of `.unitypackage` files.  Then you need to run `PrjUpdateReleaseManifest [directory]` with the path to the directory you want to scan (or simply `.` for current directory).  This will result in a file being created in this same directory called `ProjenyReleaseManifest.txt`.  The `PrjUpdateReleaseManifest` also includes a command line option to 'watch' the directory indefinitely, so you can just upload files there and the manifest will automatically be updated.
 
-Then you can declare your release source in one of your `Projeny.yaml` as follows:
+After setting up your file server you can declare it as a release source in one of your `Projeny.yaml` as follows:
 
     ReleaseSources:
         - FileServer:
@@ -633,7 +632,7 @@ Then you can declare your release source in one of your `Projeny.yaml` as follow
 
 ## <a id="command-line-reference"></a>Command Line Reference
 
-Almost all operations in Projeny can be executed within Unity using the Projeny menu or the Package Manager.  However, it can also be useful to be able to drive it from the command line, especially if you want to automate any Projeny operations yourself.
+Almost all operations in Projeny can be executed within Unity using the Projeny menu or the Package Manager.  However, not all (for eg: building the Visual Studio solution).  It can also be useful to be able to drive it from the command line for use with continous integration servers or whatever build pipeline you are using at your organization.
 
 What follows is the full list of command line parameters that you can pass to the `Prj` command.  Note that you can pass any combination of these and `Prj` will execute them in a reasonable order.
 
