@@ -342,7 +342,7 @@ If you don't want to use a network share for this, you can also define a FileSer
 
 ## <a id="file-server-release-source"></a>File Server Release Source
 
-If you want to share Projeny releases over the network, you can do so by declaring a file server release source.  First, you have to host a static web site that simply contains a flat list of `.unitypackage` files.  Then you need to run 
+If you want to share Projeny releases over the network, you can do so by declaring a file server release source.  First, you have to host a static web site that simply contains a flat list of `.unitypackage` files.  Then you need to run
 
 File Server release sources can be 
 

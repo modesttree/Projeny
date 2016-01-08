@@ -25,6 +25,8 @@ from prj.util.CommonSettings import CommonSettings
 from prj.reg.UnityPackageExtractor import UnityPackageExtractor
 from prj.reg.UnityPackageAnalyzer import UnityPackageAnalyzer
 
+import time
+
 from prj.util.CommonSettings import ConfigFileName
 from prj.reg.ReleaseSourceManager import ReleaseSourceManager
 
@@ -60,19 +62,28 @@ class Runner:
 
     def run(self, args):
         self._args = args
+
         self._args.directory = self._sys.canonicalizePath(self._args.directory)
         self._scriptRunner.runWrapper(self._runInternal)
 
     def _runInternal(self):
         self._log.debug("Started ReleaseManifestUpdater with arguments: {0}".format(" ".join(sys.argv[1:])))
 
-        releasePaths = self._getAllReleasePaths()
+        while True:
+            releasePaths = self._getAllReleasePaths()
 
-        if self._hasChanged(releasePaths):
-            self._log.info("Detected change to one or more releasePaths\nUpdating release manifest...")
+            self._log.info("Checking for changes...")
 
-            self._manifest = self._createManifest(releasePaths)
-            self._saveManifest()
+            if self._hasChanged(releasePaths):
+                self._manifest = self._createManifest(releasePaths)
+                self._saveManifest()
+
+                self._log.info("Detected change to one or more releasePaths. Release manifest has been updated.")
+
+            if self._args.pollInternal <= 0:
+                break
+
+            time.sleep(self._args.pollInternal)
 
     def _saveManifest(self):
         yamlStr = YamlSerializer.serialize(self._manifest)
@@ -105,7 +116,7 @@ class Runner:
         return releasePath
 
 def addArguments(parser):
-    parser.add_argument('-pi', '--pollInternal', default=30, metavar='PACKAGE_NAME', type=int, help="This program will scan the given directory for unitypackage files over the polling interval given here (in seconds)")
+    parser.add_argument('-pi', '--pollInternal', default=0, metavar='PACKAGE_NAME', type=int, help="This program will scan the given directory for unitypackage files over the polling interval given here (in seconds)")
     parser.add_argument('-dir', '--directory', metavar='PACKAGE_NAME', type=str, help="The directory to scan for unitypackage files")
 
 def installBindings():
