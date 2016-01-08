@@ -34,7 +34,7 @@ MonoBehaviour:
   View:
     InterpSpeed: 24.46
     ProcessingPopupDelayTime: 0.2
-    HeaderHeight: 34
+    HeaderHeight: 31.84
     ListVerticalSpacing: 11.06
     ListHorizontalSpacing: 37.28
     MarginTop: 0
@@ -47,6 +47,7 @@ MonoBehaviour:
     ApplyButtonTopPadding: 22.61
     ProjectButtonsPadding: 17.65
     FileDropdownHeight: 36.45
+    FileDropDownBottomPadding: 8.14
     FileDropdownArrow: {fileID: 2800000, guid: 107f1605cdeb67a409ee52cdf6517189, type: 3}
     ArrowButtonIconWidth: 20.42
     ArrowButtonIconHeight: 28.4

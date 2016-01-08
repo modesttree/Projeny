@@ -126,7 +126,7 @@ Most of the time however, you will not need to edit this file directly.  Instead
 
 ## <a id="advantages"></a>Advantages of Using Projeny
 
-#### <a id="shared-files"></a>1 - Shared files between projects
+### <a id="shared-files"></a>1 - Shared files between projects
 
 By using directory links, you can have multiple unity projects all using the same package folders, without needing to copy and paste each package per project.  You can change a file such as a prefab or a C# file, and that change will be applied to all other projects that are using it as well
 
@@ -145,13 +145,13 @@ To see this in action, do the following:
 * You should see both the cube and sphere in the same scene
 * This works because these three projects all have some shared packages.  Note that this allows sharing code as well prefabs (ie. the cube and the sphere prefabs), scenes, etc.
 
-#### <a id="organization"></a>2 - Package Organization and Asset Store integration
+### <a id="organization"></a>2 - Package Organization and Asset Store integration
 
 Projeny allows you to much more easily manage many different unity packages that you've created yourself, but also those packages that you've installed through the asset store. 
 
 You can build up a big collection of packages that you've purchased through the asset store and added to your UnityPackages directory, and then easily include or exclude those in your purchased assets by simply selecting or not selecting them in each project.  Projeny can also be used to easily upgrade/downgrade installed asset store packages all through a simple GUI interface.  See <a href="#managing-assetstore-assets">this section</a> for more details on managing asset store packages through projeny.
 
-#### <a id="platform-switching"></a>3 - Near instant platform switching
+### <a id="platform-switching"></a>3 - Near instant platform switching
 
 You might be wondering why the projects that you've been dealing with are all marked with the suffix '-Windows'.  Or why there are multiple ProjectSettings folders that appear after you run the --init command as described above (One underneath CubeMover and another underneath CubeMover-Windows)
 
@@ -163,7 +163,7 @@ When that occurs, Projeny will create a directory link to the main ProjectSettin
 
 To see this in action, open up the CubeMover project in Unity then select the menu item `Projeny -> Change Platform -> iOS`.  The first time you do this will take longer since Unity has to process the files but any subsequent times should be nearly instant, since it should be no different from simply opening another project.
 
-#### <a id="compilation-time-optimization"></a>4 - Compile time optimization
+### <a id="compilation-time-optimization"></a>4 - Compile time optimization
 
 Unity compiles your project in multiple passes.  The first pass compiles all C# files that are in the Plugins/ directory and the second pass compiles all other C# files.  If Unity does not detect any changes in the Plugins/ directory then Unity will skip this first pass and only execute the second pass.  (Note: This is a bit of a simplification - see [here](http://docs.unity3d.com/Manual/ScriptCompileOrderFolders.html) for full details)
 
@@ -205,7 +205,7 @@ Then click the "Apply" button.  This will update the ProjenyProject.yaml file an
 
 Now we can continue coding within the AllMovers project and benefit from faster compile times.
 
-#### <a id="platform-specific-folders"></a>5 - Platform specific package folders
+### <a id="platform-specific-folders"></a>5 - Platform specific package folders
 
 Unity 5 adds some helpful features, including the ability to enable/disable a DLL based on platform.  If you add a DLL to your project then click on it you get a bunch of checkboxes in the inspector that allow you to choose which platform this DLL is for.   Projeny allows you to do something similar except for all assets and directories.
 
@@ -217,7 +217,7 @@ This can also make things easier when it comes to code.  You can have entire pac
 
 For more details on how to use this feature, see <a href="#package-yaml">the section on package configuration</a>.
 
-#### <a id="dependency-management"></a>6 - Dependency Management of Packages
+### <a id="dependency-management"></a>6 - Dependency Management of Packages
 
 When adding a package to the UnityPackages directory, you can also specify the packages that this package depends on.  Then, when Projeny is generating your unity project directory, it can automatically figure out which packages you need.
 
@@ -254,26 +254,41 @@ This will open up the file at UnityPackages/AllMovers/ProjenyPackage.yaml.  It s
 
 This tells Projeny that whenever the AllMovers package is added to a project, the SphereMover and CubeMover packages should be added as well.  Once projeny processes the ProjenyPackage.yaml file for the AllMovers project, it will then look at the ProjenyPackage.yaml for the CubeMover and the SphereMover projects, and then repeat again for those dependencies, etc.  (The CubeMover and SphereMover packages are what contain the reference to CommonShapeMover).
 
-#### <a id="visual-studio-generation"></a>7 - More intelligent Visual Studio Solution generation
+### <a id="visual-studio-generation"></a>7 - More intelligent Visual Studio Solution generation
 
 Projeny can also take advantage of the dependency information between packages to generate a better Visual Studio project.
 
-To see this in action, 
+To see this in action, open up the AllMovers-Windows project, and then click the menu item `Projeny -> Package Manager...`.  Then click on the arrow button on the right until you read this screen:
 
-In the sample project, Projeny can generate a custom solution file that contains a C# project for each package in the project:
+<img src="Docs/Screen5.png?raw=true" alt="Package Manager" />
 
-* AllMovers
-* CubeMover
-* SphereMover
-* CommonShapeMover
+Click the Open Solution button.  You will most likely get an error about the path to Visual Studio not being defined.  To fix this, open up the `Projeny.yaml` file at the root of the folder structure and change it to include a value for `VisualStudioIdePath`.  For example:
 
-In this case, the AllMovers C# project will automatically be set to depend on the CubeMover, SphereMover, and CommonShapeMover projects.  The CubeMover C# project will depend on the CommonShapeMover project. Etc.  Because that is what the dependencies are as specified in each package.ini
+    PathVars:
+        UnityPackagesDir: '[ConfigDir]/UnityPackages'
+        UnityProjectsDir: '[ConfigDir]/UnityProjects'
+        LogPath: '[ConfigDir]/PrjLog.txt'
+        VisualStudioIdePath: 'C:/Program Files (x86)/Microsoft Visual Studio 12.0/Common7/IDE/devenv.exe'
+
+Now if we click Open Solution again, we should see two C# projects.  One named "AssetsFolder" that contains all C# files under the Assets/ folder and one named "PluginsFolder" that contains all C# files underneath the Plugins/ folder.  So far, this is the same as the solution that Unity produces when it generates its visual studio solution.
+
+Go back to the Package manager and drag the following projects over:
+
+<img src="Docs/Screen6.png?raw=true" alt="Package Manager" />
+
+Now, if you hit Update Solution, and go back to Visual Studio you should see the following:
+
+<img src="Docs/Screen7.png?raw=true" alt="Package Manager" />
+
+As you can no doubt guess by now, every package that you drag to the list on the right in the Package Manager will have a C# project created for it.  You'll also notice that the AssetsFolder has disappeared.  This is because Projeny did not find any files left over to place in it, so it didn't bother to create the project.  But, since we did not drag over the CommonShapeMover project, the PluginsFolder project has remained.
 
 This can be helpful for code organization but more importantly, this allows you to design dependencies on a module level.  In normal unity projects, every code file could potentially make use of any other code file in your entire project.  For small projects this is not an issue, however, as your project scales in size it is helpful to be able to design code at a module level and avoid having your project devolve into a [Big ball of mud](https://en.wikipedia.org/wiki/Big_ball_of_mud).
 
 For example, it is common to build up a library of re-usable utility functions that you can use in multiple unity projects, such as a math library.  For these cases, it would be important to avoid using game-specific code from within your math library, because then your math library is strongly coupled to your game and can't be used in other projects.  If you compile using the Projeny generated solution file, this would not be a problem, since it would guarantee these dependencies remain intact, even though Unity itself would allow them.
 
-For usage details on this feature see <a href="#visual-studio-generation-usage">this section</a>
+These C# project dependencies are generated based on the dependencies that are declared for the package in a `ProjenyPackage.yaml` file, as described in the <a href="#dependency-management">previous section</a>.
+
+For more details on visual studio solution generation see <a href="#visual-studio-generation-usage">this section</a>
 
 ## <a id="managing-assetstore-assets"></a>Managing Asset Store Assets
 

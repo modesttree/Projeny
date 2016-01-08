@@ -19,6 +19,8 @@ CsProjTypeGuid = 'FAE04EC0-301F-11D3-BF4B-00C04F79EFBC'
 SolutionFolderTypeGuid = '2150E333-8FDC-42A3-9474-1A3956D46DE8'
 EditorProjectNameSuffix = "-editor"
 
+ProjenyDirectoryIgnorePattern = re.compile(r'.*Assets\\Plugins\\Projeny\\.*')
+
 class VisualStudioSolutionGenerator:
     """
     Handler for creating custom visual studio solutions based on ProjenyProject.yaml files
@@ -131,16 +133,16 @@ class VisualStudioSolutionGenerator:
         includedProjects = []
         allCustomProjects = {}
 
-        pluginsProj = self._createStandardCsProjInfo('Packages-Plugins', '[PluginsDir]')
+        pluginsProj = self._createStandardCsProjInfo('PluginsFolder', '[PluginsDir]')
         includedProjects.append(pluginsProj)
 
-        scriptsEditorProj = self._createStandardCsProjInfo('Packages-Editor', '[ProjectAssetsDir]')
+        scriptsEditorProj = self._createStandardCsProjInfo('AssetsFolder-Editor', '[ProjectAssetsDir]')
         includedProjects.append(scriptsEditorProj)
 
-        scriptsProj = self._createStandardCsProjInfo('Packages', '[ProjectAssetsDir]')
+        scriptsProj = self._createStandardCsProjInfo('AssetsFolder', '[ProjectAssetsDir]')
         includedProjects.append(scriptsProj)
 
-        pluginsEditorProj = self._createStandardCsProjInfo('Packages-Plugins-Editor', '[PluginsDir]')
+        pluginsEditorProj = self._createStandardCsProjInfo('PluginsFolder-Editor', '[PluginsDir]')
         includedProjects.append(pluginsEditorProj)
 
         allPackages = schema.packages.values()
@@ -533,6 +535,12 @@ class VisualStudioSolutionGenerator:
     def _prettify(self, doc):
         return minidom.parseString(ET.tostring(doc)).toprettyxml(indent="    ")
 
+    def _shouldIgnoreCsProjFile(self, fullPath):
+        if self._config.getBool('IncludeProjenyInGeneratedSolution'):
+            return False
+
+        return ProjenyDirectoryIgnorePattern.match(fullPath)
+
     def _addCsFilesInDirectory(self, dirPath, excludeDirs, files, isForEditor):
         isInsideEditorFolder = re.match(r'.*\\Editor($|\\).*', dirPath)
 
@@ -552,6 +560,9 @@ class VisualStudioSolutionGenerator:
 
         for itemName in os.listdir(dirPath):
             fullPath = os.path.join(dirPath, itemName)
+
+            if self._shouldIgnoreCsProjFile(fullPath):
+                continue
 
             if os.path.isdir(fullPath):
                 self._addCsFilesInDirectory(fullPath, excludeDirs, files, isForEditor)

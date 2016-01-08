@@ -5,6 +5,8 @@ from prj.ioc.Inject import InjectMany
 import prj.ioc.IocAssertions as Assertions
 import prj.util.MiscUtil as MiscUtil
 
+from prj.util.CommonSettings import ConfigFileName
+
 import win32api
 import win32com.client
 
@@ -44,7 +46,7 @@ class VisualStudioHelper:
 
     def openVisualStudioSolution(self, solutionPath, filePath = None):
         if not self._varMgr.hasKey('VisualStudioIdePath'):
-            assertThat(False, "Path to visual studio has not been defined.  Please set <VisualStudioIdePath> within one of your {0} files", ConfigFileName)
+            assertThat(False, "Path to visual studio has not been defined.  Please set <VisualStudioIdePath> within one of your {0} files.  See documentation for details.", ConfigFileName)
 
         if self._sys.fileExists('[VisualStudioIdePath]'):
             self._sys.executeNoWait('"[VisualStudioIdePath]" {0} {1}'.format(self._sys.canonicalizePath(solutionPath), self._sys.canonicalizePath(filePath) if filePath else ""))

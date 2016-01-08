@@ -30,7 +30,7 @@ namespace Projeny.Internal
 
             while (exception != null)
             {
-                stringBuilder.AppendLine(string.Format("{0}: {1}", exception.GetType().Name, exception.Message));
+                stringBuilder.AppendLine(exception.Message);
                 exception = exception.InnerException;
             }
 

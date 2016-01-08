@@ -83,6 +83,7 @@
     <Compile Include="Projeny\PackageManager\Controller\PmViewAsyncHandler.cs" />
     <Compile Include="Projeny\PackageManager\Controller\PmViewErrorHandler.cs" />
     <Compile Include="Projeny\PackageManager\Controller\PmViewHandlerCommon.cs" />
+    <Compile Include="Projeny\PackageManager\Controller\PmVsSolutionViewHandler.cs" />
     <Compile Include="Projeny\PackageManager\Model\PmModel.cs" />
     <Compile Include="Projeny\PackageManager\Model\PmProjectHandler.cs" />
     <Compile Include="Projeny\PackageManager\Model\PmReleasesHandler.cs" />
