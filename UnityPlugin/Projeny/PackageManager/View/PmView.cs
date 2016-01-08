@@ -842,7 +842,7 @@ namespace Projeny.Internal
         {
             var startX = windowRect.xMin + _split3 * windowRect.width + _settings.ListVerticalSpacing;
             var endX = windowRect.xMax - _settings.ListVerticalSpacing;
-            var startY = windowRect.yMin + 2 * _settings.HeaderHeight;
+            var startY = windowRect.yMin + _settings.HeaderHeight + _settings.FileDropdownHeight + _settings.FileDropDownBottomPadding;
             var endY = windowRect.yMax;
 
             var rect = Rect.MinMaxRect(startX, startY, endX, endY);
@@ -918,7 +918,7 @@ namespace Projeny.Internal
 
             DrawFileDropdown(Rect.MinMaxRect(headerRect.xMin, startY, headerRect.xMax, endY));
 
-            startY = endY;
+            startY = endY + _settings.FileDropDownBottomPadding;
             endY = startY + _settings.HeaderHeight;
 
             GUI.Label(Rect.MinMaxRect(contentRect.xMin, startY, contentRect.xMax, endY), "Assets Folder", _settings.HeaderTextStyle);
@@ -996,8 +996,9 @@ namespace Projeny.Internal
         {
             var halfWidth = rect.width * 0.5f;
             var padding = 0.5f * _settings.ProjectButtonsPadding;
+            var buttonWidth = 0.7f * rect.width;
 
-            if (GUI.Button(Rect.MinMaxRect(rect.x + halfWidth + padding, rect.y, rect.xMax, rect.yMax), "Apply"))
+            if (GUI.Button(new Rect(rect.x + halfWidth - 0.5f * buttonWidth, rect.y, buttonWidth, rect.height), "Update Directories"))
             {
                 ClickedProjectApplyButton();
             }
@@ -1055,6 +1056,7 @@ namespace Projeny.Internal
             public float ProjectButtonsPadding;
 
             public float FileDropdownHeight;
+            public float FileDropDownBottomPadding;
 
             public Texture2D FileDropdownArrow;
 

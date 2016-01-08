@@ -33,6 +33,7 @@ namespace Projeny.Internal
             {
                 AssetsFolder = info.AssetsFolder.ToList(),
                 PluginsFolder = info.PluginsFolder.ToList(),
+                SolutionProjects = info.SolutionProjects.ToList(),
             };
         }
 
@@ -53,6 +54,11 @@ namespace Projeny.Internal
             if (info.PluginsFolder != null)
             {
                 newInfo.PluginsFolder = info.PluginsFolder.ToList();
+            }
+
+            if (info.SolutionProjects != null)
+            {
+                newInfo.SolutionProjects = info.SolutionProjects.ToList();
             }
 
             return newInfo;
@@ -238,6 +244,12 @@ namespace Projeny.Internal
             }
 
             public List<string> PluginsFolder
+            {
+                get;
+                set;
+            }
+
+            public List<string> SolutionProjects
             {
                 get;
                 set;

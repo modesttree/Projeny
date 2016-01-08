@@ -40,6 +40,7 @@ namespace Projeny.Internal
 
             config.AssetsFolder = _model.AssetItems.ToList();
             config.PluginsFolder = _model.PluginItems.ToList();
+            config.SolutionProjects = _model.VsProjects.ToList();
 
             return config;
         }

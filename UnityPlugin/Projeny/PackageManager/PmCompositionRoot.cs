@@ -115,7 +115,7 @@ namespace Projeny.Internal
 
             _solutionViewHandler = new PmVsSolutionViewHandler(
                 _model, _view, _asyncProcessor,
-                _prjCommandHandler, _viewErrorHandler);
+                _prjCommandHandler, _viewErrorHandler, _projectHandler);
 
             _releasesViewHandler = new PmReleasesViewHandler(
                 _model, _view, _asyncProcessor, _releasesHandler, _packageHandler, _prjCommandHandler, _settings);
