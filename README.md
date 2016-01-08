@@ -602,6 +602,7 @@ What follows is the full list of command line parameters that you can pass to th
 
 * #### <a id="commandline-project"></a>`--project` / `-p`
     * Selects the project to use for whatever other parameters are given
+    * Note that if there is only one project then this option can be omitted
     * For example, if you run `prj -p AllMovers -ul` this will update all the directory links for the "AllMovers" project (using the default platform which is windows).
     * Valid values are the names of the directories underneath the UnityProjects directory. 
         * You can view the full list of projects by running the <a href="#commandline-listProjects">`-lp` command</a>
@@ -701,7 +702,7 @@ What follows is the full list of command line parameters that you can pass to th
     * Lists all releases found from all release sources
 
 * #### <a id="commandline-editProjectYaml"></a>`--editProjectYaml` / `-epy`
-    * Opens up the {0} for the given project
+    * Opens up the `ProjenyProject.yaml` for the given project
 
 * #### <a id="commandline-createPackage"></a>`--createPackage` / `-cpa`
     * Creates a new folder underneath the UnityPackages directory with the given name

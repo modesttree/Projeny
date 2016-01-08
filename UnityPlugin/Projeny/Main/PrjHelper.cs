@@ -125,6 +125,19 @@ namespace Projeny
             EditorUtility.DisplayDialog("Error", errorMessage, "Ok");
         }
 
+        public static IEnumerator OpenPackagesFolderInExplorer()
+        {
+            var runner = PrjInterface.RunPrjAsync(
+                PrjInterface.CreatePrjRequest("openPackagesFolder"));
+
+            while (runner.MoveNext() && !(runner.Current is PrjResponse))
+            {
+                yield return runner.Current;
+            }
+
+            yield return CreateStandardResponse((PrjResponse)runner.Current);
+        }
+
         public static IEnumerator OpenUnityForProjectAsync(string projectName)
         {
             var runner = PrjInterface.RunPrjAsync(

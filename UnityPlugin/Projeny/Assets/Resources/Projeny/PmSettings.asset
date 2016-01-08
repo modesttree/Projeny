@@ -305,7 +305,7 @@ MonoBehaviour:
     ButtonPadding: 28.83
   InputDialog:
     PanelPadding: 13.42
-    PopupSize: {x: 386.79, y: 148.94}
+    PopupSize: {x: 492.53, y: 162.1}
   SavePromptDialog:
     PanelPadding: 13.42
     ButtonPadding: 13.37

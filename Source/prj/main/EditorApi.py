@@ -1,4 +1,5 @@
 
+import os
 import traceback
 from prj.log.LogStreamFile import LogStreamFile
 import prj.main.Prj as Prj
@@ -21,6 +22,8 @@ class Runner:
     _unityHelper = Inject('UnityHelper')
     _vsSolutionHelper = Inject('VisualStudioHelper')
     _releaseSourceManager = Inject('ReleaseSourceManager')
+    _sys = Inject('SystemHelper')
+    _varMgr = Inject('VarManager')
 
     def run(self, project, platform, requestId, param1, param2):
         self._log.debug("Started EditorApi with arguments: {0}".format(" ".join(sys.argv[1:])))
@@ -56,6 +59,9 @@ class Runner:
         elif self._requestId == 'openUnity':
             self._packageMgr.checkProjectInitialized(self._project, self._platform)
             self._unityHelper.openUnity(self._project, self._platform)
+
+        elif self._requestId == 'openPackagesFolder':
+            os.startfile(self._varMgr.expandPath("[UnityPackagesDir]"))
 
         elif self._requestId == 'updateCustomSolution':
             self._vsSolutionHelper.updateCustomSolution(self._project, self._platform)
@@ -110,7 +116,7 @@ def main():
     parser.add_argument("configPath", help="")
     parser.add_argument("project", help="")
     parser.add_argument('platform', type=str, choices=[x.lower() for x in Platforms.All], help='')
-    parser.add_argument('requestId', type=str, choices=['createProject', 'createPackage', 'deletePackage', 'installRelease', 'listReleases', 'listProjects', 'listPackages', 'updateLinks', 'updateCustomSolution', 'openCustomSolution', 'openUnity'], help='')
+    parser.add_argument('requestId', type=str, choices=['createProject', 'createPackage', 'deletePackage', 'installRelease', 'listReleases', 'listProjects', 'listPackages', 'updateLinks', 'updateCustomSolution', 'openCustomSolution', 'openUnity', 'openPackagesFolder'], help='')
     parser.add_argument("param1", nargs='?', help="")
     parser.add_argument("param2", nargs='?', help="")
 

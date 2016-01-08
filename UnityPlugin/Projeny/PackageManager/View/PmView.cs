@@ -142,14 +142,7 @@ namespace Projeny.Internal
 
         public List<DragListEntry> GetSelected(DragListTypes listType)
         {
-            var selected = GetSelected();
-
-            if (!selected.IsEmpty())
-            {
-                Assert.That(selected.All(x => x.ListType == selected[0].ListType));
-            }
-
-            return selected;
+            return GetSelected().Where(x => x.ListType == listType).ToList();
         }
 
         public List<DragListEntry> GetSelected()

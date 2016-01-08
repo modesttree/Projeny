@@ -91,36 +91,41 @@ namespace Projeny.Internal
         {
             var selected = GetSelectedItems();
 
-            if (selected.IsEmpty())
-            {
-                yield return new ContextMenuItem(
-                    true, "Refresh", false, OnContextMenuRefresh);
+            var singleInfo = selected.OnlyOrDefault();
 
-                yield return new ContextMenuItem(
-                    true, "New Package...", false, OnContextMenuNewPackage);
-            }
-            else
-            {
-                var singleInfo = selected.OnlyOrDefault();
+            yield return new ContextMenuItem(
+                !selected.IsEmpty(), "Delete", false, OnContextMenuDeleteSelected);
 
-                yield return new ContextMenuItem(
-                    !selected.IsEmpty(), "Delete", false, OnContextMenuDeleteSelected);
+            yield return new ContextMenuItem(
+                singleInfo != null, "Rename", false, OnContextMenuRenameSelected);
 
-                yield return new ContextMenuItem(
-                    singleInfo != null, "Rename", false, OnContextMenuRenameSelected);
+            yield return new ContextMenuItem(
+                singleInfo != null, "Show In Explorer", false, OnContextMenuOpenPackageFolderForSelected);
 
-                yield return new ContextMenuItem(
-                    singleInfo != null, "Open Folder", false, OnContextMenuOpenPackageFolderForSelected);
+            yield return new ContextMenuItem(
+                singleInfo != null && HasPackageYaml(selected.Single()), "Edit " + ProjenyEditorUtil.PackageConfigFileName, false, OnContextMenuEditPackageYamlSelected);
 
-                yield return new ContextMenuItem(
-                    singleInfo != null && HasPackageYaml(selected.Single()), "Edit " + ProjenyEditorUtil.PackageConfigFileName, false, OnContextMenuEditPackageYamlSelected);
+            yield return new ContextMenuItem(
+                singleInfo != null, "More Info...", false, OpenMoreInfoPopupForSelected);
 
-                yield return new ContextMenuItem(
-                    singleInfo != null, "More Info...", false, OpenMoreInfoPopupForSelected);
+            yield return new ContextMenuItem(
+                singleInfo != null && !string.IsNullOrEmpty(singleInfo.InstallInfo.ReleaseInfo.AssetStoreInfo.LinkId), "Open In Asset Store", false, OpenSelectedInAssetStore);
 
-                yield return new ContextMenuItem(
-                    singleInfo != null && !string.IsNullOrEmpty(singleInfo.InstallInfo.ReleaseInfo.AssetStoreInfo.LinkId), "Open In Asset Store", false, OpenSelectedInAssetStore);
-            }
+            yield return new ContextMenuItem(
+                true, "Refresh", false, OnContextMenuRefresh);
+
+            yield return new ContextMenuItem(
+                true, "New Package...", false, OnContextMenuNewPackage);
+
+            yield return new ContextMenuItem(
+                true, "Show UnityPackages Folder In Explorer", false, OnContextMenuOpenUnityPackagesFolderInExplorer);
+        }
+
+        void OnContextMenuOpenUnityPackagesFolderInExplorer()
+        {
+            _asyncProcessor.Process(
+                _prjCommandHandler.ProcessPrjCommand(
+                    "", PrjHelper.OpenPackagesFolderInExplorer()));
         }
 
         void OpenSelectedInAssetStore()

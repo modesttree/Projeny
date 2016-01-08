@@ -81,7 +81,7 @@ namespace Projeny.Internal
             }
 
             yield return new ContextMenuItem(
-                hasLocalPath, "Open Folder", false, OpenReleaseFolderForSelected);
+                hasLocalPath, "Show In Explorer", false, OpenReleaseFolderForSelected);
 
             yield return new ContextMenuItem(
                 singleInfo != null, "More Info...", false, OpenMoreInfoPopupForSelected);

@@ -8,6 +8,8 @@ import prj.ioc.IocAssertions as Assertions
 import sys
 import argparse
 
+from prj.log.LogStreamConsole import LogStreamConsole
+
 from prj.util.PlatformUtil import Platforms
 import prj.util.PlatformUtil as PlatformUtil
 from prj.util.Assert import *
@@ -82,7 +84,7 @@ def installBindings(args):
 
     Container.bind('LogStream').toSingle(LogStreamConsole, True, False)
 
-    Prj.installBindings([findConfigPath(args.filePath)])
+    Prj.installBindings(findConfigPath(args.filePath))
 
 if __name__ == '__main__':
     if (sys.version_info < (3, 0)):

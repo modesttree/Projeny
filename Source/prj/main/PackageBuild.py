@@ -54,12 +54,16 @@ class Runner:
         self._sys.clearDirectoryContents('[DistDir]')
         self._sys.clearDirectoryContents('[OutDir]')
 
-        self._updateBuildDirectory()
+        try:
+            self._updateBuildDirectory()
 
-        versionStr = 'v' + self._sys.readFileAsText('[InstallerDir]/Version.txt').strip()
-        installerOutputPath = '[DistDir]/ProjenyInstaller-{0}.exe'.format(versionStr)
+            versionStr = 'v' + self._sys.readFileAsText('[InstallerDir]/Version.txt').strip()
+            installerOutputPath = '[DistDir]/ProjenyInstaller-{0}.exe'.format(versionStr)
 
-        self._createInstaller(installerOutputPath)
+            self._createInstaller(installerOutputPath)
+        finally:
+            self._sys.deleteDirectoryIfExists('[OutDir]')
+
         self._createSamplesZip(versionStr)
 
         if self._args.runInstallerAfter:
@@ -83,11 +87,8 @@ class Runner:
 
     def _updateBuildDirectory(self):
 
-        if self._sys.directoryExists('[OutDir]'):
-            self._log.heading('Clearing output directory')
-            self._sys.clearDirectoryContents('[OutDir]')
-        else:
-            self._sys.createDirectory('[OutDir]')
+        self._sys.deleteDirectoryIfExists('[OutDir]')
+        self._sys.createDirectory('[OutDir]')
 
         self._log.heading('Building exes')
         self._sys.executeAndWait('[PythonDir]/BuildAllExes.bat')
