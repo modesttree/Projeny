@@ -294,50 +294,38 @@ For more details on visual studio solution generation see <a href="#visual-studi
 
 TBD
 
-## <a id="common-workflows"></a>Common Workflows
+## <a id="faq"></a>Frequently Asked Questions
 
-#### <a id="workflow-create-package"></a>1. Create a new package
-* Go to the UnityPackages directory
-* Create a new folder with the name of your package
-* Done. You can now refer to this package by its folder name
-* (optional) Add a package.ini file to your new folder
-    * This can be used to declare some dependencies for this package, or flag it for use with only specific platforms, etc.
-    * See <a href="#package-yaml">here</a> for the full package.ini reference
+#### <a id="workflow-create-package"></a>How do I create a new package?
 
-#### <a id="workflow-create-project"></a>2. Create a new project
-* Go to the UnityProjects directory
-* Create a new directory with the name of your project
-* Create a Project.yaml file in your new directory
-    * Add the names of the packages you want to include inside the Project.yaml (see <a href="#projectini">here</a> for full Project.yaml reference)
-* Add a .gitignore or a .svnignore or a .p4ignore or whatever file applies to the source control that you're using to your project directory
-    * This is important because the actual unity projects themselves should always be fully ignored by source control
-    * See the sample projects for an example of a .gitignore to use
+* Method 1 - Using the Package Manager
+    * Click the menu item `Projeny -> Package Manager`
+    * Go to the Packages section by pressing left arrow
+    * Click the new button
+    * Enter name for your package
+    * Add your package to your project by dragging it to either Assets or Plugins on the right
 
-#### <a id="workflow-add-package"></a>3. Add a package to an existing project
-* Open up the Project.yaml file for your project
-* Add a new line underneath "packages" or "pluginPackages" with the name of the package you want to add (see <a href="#projectini">here</a> for full Project.yaml reference)
-* <a href="#workflow-process-projectini">Update the directory links</a>
+* Method 2 - Manually
+    * Go to the UnityPackages directory
+    * Create a new folder with the name of your package
+    * Done. You can now refer to this package by its folder name
+    * (optional) Add a ProjenyPackage.yaml file to your new folder
+        * This can be used to declare some dependencies for this package, or flag it for use with only specific platforms, etc.
+        * See <a href="#package-yaml">here</a> for the full ProjenyPackage.yaml reference
 
-#### <a id="workflow-remove-package"></a>4. Remove a package from an existing project
-* Open up the Project.yaml file for your project
-* Delete the line with the package you want to remove
-* <a href="#workflow-process-projectini">Update the directory links</a>
+#### <a id="workflow-create-project"></a>How do I create a new project?
 
-#### <a id="workflow-update-custom-solution"></a>4. The visual studio solution has become out of sync with the file system.
-* This can occur when adding/removing C# files within Unity, when adding/removing C# files directly from the file system, when adding/removing packages to your Project.yaml, etc.
-* From within your Unity project, select the menu item `Projeny -> Custom Solution -> Update`
-* Note that you can also do this from the command line with `upm -p YourProject -ucs -uus` (see <a href="#commandline-updateCustomSolution">here</a> for details on these command line flags)
+* Method 1 - Within Unity
+    * Click the menu item `Projeny -> Change Project -> New...`
+    * Enter the name for your new project
+    * Open the Package Manager again to add packages
+    * Done
 
-#### <a id="workflow-optimize-compile-time"></a>5. Speeding up the compile time of your project
-* Open up the Project.yaml file for your project
-* Move the packages that you are currently working on to be underneath the `packages` category
-* Move all other package to be underneath the `packagePlugins` category
-* <a href="#workflow-process-projectini">Update the directory links</a>
-
-#### <a id="workflow-process-projectini"></a>6. You've made changes to your Project.yaml
-* From within Unity, execute the menu item `Projeny -> Update Links`
-* Note: You can also do this from the command line with `upm -p YourProject -ul` (see <a href="#commandline-updateLinks">here</a> for details on these command line flags)
-* (optional) <a href="#workflow-update-custom-solution">Update your custom solution</a> to show the new files
+* Method 2 - Command Line
+    * Enter command prompt / powershell at the same directory where your `Projeny.yaml` file is
+    * Execute `prj --project MyNewProject --createProject` (or the shortened form `prj -p MyNewProject -cpr`)
+    * Done.  You can now open your project in unity
+    * (optional) Add a ProjenyProject.yaml file to your new folder (see <a href="#projectini">here</a> for full Project.yaml reference)
 
 ## <a id="command-line-reference"></a>Command Line Reference
 
@@ -463,7 +451,7 @@ The format of the Project.yaml is as follows:
 
 ## <a id="package-yaml"></a>Package.ini reference
 
-In most cases your package.ini will simply list the other packages that this package depends on.  It will look like this:
+In most cases your ProjenyPackage.yaml will simply list the other packages that this package depends on.  It will look like this:
 
 [Config]
     Dependencies:
@@ -471,9 +459,9 @@ In most cases your package.ini will simply list the other packages that this pac
         MyPackageB
         MyPackageC
 
-Also note that the package.ini file is optional.  If not supplied, Projeny will assume your project has zero dependencies.
+Also note that the ProjenyPackage.yaml file is optional.  If not supplied, Projeny will assume your project has zero dependencies.
 
-However, there is a few other options here for less common cases.  The full format of the package.ini is as follows:
+However, there is a few other options here for less common cases.  The full format of the ProjenyPackage.yaml is as follows:
 
     [Config]
         Dependencies:
@@ -560,7 +548,7 @@ And then run `upm --project AllMovers --updateCustomSolution` (or the shortened 
 * SphereMover
 * Packages-Plugins
 
-As you can see, the `solutionProjects` setting in the Project.yaml can be used to choose which packages you want to have a corresponding Visual Studio project.  Also, the visual studio project dependencies are set up according to the project dependencies that are defined in the package.ini file for each package.  So in this case the AllMovers C# project will depend on CubeMover and SphereMover.
+As you can see, the `solutionProjects` setting in the Project.yaml can be used to choose which packages you want to have a corresponding Visual Studio project.  Also, the visual studio project dependencies are set up according to the project dependencies that are defined in the ProjenyPackage.yaml file for each package.  So in this case the AllMovers C# project will depend on CubeMover and SphereMover.
 
 You might notice in the above example that the Packages project has disappeared while the Packages-Plugins project remains.  If after creating the custom packages, Projeny does not find any code files left over to place inside the catch-all Packages project, then it doesn't bother creating it.  And since we didn't add the CommonShapeMover package to the list of solutionProjects, it was placed in the Packages-Plugins project, which is why that project still exists.
 

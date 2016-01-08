@@ -98,6 +98,8 @@ class PackageManager:
     # Uncomment and Add package names here
 """)
 
+        self.updateProjectJunctions(projName, Platforms.Windows)
+
     def getProjectFromAlias(self, alias):
         aliasMap = self._config.tryGetDictionary({}, 'ProjectAliases')
 
