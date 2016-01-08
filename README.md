@@ -25,24 +25,30 @@ NOTE: Projeny requires Unity3D 5.3.1 or higher, since it makes use of the `-buil
 ## Table Of Contents
 
 * <a href="#installation">Installation</a>
-* <a href="#introduction">Introduction</a>
-* Theory
-    * <a href="#overview">Overview</a>
-    * <a href="#shared-files">Shared files between projects</a>
-    * <a href="#organization">Organization and re-usability</a>
-    * <a href="#platform-switching">Near instant platform switching</a>
-    * <a href="#compilation-time-optimization">Compile time optimization</a>
-    * <a href="#platform-specific-folders">Platform specific package folders</a>
-    * <a href="#dependency-management">Dependency Management of Packages</a>
-    * <a href="#visual-studio-generation">Intelligent Visual Studio Solution Generation</a>
-* Usage
-    * <a href="#common-workflows">Common Workflows</a>
-    * <a href="#command-line-reference">Command Line Reference</a>
+* <a href="#overview">Overview</a>
+* <a href="#advantages">Advantages of Using Projeny</a>
+    1. <a href="#shared-files">Shared files between projects</a>
+    2. <a href="#organization">Package Organization and Asset Store integration</a>
+    3. <a href="#platform-switching">Near instant platform switching</a>
+    4. <a href="#compilation-time-optimization">Compile time optimization</a>
+    5. <a href="#platform-specific-folders">Platform specific package folders</a>
+    6. <a href="#dependency-management">Dependency Management of Packages</a>
+    7. <a href="#visual-studio-generation">More intelligent Visual Studio Solution generation</a>
+* Usage Details
+    * <a href="#managing-assetstore-assets">Managing Asset Store Assets / Releases</a>
     * <a href="#gotchas">Gotchas / Miscellaneous Tips and Tricks</a>
-    * <a href="#projectini">ProjenyProject.yaml reference</a>
-    * <a href="#package-yaml">Package.ini reference</a>
-    * <a href="#visual-studio-generation-usage">Visual Studio Solution Generation</a>
+    * <a href="#faq">Frequently Asked Questions</a>
+        * <a href="#workflow-create-package">How do I create a new package?</a>
+        * <a href="#workflow-create-project">How do I create a new project?</a>
+        * <a href="#workflow-create-new-config">How do I start an entirely new set of projeny-based project from scratch?</a>
+    * Configuration Files
+        * <a href="#projeny-yaml">Projeny.yaml reference</a>
+        * <a href="#project-yaml">ProjenyProject.yaml reference</a>
+        * <a href="#package-yaml">ProjenyPackage.yaml reference</a>
+    * <a href="#custom-release-registries">Custom Release Sources</a>
+    * <a href="#command-line-reference">Command Line Reference</a>
 * <a href="#appendix">Appendix</a>
+    * <a href="#dllgotchas">A. "Gotchas" with using external assemblies:</a>
 * <a href="#release-notes">Release Notes</a>
 * <a href="#license">License</a>
 

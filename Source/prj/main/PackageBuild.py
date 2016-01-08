@@ -47,6 +47,7 @@ class Runner:
     def _runInternal(self):
         self._varMgr.add('PythonDir', PythonDir)
         self._varMgr.add('ProjenyDir', ProjenyDir)
+        self._varMgr.add('SourceDir', '[ProjenyDir]/Source')
         self._varMgr.add('InstallerDir', '[ProjenyDir]/Installer')
         self._varMgr.add('OutDir', '[InstallerDir]/Build')
         self._varMgr.add('DistDir', '[InstallerDir]/Dist')
@@ -57,14 +58,18 @@ class Runner:
         try:
             self._updateBuildDirectory()
 
-            versionStr = 'v' + self._sys.readFileAsText('[InstallerDir]/Version.txt').strip()
-            installerOutputPath = '[DistDir]/ProjenyInstaller-{0}.exe'.format(versionStr)
+            versionStr = self._sys.readFileAsText('[SourceDir]/Version.txt').strip()
+            installerOutputPath = '[DistDir]/ProjenyInstaller-v{0}.exe'.format(versionStr)
 
             self._createInstaller(installerOutputPath)
         finally:
             self._sys.deleteDirectoryIfExists('[OutDir]')
 
         self._createSamplesZip(versionStr)
+
+        if self._args.addTag:
+            self._log.info('Adding git tag for version number')
+            self._sys.executeAndWait("git tag -a v{0} -m 'Version {0}'".format(versionStr))
 
         if self._args.runInstallerAfter:
             self._sys.executeNoWait(installerOutputPath)
@@ -74,7 +79,7 @@ class Runner:
         self._packageMgr.clearAllProjectGeneratedFiles(False)
 
         self._log.heading('Zipping up demo project')
-        self._zipHelper.createZipFile('[ProjenyDir]/Demo', '[DistDir]/ProjenySamples-{0}.zip'.format(versionStr))
+        self._zipHelper.createZipFile('[ProjenyDir]/Demo', '[DistDir]/ProjenySamples-v{0}.zip'.format(versionStr))
 
     def _createInstaller(self, installerOutputPath):
         self._log.heading('Creating installer exe')
@@ -120,6 +125,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Projeny build packager')
     parser.add_argument('-r', '--runInstallerAfter', action='store_true', help='')
+    parser.add_argument('-t', '--addTag', action='store_true', help='')
     args = parser.parse_args(sys.argv[1:])
 
     installBindings()
