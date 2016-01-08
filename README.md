@@ -83,9 +83,9 @@ This is best shown with an example.  After installing Projeny, [download the sam
     * SphereMover
         * ProjectSettings
 
-Each folder in the UnityProjects directory represents an actual Unity3D project.  Note that they each have the familiar ProjectSettings directory but they do not yet have an Assets directory.  This is because these projects have not been initialized yet by Projeny.  You'll also notice a file named Projeny.yaml at the root of the folder structure.  This is a simple text file that is used to specify Projeny configuration settings.
+Each folder in the UnityProjects directory represents an actual Unity3D project.  Note that they each have the familiar ProjectSettings directory but they do not yet have an Assets directory.  This is because these projects have not been initialized yet by Projeny.  You'll also notice a file named `Projeny.yaml` at the root of the folder structure.  This is a simple text file that is used to specify Projeny configuration settings.
 
-To initialize these unity projects we must run projeny from the command line.  Open up command prompt or powershell and navigate to the root directory (the same directory where you will find Projeny.yaml).  Then execute `prj --init`.  If the prj command is not found, check that it has been added to your windows PATH variable, as mentioned in the <a href="#installation">install instructions</a>.  All this command does is initialize some of the the directory links for these projects.
+To initialize these unity projects we must run projeny from the command line.  Open up command prompt or powershell and navigate to the root directory (the same directory where you will find `Projeny.yaml`).  Then execute `prj --init`.  If the prj command is not found, check that it has been added to your windows PATH variable, as mentioned in the <a href="#installation">install instructions</a>.  All this command does is initialize some of the the directory links for these projects.
 
 If we look at our project folders again, we see that a bunch of new folders appear to have been added.  Let's look at the CubeMover project in particular:
 
@@ -380,7 +380,7 @@ To start a new projeny project from scratch, you need to use the command line.
 
 ## <a id="projeny-yaml"></a>Projeny.yaml reference
 
-The Projeny.yaml file contains general settings for projeny, including the location of tools such as unity, where to place the log output, etc.
+The `Projeny.yaml` file contains general settings for projeny, including the location of tools such as unity, where to place the log output, etc.
 
 When running Projeny from thec command line using the `prj` command, it will load all configuration files from the following locations
 
@@ -399,6 +399,18 @@ If you follow <a href="#workflow-create-new-config">the instructions to create a
 This is the absolute minimum config that is required for Projeny.  Actually, you don't strictly need `LogPath` defined, but it is useful if you want detailed error information.  Every time you run the `prj` command in the directory with this `Projeny.yaml`, the PrjLog.txt will be updated with more detailed information
 
 Here is the full list of configuration settings.  Note that you don't need to include most of these, since they have reasonable defaults, but they are listed here for reference.  Also note that like all configuration files in Projeny, they are defined using the <a href="https://en.wikipedia.org/wiki/YAML">YAML standard</a>.  Comments can be added by prefixing your line with a `#` character.
+
+<a id="projeny-yaml-example"></a>
+
+    # If you use the command line a lot, it can be useful to define alias for the common projects you are changing
+    # These are taken from the demo project.  Running `prj -p am` is then the same as running `prj -p AllMovers`
+    ProjectAliases:
+        am: AllMovers
+        cm: CubeMover
+        sm: SphereMover
+
+    # The given project here will be used by the `prj` command line tool whenever the `-p` option is not included
+    DefaultProject: AllMovers
 
     PathVars:
         # This setting is necessary for many different projeny operations so that projeny knows how to run Unity
@@ -499,14 +511,18 @@ There are a number of other options here for less common cases.  The full format
         - {PackageName}
         - {PackageName}
         - {PackageName}
+
     Extras:
         - {PackageName}
         - {PackageName}
+
     FolderType: {FolderType}
+
     Platforms:
         - {PlatformName}
         - {PlatformName}
         - {PlatformName}
+
     ForcePluginsDirectory: {True/False}
     ForceAssetsDirectory: {True/False}
 
@@ -551,7 +567,7 @@ A mentioned in the <a href="#managing-assetstore-assets">above section</a>, the 
 
 Every source is ultimately just a collection of unity packages.  This is also what unity stores in the asset store cache, so even in that case, it is just a list of unity packages.
 
-For example, to add a new local folder source, open up one of your projeny config files (Projeny.yaml) and include the following:
+For example, to add a new local folder source, open up one of your projeny config files (`Projeny.yaml`) and include the following:
 
     ReleaseSources:
         - LocalFolder:
@@ -579,17 +595,17 @@ Then you can declare your release source in one of your `Projeny.yaml` as follow
 
 Almost all operations in projeny can be executed within unity using the Projeny menu or the Package Manager.  However, it can also be useful to be able to drive it from the command line, especially if you want to automate any projeny operations yourself.
 
-What follows is the full list of command line parameters that you can pass to the `Prj` command.  Note that you can pass any combination of these and Prj will execute them in a reasonable order.
+What follows is the full list of command line parameters that you can pass to the `Prj` command.  Note that you can pass any combination of these and `Prj` will execute them in a reasonable order.
 
 * #### <a id="commandline-openDocumentation"></a>`--openDocumentation` / `-d`
     * Opens up the documentation page that you are reading
 
 * #### <a id="commandline-project"></a>`--project` / `-p`
     * Selects the project to use for whatever other parameters are given
-    * For example, if you run `upm -p AllMovers -ul` this will update all the directory links for the AllMovers project (using the default platform which is windows).
+    * For example, if you run `prj -p AllMovers -ul` this will update all the directory links for the "AllMovers" project (using the default platform which is windows).
     * Valid values are the names of the directories underneath the UnityProjects directory. 
         * You can view the full list of projects by running the <a href="#commandline-listProjects">`-lp` command</a>
-        * You can also pass in one of the project aliases defined in your ProjenyConfig.xml file, to avoid typing the full name every time
+        * You can also pass in one of the project aliases defined in your `ProjenyProject.yaml` file, to avoid typing the full name every time
 
 * #### <a id="commandline-platform"></a>`--platform` / `-pl`
     * Selects the platform to use for whatever other parameters are given
@@ -602,12 +618,12 @@ What follows is the full list of command line parameters that you can pass to th
         * `osx` - Mac
         * `ios` - iOS for use with iPhone or iPad
         * `lin` - Linux
-    * For example, if you run `upm -p AllMovers -pl ios -ul` this will update all the directory links within the AllMovers-iOS directory.
+    * For example, if you run `prj -p AllMovers -pl ios -ul` this will update all the directory links within the AllMovers-iOS directory.
 
 * #### <a id="commandline-updateLinks"></a>`--updateLinks` / `-ul`
     * Updates all the directory links for the given project and platform.
-    * Projeny will read the Project.yaml file associated with the given project, then calculate all the packages that it needs to include.  For each package, it will then create a directory link (aka windows junction aka symbolic link) inside either the Assets/ directory or the Assets/Plugins directory
-    * Note that in order to run this command you must <a href="#commandline-project">specify a project</a> (or set a default project in ProjenyConfig.xml) and also optionally <a href="#commandline-platform">set a platform</a> (otherwise it will assume windows)
+    * Projeny will read the `Project.yaml` file associated with the given project, then calculate all the packages that it needs to include.  For each package, it will then create a directory link (aka windows junction aka symbolic link) inside either the Assets/ directory or the Assets/Plugins directory
+    * Note that in order to run this command you must <a href="#commandline-project">specify a project</a> (or set a default project in `Projeny.yaml`) and also optionally <a href="#commandline-platform">set a platform</a> (otherwise it will assume windows)
 
 * #### <a id="commandline-listProjects"></a>`--listProjects` / `-lp`
     * Lists the names of all the directories that are underneath the UnityProjects directory, along with the alias for each if one is defined.
@@ -616,7 +632,7 @@ What follows is the full list of command line parameters that you can pass to th
     * Generates .csproj files and a .sln file based on the configuration set in the Project.yaml for the given project and given platform
     * See <a href="#visual-studio-generation">here</a> for more details on this feature.
     * Note that in some cases you will want to run <a href="#commandline-updateUnitySolution">`-uus`</a> at the same time or before executing this command.  This is not necessary all the time but is necessary whenever you add DLL's to your project, add/remove a define in player settings, etc.  Also, if `-uus` has not been run at least once this command will fail
-    * Note that in order to run this command you must <a href="#commandline-project">specify a project</a> (or set a default project in ProjenyConfig.xml) and also optionally <a href="#commandline-platform">set a platform</a> (otherwise it will assume windows)
+    * Note that in order to run this command you must <a href="#commandline-project">specify a project</a> (or set a default project in `Projeny.yaml`) and also optionally <a href="#commandline-platform">set a platform</a> (otherwise it will assume windows)
 
 * #### <a id="commandline-updateUnitySolution"></a>`--updateUnitySolution` / `-uus`
     * Runs Unity.exe to generate the standard MonoDevelop solution, so that it can be used by the <a href="#commandline-updateCustomSolution">`-ucs` command</a>.  This is equivalent to opening unity and running the menu item `Assets -> Open C# Project` (except without actually opening visual studio/monodevelop)
@@ -626,37 +642,69 @@ What follows is the full list of command line parameters that you can pass to th
 
 * #### <a id="commandline-buildCustomSolution"></a>`--buildCustomSolution` / `-b`
     * Builds the custom solution
+    * Note: Will either use the `VisualStudioCommandLinePath` or the `MsBuildExePath` settings in `Projeny.yaml` to run the build, depending on the value of `UseDevenv`.  See <a href="#projeny-yaml-example">here</a> for details.
     * This command will fail if the custom solution has not been generated yet using the <a href="#updateCustomSolution">`-ucs` command</a>
-    * Note that in order to run this command you must <a href="#commandline-project">specify a project</a> (or set a default project in ProjenyConfig.xml) and also optionally <a href="#commandline-platform">set a platform</a> (otherwise it will assume windows)
+    * Note that in order to run this command you must <a href="#commandline-project">specify a project</a> (or set a default project in `Projeny.yaml`) and also optionally <a href="#commandline-platform">set a platform</a> (otherwise it will assume windows)
 
 * #### <a id="commandline-buildFull"></a>`--buildFull` / `-bf`
-    * This command is equivalent to the following: `upm -ul -uus -ucs -b`
+    * This command is equivalent to the following: `prj -ul -uus -ucs -b`
         * In other words, it will update the links for the given project/platform, update the custom solution, then build the custom solution
-    * Note that in order to run this command you must <a href="#commandline-project">specify a project</a> (or set a default project in ProjenyConfig.xml) and also optionally <a href="#commandline-platform">set a platform</a> (otherwise it will assume windows)
+        * See these other commands for details
+    * Note that in order to run this command you must <a href="#commandline-project">specify a project</a> (or set a default project in `Projeny.yaml`) and also optionally <a href="#commandline-platform">set a platform</a> (otherwise it will assume windows)
 
 * #### <a id="commandline-openUnity"></a>`--openUnity` / `-ou`
     * Opens unity for the given project/platform
-    * Note that in order to run this command you must <a href="#commandline-project">specify a project</a> (or set a default project in ProjenyConfig.xml) and also optionally <a href="#commandline-platform">set a platform</a> (otherwise it will assume windows)
+    * Note that in order to run this command you must <a href="#commandline-project">specify a project</a> (or set a default project in `Projeny.yaml`) and also optionally <a href="#commandline-platform">set a platform</a> (otherwise it will assume windows)
 
 * #### <a id="commandline-openCustomSolution"></a>`--openCustomSolution` / `-ocs`
     * Opens the custom solution for the given project/platform using visual studio
-    * Note that this command will require that you set your `VisualStudioIdePath` in ProjenyConfig.xml
+    * Note that this command will require that you set your `VisualStudioIdePath` in `Projeny.yaml`
     * This command will also fail if the custom solution has not been generated yet using the <a href="#updateCustomSolution">`-ucs` command</a>
-    * Note that in order to run this command you must <a href="#commandline-project">specify a project</a> (or set a default project in ProjenyConfig.xml) and also optionally <a href="#commandline-platform">set a platform</a> (otherwise it will assume windows)
+    * Note that in order to run this command you must <a href="#commandline-project">specify a project</a> (or set a default project in `Projeny.yaml`) and also optionally <a href="#commandline-platform">set a platform</a> (otherwise it will assume windows)
 
 * #### <a id="commandline-clearProjectGeneratedFiles"></a>`--clearProjectGeneratedFiles` / `-clp`
     * Deletes all the generates files/directories for the given project.   Note that this will not delete any real content, it will only remove some directory links and some temporary files generated by unity.
-    * This command is sometimes useful if you want to do a full reset of your project, which you can do by running `upm -clp -bf`.  This will delete all generated files and then re-generate them again.
-    * Note that in order to run this command you must <a href="#commandline-project">specify a project</a> (or set a default project in ProjenyConfig.xml)
+    * This command is sometimes useful if you want to do a full reset of your project, which you can do by running `prj -clp -bf`.  This will delete all generated files for the given project and then re-generate them again and build the visual studio solution.
+    * Note that in order to run this command you must <a href="#commandline-project">specify a project</a> (or set a default project in `Projeny.yaml`)
 
 * #### <a id="commandline-clearAllProjectGeneratedFiles"></a>`--clearAllProjectGeneratedFiles` / `-cla`
     * This is similar to the `-clp` command except this will be executed for every project in your UnityProjects directory
 
 * #### <a id="commandline-deleteAllLinks"></a>`--deleteAllLinks` / `-dal`
-    * Removes all directory links in all projects.  This is the reverse of the <a href="#commandline-initAll">`-ina` command</a>
+    * Removes all directory links in all projects.  This is the reverse of the <a href="#commandline-init">`-in` command</a>
 
-* #### <a id="commandline-initAll"></a>`--initAll` / `-ina`
+* #### <a id="commandline-init"></a>`--init` / `-in`
     * This is equivalent to running the <a href="#commandline-updateLinks">`-ul` command</a> on all the projects that are underneath the UnityProjects directory
+
+* #### <a id="commandline-deleteProject"></a>`--deleteProject` / `-dpr`
+    * Deletes the given project from the from UnityProjects directory
+
+* #### <a id="commandline-suppressPrompts"></a>`--suppressPrompts` / `-sp`
+    * If unset, confirmation prompts will be displayed for important operations.
+
+* #### <a id="commandline-createProject"></a>`--createProject` / `-cpr`
+    * Creates a new directory in the UnityProjects directory, adds a default `ProjenyProject.yaml` file, and sets up directory links
+
+* #### <a id="commandline-configPath"></a>`--suppressPrompts` / `-sp`
+    * The path to the main `ProjenyProject.yaml` config file.  If unspecified, it will be assumed to exist at `[CurrentDirectory]/ProjenyProject.yaml`
+
+* #### <a id="commandline-listPackages"></a>`--listPackages` / `-lpa`
+    * Lists all the directories found in the UnityPackages directory
+
+* #### <a id="commandline-deletePackage"></a>`--deletePackage` / `-dpa`
+    * Deletes the directory at UnityPackages/x where x is the given value
+
+* #### <a id="commandline-installRelease"></a>`--installRelease` / `-ins`
+    * Searches all release sources for the given release with given version
+
+* #### <a id="commandline-listReleases"></a>`--listReleases` / `-lr`
+    * Lists all releases found from all release sources
+
+* #### <a id="commandline-editProjectYaml"></a>`--editProjectYaml` / `-epy`
+    * Opens up the {0} for the given project
+
+* #### <a id="commandline-createPackage"></a>`--createPackage` / `-cpa`
+    * Creates a new folder underneath the UnityPackages directory with the given name
 
 ## <a id="appendix"></a>Appendix
 

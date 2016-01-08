@@ -116,8 +116,8 @@ class Runner:
         return releasePath
 
 def addArguments(parser):
-    parser.add_argument('directory', metavar='RELEASE_DIRECTORY', type=str, help="The directory to scan for unitypackage files")
-    parser.add_argument('-pi', '--pollInternal', default=0, metavar='POLL_INTERVAL', type=int, help="This program will scan the given directory for unitypackage files over the polling interval given here (in seconds)")
+    parser.add_argument('directory', metavar='RELEASE_DIRECTORY', type=str, help="The directory to scan for unitypackage files. ")
+    parser.add_argument('-pi', '--pollInternal', default=0, metavar='POLL_INTERVAL', type=int, help="This program will scan the given directory for unitypackage files over the polling interval given here (in seconds).  If unspecified, the manifest will only be updated once and this program will exit")
 
 def installBindings():
 

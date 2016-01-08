@@ -1,4 +1,9 @@
 
+ProjectAliases:
+    am: AllMovers
+    cm: CubeMover
+    sm: SphereMover
+
 PathVars:
     UnityPackagesDir: '[ConfigDir]/UnityPackages'
     UnityProjectsDir: '[ConfigDir]/UnityProjects'

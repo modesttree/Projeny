@@ -25,6 +25,8 @@ from prj.util.CommonSettings import CommonSettings
 from prj.reg.UnityPackageExtractor import UnityPackageExtractor
 from prj.reg.UnityPackageAnalyzer import UnityPackageAnalyzer
 
+from prj.main.ProjectSchemaLoader import ProjectConfigFileName
+
 from prj.util.CommonSettings import ConfigFileName
 from prj.reg.ReleaseSourceManager import ReleaseSourceManager
 
@@ -43,46 +45,46 @@ from prj.util.UnityHelper import UnityHelper
 def addArguments(parser):
 
     # Core
-    parser.add_argument('-in', '--init', action='store_true', help='Initializes the windows directory links for all projects')
-    parser.add_argument('-p', '--project', metavar='PROJECT_NAME', type=str, help="The project to apply changes to.")
+    parser.add_argument('-in', '--init', action='store_true', help='Initializes the directory links for all projects')
+    parser.add_argument('-p', '--project', metavar='PROJECT_NAME', type=str, help="The project to apply changes to.  If unspecified, this will be set to the value for DefaultProject in {0}".format(ConfigFileName))
     parser.add_argument('-pl', '--platform', type=str, default='win', choices=['win', 'webp', 'webgl', 'and', 'osx', 'ios', 'lin'], help='The platform to use.  If unspecified, windows is assumed.')
 
     # Script settinsg
-    parser.add_argument('-cfg', '--configPath', metavar='CONFIG_PATH', type=str, help="TBD")
+    parser.add_argument('-cfg', '--configPath', metavar='CONFIG_PATH', type=str, help="The path to the main {0} config file.  If unspecified, it will be assumed to exist at [CurrentDirectory]/{0}".format(ConfigFileName))
 
-    parser.add_argument('-v', '--verbose', action='store_true', help='Output debug-level logging')
-    parser.add_argument('-vv', '--veryVerbose', action='store_true', help='If set, detailed logging will be output to stdout rather than file')
+    parser.add_argument('-v', '--verbose', action='store_true', help='Output more detailed logging information to console')
+    parser.add_argument('-vv', '--veryVerbose', action='store_true', help='Output absolutely all logging information to console.  This will result in the console output being identical to the contents of the log file')
     parser.add_argument('-sp', '--suppressPrompts', action='store_true', help='If unset, confirmation prompts will be displayed for important operations.')
 
     # Projects
     parser.add_argument('-lpr', '--listProjects', action='store_true', help='Display the list of all projects that are in the UnityProjects directory')
-    parser.add_argument('-cpr', '--createProject', action='store_true', help='')
-    parser.add_argument('-ul', '--updateLinks', action='store_true', help='Updates directory links for the given project using package manager')
-    parser.add_argument('-clp', '--clearProjectGeneratedFiles', action='store_true', help='Remove the generated files for the given project')
-    parser.add_argument('-cla', '--clearAllProjectGeneratedFiles', action='store_true', help='Remove all the generated files for all projects')
-    parser.add_argument('-dal', '--deleteAllLinks', action='store_true', help='Delete all directory links for all projects')
-    parser.add_argument('-dpr', '--deleteProject', metavar='PROJECT_NAME', type=str, help="")
+    parser.add_argument('-cpr', '--createProject', action='store_true', help='Creates a new directory in the UnityProjects directory, adds a default {0} file, and sets up directory links'.format(ProjectConfigFileName))
+    parser.add_argument('-ul', '--updateLinks', action='store_true', help='Updates directory links for the given project and the given platform')
+    parser.add_argument('-clp', '--clearProjectGeneratedFiles', action='store_true', help='Remove all generated files for the given project.  This can be reversed easily by re-initializing the project')
+    parser.add_argument('-cla', '--clearAllProjectGeneratedFiles', action='store_true', help='Remove all the generated files for all projects. This can be reversed easily by running the init command')
+    parser.add_argument('-dal', '--deleteAllLinks', action='store_true', help='Delete all directory links for all subdirectories')
+    parser.add_argument('-dpr', '--deleteProject', metavar='PROJECT_NAME', type=str, help="Deletes the given project from the from UnityProjects directory")
 
     # Packages
-    parser.add_argument('-cpa', '--createPackage', metavar='NEW_PACKAGE_NAME', type=str, help="")
-    parser.add_argument('-lpa', '--listPackages', action='store_true', help='')
-    parser.add_argument('-dpa', '--deletePackage', metavar='PACKAGE_NAME', type=str, help="")
+    parser.add_argument('-cpa', '--createPackage', metavar='NEW_PACKAGE_NAME', type=str, help="Creates a new directory underneath the UnityPackages directory with the given name")
+    parser.add_argument('-lpa', '--listPackages', action='store_true', help='Lists all the directories found in the UnityPackages directory')
+    parser.add_argument('-dpa', '--deletePackage', metavar='PACKAGE_NAME', type=str, help="Deletes the directory at UnityPackages/x where x is the given value")
 
     # Releases
-    parser.add_argument('-ins', '--installRelease', type=str, nargs=2, metavar=('RELEASE_NAME', 'RELEASE_VERSION'), help="")
-    parser.add_argument('-lr', '--listReleases', action='store_true', help='')
+    parser.add_argument('-ins', '--installRelease', type=str, nargs=2, metavar=('RELEASE_NAME', 'RELEASE_VERSION'), help="Searches all release sources for the given release with given version")
+    parser.add_argument('-lr', '--listReleases', action='store_true', help='Lists all releases found from all release sources')
 
     # Visual Studio solution stuff
-    parser.add_argument('-uus', '--updateUnitySolution', action='store_true', help='Equivalent to executing the menu option "Assets/Sync MonoDevelop Project" in unity')
+    parser.add_argument('-uus', '--updateUnitySolution', action='store_true', help='Equivalent to executing the menu option "Assets/Open C# Project" in unity (without actually opening it)')
     parser.add_argument('-ucs', '--updateCustomSolution', action='store_true', help='Updates the custom solution for the given project with the files found in the Assets/ folder.  It will also take settings from the generated unity solution such as defines, and references.')
     parser.add_argument('-b', '--buildCustomSolution', action='store_true', help='Build the generated custom solution for the given project')
-    parser.add_argument('-ocs', '--openCustomSolution', action='store_true', help='Open the solution for the given project/platform')
-    parser.add_argument('-bf', '--buildFull', action='store_true', help='Perform a full build of the given project')
+    parser.add_argument('-ocs', '--openCustomSolution', action='store_true', help='Open the solution for the given project/platform in visual studio')
+    parser.add_argument('-bf', '--buildFull', action='store_true', help='Perform a full build of the given project, including updating directory links, generating the C# solution, and building the solution')
 
     # Misc
-    parser.add_argument('-epy', '--editProjectYaml', action='store_true', help='')
-    parser.add_argument('-cco', '--createConfig', action='store_true', help='')
-    parser.add_argument('-ou', '--openUnity', action='store_true', help='Open unity for the given project')
+    parser.add_argument('-epy', '--editProjectYaml', action='store_true', help='Opens up the {0} for the given project'.format(ProjectConfigFileName))
+    parser.add_argument('-cc', '--createConfig', action='store_true', help='Sets up a new collection of projeny based unity projects/packages in the current directory.  Adds a {0} file and also adds UnityPackages and UnityProjects directories'.format(ConfigFileName))
+    parser.add_argument('-ou', '--openUnity', action='store_true', help='Opens up Unity for the given project')
     parser.add_argument('-d', '--openDocumentation', action='store_true', help='Opens the documentation page in a web browser')
 
 def getProjenyDir():
