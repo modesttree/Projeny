@@ -152,6 +152,12 @@ class VisualStudioSolutionGenerator:
         customEditorProjects = []
         customAssetsProjects = []
 
+        # Store lambdas to create the csproj projects so that the isignored flags are always up to date when they get written
+        # Otherwise sometimes we will output csproj files that have a ProjectReference tag to a project that doesn't exist
+        # This is really hacky but I am about to release the new version and it's not worth doing a proper refactor to get
+        # this ordering right
+        csProjWriters = []
+
         # Need to populate allCustomProjects first so we can get references in _tryCreateCustomProject
         for packageInfo in allPackages:
             if packageInfo.createCustomVsProject:
@@ -168,13 +174,13 @@ class VisualStudioSolutionGenerator:
                 self._log.debug('Processing project "{0}"'.format(packageInfo.name))
 
                 customProject = self._tryCreateCustomProject( \
-                     False, allCustomProjects, packageInfo, unityRefItems, unityRefItemsEditor, unityDefines, excludeDirs, scriptsProj, pluginsProj, scriptsEditorProj, pluginsEditorProj, prebuiltProjectInfos)
+                     False, allCustomProjects, packageInfo, unityRefItems, unityRefItemsEditor, unityDefines, excludeDirs, scriptsProj, pluginsProj, scriptsEditorProj, pluginsEditorProj, prebuiltProjectInfos, csProjWriters)
 
                 if customProject:
                     includedProjects.append(customProject)
 
                 customEditorProject = self._tryCreateCustomProject( \
-                     True, allCustomProjects, packageInfo, unityRefItems, unityRefItemsEditor, unityDefines, excludeDirs, scriptsProj, pluginsProj, scriptsEditorProj, pluginsEditorProj, prebuiltProjectInfos)
+                     True, allCustomProjects, packageInfo, unityRefItems, unityRefItemsEditor, unityDefines, excludeDirs, scriptsProj, pluginsProj, scriptsEditorProj, pluginsEditorProj, prebuiltProjectInfos, csProjWriters)
 
                 if customEditorProject:
                     includedProjects.append(customEditorProject)
@@ -182,7 +188,7 @@ class VisualStudioSolutionGenerator:
         self._log.debug('Processing project "{0}"'.format(pluginsProj.name))
 
         pluginsProj.dependencies = prebuiltProjectInfos
-        self._createStandardCsProjForDirectory(pluginsProj, excludeDirs, unityRefItems, unityDefines, False, prebuiltProjectInfos)
+        self._createStandardCsProjForDirectory(pluginsProj, excludeDirs, unityRefItems, unityDefines, False, prebuiltProjectInfos, csProjWriters)
 
         pluginsEditorProj.dependencies = [pluginsProj] + prebuiltProjectInfos
 
@@ -191,23 +197,26 @@ class VisualStudioSolutionGenerator:
                 pluginsEditorProj.dependencies.append(allCustomProjects[packageInfo.name])
 
         self._log.debug('Processing project "{0}"'.format(pluginsEditorProj.name))
-        self._createStandardCsProjForDirectory(pluginsEditorProj, excludeDirs, unityRefItemsEditor, unityDefines, True, prebuiltProjectInfos)
+        self._createStandardCsProjForDirectory(pluginsEditorProj, excludeDirs, unityRefItemsEditor, unityDefines, True, prebuiltProjectInfos, csProjWriters)
 
         excludeDirs.append(self._varMgr.expandPath('[PluginsDir]'))
 
         self._log.debug('Processing project "{0}"'.format(scriptsProj.name))
         scriptsProj.dependencies = [pluginsProj] + prebuiltProjectInfos
-        self._createStandardCsProjForDirectory(scriptsProj, excludeDirs, unityRefItems, unityDefines, False, prebuiltProjectInfos)
+        self._createStandardCsProjForDirectory(scriptsProj, excludeDirs, unityRefItems, unityDefines, False, prebuiltProjectInfos, csProjWriters)
 
         scriptsEditorProj.dependencies = scriptsProj.dependencies + [scriptsProj, pluginsEditorProj]
 
         self._log.debug('Processing project "{0}"'.format(scriptsEditorProj.name))
-        self._createStandardCsProjForDirectory(scriptsEditorProj, excludeDirs, unityRefItemsEditor, unityDefines, True, prebuiltProjectInfos)
+        self._createStandardCsProjForDirectory(scriptsEditorProj, excludeDirs, unityRefItemsEditor, unityDefines, True, prebuiltProjectInfos, csProjWriters)
 
         self._ensureNoMatchingPrebuiltCsProjNames(includedProjects, prebuiltProjectInfos)
 
         for prebuiltProj in prebuiltProjectInfos:
             includedProjects.append(prebuiltProj)
+
+        for writer in csProjWriters:
+            writer()
 
         self._createSolution(includedProjects, schema.customFolderMap)
 
@@ -259,7 +268,7 @@ class VisualStudioSolutionGenerator:
 
         return CsProjInfo(projId, outputPath, csProjectName, False, files, isIgnored)
 
-    def _tryCreateCustomProject(self, isEditor, customCsProjects, packageInfo, unityRefItems, unityRefItemsEditor, defines, excludeDirs, scriptsProj, pluginsProj, scriptsEditorProj, pluginsEditorProj, prebuiltProjects):
+    def _tryCreateCustomProject(self, isEditor, customCsProjects, packageInfo, unityRefItems, unityRefItemsEditor, defines, excludeDirs, scriptsProj, pluginsProj, scriptsEditorProj, pluginsEditorProj, prebuiltProjects, csProjWriters):
 
         projName = packageInfo.name
 
@@ -320,7 +329,7 @@ class VisualStudioSolutionGenerator:
         for proj in prebuiltProjects:
             csProjInfo.dependencies.append(proj)
 
-        self._writeCsProject(csProjInfo, csProjInfo.files, refItems, defines, prebuiltProjects)
+        csProjWriters.append(lambda: self._writeCsProject(csProjInfo, csProjInfo.files, refItems, defines, prebuiltProjects))
 
         return csProjInfo
 
@@ -417,7 +426,7 @@ class VisualStudioSolutionGenerator:
 
         return CsProjInfo(projId, outputPath, projectName, False, [], False)
 
-    def _createStandardCsProjForDirectory(self, projInfo, excludeDirs, unityRefItems, defines, isEditor, prebuiltProjects):
+    def _createStandardCsProjForDirectory(self, projInfo, excludeDirs, unityRefItems, defines, isEditor, prebuiltProjects, csProjWriters):
 
         outputDir = os.path.dirname(projInfo.absPath)
 
@@ -428,7 +437,7 @@ class VisualStudioSolutionGenerator:
             projInfo.isIgnored = True
             return
 
-        self._writeCsProject(projInfo, files, unityRefItems, defines, prebuiltProjects)
+        csProjWriters.append(lambda: self._writeCsProject(projInfo, files, unityRefItems, defines, prebuiltProjects))
 
     def _createProjectGuid(self):
         return str(uuid.uuid4()).upper()
