@@ -403,8 +403,17 @@ class VisualStudioSolutionGenerator:
                     '\t\t{{{0}}} = {{{1}}}' \
                     .format(proj.id, folderId)
 
-        solutionStr = solutionStr.replace('[ProjectList]', projectList).replace('[PostSolution]', postSolution) \
-            .replace('[ProjectFolders]', projectFolderStr)
+        solutionStr = solutionStr.replace('[ProjectList]', projectList)
+
+        if len(postSolution.strip()) > 0:
+            solutionStr = solutionStr.replace('[PostSolution]', """
+    GlobalSection(ProjectConfigurationPlatforms) = postSolution
+{0}
+    EndGlobalSection""".format(postSolution))
+        else:
+            solutionStr = solutionStr.replace('[PostSolution]', '')
+
+        solutionStr = solutionStr.replace('[ProjectFolders]', projectFolderStr)
 
         if len(projectFolderMapsStr) > 0:
             fullStr = '\tGlobalSection(NestedProjects) = preSolution\n{0}\n\tEndGlobalSection'.format(projectFolderMapsStr)
