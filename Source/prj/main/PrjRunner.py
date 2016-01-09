@@ -22,6 +22,7 @@ class PrjRunner:
     _scriptRunner = Inject('ScriptRunner')
     _config = Inject('Config')
     _packageMgr = Inject('PackageManager')
+    _projectConfigChanger = Inject('ProjectConfigChanger')
     _unityHelper = Inject('UnityHelper')
     _varMgr = Inject('VarManager')
     _log = Inject('Logger')
@@ -122,10 +123,13 @@ class PrjRunner:
             self._createConfig()
 
         if self._args.createProject:
-            self._packageMgr._createProject(self._args.project)
+            self._packageMgr._createProject(self._project)
 
         if self._args.createPackage:
             self._packageMgr.createPackage(self._args.createPackage)
+
+        if self._args.projectAddPackage:
+            self._projectConfigChanger.addPackage(self._project, self._args.projectAddPackage)
 
         self._runPreBuild()
         self._runBuild()
@@ -178,7 +182,8 @@ PathVars:
            or self._args.updateCustomSolution or self._args.buildCustomSolution \
            or self._args.clearProjectGeneratedFiles or self._args.buildFull \
            or self._args.openUnity or self._args.openCustomSolution \
-           or self._args.editProjectYaml or self._args.createProject
+           or self._args.editProjectYaml or self._args.createProject \
+            or self._args.projectAddPackage
 
         if requiresProject and not self._project:
             assertThat(False, "Cannot execute the given arguments without a project specified, or a default project defined in the {0} file", ConfigFileName)

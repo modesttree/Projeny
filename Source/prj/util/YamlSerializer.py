@@ -8,7 +8,7 @@ class YamlData:
 
 def serialize(obj):
     # width is necessary otherwise it can insert newlines into string values
-    return yaml.dump(_convertToDict(obj), width=9999999, default_flow_style=False)
+    return yaml.dump(_serializeObj(obj), width=9999999, default_flow_style=False)
 
 def deserialize(yamlStr):
     return _deserializeObj(yaml.load(yamlStr))
@@ -27,27 +27,38 @@ def _deserializeObj(data):
     if dataType is list:
         return [_deserializeObj(x) for x in data]
 
+    if data == None:
+        return YamlData({})
+
     return data
 
 # This is necessary because otherwise yaml inserts python specific type information
-def _convertToDict(obj):
-    if type(obj) is not dict:
-        obj = obj.__dict__
+def _serializeObj(obj):
 
-    # Our convention with YAML is PascalCase
-    newObj = {}
-    for pair in obj.items():
-        key = pair[0]
-        value = pair[1]
-        valueType = type(value)
+    if obj == None:
+        return None
 
-        if value != None and inspect.isclass(valueType) and valueType not in (int, float, bool, str, datetime, list):
-            value = _convertToDict(value)
+    objType = type(obj)
 
-        if valueType is list:
-            value = [_convertToDict(x) for x in value]
+    if objType is list:
+        obj = [_serializeObj(x) for x in obj]
 
-        newObj[key[0].upper() + key[1:]] = value
+    elif objType in (int, float, bool, str, datetime):
+        # Do nothing
+        pass
 
-    return newObj
+    else:
+        if objType is not dict:
+            obj = obj.__dict__
+
+        oldItems = obj.items()
+        obj = {}
+        for pair in oldItems:
+            key = pair[0]
+            value = pair[1]
+
+            # Our convention with YAML is PascalCase
+            obj[key[0].upper() + key[1:]] = _serializeObj(value)
+
+    return obj
 

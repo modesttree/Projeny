@@ -43,6 +43,9 @@ namespace Projeny.Internal
         List<string> _vsProjects = new List<string>();
 
         [SerializeField]
+        List<string> _prebuilt = new List<string>();
+
+        [SerializeField]
         Dictionary<string, string> _solutionFolders = new Dictionary<string, string>();
 
         public PmModel()
@@ -81,6 +84,14 @@ namespace Projeny.Internal
             }
         }
 
+        public IEnumerable<string> PrebuiltProjects
+        {
+            get
+            {
+                return _prebuilt;
+            }
+        }
+
         public IEnumerable<string> VsProjects
         {
             get
@@ -100,6 +111,11 @@ namespace Projeny.Internal
         public void ClearSolutionFolders()
         {
             _solutionFolders.Clear();
+        }
+
+        public void ClearPrebuiltProjects()
+        {
+            _prebuilt.Clear();
         }
 
         public void ClearSolutionProjects()
@@ -151,6 +167,11 @@ namespace Projeny.Internal
         {
             _vsProjects.Add(name);
             VsProjectsChanged();
+        }
+
+        public void AddPrebuilt(string value)
+        {
+            _prebuilt.Add(value);
         }
 
         public void AddSolutionFolder(string key, string value)

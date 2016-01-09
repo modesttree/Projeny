@@ -41,6 +41,7 @@ namespace Projeny.Internal
             config.AssetsFolder = _model.AssetItems.ToList();
             config.PluginsFolder = _model.PluginItems.ToList();
             config.SolutionProjects = _model.VsProjects.ToList();
+            config.Prebuilt = _model.PrebuiltProjects.ToList();
             config.SolutionFolders = _model.VsSolutionFolders.ToDictionary(x => x.Key, x => x.Value);
 
             return config;
@@ -165,6 +166,12 @@ namespace Projeny.Internal
             foreach (var name in config.SolutionProjects)
             {
                 _model.AddVsProject(name);
+            }
+
+            _model.ClearPrebuiltProjects();
+            foreach (var name in config.Prebuilt)
+            {
+                _model.AddPrebuilt(name);
             }
 
             _model.ClearSolutionFolders();

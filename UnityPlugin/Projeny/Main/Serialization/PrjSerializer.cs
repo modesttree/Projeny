@@ -34,6 +34,7 @@ namespace Projeny.Internal
                 AssetsFolder = info.AssetsFolder.ToList(),
                 PluginsFolder = info.PluginsFolder.ToList(),
                 SolutionProjects = info.SolutionProjects.ToList(),
+                Prebuilt = info.Prebuilt.ToList(),
                 SolutionFolders = info.SolutionFolders.ToDictionary(x => x.Key, x => x.Value),
             };
         }
@@ -60,6 +61,11 @@ namespace Projeny.Internal
             if (info.SolutionProjects != null)
             {
                 newInfo.SolutionProjects = info.SolutionProjects.ToList();
+            }
+
+            if (info.Prebuilt != null)
+            {
+                newInfo.Prebuilt = info.Prebuilt.ToList();
             }
 
             if (info.SolutionFolders != null)
@@ -256,6 +262,12 @@ namespace Projeny.Internal
             }
 
             public List<string> SolutionProjects
+            {
+                get;
+                set;
+            }
+
+            public List<string> Prebuilt
             {
                 get;
                 set;

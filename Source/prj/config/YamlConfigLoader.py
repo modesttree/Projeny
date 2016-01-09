@@ -9,12 +9,15 @@ def loadYamlFilesThatExist(*paths):
 
     for path in paths:
         if os.path.isfile(path):
-            config = yaml.load(readAllTextFromFile(path))
+            config = loadYamlFile(path)
 
             if config != None:
                 configs.append(config)
 
     return configs
+
+def loadYamlFile(path):
+    return yaml.load(readAllTextFromFile(path))
 
 def readAllTextFromFile(filePath):
     with open(filePath, 'r', encoding='utf-8') as f:

@@ -25,6 +25,8 @@ from prj.util.CommonSettings import CommonSettings
 from prj.reg.UnityPackageExtractor import UnityPackageExtractor
 from prj.reg.UnityPackageAnalyzer import UnityPackageAnalyzer
 
+from prj.main.ProjectConfigChanger import ProjectConfigChanger
+
 from prj.main.ProjectSchemaLoader import ProjectConfigFileName
 
 from prj.util.CommonSettings import ConfigFileName
@@ -73,6 +75,9 @@ def addArguments(parser):
     # Releases
     parser.add_argument('-ins', '--installRelease', type=str, nargs=2, metavar=('RELEASE_NAME', 'RELEASE_VERSION'), help="Searches all release sources for the given release with given version")
     parser.add_argument('-lr', '--listReleases', action='store_true', help='Lists all releases found from all release sources')
+
+    # Project manipulation
+    parser.add_argument('-prap', '--projectAddPackage', metavar='PACKAGE_NAME', type=str, help="Adds the given package to the {0} for the given project".format(ProjectConfigFileName))
 
     # Visual Studio solution stuff
     parser.add_argument('-uus', '--updateUnitySolution', action='store_true', help='Equivalent to executing the menu option "Assets/Open C# Project" in unity (without actually opening it)')
@@ -133,6 +138,7 @@ def installBindings(mainConfigPath = None):
     Container.bind('UnityPackageExtractor').toSingle(UnityPackageExtractor)
     Container.bind('ZipHelper').toSingle(ZipHelper)
     Container.bind('UnityPackageAnalyzer').toSingle(UnityPackageAnalyzer)
+    Container.bind('ProjectConfigChanger').toSingle(ProjectConfigChanger)
 
     Container.bind('ReleaseSourceManager').toSingle(ReleaseSourceManager)
 
