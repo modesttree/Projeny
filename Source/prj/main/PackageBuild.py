@@ -39,21 +39,21 @@ class Runner:
             sys.exit(1)
 
     def _copyDir(self, relativePath):
-        self._sys.copyDirectory('[ProjenyDir]/' + relativePath, '[OutDir]/' + relativePath)
+        self._sys.copyDirectory('[ProjenyDir]/' + relativePath, '[TempDir]/' + relativePath)
 
     def _copyFile(self, relativePath):
-        self._sys.copyFile('[ProjenyDir]/' + relativePath, '[OutDir]/' + relativePath)
+        self._sys.copyFile('[ProjenyDir]/' + relativePath, '[TempDir]/' + relativePath)
 
     def _runInternal(self):
         self._varMgr.add('PythonDir', PythonDir)
         self._varMgr.add('ProjenyDir', ProjenyDir)
         self._varMgr.add('SourceDir', '[ProjenyDir]/Source')
         self._varMgr.add('InstallerDir', '[ProjenyDir]/Installer')
-        self._varMgr.add('OutDir', '[InstallerDir]/Build')
+        self._varMgr.add('TempDir', '[InstallerDir]/Build')
         self._varMgr.add('DistDir', '[InstallerDir]/Dist')
 
         self._sys.deleteAndReCreateDirectory('[DistDir]')
-        self._sys.deleteAndReCreateDirectory('[OutDir]')
+        self._sys.deleteAndReCreateDirectory('[TempDir]')
 
         try:
             self._updateBuildDirectory()
@@ -62,25 +62,32 @@ class Runner:
             installerOutputPath = '[DistDir]/ProjenyInstaller-v{0}.exe'.format(versionStr)
 
             self._createInstaller(installerOutputPath)
+
+            self._createSamplesZip(versionStr)
+
+            if self._args.addTag:
+                self._log.info('Adding git tag for version number')
+                self._sys.executeAndWait("git tag -a v{0} -m 'Version {0}'".format(versionStr))
+
+            if self._args.runInstallerAfter:
+                self._sys.deleteDirectoryIfExists('C:/Program Files (x86)/Projeny')
+                self._sys.executeNoWait(installerOutputPath)
         finally:
-            self._sys.deleteDirectoryIfExists('[OutDir]')
-
-        self._createSamplesZip(versionStr)
-
-        if self._args.addTag:
-            self._log.info('Adding git tag for version number')
-            self._sys.executeAndWait("git tag -a v{0} -m 'Version {0}'".format(versionStr))
-
-        if self._args.runInstallerAfter:
-            self._sys.deleteDirectoryIfExists('C:/Program Files (x86)/Projeny')
-            self._sys.executeNoWait(installerOutputPath)
+            self._sys.deleteDirectoryIfExists('[TempDir]')
 
     def _createSamplesZip(self, versionStr):
         self._log.heading('Clearing all generated files in Demo/UnityProjects folder')
         self._packageMgr.clearAllProjectGeneratedFiles(False)
 
+        self._sys.deleteDirectoryIfExists('[TempDir]')
+
+        self._sys.copyDirectory('[ProjenyDir]/Demo', '[TempDir]')
+
+        self._sys.removeFileIfExists('[TempDir]/.gitignore')
+        self._sys.removeFileIfExists('[TempDir]/PrjLog.txt')
+
         self._log.heading('Zipping up demo project')
-        self._zipHelper.createZipFile('[ProjenyDir]/Demo', '[DistDir]/ProjenySamples-v{0}.zip'.format(versionStr))
+        self._zipHelper.createZipFile('[TempDir]', '[DistDir]/ProjenySamples-v{0}.zip'.format(versionStr))
 
     def _createInstaller(self, installerOutputPath):
         self._log.heading('Creating installer exe')
@@ -93,7 +100,7 @@ class Runner:
 
     def _updateBuildDirectory(self):
 
-        self._sys.deleteAndReCreateDirectory('[OutDir]')
+        self._sys.deleteAndReCreateDirectory('[TempDir]')
 
         self._log.heading('Building exes')
         self._sys.executeAndWait('[PythonDir]/BuildAllExes.bat')
@@ -106,10 +113,10 @@ class Runner:
         self._copyFile(ConfigFileName)
         self._copyDir('Bin')
 
-        self._sys.removeFile('[OutDir]/Bin/.gitignore')
+        self._sys.removeFile('[TempDir]/Bin/.gitignore')
 
-        self._sys.removeByRegex('[OutDir]/Bin/UnityPlugin/Release/*.pdb')
-        self._sys.deleteDirectoryIfExists('[OutDir]/Bin/UnityPlugin/Debug')
+        self._sys.removeByRegex('[TempDir]/Bin/UnityPlugin/Release/*.pdb')
+        self._sys.deleteDirectoryIfExists('[TempDir]/Bin/UnityPlugin/Debug')
 
 def installBindings():
 
