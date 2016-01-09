@@ -1254,7 +1254,7 @@ MonoBehaviour:
   - m_Name: HeaderTextStyle
     m_Normal:
       m_Background: {fileID: 0}
-      m_TextColor: {r: 0.74264705, g: 0.74264705, b: 0.74264705, a: 1}
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_Hover:
       m_Background: {fileID: 0}
       m_TextColor: {r: 0, g: 0, b: 0, a: 1}
