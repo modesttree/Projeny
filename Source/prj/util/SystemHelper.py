@@ -4,6 +4,7 @@ from prj.util.VarManager import VarManager
 from prj.util.ProcessRunner import ProcessRunner
 from prj.util.ProcessRunner import ResultType
 
+import string
 import fnmatch
 from prj.util.Assert import *
 import prj.ioc.Container as Container
@@ -131,6 +132,17 @@ class SystemHelper:
             os.makedirs(dirPath)
         except:
             pass
+
+    def convertToValidFileName(self, s):
+        """Take a string and return a valid filename constructed from the string.
+    Uses a whitelist approach: any characters not present in valid_chars are
+    removed.
+
+    Note: this method may still produce invalid filenames such as ``, `.` or `..`
+    """
+        valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
+        filename = ''.join(c for c in s if c in valid_chars)
+        return filename
 
     def makeMissingDirectoriesInPath(self, dirPath):
         dirPath = self._varManager.expand(dirPath)

@@ -69,6 +69,8 @@ class UnityPackageExtractor:
                 assertThat(fallbackName)
                 newPackageName = fallbackName
 
+            newPackageName = self._sys.convertToValidFileName(newPackageName)
+
             assertThat(not self._isSpecialFolderName(newPackageName))
 
             outDirPath = '[UnityPackagesDir]/{0}'.format(newPackageName)
