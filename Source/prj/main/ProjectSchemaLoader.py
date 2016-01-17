@@ -125,9 +125,14 @@ class ProjectSchemaLoader:
 
         self._ensurePrebuiltProjectHasNoScripts(packageMap)
 
-        self._printDependencyTree(packageMap)
-
         self._fillOutDependencies(packageMap)
+
+        # For the pre-built assembly projects, if we add one of them to our solution,
+        # then we need to add all the pre-built dependencies, since unlike generated projects
+        # we can't make the prebuilt projects use the dll directly
+        self._ensureVisiblePrebuiltProjectHaveVisibleDependencies(packageMap)
+
+        self._printDependencyTree(packageMap)
 
         for customProj in customProjects:
             assertThat(customProj.startswith('/') or customProj in allDependencies, 'Given project "{0}" in schema is not included in either "scripts" or "plugins"'.format(customProj))
@@ -157,6 +162,19 @@ class ProjectSchemaLoader:
         for projRef in projectRoot.findall('./{0}ItemGroup/{0}ProjectReference/{0}Name'.format(NsPrefix)):
             result.append(projRef.text)
         return result
+
+    def _ensureVisiblePrebuiltProjectHaveVisibleDependencies(self, packageMap):
+        for package in packageMap.values():
+            if package.assemblyProjectPath != None and package.createCustomVsProject:
+                self._makeAllPrebuiltDependenciesVisible(package, packageMap)
+
+    def _makeAllPrebuiltDependenciesVisible(self, package, packageMap):
+        for dependName in package.explicitDependencies:
+            depend = packageMap[dependName]
+
+            if not depend.createCustomVsProject:
+                depend.createCustomVsProject = True
+                self._makeAllPrebuiltDependenciesVisible(depend, packageMap)
 
     def _ensurePrebuiltProjectHasNoScripts(self, packageMap):
         for package in packageMap.values():
