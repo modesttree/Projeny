@@ -34,92 +34,19 @@ class ProjectSchemaLoader:
         self._log.debug('Loading schema at path "{0}"'.format(schemaPath))
         config = Config(loadYamlFilesThatExist(schemaPath, schemaPathUser, schemaPathGlobal, schemaPathUserGlobal))
 
-        pluginDependencies = config.tryGetList([], 'PluginsFolder')
-        scriptsDependencies = config.tryGetList([], 'AssetsFolder')
-        customProjects = config.tryGetList([], 'SolutionProjects')
+        pluginsFolderItems = config.tryGetList([], 'PluginsFolder')
+        assetFolderItems = config.tryGetList([], 'AssetsFolder')
+        solutionProjectPatterns = config.tryGetList([], 'SolutionProjects')
         customFolders = config.tryGetDictionary({}, 'SolutionFolders')
 
         # Remove duplicates
-        scriptsDependencies = list(set(scriptsDependencies))
-        pluginDependencies = list(set(pluginDependencies))
+        assetFolderItems = list(set(assetFolderItems))
+        pluginsFolderItems = list(set(pluginsFolderItems))
 
-        for packageName in pluginDependencies:
-            assertThat(not packageName in scriptsDependencies, "Found package '{0}' in both scripts and plugins.  Must be in only one or the other".format(packageName))
+        for packageName in pluginsFolderItems:
+            assertThat(not packageName in assetFolderItems, "Found package '{0}' in both scripts and plugins.  Must be in only one or the other".format(packageName))
 
-        allDependencies = pluginDependencies + scriptsDependencies
-
-        packageMap = {}
-
-        # Resolve all dependencies for each package
-        # by default, put any dependencies that are not declared explicitly into the plugins folder
-        for packageName in allDependencies:
-
-            packageDir = self._varMgr.expandPath('[UnityPackagesDir]/{0}'.format(packageName))
-            configPath = os.path.join(packageDir, 'ProjenyPackage.yaml')
-
-            if os.path.exists(configPath):
-                packageConfig = Config(loadYamlFilesThatExist(configPath))
-            else:
-                packageConfig = Config([])
-
-            createCustomVsProject = self._checkCustomProjectMatch(packageName, customProjects)
-
-            isPluginsDir = packageName in pluginDependencies
-
-            if isPluginsDir:
-                assertThat(not packageName in scriptsDependencies)
-            else:
-                assertThat(packageName in scriptsDependencies)
-
-            if packageConfig.tryGetBool(False, 'ForceAssetsDirectory'):
-                isPluginsDir = False
-
-            explicitDependencies = packageConfig.tryGetList([], 'Dependencies')
-
-            forcePluginsDir = packageConfig.tryGetBool(False, 'ForcePluginsDirectory')
-
-            assemblyProjectRelativePath = packageConfig.tryGetString(None, 'AssemblyProject', 'Path')
-
-            assemblyProjectFullPath = None
-            assemblyProjectRoot = None
-            assemblyProjectConfig = None
-
-            if assemblyProjectRelativePath != None:
-                assemblyProjectFullPath = self._varMgr.expand(assemblyProjectRelativePath)
-
-                if not os.path.isabs(assemblyProjectFullPath):
-                    assemblyProjectFullPath = os.path.join(packageDir, assemblyProjectRelativePath)
-
-                assertThat(self._sys.fileExists(assemblyProjectFullPath), "Expected to find file at '{0}'", assemblyProjectFullPath)
-                assemblyProjectRoot = ET.parse(assemblyProjectFullPath).getroot()
-
-                self._ensureAssemblyNameIs(assemblyProjectRoot, packageName)
-
-                assertIsEqual(self._sys.getFileNameWithoutExtension(assemblyProjectFullPath), packageName,
-                  'Assembly projects must have the same name as their package')
-
-                assemblyProjectConfig = packageConfig.tryGetString(None, 'AssemblyProject', 'Config')
-                explicitDependencies += self._getDependenciesFromCsProj(assemblyProjectRoot)
-
-            assertThat(not packageName in packageMap)
-            packageMap[packageName] = PackageInfo(
-                isPluginsDir, packageName, packageConfig, createCustomVsProject,
-                explicitDependencies, forcePluginsDir, assemblyProjectFullPath, assemblyProjectRoot, assemblyProjectConfig)
-
-            for dependName in explicitDependencies:
-                if not dependName in allDependencies:
-                    pluginDependencies.append(dependName)
-                    # Yes, python is ok with changing allDependencies even while iterating over it
-                    allDependencies.append(dependName)
-
-            for dependName in packageConfig.tryGetList([], 'Extras'):
-                if not dependName in allDependencies:
-                    if isPluginsDir:
-                        pluginDependencies.append(dependName)
-                    else:
-                        scriptsDependencies.append(dependName)
-                    # Yes, python is ok with changing allDependencies even while iterating over it
-                    allDependencies.append(dependName)
+        packageMap = self._createAllPackageInfos(pluginsFolderItems, assetFolderItems, solutionProjectPatterns)
 
         self._removePlatformSpecificPackages(packageMap, platform)
 
@@ -134,10 +61,10 @@ class ProjectSchemaLoader:
 
         self._printDependencyTree(packageMap)
 
-        for customProj in customProjects:
-            assertThat(customProj.startswith('/') or customProj in allDependencies, 'Given project "{0}" in schema is not included in either "scripts" or "plugins"'.format(customProj))
+        for customProj in solutionProjectPatterns:
+            assertThat(customProj.startswith('/') or customProj in packageMap, 'Given project "{0}" in schema is not included in either "scripts" or "plugins"'.format(customProj))
 
-        self._log.info('Found {0} packages in total for given schema'.format(len(allDependencies)))
+        self._log.info('Found {0} packages in total for given schema'.format(len(packageMap)))
 
         # In Unity, the plugins folder can not have any dependencies on anything in the scripts folder
         # So if dependencies exist then just automatically move those packages to the scripts folder
@@ -153,9 +80,90 @@ class ProjectSchemaLoader:
 
         return ProjectSchema(name, packageMap, customFolders)
 
-    def _ensureAssemblyNameIs(self, projectRoot, packageName):
-        assemblyName = projectRoot.findall('./{0}PropertyGroup/{0}AssemblyName'.format(NsPrefix))[0].text
+    def _createAllPackageInfos(self, pluginsFolderItems, assetFolderItems, solutionProjectPatterns):
+        allDependencies = pluginsFolderItems + assetFolderItems
+
+        packageMap = {}
+
+        # Resolve all dependencies for each package
+        # by default, put any dependencies that are not declared explicitly into the plugins folder
+        for packageName in allDependencies:
+
+            packageDir = self._varMgr.expandPath('[UnityPackagesDir]/{0}'.format(packageName))
+            configPath = os.path.join(packageDir, 'ProjenyPackage.yaml')
+
+            if os.path.exists(configPath):
+                packageConfig = Config(loadYamlFilesThatExist(configPath))
+            else:
+                packageConfig = Config([])
+
+            createCustomVsProject = self._shouldCreateVsProjectForName(packageName, solutionProjectPatterns)
+
+            isPluginsDir = packageName in pluginsFolderItems
+
+            if isPluginsDir:
+                assertThat(not packageName in assetFolderItems)
+            else:
+                assertThat(packageName in assetFolderItems)
+
+            if packageConfig.tryGetBool(False, 'ForceAssetsDirectory'):
+                isPluginsDir = False
+
+            explicitDependencies = packageConfig.tryGetList([], 'Dependencies')
+
+            forcePluginsDir = packageConfig.tryGetBool(False, 'ForcePluginsDirectory')
+
+            assemblyProjectFullPath, assemblyProjectRoot, assemblyProjectConfig, assemblyDependencies = self._checkForAssemblyProject(packageConfig, packageName)
+
+            if assemblyDependencies != None:
+                explicitDependencies += assemblyDependencies
+
+            assertThat(not packageName in packageMap)
+            packageMap[packageName] = PackageInfo(
+                isPluginsDir, packageName, packageConfig, createCustomVsProject,
+                explicitDependencies, forcePluginsDir, assemblyProjectFullPath, assemblyProjectRoot, assemblyProjectConfig)
+
+            for dependName in explicitDependencies:
+                if not dependName in allDependencies:
+                    pluginsFolderItems.append(dependName)
+                    # Yes, python is ok with changing allDependencies even while iterating over it
+                    allDependencies.append(dependName)
+
+            for dependName in packageConfig.tryGetList([], 'Extras'):
+                if not dependName in allDependencies:
+                    if isPluginsDir:
+                        pluginsFolderItems.append(dependName)
+                    else:
+                        assetFolderItems.append(dependName)
+                    # Yes, python is ok with changing allDependencies even while iterating over it
+                    allDependencies.append(dependName)
+
+        return packageMap
+
+    def _checkForAssemblyProject(self, packageConfig, packageName):
+        assemblyProjectRelativePath = packageConfig.tryGetString(None, 'AssemblyProject', 'Path')
+
+        if assemblyProjectRelativePath == None:
+            return None, None, None, None
+
+        assemblyProjectFullPath = self._varMgr.expand(assemblyProjectRelativePath)
+
+        if not os.path.isabs(assemblyProjectFullPath):
+            assemblyProjectFullPath = os.path.join(packageDir, assemblyProjectRelativePath)
+
+        assertThat(self._sys.fileExists(assemblyProjectFullPath), "Expected to find file at '{0}'", assemblyProjectFullPath)
+        assemblyProjectRoot = ET.parse(assemblyProjectFullPath).getroot()
+
+        assemblyName = assemblyProjectRoot.findall('./{0}PropertyGroup/{0}AssemblyName'.format(NsPrefix))[0].text
         assertIsEqual(assemblyName, packageName, 'Packages that represent assembly projects must have the same name as the assembly')
+
+        assertIsEqual(self._sys.getFileNameWithoutExtension(assemblyProjectFullPath), packageName,
+          'Assembly projects must have the same name as their package')
+
+        assemblyProjectConfig = packageConfig.tryGetString(None, 'AssemblyProject', 'Config')
+        assemblyDependencies = self._getDependenciesFromCsProj(assemblyProjectRoot)
+
+        return assemblyProjectFullPath, assemblyProjectRoot, assemblyProjectConfig, assemblyDependencies
 
     def _getDependenciesFromCsProj(self, projectRoot):
         result = []
@@ -278,12 +286,12 @@ class ProjectSchemaLoader:
                 else:
                     self._printDependency(subPackage, done, indentCount+1, packageMap)
 
-    def _checkCustomProjectMatch(self, packageName, customProjects):
-        if packageName in customProjects:
+    def _shouldCreateVsProjectForName(self, packageName, solutionProjectPatterns):
+        if packageName in solutionProjectPatterns:
             return True
 
         # Allow regex's!
-        for projPattern in customProjects:
+        for projPattern in solutionProjectPatterns:
             if projPattern.startswith('/'):
                 projPattern = projPattern[1:]
                 try:
