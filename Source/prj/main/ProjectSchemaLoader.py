@@ -153,8 +153,10 @@ class ProjectSchemaLoader:
         assertIsEqual(assemblyName, packageName, 'Packages that represent assembly projects must have the same name as the assembly')
 
     def _getDependenciesFromCsProj(self, projectRoot):
-        self._log.warn('TODO - getDependenciesFromCsProj')
-        return []
+        result = []
+        for projRef in projectRoot.findall('./{0}ItemGroup/{0}ProjectReference/{0}Name'.format(NsPrefix)):
+            result.append(projRef.text)
+        return result
 
     def _ensurePrebuiltProjectHasNoScripts(self, packageMap):
         for package in packageMap.values():
