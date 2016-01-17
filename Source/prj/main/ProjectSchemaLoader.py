@@ -13,12 +13,15 @@ import prj.util.JunctionUtil as JunctionUtil
 from prj.config.Config import Config
 from prj.config.YamlConfigLoader import loadYamlFilesThatExist
 
+import xml.etree.ElementTree as ET
+
 ProjectConfigFileName = 'ProjenyProject.yaml'
 ProjectUserConfigFileName = 'ProjenyProjectCustom.yaml'
 
 class ProjectSchemaLoader:
     _varMgr = Inject('VarManager')
     _log = Inject('Logger')
+    _sys = Inject('SystemHelper')
 
     def loadSchema(self, name, platform):
         schemaPath = self._varMgr.expandPath('[UnityProjectsDir]/{0}/{1}'.format(name, ProjectConfigFileName))
@@ -33,7 +36,6 @@ class ProjectSchemaLoader:
         scriptsDependencies = config.tryGetList([], 'AssetsFolder')
         customProjects = config.tryGetList([], 'SolutionProjects')
         customFolders = config.tryGetDictionary({}, 'SolutionFolders')
-        prebuiltProjects = config.tryGetList([], 'Prebuilt')
 
         # Remove duplicates
         scriptsDependencies = list(set(scriptsDependencies))
@@ -50,7 +52,8 @@ class ProjectSchemaLoader:
         # by default, put any dependencies that are not declared explicitly into the plugins folder
         for packageName in allDependencies:
 
-            configPath = self._varMgr.expandPath('[UnityPackagesDir]/{0}/ProjenyPackage.yaml'.format(packageName))
+            packageDir = self._varMgr.expandPath('[UnityPackagesDir]/{0}'.format(packageName))
+            configPath = os.path.join(packageDir, 'ProjenyPackage.yaml')
 
             if os.path.exists(configPath):
                 packageConfig = Config(loadYamlFilesThatExist(configPath))
@@ -73,8 +76,28 @@ class ProjectSchemaLoader:
 
             forcePluginsDir = packageConfig.tryGetBool(False, 'ForcePluginsDirectory')
 
+            assemblyProjectRelativePath = packageConfig.tryGetString(None, 'AssemblyProject', 'Path')
+
+            assemblyProjectFullPath = None
+            assemblyProjectRoot = None
+            assemblyProjectConfig = None
+
+            if assemblyProjectRelativePath != None:
+                assemblyProjectFullPath = self._varMgr.expand(assemblyProjectRelativePath)
+
+                if not os.path.isabs(assemblyProjectFullPath):
+                    assemblyProjectFullPath = os.path.join(packageDir, assemblyProjectRelativePath)
+
+                assertThat(self._sys.fileExists(assemblyProjectFullPath), "Expected to find file at '{0}'", assemblyProjectFullPath)
+                assemblyProjectRoot = ET.parse(assemblyProjectFullPath).getroot()
+
+                assemblyProjectConfig = packageConfig.tryGetString(None, 'AssemblyProject', 'Config')
+                explicitDependencies += self._getDependenciesFromCsProj(assemblyProjectRoot)
+
             assertThat(not packageName in packageMap)
-            packageMap[packageName] = PackageInfo(isPluginsDir, packageName, packageConfig, createCustomVsProject, explicitDependencies, forcePluginsDir)
+            packageMap[packageName] = PackageInfo(
+                isPluginsDir, packageName, packageConfig, createCustomVsProject,
+                explicitDependencies, forcePluginsDir, assemblyProjectFullPath, assemblyProjectRoot, assemblyProjectConfig)
 
             for dependName in explicitDependencies:
                 if not dependName in allDependencies:
@@ -93,14 +116,14 @@ class ProjectSchemaLoader:
 
         self._removePlatformSpecificPackages(packageMap, platform)
 
+        self._ensurePrebuiltProjectHasNoScripts(packageMap)
+
         self._printDependencyTree(packageMap)
 
         self._fillOutDependencies(packageMap)
 
         for customProj in customProjects:
             assertThat(customProj.startswith('/') or customProj in allDependencies, 'Given project "{0}" in schema is not included in either "scripts" or "plugins"'.format(customProj))
-
-        self._addPrebuiltProjectsFromPackages(packageMap, prebuiltProjects)
 
         self._log.info('Found {0} packages in total for given schema'.format(len(allDependencies)))
 
@@ -111,13 +134,23 @@ class ProjectSchemaLoader:
         self._ensurePackagesThatAreNotProjectsDoNotHaveProjectDependencies(packageMap)
 
         projectsDir = self._varMgr.expandPath('[UnityProjectsDir]')
-        prebuiltProjectPaths = [os.path.normpath(os.path.join(projectsDir, x)) for x in prebuiltProjects]
 
         for info in packageMap.values():
             if info.forcePluginsDir and not info.isPluginDir:
                 assertThat(False, "Package '{0}' must be in plugins directory".format(info.name))
 
-        return ProjectSchema(name, packageMap, customFolders, prebuiltProjectPaths)
+        return ProjectSchema(name, packageMap, customFolders)
+
+    def _getDependenciesFromCsProj(self, projectRoot):
+        self._log.warn('TODO - getDependenciesFromCsProj')
+        return []
+
+    def _ensurePrebuiltProjectHasNoScripts(self, packageMap):
+        for package in packageMap.values():
+            if package.assemblyProjectPath != None:
+                packageDir = self._varMgr.expandPath('[UnityPackagesDir]/{0}'.format(package.name))
+                assertThat(not any(self._sys.findFilesByPattern(packageDir, '*.cs')),
+                   "Found C# scripts in assembly project '{0}'.  This is not allowed - please move to a separate package.", package.name)
 
     def _ensurePackagesThatAreNotProjectsDoNotHaveProjectDependencies(self, packageMap):
         changedOne = True
@@ -168,14 +201,6 @@ class ProjectSchemaLoader:
                 return True
 
         return False
-
-    def _addPrebuiltProjectsFromPackages(self, packageMap, prebuiltProjects):
-        for info in packageMap.values():
-            prebuiltPaths = info.config.tryGetList([], 'Prebuilt')
-
-            for path in prebuiltPaths:
-                if path not in prebuiltProjects:
-                    prebuiltProjects.append(path)
 
     def _removePlatformSpecificPackages(self, packageMap, platform):
 
@@ -271,11 +296,10 @@ class ProjectSchemaLoader:
         inProgress.remove(packageInfo.name)
 
 class ProjectSchema:
-    def __init__(self, name, packages, customFolderMap, prebuiltProjects):
+    def __init__(self, name, packages, customFolderMap):
         self.name = name
         self.packages = packages
         self.customFolderMap = customFolderMap
-        self.prebuiltProjects = prebuiltProjects
 
 class FolderTypes:
     Normal = "normal"
@@ -286,7 +310,10 @@ class FolderTypes:
     StreamingAssets = "streamingassets"
 
 class PackageInfo:
-    def __init__(self, isPluginDir, name, config, createCustomVsProject, explicitDependencies, forcePluginsDir):
+    def __init__(
+        self, isPluginDir, name, config, createCustomVsProject,
+        explicitDependencies, forcePluginsDir, assemblyProjectPath, assemblyProjectRoot, assemblyProjectConfig):
+
         self.isPluginDir = isPluginDir
         self.name = name
         self.explicitDependencies = explicitDependencies
@@ -294,6 +321,9 @@ class PackageInfo:
         self.createCustomVsProject = createCustomVsProject
         self.allDependencies = None
         self.folderType = self._getFolderTypeFromString(config.tryGetString('', 'FolderType'))
+        self.assemblyProjectPath = assemblyProjectPath
+        self.assemblyProjectRoot = assemblyProjectRoot
+        self.assemblyProjectConfig = assemblyProjectConfig
         self.forcePluginsDir = forcePluginsDir
 
     def _getFolderTypeFromString(self, value):

@@ -7,5 +7,5 @@ class ProjectConfig:
         self.assetsFolder = []
         self.solutionProjects = []
         self.solutionFolders = {}
-        self.prebuilt = []
+        self.assemblyProject = None
 
