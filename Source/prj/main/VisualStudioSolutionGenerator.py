@@ -12,8 +12,7 @@ from prj.ioc.Inject import InjectMany
 import prj.ioc.IocAssertions as Assertions
 from prj.util.Assert import *
 
-CsProjXmlNs = 'http://schemas.microsoft.com/developer/msbuild/2003'
-NsPrefix = '{' + CsProjXmlNs + '}'
+from prj.main.CsProjParserHelper import NsPrefix
 
 CsProjTypeGuid = 'FAE04EC0-301F-11D3-BF4B-00C04F79EFBC'
 SolutionFolderTypeGuid = '2150E333-8FDC-42A3-9474-1A3956D46DE8'

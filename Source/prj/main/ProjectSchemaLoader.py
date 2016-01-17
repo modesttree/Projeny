@@ -13,6 +13,8 @@ import prj.util.JunctionUtil as JunctionUtil
 from prj.config.Config import Config
 from prj.config.YamlConfigLoader import loadYamlFilesThatExist
 
+from prj.main.CsProjParserHelper import NsPrefix
+
 import xml.etree.ElementTree as ET
 
 ProjectConfigFileName = 'ProjenyProject.yaml'
@@ -91,6 +93,11 @@ class ProjectSchemaLoader:
                 assertThat(self._sys.fileExists(assemblyProjectFullPath), "Expected to find file at '{0}'", assemblyProjectFullPath)
                 assemblyProjectRoot = ET.parse(assemblyProjectFullPath).getroot()
 
+                self._ensureAssemblyNameIs(assemblyProjectRoot, packageName)
+
+                assertIsEqual(self._sys.getFileNameWithoutExtension(assemblyProjectFullPath), packageName,
+                  'Assembly projects must have the same name as their package')
+
                 assemblyProjectConfig = packageConfig.tryGetString(None, 'AssemblyProject', 'Config')
                 explicitDependencies += self._getDependenciesFromCsProj(assemblyProjectRoot)
 
@@ -140,6 +147,10 @@ class ProjectSchemaLoader:
                 assertThat(False, "Package '{0}' must be in plugins directory".format(info.name))
 
         return ProjectSchema(name, packageMap, customFolders)
+
+    def _ensureAssemblyNameIs(self, projectRoot, packageName):
+        assemblyName = projectRoot.findall('./{0}PropertyGroup/{0}AssemblyName'.format(NsPrefix))[0].text
+        assertIsEqual(assemblyName, packageName, 'Packages that represent assembly projects must have the same name as the assembly')
 
     def _getDependenciesFromCsProj(self, projectRoot):
         self._log.warn('TODO - getDependenciesFromCsProj')

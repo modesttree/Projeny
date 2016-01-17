@@ -33,12 +33,12 @@ def assertThat(value, message = None, *params):
 def assertIsEqual(left, right, message = None, *params):
     if left != right:
         _triggerAssertWithMessage(
-            "Expected {0} but found {1}".format(right, left), message, *params)
+            "Expected '{0}' but found '{1}'".format(right, left), message, *params)
 
 def assertIsNotEqual(left, right, message = None, *params):
     if left == right:
         _triggerAssertWithMessage(
-            "Expected {0} to differ from {1}".format(right, left), message, *params)
+            "Expected '{0}' to differ from '{1}'".format(right, left), message, *params)
 
 def assertIsType(value, expectedType, message = None, *params):
     if type(value) != expectedType:
@@ -53,13 +53,13 @@ def assertRaises(exceptionType, handler, message = None, *params):
 
     if not exc:
         _triggerAssertWithMessage(
-            "Expected exception {0} to be raised, but none was", exceptionType.__name__, message, *params)
+            "Expected exception '{0}' to be raised, but none was", exceptionType.__name__, message, *params)
 
     if isinstance(exc, exceptionType):
         return
 
     _triggerAssertWithMessage(
-        "Expected exception {0} to be raised, but instead got exception {1}".format(exceptionType.__name__, type(exc).__name__),
+        "Expected exception '{0}' to be raised, but instead got exception '{1}'".format(exceptionType.__name__, type(exc).__name__),
         message, *params)
 
 def assertRaisesAny(handler, message = None, *params):

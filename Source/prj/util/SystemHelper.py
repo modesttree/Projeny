@@ -209,6 +209,9 @@ class SystemHelper:
 
         return False
 
+    def getFileNameWithoutExtension(self, path):
+        return os.path.basename(os.path.splitext(path)[0])
+
     def deleteEmptyDirectoriesUnder(self, dirPath):
         dirPath = self._varManager.expandPath(dirPath)
 
