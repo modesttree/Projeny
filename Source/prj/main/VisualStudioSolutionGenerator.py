@@ -156,11 +156,11 @@ class VisualStudioSolutionGenerator:
         # Need to populate allCustomProjects first so we can get references in _tryCreateCustomProject
         for packageInfo in allPackages:
             if packageInfo.createCustomVsProject:
-                if packageInfo.assemblyProjectPath != None:
-                    projId = self._getCsProjIdFromFile(packageInfo.assemblyProjectRoot)
+                if packageInfo.assemblyProjectInfo != None:
+                    projId = self._getCsProjIdFromFile(packageInfo.assemblyProjectInfo.root)
                     customProject = CsProjInfo(
-                        projId, packageInfo.assemblyProjectPath, packageInfo.name,
-                        [], False, packageInfo.assemblyProjectConfig)
+                        projId, packageInfo.assemblyProjectInfo.path, packageInfo.name,
+                        [], False, packageInfo.assemblyProjectInfo.config)
                     allCustomProjects[customProject.name] = customProject
                     includedProjects.append(customProject)
                     prebuiltProjectInfos.append(customProject)
@@ -172,7 +172,7 @@ class VisualStudioSolutionGenerator:
                     allCustomProjects[customEditorProject.name] = customEditorProject
 
         for packageInfo in allPackages:
-            if packageInfo.createCustomVsProject and packageInfo.assemblyProjectPath == None:
+            if packageInfo.createCustomVsProject and packageInfo.assemblyProjectInfo == None:
                 self._log.debug('Processing project "{0}"'.format(packageInfo.name))
 
                 customProject = self._tryCreateCustomProject(

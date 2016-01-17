@@ -46,9 +46,9 @@ class ProjectSchemaLoader:
         for packageName in pluginsFolderItems:
             assertThat(not packageName in assetFolderItems, "Found package '{0}' in both scripts and plugins.  Must be in only one or the other".format(packageName))
 
-        packageMap = self._createAllPackageInfos(pluginsFolderItems, assetFolderItems, solutionProjectPatterns)
-
-        self._removePlatformSpecificPackages(packageMap, platform)
+        # Search all the given packages and any new packages that are dependencies and create PackageInfo() objects for each
+        packageMap = self._createAllPackageInfos(
+            pluginsFolderItems, assetFolderItems, solutionProjectPatterns, platform)
 
         self._ensurePrebuiltProjectHasNoScripts(packageMap)
 
@@ -80,14 +80,58 @@ class ProjectSchemaLoader:
 
         return ProjectSchema(name, packageMap, customFolders)
 
-    def _createAllPackageInfos(self, pluginsFolderItems, assetFolderItems, solutionProjectPatterns):
-        allDependencies = pluginsFolderItems + assetFolderItems
+    def _shouldIncludeForPlatform(self, packageName, packageConfig, folderType, platform):
+
+        if folderType == FolderTypes.AndroidProject or folderType == FolderTypes.AndroidLibraries:
+            allowedPlatforms = [Platforms.Android]
+        elif folderType == FolderTypes.Ios:
+            allowedPlatforms = [Platforms.Ios]
+        elif folderType == FolderTypes.WebGl:
+            allowedPlatforms = [Platforms.WebGl]
+        else:
+            allowedPlatforms = packageConfig.tryGetList([], 'Platforms')
+
+            if len(allowedPlatforms) == 0:
+                return True
+
+        if platform not in allowedPlatforms:
+            self._log.debug("Skipped project '{0}' since it is not enabled for platform '{1}'".format(packageName, platform))
+            return False
+
+        return True
+
+    def _getFolderTypeFromString(self, value):
+        value = value.lower()
+
+        if not value or value == FolderTypes.Normal or len(value) == 0:
+            return FolderTypes.Normal
+
+        if value == FolderTypes.AndroidProject:
+            return FolderTypes.AndroidProject
+
+        if value == FolderTypes.AndroidLibraries:
+            return FolderTypes.AndroidLibraries
+
+        if value == FolderTypes.Ios:
+            return FolderTypes.Ios
+
+        if value == FolderTypes.WebGl:
+            return FolderTypes.WebGl
+
+        if value == FolderTypes.StreamingAssets:
+            return FolderTypes.StreamingAssets
+
+        assertThat(False, "Unrecognized folder type '{0}'".format(value))
+        return ""
+
+    def _createAllPackageInfos(self, pluginsFolderItems, assetFolderItems, solutionProjectPatterns, platform):
+        allPackageNames = pluginsFolderItems + assetFolderItems
 
         packageMap = {}
 
         # Resolve all dependencies for each package
         # by default, put any dependencies that are not declared explicitly into the plugins folder
-        for packageName in allDependencies:
+        for packageName in allPackageNames:
 
             packageDir = self._varMgr.expandPath('[UnityPackagesDir]/{0}'.format(packageName))
             configPath = os.path.join(packageDir, 'ProjenyPackage.yaml')
@@ -97,14 +141,18 @@ class ProjectSchemaLoader:
             else:
                 packageConfig = Config([])
 
+            folderType = self._getFolderTypeFromString(packageConfig.tryGetString('', 'FolderType'))
+
+            if not self._shouldIncludeForPlatform(packageName, packageConfig, folderType, platform):
+                continue
+
             createCustomVsProject = self._shouldCreateVsProjectForName(packageName, solutionProjectPatterns)
 
-            isPluginsDir = packageName in pluginsFolderItems
+            isPluginsDir = True
 
-            if isPluginsDir:
-                assertThat(not packageName in assetFolderItems)
-            else:
-                assertThat(packageName in assetFolderItems)
+            if packageName in assetFolderItems:
+                assertThat(not packageName in pluginsFolderItems)
+                isPluginsDir = False
 
             if packageConfig.tryGetBool(False, 'ForceAssetsDirectory'):
                 isPluginsDir = False
@@ -113,57 +161,48 @@ class ProjectSchemaLoader:
 
             forcePluginsDir = packageConfig.tryGetBool(False, 'ForcePluginsDirectory')
 
-            assemblyProjectFullPath, assemblyProjectRoot, assemblyProjectConfig, assemblyDependencies = self._checkForAssemblyProject(packageConfig, packageName)
+            assemblyProjInfo = self._tryGetAssemblyProjectInfo(packageConfig, packageName)
 
-            if assemblyDependencies != None:
-                explicitDependencies += assemblyDependencies
+            if assemblyProjInfo != None:
+                explicitDependencies += assemblyProjInfo.dependencies
 
             assertThat(not packageName in packageMap)
             packageMap[packageName] = PackageInfo(
                 isPluginsDir, packageName, packageConfig, createCustomVsProject,
-                explicitDependencies, forcePluginsDir, assemblyProjectFullPath, assemblyProjectRoot, assemblyProjectConfig)
+                explicitDependencies, forcePluginsDir, folderType, assemblyProjInfo)
 
-            for dependName in explicitDependencies:
-                if not dependName in allDependencies:
-                    pluginsFolderItems.append(dependName)
-                    # Yes, python is ok with changing allDependencies even while iterating over it
-                    allDependencies.append(dependName)
-
-            for dependName in packageConfig.tryGetList([], 'Extras'):
-                if not dependName in allDependencies:
-                    if isPluginsDir:
-                        pluginsFolderItems.append(dependName)
-                    else:
-                        assetFolderItems.append(dependName)
-                    # Yes, python is ok with changing allDependencies even while iterating over it
-                    allDependencies.append(dependName)
+            for dependName in (explicitDependencies + packageConfig.tryGetList([], 'Extras')):
+                if not dependName in allPackageNames:
+                    # Yes, python is ok with changing allPackageNames even while iterating over it
+                    allPackageNames.append(dependName)
 
         return packageMap
 
-    def _checkForAssemblyProject(self, packageConfig, packageName):
+    def _tryGetAssemblyProjectInfo(self, packageConfig, packageName):
         assemblyProjectRelativePath = packageConfig.tryGetString(None, 'AssemblyProject', 'Path')
 
         if assemblyProjectRelativePath == None:
-            return None, None, None, None
+            return None
 
-        assemblyProjectFullPath = self._varMgr.expand(assemblyProjectRelativePath)
+        projFullPath = self._varMgr.expand(assemblyProjectRelativePath)
 
-        if not os.path.isabs(assemblyProjectFullPath):
-            assemblyProjectFullPath = os.path.join(packageDir, assemblyProjectRelativePath)
+        if not os.path.isabs(projFullPath):
+            projFullPath = os.path.join(packageDir, assemblyProjectRelativePath)
 
-        assertThat(self._sys.fileExists(assemblyProjectFullPath), "Expected to find file at '{0}'", assemblyProjectFullPath)
-        assemblyProjectRoot = ET.parse(assemblyProjectFullPath).getroot()
+        assertThat(self._sys.fileExists(projFullPath), "Expected to find file at '{0}'", projFullPath)
+        projRoot = ET.parse(projFullPath).getroot()
 
-        assemblyName = assemblyProjectRoot.findall('./{0}PropertyGroup/{0}AssemblyName'.format(NsPrefix))[0].text
+        assemblyName = projRoot.findall('./{0}PropertyGroup/{0}AssemblyName'.format(NsPrefix))[0].text
         assertIsEqual(assemblyName, packageName, 'Packages that represent assembly projects must have the same name as the assembly')
 
-        assertIsEqual(self._sys.getFileNameWithoutExtension(assemblyProjectFullPath), packageName,
+        assertIsEqual(self._sys.getFileNameWithoutExtension(projFullPath), packageName,
           'Assembly projects must have the same name as their package')
 
-        assemblyProjectConfig = packageConfig.tryGetString(None, 'AssemblyProject', 'Config')
-        assemblyDependencies = self._getDependenciesFromCsProj(assemblyProjectRoot)
+        projConfig = packageConfig.tryGetString(None, 'AssemblyProject', 'Config')
+        dependencies = self._getDependenciesFromCsProj(projRoot)
 
-        return assemblyProjectFullPath, assemblyProjectRoot, assemblyProjectConfig, assemblyDependencies
+        return AssemblyProjectInfo(
+            projFullPath, projRoot, projConfig, dependencies)
 
     def _getDependenciesFromCsProj(self, projectRoot):
         result = []
@@ -173,7 +212,7 @@ class ProjectSchemaLoader:
 
     def _ensureVisiblePrebuiltProjectHaveVisibleDependencies(self, packageMap):
         for package in packageMap.values():
-            if package.assemblyProjectPath != None and package.createCustomVsProject:
+            if package.assemblyProjectInfo != None and package.createCustomVsProject:
                 self._makeAllPrebuiltDependenciesVisible(package, packageMap)
 
     def _makeAllPrebuiltDependenciesVisible(self, package, packageMap):
@@ -186,7 +225,7 @@ class ProjectSchemaLoader:
 
     def _ensurePrebuiltProjectHasNoScripts(self, packageMap):
         for package in packageMap.values():
-            if package.assemblyProjectPath != None:
+            if package.assemblyProjectInfo != None:
                 packageDir = self._varMgr.expandPath('[UnityPackagesDir]/{0}'.format(package.name))
                 assertThat(not any(self._sys.findFilesByPattern(packageDir, '*.cs')),
                    "Found C# scripts in assembly project '{0}'.  This is not allowed - please move to a separate package.", package.name)
@@ -240,26 +279,6 @@ class ProjectSchemaLoader:
                 return True
 
         return False
-
-    def _removePlatformSpecificPackages(self, packageMap, platform):
-
-        for info in list(packageMap.values()):
-
-            if info.folderType == FolderTypes.AndroidProject or info.folderType == FolderTypes.AndroidLibraries:
-                platforms = [Platforms.Android]
-            elif info.folderType == FolderTypes.Ios:
-                platforms = [Platforms.Ios]
-            elif info.folderType == FolderTypes.WebGl:
-                platforms = [Platforms.WebGl]
-            else:
-                platforms = info.config.tryGetList([], 'Platforms')
-
-                if len(platforms) == 0:
-                    continue
-
-            if platform not in platforms:
-                del packageMap[info.name]
-                self._log.debug('Skipped project {0} since it is not enabled for platform {0}'.format(info.name, platform))
 
     def _printDependencyTree(self, packageMap):
         packages = sorted(packageMap.values(), key = lambda p: (p.isPluginDir, -len(p.explicitDependencies)))
@@ -348,10 +367,17 @@ class FolderTypes:
     Ios = "ios"
     StreamingAssets = "streamingassets"
 
+class AssemblyProjectInfo:
+    def __init__(self, path, root, config, dependencies):
+        self.path = path
+        self.root = root
+        self.config = config
+        self.dependencies = dependencies
+
 class PackageInfo:
     def __init__(
         self, isPluginDir, name, config, createCustomVsProject,
-        explicitDependencies, forcePluginsDir, assemblyProjectPath, assemblyProjectRoot, assemblyProjectConfig):
+        explicitDependencies, forcePluginsDir, folderType, assemblyProjectInfo):
 
         self.isPluginDir = isPluginDir
         self.name = name
@@ -359,35 +385,9 @@ class PackageInfo:
         self.config = config
         self.createCustomVsProject = createCustomVsProject
         self.allDependencies = None
-        self.folderType = self._getFolderTypeFromString(config.tryGetString('', 'FolderType'))
-        self.assemblyProjectPath = assemblyProjectPath
-        self.assemblyProjectRoot = assemblyProjectRoot
-        self.assemblyProjectConfig = assemblyProjectConfig
+        self.folderType = folderType
+        self.assemblyProjectInfo = assemblyProjectInfo
         self.forcePluginsDir = forcePluginsDir
-
-    def _getFolderTypeFromString(self, value):
-        value = value.lower()
-
-        if not value or value == FolderTypes.Normal or len(value) == 0:
-            return FolderTypes.Normal
-
-        if value == FolderTypes.AndroidProject:
-            return FolderTypes.AndroidProject
-
-        if value == FolderTypes.AndroidLibraries:
-            return FolderTypes.AndroidLibraries
-
-        if value == FolderTypes.Ios:
-            return FolderTypes.Ios
-
-        if value == FolderTypes.WebGl:
-            return FolderTypes.WebGl
-
-        if value == FolderTypes.StreamingAssets:
-            return FolderTypes.StreamingAssets
-
-        assertThat(False, "Unrecognized folder type '{0}'".format(value))
-        return ""
 
     @property
     def outputDirVar(self):
