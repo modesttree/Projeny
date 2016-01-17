@@ -50,9 +50,10 @@ class ProjectSchemaLoader:
         packageMap = self._createAllPackageInfos(
             pluginsFolderItems, assetFolderItems, solutionProjectPatterns, platform)
 
-        self._ensurePrebuiltProjectHasNoScripts(packageMap)
+        self._ensurePrebuiltProjectsHaveNoScripts(packageMap)
 
-        self._fillOutDependencies(packageMap)
+        # We have all the package infos, but we don't know which packages depend on what so calculate that
+        self._calculateDependencyListForEachPackage(packageMap)
 
         # For the pre-built assembly projects, if we add one of them to our solution,
         # then we need to add all the pre-built dependencies, since unlike generated projects
@@ -71,8 +72,6 @@ class ProjectSchemaLoader:
         self._ensurePluginPackagesDoNotHaveDependenciesInAssets(packageMap)
 
         self._ensurePackagesThatAreNotProjectsDoNotHaveProjectDependencies(packageMap)
-
-        projectsDir = self._varMgr.expandPath('[UnityProjectsDir]')
 
         for info in packageMap.values():
             if info.forcePluginsDir and not info.isPluginDir:
@@ -223,7 +222,7 @@ class ProjectSchemaLoader:
                 depend.createCustomVsProject = True
                 self._makeAllPrebuiltDependenciesVisible(depend, packageMap)
 
-    def _ensurePrebuiltProjectHasNoScripts(self, packageMap):
+    def _ensurePrebuiltProjectsHaveNoScripts(self, packageMap):
         for package in packageMap.values():
             if package.assemblyProjectInfo != None:
                 packageDir = self._varMgr.expandPath('[UnityPackagesDir]/{0}'.format(package.name))
@@ -321,15 +320,15 @@ class ProjectSchemaLoader:
 
         return False
 
-    def _fillOutDependencies(self, packageMap):
+    def _calculateDependencyListForEachPackage(self, packageMap):
 
         self._log.debug('Processing dependency tree')
 
         inProgress = set()
         for info in packageMap.values():
-            self._fillOutDependenciesForPackage(info, packageMap, inProgress)
+            self._calculateDependencyListForPackage(info, packageMap, inProgress)
 
-    def _fillOutDependenciesForPackage(self, packageInfo, packageMap, inProgress):
+    def _calculateDependencyListForPackage(self, packageInfo, packageMap, inProgress):
 
         if packageInfo.name in inProgress:
             assertThat(False, "Found circular dependency when processing package {0}.  Dependency list: {1}".format(packageInfo.name, ' -> '.join([x for x in inProgress]) + '-> ' + packageInfo.name))
@@ -338,14 +337,12 @@ class ProjectSchemaLoader:
         allDependencies = set(packageInfo.explicitDependencies)
 
         for explicitDependName in packageInfo.explicitDependencies:
-            if explicitDependName not in packageMap:
-                # Might be stripped out based on platform or something so just ignore
-                continue
+            assertThat(explicitDependName in packageMap)
 
             explicitDependInfo = packageMap[explicitDependName]
 
-            if not explicitDependInfo.allDependencies:
-                self._fillOutDependenciesForPackage(explicitDependInfo, packageMap, inProgress)
+            if explicitDependInfo.allDependencies == None:
+                self._calculateDependencyListForPackage(explicitDependInfo, packageMap, inProgress)
 
             for dependName in explicitDependInfo.allDependencies:
                 allDependencies.add(dependName)
