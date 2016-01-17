@@ -27,7 +27,7 @@ namespace Projeny.Internal
             }
         }
 
-        public static string FindExePath(string exe)
+        public static string FindExePathFromEnvPath(string exe)
         {
             exe = Environment.ExpandEnvironmentVariables(exe);
 

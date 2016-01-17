@@ -140,10 +140,10 @@ class PackageManager:
         sourceControlType = self._findSourceControl()
 
         if sourceControlType == SourceControlTypes.Git:
-            self._log.heading('Detected git repository.  Making sure generated project folders are ignored by git...')
-            if not self._sys.fileExists('[ProjectRootGitIgnoreTemplate]'):
-                self._log.heading('Adding missing git ignore file to project root')
-                self._sys.copyFile('[ProjectRootGitIgnoreTemplate]', os.path.join(projDirPath, '.gitignore'))
+            self._log.info('Detected git repository.  Making sure generated project folders are ignored by git...')
+            if not self._sys.fileExists('[ProjectRoot]/.gitignore'):
+                self._sys.copyFile('[ProjectRootGitIgnoreTemplate]', '[ProjectRoot]/.gitignore')
+                self._log.warn('Added new git ignore file to project root')
         elif sourceControlType == SourceControlTypes.Subversion:
             self._log.info('Detected subversion repository. Making sure generated project folders are ignored by SVN...')
             try:

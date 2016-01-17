@@ -725,7 +725,7 @@ What follows is the full list of command line parameters that you can pass to th
 * #### <a id="commandline-createProject"></a>`--createProject` / `-cpr`
     * Creates a new directory in the `UnityProjects` directory, adds a default `ProjenyProject.yaml` file, and sets up directory links
 
-* #### <a id="commandline-configPath"></a>`--suppressPrompts` / `-sp`
+* #### <a id="commandline-configPath"></a>`--configPath` / `-cfg`
     * The path to the main `ProjenyProject.yaml` config file.  If unspecified, it will be assumed to exist at `[CurrentDirectory]/ProjenyProject.yaml`
 
 * #### <a id="commandline-listPackages"></a>`--listPackages` / `-lpa`
