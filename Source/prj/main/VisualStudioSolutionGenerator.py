@@ -67,7 +67,7 @@ class VisualStudioSolutionGenerator:
                 if not os.path.isabs(hintPath):
                     hintPath = self._varMgr.expandPath('[ProjectPlatformRoot]/{0}'.format(hintPath))
 
-                assertThat(self._sys.fileExists(hintPath), "Expected to find file at '{0}'".format(hintPath))
+                assertThat(self._sys.fileExists(hintPath), "Expected to find file at '{0}'.  Try updating the unity generated solution, the assembly references might be out of date.".format(hintPath))
 
             items.append(RefInfo(name, hintPath))
 

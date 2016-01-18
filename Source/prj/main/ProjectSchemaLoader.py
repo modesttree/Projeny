@@ -52,6 +52,8 @@ class ProjectSchemaLoader:
 
         self._ensurePrebuiltProjectsHaveNoScripts(packageMap)
 
+        self._ensurePrebuiltProjectDependenciesArePrebuilt(packageMap)
+
         # We have all the package infos, but we don't know which packages depend on what so calculate that
         self._calculateDependencyListForEachPackage(packageMap)
 
@@ -163,6 +165,10 @@ class ProjectSchemaLoader:
             assemblyProjInfo = self._tryGetAssemblyProjectInfo(packageConfig, packageName)
 
             if assemblyProjInfo != None:
+                for assemblyDependName in assemblyProjInfo.dependencies:
+                    if assemblyDependName not in allPackageNames:
+                        allPackageNames.append(assemblyDependName)
+
                 explicitDependencies += assemblyProjInfo.dependencies
 
             assertThat(not packageName in packageMap)
@@ -171,7 +177,7 @@ class ProjectSchemaLoader:
                 explicitDependencies, forcePluginsDir, folderType, assemblyProjInfo)
 
             for dependName in (explicitDependencies + packageConfig.tryGetList([], 'Extras')):
-                if not dependName in allPackageNames:
+                if dependName not in allPackageNames:
                     # Yes, python is ok with changing allPackageNames even while iterating over it
                     allPackageNames.append(dependName)
 
@@ -188,13 +194,13 @@ class ProjectSchemaLoader:
         if not os.path.isabs(projFullPath):
             projFullPath = os.path.join(packageDir, assemblyProjectRelativePath)
 
-        assertThat(self._sys.fileExists(projFullPath), "Expected to find file at '{0}'", projFullPath)
+        assertThat(self._sys.fileExists(projFullPath), "Expected to find file at '{0}'.", projFullPath)
         projRoot = ET.parse(projFullPath).getroot()
 
         assemblyName = projRoot.findall('./{0}PropertyGroup/{0}AssemblyName'.format(NsPrefix))[0].text
-        assertIsEqual(assemblyName, packageName, 'Packages that represent assembly projects must have the same name as the assembly')
+        assertThat(assemblyName == '$(MSBuildProjectName)' or assemblyName.lower() == packageName.lower(), 'Packages that represent assembly projects must have the same name as the assembly')
 
-        assertIsEqual(self._sys.getFileNameWithoutExtension(projFullPath), packageName,
+        assertIsEqual(self._sys.getFileNameWithoutExtension(projFullPath).lower(), packageName.lower(),
           'Assembly projects must have the same name as their package')
 
         projConfig = packageConfig.tryGetString(None, 'AssemblyProject', 'Config')
@@ -221,6 +227,18 @@ class ProjectSchemaLoader:
             if not depend.createCustomVsProject:
                 depend.createCustomVsProject = True
                 self._makeAllPrebuiltDependenciesVisible(depend, packageMap)
+
+    def _ensurePrebuiltProjectDependenciesArePrebuilt(self, packageMap):
+        for packageInfo in packageMap.values():
+            assInfo = packageInfo.assemblyProjectInfo
+
+            if assInfo == None:
+                continue
+
+            for dependName in assInfo.dependencies:
+                depend = packageMap[dependName]
+                assertThat(depend.assemblyProjectInfo != None,
+                   "Expected package '{0}' to have an assembly project defined, since another assembly project ({1}) depends on it", dependName, packageInfo.name)
 
     def _ensurePrebuiltProjectsHaveNoScripts(self, packageMap):
         for package in packageMap.values():
