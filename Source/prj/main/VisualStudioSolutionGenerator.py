@@ -149,58 +149,84 @@ class VisualStudioSolutionGenerator:
         self._addCustomProjects(
             allPackages, prebuiltProjectInfos, allProjects)
 
-        # Store lambdas to create the csproj projects so that the isignored flags are always up to date when they get written
-        # Otherwise sometimes we will output csproj files that have a ProjectReference tag to a project that doesn't exist
-        # This is really hacky but I am about to release the new version and it's not worth doing a proper refactor to get
-        # this ordering right
-        csProjWriters = []
-
         self._initDependenciesForAllProjects(
             allPackages, allProjects, scriptsProj, pluginsProj, scriptsEditorProj,
-            pluginsEditorProj, csProjWriters, prebuiltProjectInfos, unifyProjInfo)
+            pluginsEditorProj, prebuiltProjectInfos, unifyProjInfo)
+
+        self._addFilesForAllProjects(
+            allProjects, pluginsEditorProj, pluginsProj, scriptsProj,
+            scriptsEditorProj, prebuiltProjectInfos, unifyProjInfo)
 
         self._writeCsProjFiles(
             allProjects, pluginsEditorProj, pluginsProj, scriptsProj,
-            scriptsEditorProj, csProjWriters, prebuiltProjectInfos, unifyProjInfo)
+            scriptsEditorProj, prebuiltProjectInfos, unifyProjInfo)
 
         self._createSolution(allProjects.values(), schema.customFolderMap)
 
-    def _writeCsProjFiles(
+    def _addFilesForAllProjects(
         self, allProjects, pluginsEditorProj, pluginsProj, scriptsProj,
-        scriptsEditorProj, csProjWriters, prebuiltProjectInfos, unifyProjInfo):
+        scriptsEditorProj, prebuiltProjectInfos, unifyProjInfo):
+
         excludeDirs = []
 
         for projInfo in allProjects.values():
-            if projInfo.projectType == ProjectType.Custom or projInfo.projectType == ProjectType.CustomEditor:
-                outputDir = os.path.dirname(projInfo.absPath)
-                packageDir = os.path.join(outputDir, projInfo.packageInfo.name)
-                excludeDirs.append(packageDir)
+            if projInfo.projectType != ProjectType.Custom and projInfo.projectType != ProjectType.CustomEditor:
+                continue
+
+            outputDir = os.path.dirname(projInfo.absPath)
+            packageDir = os.path.join(outputDir, projInfo.packageInfo.name)
+            excludeDirs.append(packageDir)
 
         self._log.debug('Processing project "{0}"'.format(scriptsEditorProj.name))
 
-        self._createStandardCsProjForDirectory(
-            pluginsEditorProj, excludeDirs, unifyProjInfo, True, csProjWriters, prebuiltProjectInfos)
+        self._initFilesForStandardCsProjForDirectory(
+            pluginsEditorProj, excludeDirs, unifyProjInfo, True, prebuiltProjectInfos)
 
-        self._createStandardCsProjForDirectory(
-            pluginsProj, excludeDirs, unifyProjInfo, False, csProjWriters, prebuiltProjectInfos)
+        self._initFilesForStandardCsProjForDirectory(
+            pluginsProj, excludeDirs, unifyProjInfo, False, prebuiltProjectInfos)
 
         excludeDirs.append(self._varMgr.expandPath('[PluginsDir]'))
 
-        self._createStandardCsProjForDirectory(
-            scriptsProj, excludeDirs, unifyProjInfo, False, csProjWriters, prebuiltProjectInfos)
+        self._initFilesForStandardCsProjForDirectory(
+            scriptsProj, excludeDirs, unifyProjInfo, False, prebuiltProjectInfos)
 
-        self._createStandardCsProjForDirectory(
-            scriptsEditorProj, excludeDirs, unifyProjInfo, True, csProjWriters, prebuiltProjectInfos)
+        self._initFilesForStandardCsProjForDirectory(
+            scriptsEditorProj, excludeDirs, unifyProjInfo, True, prebuiltProjectInfos)
 
-        for writer in csProjWriters:
-            writer()
+    def _writeCsProjFiles(
+        self, allProjects, pluginsEditorProj, pluginsProj, scriptsProj,
+        scriptsEditorProj, prebuiltProjectInfos, unifyProjInfo):
+
+        for projInfo in allProjects.values():
+            if projInfo.projectType != ProjectType.Custom and projInfo.projectType != ProjectType.CustomEditor:
+                continue
+
+            if projInfo.projectType == ProjectType.CustomEditor:
+                refItems = unifyProjInfo.referencesEditor
+            else:
+                refItems = unifyProjInfo.references
+
+            self._writeCsProject(projInfo, projInfo.files, refItems, unifyProjInfo.defines, prebuiltProjectInfos)
+
+        self._log.debug('Processing project "{0}"'.format(scriptsEditorProj.name))
+
+        self._writeStandardCsProjForDirectory(
+            pluginsEditorProj, unifyProjInfo, True, prebuiltProjectInfos)
+
+        self._writeStandardCsProjForDirectory(
+            pluginsProj, unifyProjInfo, False, prebuiltProjectInfos)
+
+        self._writeStandardCsProjForDirectory(
+            scriptsProj, unifyProjInfo, False, prebuiltProjectInfos)
+
+        self._writeStandardCsProjForDirectory(
+            scriptsEditorProj, unifyProjInfo, True, prebuiltProjectInfos)
 
     def _initDependenciesForAllProjects(
         self, allPackages, allProjects, scriptsProj, pluginsProj, scriptsEditorProj,
-        pluginsEditorProj, csProjWriters, prebuiltProjectInfos, unifyProjInfo):
+        pluginsEditorProj, prebuiltProjectInfos, unifyProjInfo):
 
         for projInfo in allProjects.values():
-
             if projInfo.projectType != ProjectType.Custom and projInfo.projectType != ProjectType.CustomEditor:
                 continue
 
@@ -211,13 +237,6 @@ class VisualStudioSolutionGenerator:
             projInfo.dependencies = self._getProjectDependencies(
                 allProjects, projInfo, scriptsProj, pluginsProj, scriptsEditorProj,
                 pluginsEditorProj)
-
-            if projInfo.projectType == ProjectType.CustomEditor:
-                refItems = unifyProjInfo.referencesEditor
-            else:
-                refItems = unifyProjInfo.references
-
-            csProjWriters.append(lambda: self._writeCsProject(projInfo, projInfo.files, refItems, unifyProjInfo.defines, prebuiltProjectInfos))
 
         self._log.debug('Processing project "{0}"'.format(pluginsProj.name))
 
@@ -436,16 +455,21 @@ class VisualStudioSolutionGenerator:
         return CsProjInfo(
             projId, outputPath, projectName, [], False, None, ProjectType.Standard, None)
 
-    def _createStandardCsProjForDirectory(
-        self, projInfo, excludeDirs, unityProjInfo, isEditor, csProjWriters, prebuiltProjectInfos):
+    def _initFilesForStandardCsProjForDirectory(
+        self, projInfo, excludeDirs, unityProjInfo, isEditor, prebuiltProjectInfos):
 
         outputDir = os.path.dirname(projInfo.absPath)
 
-        files = []
-        self._addCsFilesInDirectory(outputDir, excludeDirs, files, isEditor)
+        projInfo.files = []
+        self._addCsFilesInDirectory(outputDir, excludeDirs, projInfo.files, isEditor)
 
-        if len(files) == 0:
+        if len(projInfo.files) == 0:
             projInfo.isIgnored = True
+
+    def _writeStandardCsProjForDirectory(
+        self, projInfo, unityProjInfo, isEditor, prebuiltProjectInfos):
+
+        if projInfo.isIgnored:
             return
 
         if isEditor:
@@ -453,7 +477,8 @@ class VisualStudioSolutionGenerator:
         else:
             references = unityProjInfo.references
 
-        csProjWriters.append(lambda: self._writeCsProject(projInfo, files, references, unityProjInfo.defines, prebuiltProjectInfos))
+        self._writeCsProject(
+            projInfo, projInfo.files, references, unityProjInfo.defines, prebuiltProjectInfos)
 
     def _createProjectGuid(self):
         return str(uuid.uuid4()).upper()
