@@ -145,8 +145,8 @@ class VisualStudioSolutionGenerator:
 
         prebuiltProjectInfos = []
 
-        # Need to populate allProjects first so we can get references in _initDependenciesForCustomProjects
-        self._addAllCsProjInfos(
+        # Need to populate allProjects first so we can get references in _initDependenciesForAllProjects
+        self._addCustomProjects(
             allPackages, prebuiltProjectInfos, allProjects)
 
         # Store lambdas to create the csproj projects so that the isignored flags are always up to date when they get written
@@ -155,57 +155,56 @@ class VisualStudioSolutionGenerator:
         # this ordering right
         csProjWriters = []
 
-        customProjects = [x for x in allProjects.values() if x.projectType == ProjectType.Custom or x.projectType == ProjectType.CustomEditor]
-
-        self._initDependenciesForCustomProjects(
-            allPackages, customProjects, allProjects, scriptsProj, pluginsProj, scriptsEditorProj,
+        self._initDependenciesForAllProjects(
+            allPackages, allProjects, scriptsProj, pluginsProj, scriptsEditorProj,
             pluginsEditorProj, csProjWriters, prebuiltProjectInfos, unifyProjInfo)
 
-        self._log.debug('Processing project "{0}"'.format(pluginsProj.name))
+        self._writeCsProjFiles(
+            allProjects, pluginsEditorProj, pluginsProj, scriptsProj,
+            scriptsEditorProj, csProjWriters, prebuiltProjectInfos, unifyProjInfo)
 
+        self._createSolution(allProjects.values(), schema.customFolderMap)
+
+    def _writeCsProjFiles(
+        self, allProjects, pluginsEditorProj, pluginsProj, scriptsProj,
+        scriptsEditorProj, csProjWriters, prebuiltProjectInfos, unifyProjInfo):
         excludeDirs = []
 
-        for projInfo in customProjects:
-            outputDir = os.path.dirname(projInfo.absPath)
-            packageDir = os.path.join(outputDir, projInfo.packageInfo.name)
-            excludeDirs.append(packageDir)
+        for projInfo in allProjects.values():
+            if projInfo.projectType == ProjectType.Custom or projInfo.projectType == ProjectType.CustomEditor:
+                outputDir = os.path.dirname(projInfo.absPath)
+                packageDir = os.path.join(outputDir, projInfo.packageInfo.name)
+                excludeDirs.append(packageDir)
 
-        pluginsProj.dependencies = prebuiltProjectInfos
+        self._log.debug('Processing project "{0}"'.format(scriptsEditorProj.name))
+
+        self._createStandardCsProjForDirectory(
+            pluginsEditorProj, excludeDirs, unifyProjInfo, True, csProjWriters, prebuiltProjectInfos)
+
         self._createStandardCsProjForDirectory(
             pluginsProj, excludeDirs, unifyProjInfo, False, csProjWriters, prebuiltProjectInfos)
 
-        pluginsEditorProj.dependencies = [pluginsProj] + prebuiltProjectInfos
-
-        for packageInfo in allPackages:
-            if packageInfo.createCustomVsProject and packageInfo.isPluginDir:
-                pluginsEditorProj.dependencies.append(allProjects[packageInfo.name])
-
-        self._log.debug('Processing project "{0}"'.format(pluginsEditorProj.name))
-        self._createStandardCsProjForDirectory(pluginsEditorProj, excludeDirs, unifyProjInfo, True, csProjWriters, prebuiltProjectInfos)
-
         excludeDirs.append(self._varMgr.expandPath('[PluginsDir]'))
 
-        self._log.debug('Processing project "{0}"'.format(scriptsProj.name))
-        scriptsProj.dependencies = [pluginsProj] + prebuiltProjectInfos
-        self._createStandardCsProjForDirectory(scriptsProj, excludeDirs, unifyProjInfo, False, csProjWriters, prebuiltProjectInfos)
+        self._createStandardCsProjForDirectory(
+            scriptsProj, excludeDirs, unifyProjInfo, False, csProjWriters, prebuiltProjectInfos)
 
-        scriptsEditorProj.dependencies = scriptsProj.dependencies + [scriptsProj, pluginsEditorProj]
-
-        self._log.debug('Processing project "{0}"'.format(scriptsEditorProj.name))
-        self._createStandardCsProjForDirectory(scriptsEditorProj, excludeDirs, unifyProjInfo, True, csProjWriters, prebuiltProjectInfos)
+        self._createStandardCsProjForDirectory(
+            scriptsEditorProj, excludeDirs, unifyProjInfo, True, csProjWriters, prebuiltProjectInfos)
 
         for writer in csProjWriters:
             writer()
 
-        self._createSolution(allProjects.values(), schema.customFolderMap)
-
-    def _initDependenciesForCustomProjects(
-        self, allPackages, customProjects, allProjects, scriptsProj, pluginsProj, scriptsEditorProj,
+    def _initDependenciesForAllProjects(
+        self, allPackages, allProjects, scriptsProj, pluginsProj, scriptsEditorProj,
         pluginsEditorProj, csProjWriters, prebuiltProjectInfos, unifyProjInfo):
 
-        for projInfo in customProjects:
+        for projInfo in allProjects.values():
+
+            if projInfo.projectType != ProjectType.Custom and projInfo.projectType != ProjectType.CustomEditor:
+                continue
+
             assertThat(projInfo.packageInfo.createCustomVsProject)
-            assertThat(projInfo.projectType == ProjectType.Custom or projInfo.projectType == ProjectType.CustomEditor)
 
             self._log.debug('Processing generated project "{0}"'.format(projInfo.name))
 
@@ -220,7 +219,24 @@ class VisualStudioSolutionGenerator:
 
             csProjWriters.append(lambda: self._writeCsProject(projInfo, projInfo.files, refItems, unifyProjInfo.defines, prebuiltProjectInfos))
 
-    def _addAllCsProjInfos(
+        self._log.debug('Processing project "{0}"'.format(pluginsProj.name))
+
+        pluginsProj.dependencies = prebuiltProjectInfos
+
+        pluginsEditorProj.dependencies = [pluginsProj] + prebuiltProjectInfos
+
+        for packageInfo in allPackages:
+            if packageInfo.createCustomVsProject and packageInfo.isPluginDir:
+                pluginsEditorProj.dependencies.append(allProjects[packageInfo.name])
+
+        self._log.debug('Processing project "{0}"'.format(pluginsEditorProj.name))
+
+        self._log.debug('Processing project "{0}"'.format(scriptsProj.name))
+        scriptsProj.dependencies = [pluginsProj] + prebuiltProjectInfos
+
+        scriptsEditorProj.dependencies = scriptsProj.dependencies + [scriptsProj, pluginsEditorProj]
+
+    def _addCustomProjects(
         self, allPackages, prebuiltProjectInfos, allCustomProjects):
 
         for packageInfo in allPackages:
