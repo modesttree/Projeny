@@ -9,6 +9,8 @@ from prj.ioc.Inject import Inject
 from prj.ioc.Inject import InjectOptional
 import prj.ioc.IocAssertions as Assertions
 
+from collections import OrderedDict
+
 class Config:
     ''' Build config info  (eg. path info, etc.) '''
 
@@ -126,6 +128,25 @@ class Config:
 
         return result
 
+    def getOrderedDictionary(self, *args):
+        result = self.tryGetOrderedDictionary(None, *args)
+        assertThat(result is not None, "Could not find match for YAML element {0}", self._propNameToString(args))
+        return result
+
+    def tryGetOrderedDictionary(self, fallback, *args):
+        dictionaries = self.tryGetList(None, *args)
+
+        if dictionaries == None:
+            return fallback
+
+        result = OrderedDict()
+        for dictionary in dictionaries:
+            assertThat(type(dictionary) is dict)
+            assertThat(len(dictionary) == 1)
+            key, value = next(iter(dictionary.items()))
+            result[key] = value
+        return result
+
     def getDictionary(self, *args):
         result = self.tryGetDictionary(None, *args)
         assertThat(result is not None, "Could not find match for YAML element {0}", self._propNameToString(args))
@@ -144,3 +165,15 @@ class Config:
             result = Util.mergeDictionaries(result, match)
 
         return result
+
+#if __name__ == '__main__':
+
+    #from prj.config.YamlConfigLoader import loadYamlFile
+
+    #config = Config([loadYamlFile('C:/M3d/1/Src/UnityProjects/ProjenyProject.yaml')])
+
+    #result = config.getOrderedDictionary('SolutionFolders')
+
+    #for k, v in result.items():
+        #print("-----")
+        #print("{0} = {1}".format(k, v))

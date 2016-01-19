@@ -15,6 +15,7 @@ from prj.config.YamlConfigLoader import loadYamlFilesThatExist
 
 from prj.main.CsProjParserHelper import NsPrefix
 
+from collections import OrderedDict
 import xml.etree.ElementTree as ET
 
 ProjectConfigFileName = 'ProjenyProject.yaml'
@@ -37,7 +38,7 @@ class ProjectSchemaLoader:
         pluginsFolderItems = config.tryGetList([], 'PluginsFolder')
         assetFolderItems = config.tryGetList([], 'AssetsFolder')
         solutionProjectPatterns = config.tryGetList([], 'SolutionProjects')
-        customFolders = config.tryGetDictionary({}, 'SolutionFolders')
+        customFolders = config.tryGetOrderedDictionary(OrderedDict(), 'SolutionFolders')
 
         # Remove duplicates
         assetFolderItems = list(set(assetFolderItems))
