@@ -229,7 +229,7 @@ class VisualStudioSolutionGenerator:
                 projId = self._getCsProjIdFromFile(info.assemblyProjectInfo.root)
                 customProject = CsProjInfo(
                     projId, info.assemblyProjectInfo.path, info.name,
-                    [], False, info.assemblyProjectInfo.config)
+                    [], False, info.assemblyProjectInfo.config, ProjectType.Prebuilt)
                 allCustomProjects[customProject.name] = customProject
 
                 prebuiltProjectInfos.append(customProject)
@@ -268,7 +268,7 @@ class VisualStudioSolutionGenerator:
         isIgnored = (len(files) == 0)
 
         return CsProjInfo(
-            projId, outputPath, csProjectName, files, isIgnored)
+            projId, outputPath, csProjectName, files, isIgnored, None, ProjectType.Custom)
 
     def _tryCreateCustomProject(
         self, isEditor, customCsProjects, packageInfo, unifyProjInfo,
@@ -425,7 +425,7 @@ class VisualStudioSolutionGenerator:
         projId = self._createProjectGuid()
 
         return CsProjInfo(
-            projId, outputPath, projectName, [], False)
+            projId, outputPath, projectName, [], False, None, ProjectType.Standard)
 
     def _createStandardCsProjForDirectory(
         self, projInfo, excludeDirs, unityProjInfo, isEditor, csProjWriters, prebuiltProjectInfos):
@@ -598,8 +598,13 @@ class UnityGeneratedProjInfo:
         self.references = references
         self.referencesEditor = referencesEditor
 
+class ProjectType:
+    Prebuilt = 1
+    Custom = 2
+    Standard = 3
+
 class CsProjInfo:
-    def __init__(self, id, absPath, name, files, isIgnored, configType = None):
+    def __init__(self, id, absPath, name, files, isIgnored, configType, projectType):
         assertThat(name)
 
         self.id = id
@@ -609,4 +614,5 @@ class CsProjInfo:
         self.files = files
         self.isIgnored = isIgnored
         self.configType = configType
+        self.projectType = projectType
 
