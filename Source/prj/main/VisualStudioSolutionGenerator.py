@@ -44,7 +44,9 @@ class VisualStudioSolutionGenerator:
         self._packageManager.checkProjectInitialized(projectName, platform)
 
         schema = self._schemaLoader.loadSchema(projectName, platform)
-        self._updateVisualStudioSolutionInternal(schema)
+
+        self._updateVisualStudioSolutionInternal(
+            schema.packages.values(), schema.customFolderMap)
 
     def _prettify(self, doc):
         return minidom.parseString(ET.tostring(doc)).toprettyxml(indent="    ")
@@ -125,55 +127,51 @@ class VisualStudioSolutionGenerator:
 
         return UnityGeneratedProjInfo(defines, references, referencesEditor)
 
-    def _updateVisualStudioSolutionInternal(self, schema):
+    def _updateVisualStudioSolutionInternal(self, allPackages, customFolderMap):
 
         # Necessary to avoid having ns0: prefixes everywhere on output
         ET.register_namespace('', 'http://schemas.microsoft.com/developer/msbuild/2003')
 
         unifyProjInfo = self._parseGeneratedUnityProject()
 
-        allProjects = {}
-
-        self._addStandardProjects(allProjects)
-
-        allPackages = schema.packages.values()
-
-        prebuiltProjectInfos = []
-
-        # Need to populate allProjects first so we can get references in _initDependenciesForAllProjects
-        self._addCustomProjects(
-            allPackages, prebuiltProjectInfos, allProjects)
+        projectMap = self._createProjectMap(allPackages)
 
         self._initDependenciesForAllProjects(
-            allPackages, allProjects, prebuiltProjectInfos, unifyProjInfo)
+            allPackages, projectMap, unifyProjInfo)
 
         self._addFilesForAllProjects(
-            allProjects, prebuiltProjectInfos, unifyProjInfo)
+            projectMap, unifyProjInfo)
 
         self._writeCsProjFiles(
-            allProjects, prebuiltProjectInfos, unifyProjInfo)
+            projectMap, unifyProjInfo)
 
-        self._createSolution(allProjects.values(), schema.customFolderMap)
+        self._createSolution(projectMap.values(), customFolderMap)
 
-    def _addStandardProjects(self, allProjects):
-        allProjects[PluginsProjectName] = self._createStandardCsProjInfo(
+    def _createProjectMap(self, allPackages):
+        projectMap = {}
+        self._addStandardProjects(projectMap)
+        self._addCustomProjects(allPackages, projectMap)
+        return projectMap
+
+    def _addStandardProjects(self, projectMap):
+        projectMap[PluginsProjectName] = self._createStandardCsProjInfo(
             PluginsProjectName, '[PluginsDir]')
 
-        allProjects[AssetsProjectName] = self._createStandardCsProjInfo(
+        projectMap[AssetsProjectName] = self._createStandardCsProjInfo(
             AssetsProjectName, '[ProjectAssetsDir]')
 
-        allProjects[AssetsEditorProjectName] = self._createStandardCsProjInfo(
+        projectMap[AssetsEditorProjectName] = self._createStandardCsProjInfo(
             AssetsEditorProjectName, '[ProjectAssetsDir]')
 
-        allProjects[PluginsEditorProjectName] = self._createStandardCsProjInfo(
+        projectMap[PluginsEditorProjectName] = self._createStandardCsProjInfo(
             PluginsEditorProjectName, '[PluginsDir]')
 
     def _addFilesForAllProjects(
-        self, allProjects, prebuiltProjectInfos, unifyProjInfo):
+        self, projectMap, unifyProjInfo):
 
         excludeDirs = []
 
-        for projInfo in allProjects.values():
+        for projInfo in projectMap.values():
             if projInfo.projectType != ProjectType.Custom and projInfo.projectType != ProjectType.CustomEditor:
                 continue
 
@@ -182,23 +180,23 @@ class VisualStudioSolutionGenerator:
             excludeDirs.append(packageDir)
 
         self._initFilesForStandardCsProjForDirectory(
-            allProjects[PluginsEditorProjectName], excludeDirs, unifyProjInfo, True, prebuiltProjectInfos)
+            projectMap[PluginsEditorProjectName], excludeDirs, unifyProjInfo, True)
 
         self._initFilesForStandardCsProjForDirectory(
-            allProjects[PluginsProjectName], excludeDirs, unifyProjInfo, False, prebuiltProjectInfos)
+            projectMap[PluginsProjectName], excludeDirs, unifyProjInfo, False)
 
         excludeDirs.append(self._varMgr.expandPath('[PluginsDir]'))
 
         self._initFilesForStandardCsProjForDirectory(
-            allProjects[AssetsProjectName], excludeDirs, unifyProjInfo, False, prebuiltProjectInfos)
+            projectMap[AssetsProjectName], excludeDirs, unifyProjInfo, False)
 
         self._initFilesForStandardCsProjForDirectory(
-            allProjects[AssetsEditorProjectName], excludeDirs, unifyProjInfo, True, prebuiltProjectInfos)
+            projectMap[AssetsEditorProjectName], excludeDirs, unifyProjInfo, True)
 
     def _writeCsProjFiles(
-        self, allProjects, prebuiltProjectInfos, unifyProjInfo):
+        self, projectMap, unifyProjInfo):
 
-        for projInfo in allProjects.values():
+        for projInfo in projectMap.values():
             if projInfo.projectType != ProjectType.Custom and projInfo.projectType != ProjectType.CustomEditor:
                 continue
 
@@ -207,24 +205,24 @@ class VisualStudioSolutionGenerator:
             else:
                 refItems = unifyProjInfo.references
 
-            self._writeCsProject(projInfo, projInfo.files, refItems, unifyProjInfo.defines, prebuiltProjectInfos)
+            self._writeCsProject(projInfo, projectMap, projInfo.files, refItems, unifyProjInfo.defines)
 
         self._writeStandardCsProjForDirectory(
-            allProjects[PluginsEditorProjectName], unifyProjInfo, True, prebuiltProjectInfos)
+            projectMap[PluginsEditorProjectName], projectMap, unifyProjInfo, True)
 
         self._writeStandardCsProjForDirectory(
-            allProjects[PluginsProjectName], unifyProjInfo, False, prebuiltProjectInfos)
+            projectMap[PluginsProjectName], projectMap, unifyProjInfo, False)
 
         self._writeStandardCsProjForDirectory(
-            allProjects[AssetsProjectName], unifyProjInfo, False, prebuiltProjectInfos)
+            projectMap[AssetsProjectName], projectMap, unifyProjInfo, False)
 
         self._writeStandardCsProjForDirectory(
-            allProjects[AssetsEditorProjectName], unifyProjInfo, True, prebuiltProjectInfos)
+            projectMap[AssetsEditorProjectName], projectMap, unifyProjInfo, True)
 
     def _initDependenciesForAllProjects(
-        self, allPackages, allProjects, prebuiltProjectInfos, unifyProjInfo):
+        self, allPackages, projectMap, unifyProjInfo):
 
-        for projInfo in allProjects.values():
+        for projInfo in projectMap.values():
             if projInfo.projectType != ProjectType.Custom and projInfo.projectType != ProjectType.CustomEditor:
                 continue
 
@@ -232,30 +230,32 @@ class VisualStudioSolutionGenerator:
 
             self._log.debug('Processing generated project "{0}"'.format(projInfo.name))
 
-            projInfo.dependencies = self._getProjectDependencies(allProjects, projInfo)
+            projInfo.dependencies = self._getProjectDependencies(projectMap, projInfo)
 
-        pluginsProj = allProjects[PluginsProjectName]
+        pluginsProj = projectMap[PluginsProjectName]
         self._log.debug('Processing project "{0}"'.format(pluginsProj.name))
+
+        prebuiltProjectInfos = [x for x in projectMap.values() if x.projectType == ProjectType.Prebuilt]
 
         pluginsProj.dependencies = prebuiltProjectInfos
 
-        pluginsEditorProj = allProjects[PluginsEditorProjectName]
+        pluginsEditorProj = projectMap[PluginsEditorProjectName]
         pluginsEditorProj.dependencies = [pluginsProj] + prebuiltProjectInfos
 
         for packageInfo in allPackages:
             if packageInfo.createCustomVsProject and packageInfo.isPluginDir:
-                pluginsEditorProj.dependencies.append(allProjects[packageInfo.name])
+                pluginsEditorProj.dependencies.append(projectMap[packageInfo.name])
 
-        scriptsProj = allProjects[AssetsProjectName]
+        scriptsProj = projectMap[AssetsProjectName]
 
         self._log.debug('Processing project "{0}"'.format(scriptsProj.name))
         scriptsProj.dependencies = [pluginsProj] + prebuiltProjectInfos
 
-        scriptsEditorProj = allProjects[AssetsEditorProjectName]
+        scriptsEditorProj = projectMap[AssetsEditorProjectName]
         scriptsEditorProj.dependencies = scriptsProj.dependencies + [scriptsProj, pluginsEditorProj]
 
     def _addCustomProjects(
-        self, allPackages, prebuiltProjectInfos, allCustomProjects):
+        self, allPackages, allCustomProjects):
 
         for packageInfo in allPackages:
             if not packageInfo.createCustomVsProject:
@@ -273,8 +273,6 @@ class VisualStudioSolutionGenerator:
                     projId, packageInfo.assemblyProjectInfo.path, packageInfo.name,
                     [], False, packageInfo.assemblyProjectInfo.config, ProjectType.Prebuilt, packageInfo)
                 allCustomProjects[customProject.name] = customProject
-
-                prebuiltProjectInfos.append(customProject)
 
     def _getCsProjIdFromFile(self, projectRoot):
         projId = projectRoot.findall('./{0}PropertyGroup/{0}ProjectGuid'.format(NsPrefix))[0].text
@@ -312,7 +310,7 @@ class VisualStudioSolutionGenerator:
         return CsProjInfo(
             projId, outputPath, csProjectName, files, isIgnored, None, ProjectType.CustomEditor if isEditor else ProjectType.Custom, packageInfo)
 
-    def _getProjectDependencies(self, allProjects, projInfo):
+    def _getProjectDependencies(self, projectMap, projInfo):
 
         packageInfo = projInfo.packageInfo
         assertIsNotNone(packageInfo)
@@ -322,33 +320,33 @@ class VisualStudioSolutionGenerator:
         isEditor = projInfo.projectType == ProjectType.CustomEditor
 
         if isEditor:
-            projDependencies.append(allProjects[PluginsProjectName])
-            projDependencies.append(allProjects[PluginsEditorProjectName])
+            projDependencies.append(projectMap[PluginsProjectName])
+            projDependencies.append(projectMap[PluginsEditorProjectName])
 
-            projDependencies.append(allProjects[packageInfo.name])
+            projDependencies.append(projectMap[packageInfo.name])
 
             if not packageInfo.isPluginDir:
-                projDependencies.append(allProjects[AssetsProjectName])
-                projDependencies.append(allProjects[AssetsEditorProjectName])
+                projDependencies.append(projectMap[AssetsProjectName])
+                projDependencies.append(projectMap[AssetsEditorProjectName])
         else:
-            projDependencies.append(allProjects[PluginsProjectName])
+            projDependencies.append(projectMap[PluginsProjectName])
 
             if not packageInfo.isPluginDir:
-                projDependencies.append(allProjects[AssetsProjectName])
+                projDependencies.append(projectMap[AssetsProjectName])
 
         for dependName in packageInfo.allDependencies:
             assertThat(not dependName in projDependencies)
 
-            if dependName in allProjects:
-                dependProj = allProjects[dependName]
+            if dependName in projectMap:
+                dependProj = projectMap[dependName]
 
                 projDependencies.append(dependProj)
 
             if isEditor:
                 dependEditorName = dependName + EditorProjectNameSuffix
 
-                if dependEditorName in allProjects:
-                    dependEditorProj = allProjects[dependEditorName]
+                if dependEditorName in projectMap:
+                    dependEditorProj = projectMap[dependEditorName]
 
                     projDependencies.append(dependEditorProj)
 
@@ -453,7 +451,7 @@ class VisualStudioSolutionGenerator:
             projId, outputPath, projectName, [], False, None, ProjectType.Standard, None)
 
     def _initFilesForStandardCsProjForDirectory(
-        self, projInfo, excludeDirs, unityProjInfo, isEditor, prebuiltProjectInfos):
+        self, projInfo, excludeDirs, unityProjInfo, isEditor):
 
         outputDir = os.path.dirname(projInfo.absPath)
 
@@ -464,7 +462,7 @@ class VisualStudioSolutionGenerator:
             projInfo.isIgnored = True
 
     def _writeStandardCsProjForDirectory(
-        self, projInfo, unityProjInfo, isEditor, prebuiltProjectInfos):
+        self, projInfo, projectMap, unityProjInfo, isEditor):
 
         if projInfo.isIgnored:
             return
@@ -475,7 +473,7 @@ class VisualStudioSolutionGenerator:
             references = unityProjInfo.references
 
         self._writeCsProject(
-            projInfo, projInfo.files, references, unityProjInfo.defines, prebuiltProjectInfos)
+            projInfo, projectMap, projInfo.files, references, unityProjInfo.defines)
 
     def _createProjectGuid(self):
         return str(uuid.uuid4()).upper()
@@ -483,7 +481,7 @@ class VisualStudioSolutionGenerator:
     def _shouldReferenceBeCopyLocal(self, refName):
         return refName != 'System' and refName != 'System.Core'
 
-    def _writeCsProject(self, projInfo, files, refItems, defines, prebuiltProjectInfos):
+    def _writeCsProject(self, projInfo, projectMap, files, refItems, defines):
 
         outputDir = os.path.dirname(projInfo.absPath)
 
@@ -495,10 +493,12 @@ class VisualStudioSolutionGenerator:
         refsItemGroupElem = root.findall('./{0}ItemGroup[{0}Reference]'.format(NsPrefix))[0]
         refsItemGroupElem.clear()
 
+        prebuiltProjectInfos = [x for x in projectMap.values() if x.projectType == ProjectType.Prebuilt]
+
         # Add reference items given from unity project
         for refInfo in refItems:
 
-            if len([x for x in prebuiltProjectInfos if x.name == refInfo.name]) > 0:
+            if any([x for x in prebuiltProjectInfos if x.name == refInfo.name]):
                 self._log.debug('Ignoring reference for prebuilt project "{0}"'.format(refInfo.name))
                 continue
 
