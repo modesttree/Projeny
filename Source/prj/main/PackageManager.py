@@ -1,31 +1,31 @@
 
 import os
 
-from prj.util.VarManager import VarManager
-from prj.log.Logger import Logger
-from prj.util.SystemHelper import SystemHelper
-import prj.util.JunctionUtil as JunctionUtil
-import prj.util.Util as Util
+from mtm.util.VarManager import VarManager
+from mtm.log.Logger import Logger
+from mtm.util.SystemHelper import SystemHelper
+import mtm.util.JunctionUtil as JunctionUtil
+import mtm.util.Util as Util
 
 from prj.main.ProjectSchemaLoader import FolderTypes
-from prj.util.PlatformUtil import Platforms
+from mtm.util.PlatformUtil import Platforms
 
 import shutil
 
-from prj.util.CommonSettings import ConfigFileName
-import prj.util.MiscUtil as MiscUtil
-import prj.util.PlatformUtil as PlatformUtil
+from mtm.util.CommonSettings import ConfigFileName
+import mtm.util.MiscUtil as MiscUtil
+import mtm.util.PlatformUtil as PlatformUtil
 
 from prj.reg.PackageInfo import PackageInstallInfo
-from prj.util.Assert import *
+from mtm.util.Assert import *
 from prj.reg.PackageInfo import PackageInfo
 
 from datetime import datetime
-import prj.util.YamlSerializer as YamlSerializer
-import prj.ioc.Container as Container
-from prj.ioc.Inject import Inject
-from prj.ioc.Inject import InjectMany
-import prj.ioc.IocAssertions as Assertions
+import mtm.util.YamlSerializer as YamlSerializer
+import mtm.ioc.Container as Container
+from mtm.ioc.Inject import Inject
+from mtm.ioc.Inject import InjectMany
+import mtm.ioc.IocAssertions as Assertions
 
 InstallInfoFileName = 'ProjenyInstall.yaml'
 

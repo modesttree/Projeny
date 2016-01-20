@@ -1,14 +1,14 @@
 
-import prj.util.YamlSerializer as YamlSerializer
+import mtm.util.YamlSerializer as YamlSerializer
 
-from prj.util.Assert import *
+from mtm.util.Assert import *
 
-import prj.ioc.Container as Container
-from prj.ioc.Inject import Inject
-from prj.ioc.Inject import InjectMany
-import prj.ioc.IocAssertions as Assertions
+import mtm.ioc.Container as Container
+from mtm.ioc.Inject import Inject
+from mtm.ioc.Inject import InjectMany
+import mtm.ioc.IocAssertions as Assertions
 
-from prj.util.PlatformUtil import Platforms
+from mtm.util.PlatformUtil import Platforms
 
 from prj.main.ProjectSchemaLoader import ProjectConfigFileName
 from prj.main.ProjectConfig import ProjectConfig

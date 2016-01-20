@@ -2,17 +2,17 @@
 import prj.main.Prj as Prj
 
 import os
-import prj.ioc.Container as Container
-from prj.ioc.Inject import Inject
-import prj.ioc.IocAssertions as Assertions
+import mtm.ioc.Container as Container
+from mtm.ioc.Inject import Inject
+import mtm.ioc.IocAssertions as Assertions
 import sys
 import argparse
 
-from prj.log.LogStreamConsole import LogStreamConsole
+from mtm.log.LogStreamConsole import LogStreamConsole
 
-from prj.util.PlatformUtil import Platforms
-import prj.util.PlatformUtil as PlatformUtil
-from prj.util.Assert import *
+from mtm.util.PlatformUtil import Platforms
+import mtm.util.PlatformUtil as PlatformUtil
+from mtm.util.Assert import *
 
 class Runner:
     _scriptRunner = Inject('ScriptRunner')

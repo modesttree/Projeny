@@ -1,19 +1,19 @@
 import sys
 import argparse
 
-from prj.log.LogStreamFile import LogStreamFile
+from mtm.log.LogStreamFile import LogStreamFile
 import os
-import prj.ioc.Container as Container
-from prj.ioc.Inject import Inject
-from prj.ioc.Inject import InjectOptional
-import prj.ioc.IocAssertions as Assertions
+import mtm.ioc.Container as Container
+from mtm.ioc.Inject import Inject
+from mtm.ioc.Inject import InjectOptional
+import mtm.ioc.IocAssertions as Assertions
 
-from prj.config.Config import Config
-from prj.log.LogStreamConsole import LogStreamConsole
-from prj.util.CommonSettings import ConfigFileName
-import prj.util.MiscUtil as MiscUtil
+from mtm.config.Config import Config
+from mtm.log.LogStreamConsole import LogStreamConsole
+from mtm.util.CommonSettings import ConfigFileName
+import mtm.util.MiscUtil as MiscUtil
 
-from prj.util.Assert import *
+from mtm.util.Assert import *
 import prj.main.Prj as Prj
 
 ScriptDir = os.path.dirname(os.path.realpath(__file__))

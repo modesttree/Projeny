@@ -3,15 +3,15 @@ import sys
 import re
 import os
 
-from prj.util.Assert import *
-from prj.util.PlatformUtil import Platforms
-import prj.util.Util as Util
-import prj.ioc.Container as Container
-from prj.ioc.Inject import Inject
-import prj.ioc.IocAssertions as Assertions
-import prj.util.JunctionUtil as JunctionUtil
-from prj.config.Config import Config
-from prj.config.YamlConfigLoader import loadYamlFilesThatExist
+from mtm.util.Assert import *
+from mtm.util.PlatformUtil import Platforms
+import mtm.util.Util as Util
+import mtm.ioc.Container as Container
+from mtm.ioc.Inject import Inject
+import mtm.ioc.IocAssertions as Assertions
+import mtm.util.JunctionUtil as JunctionUtil
+from mtm.config.Config import Config
+from mtm.config.YamlConfigLoader import loadYamlFilesThatExist
 
 from prj.main.CsProjParserHelper import NsPrefix
 

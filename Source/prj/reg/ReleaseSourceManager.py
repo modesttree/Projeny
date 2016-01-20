@@ -1,21 +1,21 @@
 
 from datetime import datetime
-from prj.ioc.Inject import Inject
-from prj.ioc.Inject import InjectMany
-import prj.ioc.IocAssertions as Assertions
+from mtm.ioc.Inject import Inject
+from mtm.ioc.Inject import InjectMany
+import mtm.ioc.IocAssertions as Assertions
 
-from prj.util.Assert import *
+from mtm.util.Assert import *
 
 from prj.reg.LocalFolderReleaseSource import LocalFolderReleaseSource
 from prj.reg.AssetStoreCacheReleaseSource import AssetStoreCacheReleaseSource
 from prj.reg.RemoteServerReleaseSource import RemoteServerReleaseSource
 
-import prj.util.MiscUtil as MiscUtil
+import mtm.util.MiscUtil as MiscUtil
 
 from prj.reg.PackageInfo import PackageInstallInfo
 
 import os
-import prj.util.YamlSerializer as YamlSerializer
+import mtm.util.YamlSerializer as YamlSerializer
 
 from prj.main.PackageManager import InstallInfoFileName
 

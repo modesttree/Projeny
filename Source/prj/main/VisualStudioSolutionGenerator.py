@@ -6,11 +6,11 @@ import uuid
 import re
 import os
 
-import prj.ioc.Container as Container
-from prj.ioc.Inject import Inject
-from prj.ioc.Inject import InjectMany
-import prj.ioc.IocAssertions as Assertions
-from prj.util.Assert import *
+import mtm.ioc.Container as Container
+from mtm.ioc.Inject import Inject
+from mtm.ioc.Inject import InjectMany
+import mtm.ioc.IocAssertions as Assertions
+from mtm.util.Assert import *
 
 from prj.main.CsProjParserHelper import NsPrefix
 

@@ -3,18 +3,18 @@ import sys
 import os
 import webbrowser
 
-from prj.util.Assert import *
-import prj.util.MiscUtil as MiscUtil
-import prj.util.PlatformUtil as PlatformUtil
+from mtm.util.Assert import *
+import mtm.util.MiscUtil as MiscUtil
+import mtm.util.PlatformUtil as PlatformUtil
 
-from prj.util.PlatformUtil import Platforms
-from prj.util.CommonSettings import ConfigFileName
+from mtm.util.PlatformUtil import Platforms
+from mtm.util.CommonSettings import ConfigFileName
 
-import prj.ioc.Container as Container
-from prj.ioc.Inject import Inject
-from prj.ioc.Inject import InjectMany
-from prj.ioc.Inject import InjectOptional
-import prj.ioc.IocAssertions as Assertions
+import mtm.ioc.Container as Container
+from mtm.ioc.Inject import Inject
+from mtm.ioc.Inject import InjectMany
+from mtm.ioc.Inject import InjectOptional
+import mtm.ioc.IocAssertions as Assertions
 
 from prj.main.ProjectSchemaLoader import ProjectConfigFileName
 

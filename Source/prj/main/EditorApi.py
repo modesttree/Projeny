@@ -1,20 +1,20 @@
 
 import os
 import traceback
-from prj.log.LogStreamFile import LogStreamFile
+from mtm.log.LogStreamFile import LogStreamFile
 import prj.main.Prj as Prj
 
-import prj.util.YamlSerializer as YamlSerializer
-from prj.log.LogStreamConsoleHeadingsOnly import LogStreamConsoleHeadingsOnly
-import prj.ioc.Container as Container
-from prj.ioc.Inject import Inject
-import prj.ioc.IocAssertions as Assertions
+import mtm.util.YamlSerializer as YamlSerializer
+from mtm.log.LogStreamConsoleHeadingsOnly import LogStreamConsoleHeadingsOnly
+import mtm.ioc.Container as Container
+from mtm.ioc.Inject import Inject
+import mtm.ioc.IocAssertions as Assertions
 import sys
-import prj.util.MiscUtil as MiscUtil
+import mtm.util.MiscUtil as MiscUtil
 
-from prj.util.PlatformUtil import Platforms
-import prj.util.PlatformUtil as PlatformUtil
-from prj.util.Assert import *
+from mtm.util.PlatformUtil import Platforms
+import mtm.util.PlatformUtil as PlatformUtil
+from mtm.util.Assert import *
 
 class Runner:
     _log = Inject('Logger')

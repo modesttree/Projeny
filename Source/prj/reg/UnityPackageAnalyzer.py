@@ -1,6 +1,6 @@
 
 import os
-from prj.util.Assert import *
+from mtm.util.Assert import *
 from prj.reg.ReleaseInfo import ReleaseInfo, AssetStoreInfo
 import binascii
 import re
@@ -9,8 +9,8 @@ from datetime import datetime
 import json
 
 
-from prj.ioc.Inject import Inject
-from prj.ioc.Inject import InjectMany
+from mtm.ioc.Inject import Inject
+from mtm.ioc.Inject import InjectMany
 
 class UnityPackageAnalyzer:
     _log = Inject('Logger')
@@ -119,14 +119,14 @@ class UnityPackageAnalyzer:
 
 if __name__ == '__main__':
 
-    import prj.ioc.Container as Container
-    from prj.config.Config import Config
-    from prj.util.ScriptRunner import ScriptRunner
-    from prj.util.VarManager import VarManager
-    from prj.log.Logger import Logger
-    from prj.util.SystemHelper import SystemHelper
-    from prj.util.ProcessRunner import ProcessRunner
-    from prj.log.LogStreamConsole import LogStreamConsole
+    import mtm.ioc.Container as Container
+    from mtm.config.Config import Config
+    from mtm.util.ScriptRunner import ScriptRunner
+    from mtm.util.VarManager import VarManager
+    from mtm.log.Logger import Logger
+    from mtm.util.SystemHelper import SystemHelper
+    from mtm.util.ProcessRunner import ProcessRunner
+    from mtm.log.LogStreamConsole import LogStreamConsole
 
     Container.bind('Config').toSingle(Config, [])
     Container.bind('Logger').toSingle(Logger)

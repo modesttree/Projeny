@@ -1,25 +1,25 @@
 
-import prj.ioc.Container as Container
-from prj.log.Logger import Logger
-from prj.log.LogStreamConsole import LogStreamConsole
-from prj.util.SystemHelper import SystemHelper
+import mtm.ioc.Container as Container
+from mtm.log.Logger import Logger
+from mtm.log.LogStreamConsole import LogStreamConsole
+from mtm.util.SystemHelper import SystemHelper
 
 import tempfile
 
-from prj.ioc.Inject import Inject
-from prj.ioc.Inject import InjectMany
-import prj.ioc.IocAssertions as Assertions
+from mtm.ioc.Inject import Inject
+from mtm.ioc.Inject import InjectMany
+import mtm.ioc.IocAssertions as Assertions
 
-from prj.util.ScriptRunner import ScriptRunner
-from prj.util.VarManager import VarManager
-from prj.config.Config import Config
+from mtm.util.ScriptRunner import ScriptRunner
+from mtm.util.VarManager import VarManager
+from mtm.config.Config import Config
 
 import shutil
 
 import os
 
-from prj.util.ProcessRunner import ProcessRunner
-from prj.util.Assert import *
+from mtm.util.ProcessRunner import ProcessRunner
+from mtm.util.Assert import *
 
 class UnityPackageExtractor:
     _log = Inject('Logger')

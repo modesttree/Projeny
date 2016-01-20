@@ -1,16 +1,16 @@
 
-import prj.ioc.Container as Container
-from prj.ioc.Inject import Inject
-from prj.ioc.Inject import InjectMany
-import prj.ioc.IocAssertions as Assertions
-import prj.util.MiscUtil as MiscUtil
+import mtm.ioc.Container as Container
+from mtm.ioc.Inject import Inject
+from mtm.ioc.Inject import InjectMany
+import mtm.ioc.IocAssertions as Assertions
+import mtm.util.MiscUtil as MiscUtil
 
-from prj.util.CommonSettings import ConfigFileName
+from mtm.util.CommonSettings import ConfigFileName
 
 import win32api
 import win32com.client
 
-from prj.util.Assert import *
+from mtm.util.Assert import *
 
 class VisualStudioHelper:
     _log = Inject('Logger')

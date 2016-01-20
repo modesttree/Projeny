@@ -1,13 +1,13 @@
 
-from prj.ioc.Inject import Inject
-from prj.ioc.Inject import InjectMany
-import prj.ioc.IocAssertions as Assertions
+from mtm.ioc.Inject import Inject
+from mtm.ioc.Inject import InjectMany
+import mtm.ioc.IocAssertions as Assertions
 
 from prj.reg.ReleaseInfo import ReleaseInfo
 import prj.reg.UnityPackageAnalyzer as UnityPackageAnalyzer
 
 
-from prj.util.Assert import *
+from mtm.util.Assert import *
 
 class FileInfo:
     def __init__(self, path, release):
