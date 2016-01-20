@@ -71,6 +71,9 @@ class PrjRunner:
         if self._args.init:
             self._packageMgr.updateLinksForAllProjects()
 
+        if self._args.initLinks:
+            self._packageMgr.checkProjectInitialized(self._project, self._platform)
+
         if self._args.updateLinks:
             self._packageMgr.updateProjectJunctions(self._project, self._platform)
 

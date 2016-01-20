@@ -72,6 +72,8 @@ def addArguments(parser):
     parser.add_argument('-lpa', '--listPackages', action='store_true', help='Lists all the directories found in the UnityPackages directory')
     parser.add_argument('-dpa', '--deletePackage', metavar='PACKAGE_NAME', type=str, help="Deletes the directory at UnityPackages/x where x is the given value")
 
+    parser.add_argument('-il', '--initLinks', action='store_true', help="This is the same as -ul except it will only update the directories if they haven't been updated at all yet")
+
     # Releases
     parser.add_argument('-ins', '--installRelease', type=str, nargs=2, metavar=('RELEASE_NAME', 'RELEASE_VERSION'), help="Searches all release sources for the given release with given version")
     parser.add_argument('-lr', '--listReleases', action='store_true', help='Lists all releases found from all release sources')
