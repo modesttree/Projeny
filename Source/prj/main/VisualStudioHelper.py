@@ -70,6 +70,7 @@ class VisualStudioHelper:
         self.buildVisualStudioProject(solutionPath, 'Debug')
 
     def buildVisualStudioProject(self, solutionPath, buildConfig):
+        solutionPath = self._varMgr.expand(solutionPath)
         if self._config.getBool('Compilation', 'UseDevenv'):
             buildCommand = '"[VisualStudioCommandLinePath]" {0} /build "{1}"'.format(solutionPath, buildConfig)
         else:

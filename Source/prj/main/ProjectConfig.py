@@ -6,6 +6,6 @@ class ProjectConfig:
         self.pluginsFolder = []
         self.assetsFolder = []
         self.solutionProjects = []
-        self.solutionFolders = {}
+        self.solutionFolders = []
         self.assemblyProject = None
 

@@ -74,6 +74,14 @@ class PrjRunner:
         if self._args.updateLinks:
             self._packageMgr.updateProjectJunctions(self._project, self._platform)
 
+        if self._args.buildPrebuild:
+            solutionPath = self._config.tryGetString(None, 'Prebuild', 'SolutionPath')
+
+            if solutionPath != None:
+                self._log.heading('Building {0}'.format(os.path.basename(self._varMgr.expandPath(solutionPath))))
+                config = self._config.tryGetString('Debug', 'Prebuild', 'SolutionConfig')
+                self._vsSolutionHelper.buildVisualStudioProject(solutionPath, config)
+
         if self._args.updateUnitySolution:
             self._vsSolutionHelper.updateUnitySolution(self._project, self._platform)
 

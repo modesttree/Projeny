@@ -85,6 +85,7 @@ def addArguments(parser):
     parser.add_argument('-b', '--buildCustomSolution', action='store_true', help='Build the generated custom solution for the given project')
     parser.add_argument('-ocs', '--openCustomSolution', action='store_true', help='Open the solution for the given project/platform in visual studio')
     parser.add_argument('-bf', '--buildFull', action='store_true', help='Perform a full build of the given project, including updating directory links, generating the C# solution, and building the solution')
+    parser.add_argument('-bpb', '--buildPrebuild', action='store_true', help='Build the prebuild solution, if set.')
 
     # Misc
     parser.add_argument('-epy', '--editProjectYaml', action='store_true', help='Opens up the {0} for the given project'.format(ProjectConfigFileName))
@@ -144,6 +145,7 @@ def installBindings(mainConfigPath = None):
 
 def processArgs(args):
     if args.buildFull:
+        args.buildPrebuild = True
         args.updateLinks = True
         args.updateUnitySolution = True
         args.updateCustomSolution = True
