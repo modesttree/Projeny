@@ -1,47 +1,69 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{463BDB34-890F-4375-A79F-37950F5457DC}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>YamlDotNet</RootNamespace>
     <AssemblyName>YamlDotNet</AssemblyName>
+    <SignAssembly>false</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\YamlDotNet.snk</AssemblyOriginatorKeyFile>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
+    <IsWebBootstrapper>true</IsWebBootstrapper>
+    <PublishUrl>http://localhost/YamlDotNet.Core/</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Web</InstallFrom>
+    <UpdateEnabled>true</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <ImportPortableTargets>false</ImportPortableTargets>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Unity Release|AnyCPU'">
+      <OutputPath>..\..\Bin\UnityPlugin\Debug\</OutputPath>
+      <IntermediateOutputPath>..\..\Temp\obj\Debug\</IntermediateOutputPath>
+      <BaseIntermediateOutputPath>..\..\Temp\obj\Debug\</BaseIntermediateOutputPath>
+      <DefineConstants>TRACE;UNITY</DefineConstants>
+      <Optimize>true</Optimize>
+      <NoWarn>1591</NoWarn>
+      <DebugType>pdbonly</DebugType>
+      <PlatformTarget>AnyCPU</PlatformTarget>
+      <ErrorReport>prompt</ErrorReport>
+      <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+      <TargetFrameworkProfile>Unity Subset v3.5</TargetFrameworkProfile>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>..\..\Projeny\Lib\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Unity Debug|AnyCPU'">
+      <DebugSymbols>true</DebugSymbols>
+      <OutputPath>..\..\Bin\UnityPlugin\Debug\</OutputPath>
+      <IntermediateOutputPath>..\..\Temp\obj\Debug\</IntermediateOutputPath>
+      <BaseIntermediateOutputPath>..\..\Temp\obj\Debug\</BaseIntermediateOutputPath>
+      <DefineConstants>CODE_ANALYSIS;DEBUG;TRACE;UNITY</DefineConstants>
+      <NoWarn>1591</NoWarn>
+      <DebugType>full</DebugType>
+      <PlatformTarget>AnyCPU</PlatformTarget>
+      <ErrorReport>prompt</ErrorReport>
+      <TargetFrameworkProfile>Unity Subset v3.5</TargetFrameworkProfile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Data" />
+    <Reference Include="System.Core" />
     <Reference Include="System.Xml" />
-    <Reference Include="UnityEditor">
-      <HintPath>..\Unity\UnityEditor.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="UnityEngine">
-      <HintPath>..\Unity\UnityEngine.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\AnchorNotFoundException.cs" />
@@ -58,11 +80,11 @@
     <Compile Include="Core\Events\DocumentStart.cs" />
     <Compile Include="Core\Events\EventType.cs" />
     <Compile Include="Core\Events\IParsingEventVisitor.cs" />
-    <Compile Include="Core\Events\MappingEnd.cs" />
-    <Compile Include="Core\Events\MappingStart.cs" />
     <Compile Include="Core\Events\MappingStyle.cs" />
     <Compile Include="Core\Events\NodeEvent.cs" />
     <Compile Include="Core\Events\ParsingEvent.cs" />
+    <Compile Include="Core\Events\MappingEnd.cs" />
+    <Compile Include="Core\Events\MappingStart.cs" />
     <Compile Include="Core\Events\Scalar.cs" />
     <Compile Include="Core\Events\SequenceEnd.cs" />
     <Compile Include="Core\Events\SequenceStart.cs" />
@@ -82,20 +104,21 @@
     <Compile Include="Core\MergingParser.cs" />
     <Compile Include="Core\Parser.cs" />
     <Compile Include="Core\ParserState.cs" />
-    <Compile Include="Core\ScalarStyle.cs" />
+    <Compile Include="Core\Tokens\Comment.cs" />
+    <Compile Include="Helpers\Portability.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Core\Scanner.cs" />
     <Compile Include="Core\SemanticErrorException.cs" />
     <Compile Include="Core\SimpleKey.cs" />
     <Compile Include="Core\StringLookAheadBuffer.cs" />
     <Compile Include="Core\SyntaxErrorException.cs" />
     <Compile Include="Core\TagDirectiveCollection.cs" />
-    <Compile Include="Core\Tokens\Anchor.cs" />
     <Compile Include="Core\Tokens\AnchorAlias.cs" />
+    <Compile Include="Core\Tokens\Anchor.cs" />
     <Compile Include="Core\Tokens\BlockEnd.cs" />
     <Compile Include="Core\Tokens\BlockEntry.cs" />
     <Compile Include="Core\Tokens\BlockMappingStart.cs" />
     <Compile Include="Core\Tokens\BlockSequenceStart.cs" />
-    <Compile Include="Core\Tokens\Comment.cs" />
     <Compile Include="Core\Tokens\DocumentEnd.cs" />
     <Compile Include="Core\Tokens\DocumentStart.cs" />
     <Compile Include="Core\Tokens\FlowEntry.cs" />
@@ -105,6 +128,7 @@
     <Compile Include="Core\Tokens\FlowSequenceStart.cs" />
     <Compile Include="Core\Tokens\Key.cs" />
     <Compile Include="Core\Tokens\Scalar.cs" />
+    <Compile Include="Core\ScalarStyle.cs" />
     <Compile Include="Core\Tokens\StreamEnd.cs" />
     <Compile Include="Core\Tokens\StreamStart.cs" />
     <Compile Include="Core\Tokens\Tag.cs" />
@@ -114,13 +138,6 @@
     <Compile Include="Core\Tokens\VersionDirective.cs" />
     <Compile Include="Core\Version.cs" />
     <Compile Include="Core\YamlException.cs" />
-    <Compile Include="Examples\Deserializing_an_object_graph.cs" />
-    <Compile Include="Examples\Deserializing_multiple_documents.cs" />
-    <Compile Include="Examples\Loading_a_YAML_stream.cs" />
-    <Compile Include="Examples\Serializing_an_object_graph.cs" />
-    <Compile Include="Examples\Validating_during_deserialization.cs" />
-    <Compile Include="Helpers\Portability.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RepresentationModel\DocumentLoadingState.cs" />
     <Compile Include="RepresentationModel\EmitterState.cs" />
     <Compile Include="RepresentationModel\IYamlVisitor.cs" />
@@ -190,6 +207,7 @@
     <Compile Include="Serialization\Serializer.cs" />
     <Compile Include="Serialization\StreamFragment.cs" />
     <Compile Include="Serialization\TagMappings.cs" />
+    <Compile Include="Serialization\TypeInspectors\CachedTypeInspector.cs" />
     <Compile Include="Serialization\TypeInspectors\NamingConventionTypeInspector.cs" />
     <Compile Include="Serialization\TypeInspectors\ReadableAndWritablePropertiesTypeInspector.cs" />
     <Compile Include="Serialization\TypeInspectors\ReadablePropertiesTypeInspector.cs" />
@@ -212,10 +230,38 @@
     <Compile Include="Serialization\YamlMember.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Readme.txt" />
-    <Content Include="YamlDotNet.license.txt" />
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 2.0 %28x86%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.0 %28x86%29</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <None Include="YamlDotNet.Signed.nuspec" />
+    <None Include="YamlDotNet.Unsigned.nuspec" />
+  </ItemGroup>
+  <Import Condition="'$(ImportPortableTargets)' == 'false'" Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Condition="'$(ImportPortableTargets)' == 'true'" Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

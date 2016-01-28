@@ -36,6 +36,26 @@ namespace YamlDotNet.Serialization.Utilities
 	/// </summary>
 	public static class TypeConverter
 	{
+#if !(PORTABLE || UNITY)
+		/// <summary>
+		/// Registers a <see cref="System.ComponentModel.TypeConverter"/> dynamically.
+		/// </summary>
+		/// <typeparam name="TConvertible">The type to which the coverter should be associated.</typeparam>
+		/// <typeparam name="TConverter">The type of the converter.</typeparam>
+		[System.Security.Permissions.PermissionSet(System.Security.Permissions.SecurityAction.LinkDemand, Name = "FullTrust")]
+		public static void RegisterTypeConverter<TConvertible, TConverter>()
+			where TConverter : System.ComponentModel.TypeConverter
+		{
+			var alreadyRegistered = TypeDescriptor.GetAttributes(typeof(TConvertible))
+				.OfType<TypeConverterAttribute>()
+				.Any(a => a.ConverterTypeName == typeof(TConverter).AssemblyQualifiedName);
+
+			if (!alreadyRegistered)
+			{
+				TypeDescriptor.AddAttributes(typeof(TConvertible), new TypeConverterAttribute(typeof(TConverter)));
+			}
+		}
+#endif
 
 		/// <summary>
 		/// Converts the specified value.
@@ -148,6 +168,7 @@ namespace YamlDotNet.Serialization.Utilities
 					return true;
 			}
 
+#if !PORTABLE
 			// Try with the source type's converter
 			var sourceConverter = TypeDescriptor.GetConverter(value);
 			if (sourceConverter != null && sourceConverter.CanConvertTo(destinationType))
@@ -161,6 +182,7 @@ namespace YamlDotNet.Serialization.Utilities
 			{
 				return destinationConverter.ConvertFrom(null, culture, value);
 			}
+#endif
 
 			// Try to find a casting operator in the source or destination type
 			foreach (var type in new[] { sourceType, destinationType })

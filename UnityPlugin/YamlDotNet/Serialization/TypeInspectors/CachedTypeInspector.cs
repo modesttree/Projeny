@@ -1,16 +1,16 @@
 //  This file is part of YamlDotNet - A .NET library for YAML.
 //  Copyright (c) Antoine Aubry and contributors
-    
+
 //  Permission is hereby granted, free of charge, to any person obtaining a copy of
 //  this software and associated documentation files (the "Software"), to deal in
 //  the Software without restriction, including without limitation the rights to
 //  use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 //  of the Software, and to permit persons to whom the Software is furnished to do
 //  so, subject to the following conditions:
-    
+
 //  The above copyright notice and this permission notice shall be included in all
 //  copies or substantial portions of the Software.
-    
+
 //  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 //  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 //  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,49 +20,37 @@
 //  SOFTWARE.
 
 using System;
-using System.Runtime.Serialization;
+using System.Collections.Generic;
+using System.Linq;
 
-namespace YamlDotNet.Core
+namespace YamlDotNet.Serialization.TypeInspectors
 {
 	/// <summary>
-	/// The exception that is thrown when an alias references an anchor that does not exist.
+	/// Wraps another <see cref="ITypeInspector"/> and applies caching.
 	/// </summary>
-	[Serializable]
-	public class AnchorNotFoundException : YamlException
+	public sealed class CachedTypeInspector : TypeInspectorSkeleton
 	{
-		/// <summary>
-		/// Initializes a new instance of the <see cref="AnchorNotFoundException"/> class.
-		/// </summary>
-		public AnchorNotFoundException()
+		private readonly ITypeInspector innerTypeDescriptor;
+		private readonly Dictionary<Type, List<IPropertyDescriptor>> cache = new Dictionary<Type, List<IPropertyDescriptor>>();
+
+		public CachedTypeInspector(ITypeInspector innerTypeDescriptor)
 		{
+			if (innerTypeDescriptor == null)
+			{
+				throw new ArgumentNullException("innerTypeDescriptor");
+			}
+
+			this.innerTypeDescriptor = innerTypeDescriptor;
 		}
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="AnchorNotFoundException"/> class.
-		/// </summary>
-		/// <param name="message">The message.</param>
-		public AnchorNotFoundException(string message)
-			: base(message)
+		public override IEnumerable<IPropertyDescriptor> GetProperties(Type type, object container)
 		{
+			List<IPropertyDescriptor> list;
+			if (!cache.TryGetValue(type, out list))
+			{
+				list = new List<IPropertyDescriptor>(innerTypeDescriptor.GetProperties(type, container));
+			}
+			return list;
 		}
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="AnchorNotFoundException"/> class.
-		/// </summary>
-		public AnchorNotFoundException(Mark start, Mark end, string message)
-			: base(start, end, message)
-		{
-		}
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="AnchorNotFoundException"/> class.
-		/// </summary>
-		/// <param name="message">The message.</param>
-		/// <param name="inner">The inner.</param>
-		public AnchorNotFoundException(string message, Exception inner)
-			: base(message, inner)
-		{
-		}
-
 	}
 }
