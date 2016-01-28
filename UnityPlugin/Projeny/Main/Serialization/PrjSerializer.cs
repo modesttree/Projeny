@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
+using ModestTree;
 using UnityEngine;
 
 namespace Projeny.Internal
@@ -31,11 +33,12 @@ namespace Projeny.Internal
         {
             return new ProjectConfigInternal()
             {
-                AssetsFolder = info.AssetsFolder.ToList(),
-                PluginsFolder = info.PluginsFolder.ToList(),
-                SolutionProjects = info.SolutionProjects.ToList(),
-                Prebuilt = info.Prebuilt.ToList(),
-                SolutionFolders = info.SolutionFolders.ToDictionary(x => x.Key, x => x.Value),
+                ProjectSettingsPath = info.ProjectSettingsPath,
+                AssetsFolder = info.AssetsFolder.IsEmpty() ? null : info.AssetsFolder.ToList(),
+                PluginsFolder = info.PluginsFolder.IsEmpty() ? null : info.PluginsFolder.ToList(),
+                SolutionProjects = info.SolutionProjects.IsEmpty() ? null : info.SolutionProjects.ToList(),
+                Prebuilt = info.Prebuilt.IsEmpty() ? null : info.Prebuilt.ToList(),
+                SolutionFolders = info.SolutionFolders.IsEmpty() ? null : info.SolutionFolders.Select(x => new Dictionary<string, string>() { { x.Key, x.Value } } ).ToList(),
             };
         }
 
@@ -47,6 +50,8 @@ namespace Projeny.Internal
             }
 
             var newInfo = new ProjectConfig();
+
+            newInfo.ProjectSettingsPath = info.ProjectSettingsPath;
 
             if (info.AssetsFolder != null)
             {
@@ -70,7 +75,7 @@ namespace Projeny.Internal
 
             if (info.SolutionFolders != null)
             {
-                newInfo.SolutionFolders = info.SolutionFolders.ToDictionary(x => x.Key, x => x.Value);
+                newInfo.SolutionFolders = info.SolutionFolders.Select(x => x.Single()).ToList();
             }
 
             return newInfo;
@@ -249,6 +254,12 @@ namespace Projeny.Internal
 
         class ProjectConfigInternal
         {
+            public string ProjectSettingsPath
+            {
+                get;
+                set;
+            }
+
             public List<string> AssetsFolder
             {
                 get;
@@ -273,7 +284,7 @@ namespace Projeny.Internal
                 set;
             }
 
-            public Dictionary<string, string> SolutionFolders
+            public List<Dictionary<string, string>> SolutionFolders
             {
                 get;
                 set;

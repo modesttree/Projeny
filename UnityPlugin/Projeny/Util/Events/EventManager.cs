@@ -5,9 +5,13 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using UnityEngine;
+using ModestTree.Util;
 
-namespace Projeny.Internal
+#if UNITY3D
+using UnityEngine;
+#endif
+
+namespace ModestTree.Util
 {
     [Flags]
     public enum EventQueueMode
@@ -21,6 +25,11 @@ namespace Projeny.Internal
         LatestOnly,
         // Call the handler with the earliest received event info when Flush() is called (max one per Flush())
         FirstOnly,
+        // With these set, the event(s) will not be triggered if Flush()
+        // is called in the same frame in which it was originally invoked
+        AllNextFrame,
+        LatestOnlyNextFrame,
+        FirstOnlyNextFrame,
     }
 
     // Responsibilities:
@@ -30,6 +39,13 @@ namespace Projeny.Internal
     {
         Dictionary<EventHandlerKey, HandlerInfo> _handlers = new Dictionary<EventHandlerKey, HandlerInfo>();
         List<QueueEntry> _queue = new List<QueueEntry>();
+        IFrameCounter _frameCounter;
+
+        [Preserve]
+        public EventManager(IFrameCounter frameCounter)
+        {
+            _frameCounter = frameCounter;
+        }
 
         public int NumListeners
         {
@@ -45,6 +61,11 @@ namespace Projeny.Internal
             {
                 _queue.Remove(entry);
             }
+        }
+
+        bool IsProfilingEnabled()
+        {
+            return false;
         }
 
         public void OnRemoteInvoked(EventHandlerKey key, object[] args)
@@ -68,6 +89,7 @@ namespace Projeny.Internal
             {
                 HandlerInfo = handlerInfo,
                 InvocationArguments = args,
+                FrameNumber = (_frameCounter == null ? 0 : _frameCounter.FrameCount),
             };
 
             if (handlerInfo.Mode == EventQueueMode.Synchronous)
@@ -90,11 +112,13 @@ namespace Projeny.Internal
                     Assert.IsEqual(queue.Where(x => x.HandlerInfo == handlerInfo).Count(), 0);
                     break;
                 }
+                case EventQueueMode.AllNextFrame:
                 case EventQueueMode.All:
                 {
                     // Do nothing, trigger all events
                     break;
                 }
+                case EventQueueMode.LatestOnlyNextFrame:
                 case EventQueueMode.LatestOnly:
                 {
                     // Remove all but the last one
@@ -105,6 +129,7 @@ namespace Projeny.Internal
 
                     break;
                 }
+                case EventQueueMode.FirstOnlyNextFrame:
                 case EventQueueMode.FirstOnly:
                 {
                     // Remove all but the first one
@@ -123,6 +148,18 @@ namespace Projeny.Internal
             }
         }
 
+        bool ShouldProcessThisFrame(QueueEntry entry)
+        {
+            // If queue mode is NextFrame then only process events that occurred on a previous frame
+            if (entry.HandlerInfo.Mode == EventQueueMode.LatestOnlyNextFrame || entry.HandlerInfo.Mode == EventQueueMode.AllNextFrame)
+            {
+                Assert.IsNotNull(_frameCounter);
+                return entry.FrameNumber < _frameCounter.FrameCount;
+            }
+
+            return true;
+        }
+
         public void Flush()
         {
             if (_queue.IsEmpty())
@@ -130,8 +167,9 @@ namespace Projeny.Internal
                 return;
             }
 
-            var entriesToProcess = _queue.ToList();
-            _queue.Clear();
+            var entriesToProcess = _queue.Where(ShouldProcessThisFrame).ToList();
+
+            _queue.RemoveAll(ShouldProcessThisFrame);
 
             foreach (var handlerInfo in _handlers.Values)
             {
@@ -154,6 +192,11 @@ namespace Projeny.Internal
             }
         }
 
+        string GetDelegateMethodName(Delegate del)
+        {
+            return del.Target.GetType().Name + "." + del.Method.Name;
+        }
+
         void TriggerEvent(QueueEntry entry)
         {
             Delegate localDel;
@@ -162,7 +205,17 @@ namespace Projeny.Internal
             Assert.IsNotNull(entry.HandlerInfo.LocalDelegate);
             localDel = entry.HandlerInfo.LocalDelegate;
 
-            localDel.DynamicInvoke(entry.InvocationArguments);
+            if (IsProfilingEnabled())
+            {
+                using (ProfileBlock.Start(GetDelegateMethodName(localDel)))
+                {
+                    localDel.DynamicInvoke(entry.InvocationArguments);
+                }
+            }
+            else
+            {
+                localDel.DynamicInvoke(entry.InvocationArguments);
+            }
         }
 
         public void AssertIsEmpty()
@@ -182,6 +235,13 @@ namespace Projeny.Internal
 
                 Assert.That(false, output.ToString());
             }
+        }
+
+        // This method can be used to trigger anonymous delegates
+        // Assumes that the given delegate is unique
+        public void TriggerOneOffNextFrame(Action localDelegate)
+        {
+            TriggerOneOff(localDelegate, EventQueueMode.AllNextFrame);
         }
 
         // This method can be used to trigger anonymous delegates
@@ -512,6 +572,7 @@ namespace Projeny.Internal
         {
             public HandlerInfo HandlerInfo;
             public object[] InvocationArguments;
+            public int FrameNumber;
         }
 
         public class HandlerInfo

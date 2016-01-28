@@ -10,7 +10,7 @@ import mtm.ioc.IocAssertions as Assertions
 from mtm.util.Assert import *
 import mtm.util.MiscUtil as MiscUtil
 import mtm.util.PlatformUtil as PlatformUtil
-from mtm.util.PlatformUtil import Platforms
+from mtm.util.Platforms import Platforms
 
 from mtm.util.SystemHelper import ProcessErrorCodeException
 
@@ -33,25 +33,25 @@ class UnityHelper:
         pass
 
     def onUnityLog(self, logStr):
-        self._log.debug(logStr)
+        self._log.noise(logStr)
 
-    def runEditorFunction(self, projectName, platform, editorCommand, batchMode = True, quitAfter = True, extraExtraArgs = ''):
-        extraArgs = ''
+    def runEditorFunction(self, projectName, platform, editorCommand, batchMode = True, quitAfter = True, extraArgs = ''):
+        allArgs = ''
 
         if quitAfter:
-            extraArgs += ' -quit'
+            allArgs += ' -quit'
 
         if batchMode:
-            extraArgs += ' -batchmode -nographics'
+            allArgs += ' -batchmode -nographics'
 
-        extraArgs += ' ' + extraExtraArgs
+        allArgs += ' ' + extraArgs
 
-        self.runEditorFunctionRaw(projectName, platform, editorCommand, extraArgs)
+        self.runEditorFunctionRaw(projectName, platform, editorCommand, allArgs)
 
     def openUnity(self, projectName, platform):
-        self._log.heading('Opening Unity')
-        projectPath = self._sys.canonicalizePath("[UnityProjectsDir]/{0}/{1}-{2}".format(projectName, self._commonSettings.getShortProjectName(projectName), PlatformUtil.toPlatformFolderName(platform)))
-        self._sys.executeNoWait('"[UnityExePath]" -buildTarget {0} -projectPath "{1}"'.format(self._getBuildTargetArg(platform), projectPath))
+        with self._log.heading('Opening Unity'):
+            projectPath = self._sys.canonicalizePath("[UnityProjectsDir]/{0}/{1}-{2}".format(projectName, self._commonSettings.getShortProjectName(projectName), PlatformUtil.toPlatformFolderName(platform)))
+            self._sys.executeNoWait('"[UnityExePath]" -buildTarget {0} -projectPath "{1}"'.format(self._getBuildTargetArg(platform), projectPath))
 
     def _getBuildTargetArg(self, platform):
 

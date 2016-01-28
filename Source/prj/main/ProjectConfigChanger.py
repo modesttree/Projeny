@@ -8,9 +8,9 @@ from mtm.ioc.Inject import Inject
 from mtm.ioc.Inject import InjectMany
 import mtm.ioc.IocAssertions as Assertions
 
-from mtm.util.PlatformUtil import Platforms
+from mtm.util.Platforms import Platforms
 
-from prj.main.ProjectSchemaLoader import ProjectConfigFileName
+from prj.main.ProjenyConstants import ProjectConfigFileName
 from prj.main.ProjectConfig import ProjectConfig
 
 class ProjectConfigChanger:
@@ -39,20 +39,18 @@ class ProjectConfigChanger:
         self._sys.writeFileAsText(configPath, YamlSerializer.serialize(projectConfig))
 
     def addPackage(self, projectName, packageName):
-        self._log.heading('Adding package {0} to project {1}'.format(packageName, projectName))
+        with self._log.heading('Adding package {0} to project {1}'.format(packageName, projectName)):
+            assertThat(packageName in self._packageManager.getAllPackageNames(), "Could not find the given package '{0}' in the UnityPackages folder", packageName)
+            self._packageManager.setPathsForProject(projectName, Platforms.Windows)
 
-        assertThat(packageName in self._packageManager.getAllPackageNames(), "Could not find the given package '{0}' in the UnityPackages folder", packageName)
+            projConfig = self._loadProjectConfig(projectName)
 
-        self._packageManager.setPathsForProject(projectName, Platforms.Windows)
+            assertThat(packageName not in projConfig.assetsFolder and packageName not in projConfig.pluginsFolder,
+               "Given package '{0}' has already been added to project config", packageName)
 
-        projConfig = self._loadProjectConfig(projectName)
+            projConfig.assetsFolder.append(packageName)
 
-        assertThat(packageName not in projConfig.assetsFolder and packageName not in projConfig.pluginsFolder,
-           "Given package '{0}' has already been added to project config", packageName)
+            self._saveProjectConfig(projectName, projConfig)
 
-        projConfig.assetsFolder.append(packageName)
-
-        self._saveProjectConfig(projectName, projConfig)
-
-        self._log.good("Added package '{0}' to file '{1}/{2}'", packageName, projectName, ProjectConfigFileName)
+            self._log.good("Added package '{0}' to file '{1}/{2}'", packageName, projectName, ProjectConfigFileName)
 

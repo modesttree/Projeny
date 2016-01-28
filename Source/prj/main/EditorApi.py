@@ -12,7 +12,7 @@ import mtm.ioc.IocAssertions as Assertions
 import sys
 import mtm.util.MiscUtil as MiscUtil
 
-from mtm.util.PlatformUtil import Platforms
+from mtm.util.Platforms import Platforms
 import mtm.util.PlatformUtil as PlatformUtil
 from mtm.util.Assert import *
 
@@ -20,7 +20,7 @@ class Runner:
     _log = Inject('Logger')
     _packageMgr = Inject('PackageManager')
     _unityHelper = Inject('UnityHelper')
-    _vsSolutionHelper = Inject('VisualStudioHelper')
+    _projVsHelper = Inject('ProjenyVisualStudioHelper')
     _releaseSourceManager = Inject('ReleaseSourceManager')
     _sys = Inject('SystemHelper')
     _varMgr = Inject('VarManager')
@@ -52,6 +52,9 @@ class Runner:
         if not succeeded:
             sys.exit(1)
 
+    def _outputAllPathVars(self):
+        sys.stderr.write(YamlSerializer.serialize(self._varMgr.getAllParameters()))
+
     def _runInternal(self):
         if self._requestId == 'updateLinks':
             self._packageMgr.updateProjectJunctions(self._project, self._platform)
@@ -63,11 +66,14 @@ class Runner:
         elif self._requestId == 'openPackagesFolder':
             os.startfile(self._varMgr.expandPath("[UnityPackagesDir]"))
 
+        elif self._requestId == 'getPathVars':
+            self._outputAllPathVars()
+
         elif self._requestId == 'updateCustomSolution':
-            self._vsSolutionHelper.updateCustomSolution(self._project, self._platform)
+            self._projVsHelper.updateCustomSolution(self._project, self._platform)
 
         elif self._requestId == 'openCustomSolution':
-            self._vsSolutionHelper.openCustomSolution(self._project, self._platform)
+            self._projVsHelper.openCustomSolution(self._project, self._platform)
 
         elif self._requestId == 'listPackages':
             infos = self._packageMgr.getAllPackageInfos()
@@ -116,13 +122,14 @@ def main():
     parser.add_argument("configPath", help="")
     parser.add_argument("project", help="")
     parser.add_argument('platform', type=str, choices=[x.lower() for x in Platforms.All], help='')
-    parser.add_argument('requestId', type=str, choices=['createProject', 'createPackage', 'deletePackage', 'installRelease', 'listReleases', 'listProjects', 'listPackages', 'updateLinks', 'updateCustomSolution', 'openCustomSolution', 'openUnity', 'openPackagesFolder'], help='')
+    parser.add_argument('requestId', type=str, choices=['createProject', 'createPackage', 'deletePackage', 'installRelease', 'listReleases', 'listProjects', 'listPackages', 'updateLinks', 'updateCustomSolution', 'openCustomSolution', 'openUnity', 'openPackagesFolder', 'getPathVars'], help='')
     parser.add_argument("param1", nargs='?', help="")
     parser.add_argument("param2", nargs='?', help="")
 
     args = parser.parse_args(sys.argv[1:])
 
     installBindings(args.configPath)
+    Prj.installPlugins()
 
     Runner().run(args.project, PlatformUtil.fromPlatformFolderName(args.platform), args.requestId, args.param1, args.param2)
 

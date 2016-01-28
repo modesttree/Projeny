@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using ModestTree;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEditor;
@@ -7,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Projeny.Internal;
 using System.Linq;
+using ModestTree.Util;
 
 namespace Projeny.Internal
 {
@@ -17,7 +19,7 @@ namespace Projeny.Internal
         readonly PmPackageHandler _packageHandler;
         readonly AsyncProcessor _asyncProcessor;
         readonly PmView _view;
-        readonly EventManager _eventManager = new EventManager();
+        readonly EventManager _eventManager = new EventManager(null);
 
         public PmPackageViewHandler(
             PmView view,
@@ -56,7 +58,7 @@ namespace Projeny.Internal
 
         public void OnClickedRefreshPackages()
         {
-            _asyncProcessor.Process(_packageHandler.RefreshPackagesAsync(), "Refreshing Packages");
+            _asyncProcessor.Process(_packageHandler.RefreshPackagesAsync(), true, "Refreshing Packages");
         }
 
         public void OnClickedCreateNewPackage()
@@ -233,7 +235,7 @@ namespace Projeny.Internal
         void OnContextMenuRefresh()
         {
             _asyncProcessor.Process(
-                _packageHandler.RefreshPackagesAsync(), "Refreshing Packages");
+                _packageHandler.RefreshPackagesAsync(), true, "Refreshing Packages");
         }
 
         void OnContextMenuEditPackageYamlSelected()
@@ -308,7 +310,7 @@ namespace Projeny.Internal
         void OnContextMenuDeleteSelected()
         {
             var selected = GetSelectedItems();
-            _asyncProcessor.Process(_packageHandler.DeletePackages(selected), "Deleting Packages");
+            _asyncProcessor.Process(_packageHandler.DeletePackages(selected), true, "Deleting Packages");
         }
 
         bool HasPackageYaml(PackageInfo info)
@@ -323,5 +325,4 @@ namespace Projeny.Internal
         }
     }
 }
-
 

@@ -7,6 +7,8 @@ using System.Collections;
 using System.Collections.Generic;
 using Projeny.Internal;
 using System.Linq;
+using ModestTree.Util;
+using ModestTree;
 
 namespace Projeny.Internal
 {
@@ -19,7 +21,7 @@ namespace Projeny.Internal
         readonly PmModel _model;
         readonly PmView _view;
 
-        readonly EventManager _eventManager = new EventManager();
+        readonly EventManager _eventManager = new EventManager(null);
 
         public PmVsSolutionViewHandler(
             PmModel model,
@@ -115,7 +117,7 @@ namespace Projeny.Internal
         public void OnClickedOpenSolution()
         {
             _asyncProcessor.Process(
-                OpenCustomSolutionAsync(), "Opening Visual Studio Solution");
+                OpenCustomSolutionAsync(), true, "Opening Visual Studio Solution");
         }
 
         IEnumerator OpenCustomSolutionAsync()
@@ -129,7 +131,7 @@ namespace Projeny.Internal
         public void OnClickedUpdateSolution()
         {
             _asyncProcessor.Process(
-                UpdateCustomSolutionAsync(), "Updating Visual Studio Solution");
+                UpdateCustomSolutionAsync(), true, "Updating Visual Studio Solution");
         }
 
         IEnumerator UpdateCustomSolutionAsync()

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using ModestTree;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEditor;
@@ -7,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Projeny.Internal;
 using System.Linq;
+using ModestTree.Util;
 
 namespace Projeny.Internal
 {
@@ -19,7 +21,7 @@ namespace Projeny.Internal
         readonly AsyncProcessor _asyncProcessor;
         readonly PmView _view;
         readonly PmModel _model;
-        readonly EventManager _eventManager = new EventManager();
+        readonly EventManager _eventManager = new EventManager(null);
 
         public PmReleasesViewHandler(
             PmModel model,
@@ -182,8 +184,7 @@ namespace Projeny.Internal
 
         public void OnClickedRefreshReleaseList()
         {
-            _asyncProcessor.Process(_releasesHandler.RefreshReleasesAsync(), "Refreshing Release List");
+            _asyncProcessor.Process(_releasesHandler.RefreshReleasesAsync(), true, "Refreshing Release List");
         }
     }
 }
-

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using ModestTree;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEditor;
@@ -38,11 +39,12 @@ namespace Projeny.Internal
         {
             var config = new ProjectConfig();
 
+            config.ProjectSettingsPath = _model.ProjectSettingsPath;
             config.AssetsFolder = _model.AssetItems.ToList();
             config.PluginsFolder = _model.PluginItems.ToList();
             config.SolutionProjects = _model.VsProjects.ToList();
             config.Prebuilt = _model.PrebuiltProjects.ToList();
-            config.SolutionFolders = _model.VsSolutionFolders.ToDictionary(x => x.Key, x => x.Value);
+            config.SolutionFolders = _model.VsSolutionFolders.ToList();
 
             return config;
         }
@@ -150,6 +152,8 @@ namespace Projeny.Internal
 
         void PopulateModelFromConfig(ProjectConfig config)
         {
+            _model.ProjectSettingsPath = config.ProjectSettingsPath;
+
             _model.ClearPluginItems();
             foreach (var name in config.PluginsFolder)
             {
@@ -182,5 +186,4 @@ namespace Projeny.Internal
         }
     }
 }
-
 

@@ -19,6 +19,7 @@ from mtm.util.ProcessRunner import ProcessRunner
 from mtm.util.JunctionHelper import JunctionHelper
 from prj.main.VisualStudioSolutionGenerator import VisualStudioSolutionGenerator
 from prj.main.VisualStudioHelper import VisualStudioHelper
+from prj.main.ProjenyVisualStudioHelper import ProjenyVisualStudioHelper
 from prj.main.ProjectSchemaLoader import ProjectSchemaLoader
 from mtm.util.ScriptRunner import ScriptRunner
 from mtm.util.CommonSettings import CommonSettings
@@ -27,7 +28,7 @@ from prj.reg.UnityPackageAnalyzer import UnityPackageAnalyzer
 
 from prj.main.ProjectConfigChanger import ProjectConfigChanger
 
-from prj.main.ProjectSchemaLoader import ProjectConfigFileName
+from prj.main.ProjenyConstants import ProjectConfigFileName
 
 from mtm.util.CommonSettings import ConfigFileName
 from prj.reg.ReleaseSourceManager import ReleaseSourceManager
@@ -52,7 +53,7 @@ def addArguments(parser):
     parser.add_argument('-pl', '--platform', type=str, default='win', choices=['win', 'webp', 'webgl', 'and', 'osx', 'ios', 'lin'], help='The platform to use.  If unspecified, windows is assumed.')
 
     # Script settinsg
-    parser.add_argument('-cfg', '--configPath', metavar='CONFIG_PATH', type=str, help="The path to the main {0} config file.  If unspecified, it will be assumed to exist at [CurrentDirectory]/{0}".format(ConfigFileName))
+    parser.add_argument('-cfg', '--configPath', metavar='CONFIG_PATH', type=str, help="The path to the _main {0} config file.  If unspecified, it will be assumed to exist at [CurrentDirectory]/{0}".format(ConfigFileName))
 
     parser.add_argument('-v', '--verbose', action='store_true', help='Output more detailed logging information to console')
     parser.add_argument('-vv', '--veryVerbose', action='store_true', help='Output absolutely all logging information to console.  This will result in the console output being identical to the contents of the log file')
@@ -60,16 +61,18 @@ def addArguments(parser):
 
     # Projects
     parser.add_argument('-lpr', '--listProjects', action='store_true', help='Display the list of all projects that are in the UnityProjects directory')
-    parser.add_argument('-cpr', '--createProject', action='store_true', help='Creates a new directory in the UnityProjects directory, adds a default {0} file, and sets up directory links'.format(ProjectConfigFileName))
     parser.add_argument('-ul', '--updateLinks', action='store_true', help='Updates directory links for the given project and the given platform')
     parser.add_argument('-clp', '--clearProjectGeneratedFiles', action='store_true', help='Remove all generated files for the given project.  This can be reversed easily by re-initializing the project')
     parser.add_argument('-cla', '--clearAllProjectGeneratedFiles', action='store_true', help='Remove all the generated files for all projects. This can be reversed easily by running the init command')
     parser.add_argument('-dal', '--deleteAllLinks', action='store_true', help='Delete all directory links for all subdirectories')
-    parser.add_argument('-dpr', '--deleteProject', metavar='PROJECT_NAME', type=str, help="Deletes the given project from the from UnityProjects directory")
+    parser.add_argument('-dpr', '--deleteProject', action='store_true', help='Deletes the given project from the from UnityProjects directory')
+
+    parser.add_argument('-cpr', '--createProject', action='store_true', help='Creates a new directory in the UnityProjects directory, adds a default {0} file, and sets up directory links'.format(ProjectConfigFileName))
 
     # Packages
     parser.add_argument('-cpa', '--createPackage', metavar='NEW_PACKAGE_NAME', type=str, help="Creates a new directory underneath the UnityPackages directory with the given name")
     parser.add_argument('-lpa', '--listPackages', action='store_true', help='Lists all the directories found in the UnityPackages directory')
+    parser.add_argument('-lupa', '--listUnusedPackages', action='store_true', help='Lists all the packages that are not used in any projects')
     parser.add_argument('-dpa', '--deletePackage', metavar='PACKAGE_NAME', type=str, help="Deletes the directory at UnityPackages/x where x is the given value")
 
     parser.add_argument('-il', '--initLinks', action='store_true', help="This is the same as -ul except it will only update the directories if they haven't been updated at all yet")
@@ -84,9 +87,10 @@ def addArguments(parser):
     # Visual Studio solution stuff
     parser.add_argument('-uus', '--updateUnitySolution', action='store_true', help='Equivalent to executing the menu option "Assets/Open C# Project" in unity (without actually opening it)')
     parser.add_argument('-ucs', '--updateCustomSolution', action='store_true', help='Updates the custom solution for the given project with the files found in the Assets/ folder.  It will also take settings from the generated unity solution such as defines, and references.')
-    parser.add_argument('-b', '--buildCustomSolution', action='store_true', help='Build the generated custom solution for the given project')
+    parser.add_argument('-bcs', '--buildCustomSolution', action='store_true', help='Build the generated custom solution for the given project')
     parser.add_argument('-ocs', '--openCustomSolution', action='store_true', help='Open the solution for the given project/platform in visual studio')
     parser.add_argument('-bf', '--buildFull', action='store_true', help='Perform a full build of the given project, including updating directory links, generating the C# solution, and building the solution')
+    parser.add_argument('-bfp', '--buildFullProject', action='store_true', help='Perform a full build of the given project only - that is, without doing the prebuild')
     parser.add_argument('-bpb', '--buildPrebuild', action='store_true', help='Build the prebuild solution, if set.')
 
     # Misc
@@ -95,36 +99,42 @@ def addArguments(parser):
     parser.add_argument('-ou', '--openUnity', action='store_true', help='Opens up Unity for the given project')
     parser.add_argument('-d', '--openDocumentation', action='store_true', help='Opens the documentation page in a web browser')
 
-def getProjenyDir():
-    # This works for both exe builds (Bin/Prj/Data/Prj.exe) and running from source (Source/prj/main/Prj.py) by coincidence
+def _getProjenyDir():
+
+    if not MiscUtil.isRunningAsExe():
+        scriptDir = os.path.dirname(os.path.realpath(__file__))
+        return os.path.join(scriptDir, '../../..')
+
+    # This works for both exe builds (Bin/Prj/Data/Prj.exe) and running from source (Source/prj/_main/Prj.py) by coincidence
     return os.path.join(MiscUtil.getExecDirectory(), '../../..')
 
-def getExtraUserConfigPaths():
+def _getExtraUserConfigPaths():
     return [os.path.join(os.path.expanduser('~'), ConfigFileName)]
 
-def installBindings(mainConfigPath = None):
+def installBindings(mainConfigPath):
 
-    projenyDir = getProjenyDir()
+    assertThat(mainConfigPath == None or os.path.isfile(mainConfigPath))
+
+    projenyDir = _getProjenyDir()
     projenyConfigPath = os.path.join(projenyDir, ConfigFileName)
 
     # Put the standard config first so it can be over-ridden by user settings
     configPaths = [projenyConfigPath]
 
-    if mainConfigPath:
-        assertThat(os.path.isfile(mainConfigPath), 'Could not find file at "{0}"', mainConfigPath)
-        configPaths += [mainConfigPath]
+    if mainConfigPath is not None:
+        configPaths.append(mainConfigPath)
 
-    configPaths += getExtraUserConfigPaths()
+    configPaths += _getExtraUserConfigPaths()
 
     Container.bind('Config').toSingle(Config, loadYamlFilesThatExist(*configPaths))
 
     initialVars = { 'ProjenyDir': projenyDir, }
 
-    if mainConfigPath:
+    if mainConfigPath != None:
         initialVars['ConfigDir'] = os.path.dirname(mainConfigPath)
 
     if not MiscUtil.isRunningAsExe():
-        initialVars['PythonPluginDir'] = getPluginDirPath()
+        initialVars['PythonPluginDir'] = _getPluginDirPath()
 
     Container.bind('VarManager').toSingle(VarManager, initialVars)
     Container.bind('SystemHelper').toSingle(SystemHelper)
@@ -136,62 +146,65 @@ def installBindings(mainConfigPath = None):
     Container.bind('JunctionHelper').toSingle(JunctionHelper)
     Container.bind('VisualStudioSolutionGenerator').toSingle(VisualStudioSolutionGenerator)
     Container.bind('VisualStudioHelper').toSingle(VisualStudioHelper)
+    Container.bind('ProjenyVisualStudioHelper').toSingle(ProjenyVisualStudioHelper)
     Container.bind('ProjectSchemaLoader').toSingle(ProjectSchemaLoader)
     Container.bind('CommonSettings').toSingle(CommonSettings)
     Container.bind('UnityPackageExtractor').toSingle(UnityPackageExtractor)
     Container.bind('ZipHelper').toSingle(ZipHelper)
     Container.bind('UnityPackageAnalyzer').toSingle(UnityPackageAnalyzer)
     Container.bind('ProjectConfigChanger').toSingle(ProjectConfigChanger)
+    Container.bind('PrjRunner').toSingle(PrjRunner)
 
     Container.bind('ReleaseSourceManager').toSingle(ReleaseSourceManager)
 
-def processArgs(args):
-    if args.buildFull:
-        args.buildPrebuild = True
-        args.updateLinks = True
-        args.updateUnitySolution = True
-        args.updateCustomSolution = True
-        args.buildCustomSolution = True
-
-def findFilesByPattern(directory, pattern):
+def _findFilesByPattern(directory, pattern):
     for root, dirs, files in os.walk(directory):
         for basename in files:
             if fnmatch.fnmatch(basename, pattern):
                 filename = os.path.join(root, basename)
                 yield filename
 
-def getPluginDirPath():
-    return os.path.join(MiscUtil.getExecDirectory(), '../../plugins')
+def _getPluginDirPath():
+    scriptDir = os.path.dirname(os.path.realpath(__file__))
+    return os.path.join(scriptDir, '../plugins')
 
 def installPlugins():
-
     if MiscUtil.isRunningAsExe():
         # Must be running from source for plugins
         return
 
     import importlib
 
-    pluginDir = getPluginDirPath()
+    pluginDir = _getPluginDirPath()
 
-    for filePath in findFilesByPattern(pluginDir, '*.py'):
+    for filePath in _findFilesByPattern(pluginDir, '*.py'):
         basePath = filePath[len(pluginDir) + 1:]
         basePath = os.path.splitext(basePath)[0]
         basePath = basePath.replace('\\', '.')
-        importlib.import_module('plugins.' + basePath)
+        importlib.import_module('prj.plugins.' + basePath)
 
-def tryGetMainConfigPath(args):
-    if args.configPath:
-        assertThat(os.path.isfile(args.configPath), "Could not find config file at '{0}'", args.configPath)
-        return args.configPath
+def _getParentDirsAndSelf(dirPath):
+    yield dirPath
 
-    configPathGuess = os.path.join(os.getcwd(), ConfigFileName)
+    lastParentDir = None
+    parentDir = os.path.dirname(dirPath)
 
-    if os.path.isfile(configPathGuess):
-        return configPathGuess
+    while parentDir and parentDir != lastParentDir:
+        yield parentDir
+
+        lastParentDir = parentDir
+        parentDir = os.path.dirname(parentDir)
+
+def tryFindMainConfigPath():
+    for dirPath in _getParentDirsAndSelf(os.getcwd()):
+        configPath = os.path.join(dirPath, ConfigFileName)
+
+        if os.path.isfile(configPath):
+            return configPath
 
     return None
 
-def main():
+def _main():
     # Here we split out some functionality into various methods
     # so that other python code can make use of them
     # if they want to extend projeny
@@ -207,15 +220,22 @@ def main():
 
     args = parser.parse_args(sys.argv[1:])
 
-    processArgs(args)
-
     Container.bind('LogStream').toSingle(LogStreamFile)
     Container.bind('LogStream').toSingle(LogStreamConsole, args.verbose, args.veryVerbose)
 
-    installBindings(tryGetMainConfigPath(args))
+    if args.configPath:
+        assertThat(os.path.isfile(args.configPath), "Could not find config file at '{0}'", args.configPath)
+        mainConfigPath = args.configPath
+    else:
+        mainConfigPath = tryFindMainConfigPath()
+
+        if mainConfigPath == None and not args.createConfig:
+            assertThat(False, "Could not find config file '{0}'", ConfigFileName)
+
+    installBindings(mainConfigPath)
     installPlugins()
 
-    PrjRunner().run(args)
+    Container.resolve('PrjRunner').run(args)
 
 if __name__ == '__main__':
 
@@ -226,7 +246,7 @@ if __name__ == '__main__':
     succeeded = True
 
     try:
-        main()
+        _main()
 
     except KeyboardInterrupt as e:
         print('Operation aborted by user by hitting CTRL+C')
@@ -242,3 +262,4 @@ if __name__ == '__main__':
 
     if not succeeded:
         sys.exit(1)
+

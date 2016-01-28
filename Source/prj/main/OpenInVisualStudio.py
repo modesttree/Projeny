@@ -10,7 +10,7 @@ import argparse
 
 from mtm.log.LogStreamConsole import LogStreamConsole
 
-from mtm.util.PlatformUtil import Platforms
+from mtm.util.Platforms import Platforms
 import mtm.util.PlatformUtil as PlatformUtil
 from mtm.util.Assert import *
 

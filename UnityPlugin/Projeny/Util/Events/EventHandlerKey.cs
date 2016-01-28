@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
 
-namespace Projeny.Internal
+namespace ModestTree.Util
 {
     public class EventHandlerKey : IEquatable<EventHandlerKey>
     {

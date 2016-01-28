@@ -1,7 +1,10 @@
 using System;
-using UnityEngine;
 
-namespace Projeny.Internal
+#if UNITY3D
+using UnityEngine;
+#endif
+
+namespace ModestTree.Util
 {
     public interface IFrameCounter
     {
@@ -10,14 +13,15 @@ namespace Projeny.Internal
             get;
         }
     }
-
+    
+#if UNITY3D
     // Necessary since you can't reference things like Time in nunit tests
     public class UnityFrameCounter : IFrameCounter
     {
+        [Inject]
         public UnityFrameCounter()
         {
         }
-
         public int FrameCount
         {
             get
@@ -26,4 +30,5 @@ namespace Projeny.Internal
             }
         }
     }
+#endif
 }

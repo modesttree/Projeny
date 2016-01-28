@@ -6,9 +6,10 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Xml.Serialization;
+using ModestTree.Util;
 using System.IO;
 
-namespace Projeny.Internal
+namespace ModestTree.Util
 {
     public class CoRoutineTimeoutException : Exception
     {
@@ -35,7 +36,7 @@ namespace Projeny.Internal
                     result.Append(" -> ");
                 }
 
-                result.Append(objType.Name);
+                result.Append(objType.Name());
             }
 
             result.AppendLine();
@@ -80,7 +81,6 @@ namespace Projeny.Internal
             }
         }
 
-        // Returns true if it needs to be called again
         public bool Pump()
         {
             Assert.That(!_processStack.IsEmpty());
@@ -186,7 +186,7 @@ namespace Projeny.Internal
             if (coroutine.ReturnValue != null)
             {
                 Assert.That(coroutine.ReturnValue.GetType().DerivesFromOrEqual<T>(),
-                    "Unexpected type returned from coroutine!  Expected '{0}' and found '{1}'", typeof(T).Name, coroutine.ReturnValue.GetType().Name);
+                    "Unexpected type returned from coroutine!  Expected '{0}' and found '{1}'", typeof(T).Name(), coroutine.ReturnValue.GetType().Name());
             }
 
             yield return (T)coroutine.ReturnValue;

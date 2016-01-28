@@ -2,6 +2,7 @@
 import os
 import re
 
+import mtm.util.Util as Util
 import mtm.util.MiscUtil as MiscUtil
 
 import mtm.ioc.Container as Container
@@ -27,6 +28,14 @@ class VarManager:
         # our config
 
         self._regex = re.compile('^([^\[]*)(\[[^\]]*\])(.*)$')
+
+    def getAllParameters(self):
+        matches = self._config.getAll('PathVars')
+        result = self._params.copy()
+        for match in matches:
+            assertIsType(match, dict)
+            result = Util.mergeDictionaries(result, match)
+        return result
 
     def hasKey(self, key):
         return key in self._params or self._config.tryGet('PathVars', key) != None

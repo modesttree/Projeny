@@ -7,6 +7,8 @@ using System.Collections;
 using System.Collections.Generic;
 using Projeny.Internal;
 using System.Linq;
+using ModestTree.Util;
+using ModestTree;
 
 namespace Projeny.Internal
 {
@@ -54,7 +56,7 @@ namespace Projeny.Internal
                     case DragListTypes.Package:
                     {
                         _asyncProcessor.Process(
-                            _packageHandler.DeletePackages(group.Select(x => (PackageInfo)x.Model).ToList()), "Deleting Packages");
+                            _packageHandler.DeletePackages(group.Select(x => (PackageInfo)x.Model).ToList()), true, "Deleting Packages");
                         break;
                     }
                 }

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Projeny.Internal
+namespace ModestTree.Util
 {
     public class Tuple<T1, T2>
     {

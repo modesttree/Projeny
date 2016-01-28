@@ -1,14 +1,6 @@
 from mtm.util.Assert import *
 
-class Platforms:
-    Windows = 'Windows'
-    WebPlayer = 'WebPlayer'
-    Android = 'Android'
-    WebGl = 'WebGL'
-    OsX = 'OSX'
-    Linux = 'Linux'
-    Ios = 'iOS'
-    All = [Windows, WebPlayer, Android, WebGl, OsX, Linux, Ios]
+from mtm.util.Platforms import Platforms
 
 def toPlatformFolderName(platform):
     # We can just directly use the full platform name for folder names

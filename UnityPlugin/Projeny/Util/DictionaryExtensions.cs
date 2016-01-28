@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
+using ModestTree.Util;
 
-namespace Projeny.Internal
+namespace ModestTree
 {
     public static class DictionaryExtensions
     {

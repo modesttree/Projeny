@@ -7,6 +7,8 @@ using System.Collections;
 using System.Collections.Generic;
 using Projeny.Internal;
 using System.Linq;
+using ModestTree.Util;
+using ModestTree;
 
 namespace Projeny.Internal
 {
@@ -18,7 +20,7 @@ namespace Projeny.Internal
         readonly PmView _view;
         readonly PmModel _model;
 
-        readonly EventManager _eventManager = new EventManager();
+        readonly EventManager _eventManager = new EventManager(null);
 
         public PmDragDropHandler(
             PmModel model,
@@ -80,7 +82,7 @@ namespace Projeny.Internal
                         {
                             _asyncProcessor.Process(
                                 InstallReleasesAsync(
-                                    entries.Select(x => (ReleaseInfo)x.Model).ToList()), "Installing Releases");
+                                    entries.Select(x => (ReleaseInfo)x.Model).ToList()), true, "Installing Releases");
                             break;
                         }
                         default:

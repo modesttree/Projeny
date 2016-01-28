@@ -31,55 +31,52 @@ class UnityPackageExtractor:
 
         fileName = os.path.basename(unityPackagePath)
 
-        self._log.heading("Extracting '{0}'", fileName)
-        self._log.debug("Extracting unity package at path '{0}'", unityPackagePath)
+        with self._log.heading("Extracting '{0}'", fileName):
+            self._log.debug("Extracting unity package at path '{0}'", unityPackagePath)
+            tempDir = tempfile.mkdtemp()
+            self._log.info("Using temp directory '{0}'", tempDir)
 
-        tempDir = tempfile.mkdtemp()
-        self._log.info("Using temp directory '{0}'", tempDir)
+            try:
+                self._sys.createDirectory(os.path.join(tempDir, 'ProjectSettings'))
+                self._sys.createDirectory(os.path.join(tempDir, 'Assets'))
 
-        try:
-            self._sys.createDirectory(os.path.join(tempDir, 'ProjectSettings'))
-            self._sys.createDirectory(os.path.join(tempDir, 'Assets'))
+                self._sys.executeAndWait('"[UnityExePath]" -batchmode -nographics -quit -projectPath "{0}" -importPackage "{1}"'.format(tempDir, unityPackagePath))
 
-            self._sys.executeAndWait('"[UnityExePath]" -batchmode -nographics -quit -projectPath "{0}" -importPackage "{1}"'.format(tempDir, unityPackagePath))
+                with self._log.heading("Copying extracted results to output directory"):
+                    assetsDir = os.path.join(tempDir, 'Assets')
+                    # If the unitypackage only contains a single directory, then extract that instead
+                    # To avoid ending up with PackageName/PackageName directories for everything
+                    dirToCopy = self._chooseDirToCopy(assetsDir)
 
-            self._log.heading("Copying extracted results to output directory")
+                    dirToCopyName = os.path.basename(dirToCopy)
 
-            assetsDir = os.path.join(tempDir, 'Assets')
+                    assertThat(not self._isSpecialFolderName(dirToCopyName))
 
-            # If the unitypackage only contains a single directory, then extract that instead
-            # To avoid ending up with PackageName/PackageName directories for everything
-            dirToCopy = self._chooseDirToCopy(assetsDir)
+                    # If the extracted package contains a single directory, then by default use that directory as the name for the package
+                    # This is nice for packages that assume some directory structure (eg. UnityTestTools)
+                    # Also, some packages have titles that aren't as nice as directories.  For example, Unity Test Tools uses the directory name UnityTestTools
+                    # which is a bit nicer (though adds a bit of confusion since the release name doesn't match)
+                    # Note that for upgrading/downgrading, this doesn't matter because it uses the ID which is stored in the ProjenyInstall.yaml file
+                    if not forcedName and (dirToCopyName.lower() != 'assets' and dirToCopyName.lower() != 'plugins'):
+                        forcedName = dirToCopyName
 
-            dirToCopyName = os.path.basename(dirToCopy)
+                    if forcedName:
+                        newPackageName = forcedName
+                    else:
+                        assertThat(fallbackName)
+                        newPackageName = fallbackName
 
-            assertThat(not self._isSpecialFolderName(dirToCopyName))
+                    newPackageName = self._sys.convertToValidFileName(newPackageName)
 
-            # If the extracted package contains a single directory, then by default use that directory as the name for the package
-            # This is nice for packages that assume some directory structure (eg. UnityTestTools)
-            # Also, some packages have titles that aren't as nice as directories.  For example, Unity Test Tools uses the directory name UnityTestTools
-            # which is a bit nicer (though adds a bit of confusion since the release name doesn't match)
-            # Note that for upgrading/downgrading, this doesn't matter because it uses the ID which is stored in the ProjenyInstall.yaml file
-            if not forcedName and (dirToCopyName.lower() != 'assets' and dirToCopyName.lower() != 'plugins'):
-                forcedName = dirToCopyName
+                    assertThat(not self._isSpecialFolderName(newPackageName))
 
-            if forcedName:
-                newPackageName = forcedName
-            else:
-                assertThat(fallbackName)
-                newPackageName = fallbackName
+                    outDirPath = '[UnityPackagesDir]/{0}'.format(newPackageName)
+                    self._sys.copyDirectory(dirToCopy, outDirPath)
 
-            newPackageName = self._sys.convertToValidFileName(newPackageName)
-
-            assertThat(not self._isSpecialFolderName(newPackageName))
-
-            outDirPath = '[UnityPackagesDir]/{0}'.format(newPackageName)
-            self._sys.copyDirectory(dirToCopy, outDirPath)
-
-            return newPackageName
-        finally:
-            self._log.debug("Deleting temporary directory", tempDir)
-            shutil.rmtree(tempDir)
+                    return newPackageName
+            finally:
+                self._log.debug("Deleting temporary directory", tempDir)
+                shutil.rmtree(tempDir)
 
     def _isSpecialFolderName(self, dirName):
         dirNameLower = dirName.lower()

@@ -64,10 +64,9 @@ class ReleaseSourceManager:
 
     def listAllReleases(self):
         self._lazyInit()
-        self._log.heading('Found {0} Releases', self._getTotalReleaseCount())
-
-        for release in self.lookupAllReleases():
-            self._log.info("{0} ({1}) ({2})", release.name, release.version, release.versionCode)
+        with self._log.heading('Found {0} Releases', self._getTotalReleaseCount()):
+            for release in self.lookupAllReleases():
+                self._log.info("{0} ({1}) ({2})", release.name, release.version, release.versionCode)
 
     def lookupAllReleases(self):
         self._lazyInit()
@@ -99,16 +98,14 @@ class ReleaseSourceManager:
         assertThat(releaseVersion)
 
         self._lazyInit()
-        self._log.heading("Attempting to install release '{0}' (version '{1}')", releaseName, releaseVersion)
+        with self._log.heading("Attempting to install release '{0}' (version '{1}')", releaseName, releaseVersion):
+            assertThat(len(self._releaseSources) > 0, "Could not find any release sources to search for the given release")
+            releaseInfo, releaseSource = self._findReleaseInfoAndSourceByNameAndVersion(releaseName, releaseVersion)
 
-        assertThat(len(self._releaseSources) > 0, "Could not find any release sources to search for the given release")
+            assertThat(releaseInfo, "Failed to install release '{0}' (version {1}) - could not find it in any of the release sources.\nSources checked: \n  {2}\nTry listing all available release with the -lr command"
+               .format(releaseName, releaseVersion, "\n  ".join([x.getName() for x in self._releaseSources])))
 
-        releaseInfo, releaseSource = self._findReleaseInfoAndSourceByNameAndVersion(releaseName, releaseVersion)
-
-        assertThat(releaseInfo, "Failed to install release '{0}' (version {1}) - could not find it in any of the release sources.\nSources checked: \n  {2}\nTry listing all available release with the -lr command"
-           .format(releaseName, releaseVersion, "\n  ".join([x.getName() for x in self._releaseSources])))
-
-        self._installReleaseInternal(releaseInfo, releaseSource, suppressPrompts)
+            self._installReleaseInternal(releaseInfo, releaseSource, suppressPrompts)
 
     def installReleaseById(self, releaseId, releaseVersionCode, suppressPrompts = False):
 
@@ -135,44 +132,43 @@ class ReleaseSourceManager:
 
     def _installReleaseInternal(self, releaseInfo, releaseSource, suppressPrompts = False):
 
-        self._log.heading("Installing release '{0}' (version {1})", releaseInfo.name, releaseInfo.version)
+        with self._log.heading("Installing release '{0}' (version {1})", releaseInfo.name, releaseInfo.version):
+            installDirName = None
+            for packageInfo in self._packageManager.getAllPackageInfos():
+                installInfo = packageInfo.installInfo
 
-        installDirName = None
+                if installInfo and installInfo.releaseInfo and installInfo.releaseInfo.id == releaseInfo.id:
+                    if installInfo.releaseInfo.versionCode == releaseInfo.versionCode:
+                        if not suppressPrompts:
+                            shouldContinue = MiscUtil.confirmChoice(
+                                "Release '{0}' (version {1}) is already installed.  Would you like to re-install anyway?  Note that this will overwrite any local changes you've made to it.".format(releaseInfo.name, releaseInfo.version))
 
-        for packageInfo in self._packageManager.getAllPackageInfos():
-            installInfo = packageInfo.installInfo
+                            assertThat(shouldContinue, 'User aborted')
+                    else:
+                        print("\nFound release '{0}' already installed with version '{1}'".format(releaseInfo.name, releaseInfo.version), end='')
 
-            if installInfo and installInfo.releaseInfo and installInfo.releaseInfo.id == releaseInfo.id:
-                if installInfo.releaseInfo.versionCode == releaseInfo.versionCode:
-                    if not suppressPrompts:
-                        shouldContinue = MiscUtil.confirmChoice(
-                            "Release '{0}' (version {1}) is already installed.  Would you like to re-install anyway?  Note that this will overwrite any local changes you've made to it.".format(releaseInfo.name, releaseInfo.version))
+                        installDirection = 'UPGRADE' if releaseInfo.versionCode > installInfo.releaseInfo.versionCode else 'DOWNGRADE'
 
-                        assertThat(shouldContinue, 'User aborted')
-                else:
-                    print("\nFound release '{0}' already installed with version '{1}'".format(releaseInfo.name, releaseInfo.version), end='')
+                        if not suppressPrompts:
+                            shouldContinue = MiscUtil.confirmChoice("Are you sure you want to {0} '{1}' from version '{2}' to version '{3}'? (y/n)".format(installDirection, releaseInfo.name, installInfo.releaseInfo.version, releaseInfo.version))
+                            assertThat(shouldContinue, 'User aborted')
 
-                    installDirection = 'UPGRADE' if releaseInfo.versionCode > installInfo.releaseInfo.versionCode else 'DOWNGRADE'
+                    self._packageManager.deletePackage(packageInfo.name)
+                    # Retain original directory name in case it is referenced by other packages
+                    installDirName = packageInfo.name
 
-                    if not suppressPrompts:
-                        shouldContinue = MiscUtil.confirmChoice("Are you sure you want to {0} '{1}' from version '{2}' to version '{3}'? (y/n)".format(installDirection, releaseInfo.name, installInfo.releaseInfo.version, releaseInfo.version))
-                        assertThat(shouldContinue, 'User aborted')
+            installDirName = releaseSource.installRelease(releaseInfo, installDirName)
 
-                self._packageManager.deletePackage(packageInfo.name)
-                # Retain original directory name in case it is referenced by other packages
-                installDirName = packageInfo.name
+            destDir = self._varMgr.expand('[UnityPackagesDir]/{0}'.format(installDirName))
 
-        installDirName = releaseSource.installRelease(releaseInfo, installDirName)
+            assertThat(self._sys.directoryExists(destDir), 'Expected dir "{0}" to exist', destDir)
 
-        destDir = self._varMgr.expand('[UnityPackagesDir]/{0}'.format(installDirName))
+            newInstallInfo = PackageInstallInfo()
+            newInstallInfo.releaseInfo = releaseInfo
+            newInstallInfo.installDate = datetime.utcnow()
 
-        assertThat(self._sys.directoryExists(destDir), 'Expected dir "{0}" to exist', destDir)
+            yamlStr = YamlSerializer.serialize(newInstallInfo)
+            self._sys.writeFileAsText(os.path.join(destDir, InstallInfoFileName), yamlStr)
 
-        newInstallInfo = PackageInstallInfo()
-        newInstallInfo.releaseInfo = releaseInfo
-        newInstallInfo.installDate = datetime.utcnow()
+            self._log.info("Successfully installed '{0}' (version {1})", releaseInfo.name, releaseInfo.version)
 
-        yamlStr = YamlSerializer.serialize(newInstallInfo)
-        self._sys.writeFileAsText(os.path.join(destDir, InstallInfoFileName), yamlStr)
-
-        self._log.info("Successfully installed '{0}' (version {1})", releaseInfo.name, releaseInfo.version)

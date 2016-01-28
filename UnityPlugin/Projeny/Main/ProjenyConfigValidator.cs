@@ -5,11 +5,13 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using ModestTree;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditorInternal;
 using UnityEngine;
 using Projeny.Internal;
+using ModestTree.Util;
 
 namespace Projeny.Internal
 {
@@ -58,7 +60,7 @@ namespace Projeny.Internal
                 {
                     foreach (var pluginDir in scriptDir.GetDirectories())
                     {
-                        if (pluginDir.Name == "Projeny")
+                        if (pluginDir.Name == "Projeny" || pluginDir.Name == "ProjenyGenerated")
                         {
                             continue;
                         }

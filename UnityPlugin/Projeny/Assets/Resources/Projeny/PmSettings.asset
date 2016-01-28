@@ -8,9 +8,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 01fe9b81f68762b438dd4eecbcfe2900, type: 3}
+  m_Script: {fileID: 11500000, guid: 6e78a2ff93d634841a8d26620c43dfca, type: 3}
   m_Name: PmSettings
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier:
   GUISkinDark: {fileID: 11400000, guid: 85dcafaa6e0300f4aa41e173500b6536, type: 2}
   GUISkinLight: {fileID: 11400000, guid: bb6bdd539afbc5943a2696150cffa4ee, type: 2}
   DragList:
@@ -61,7 +61,7 @@ MonoBehaviour:
       LoadingOverlapPopupColor: {r: 0.19852942, g: 0.19852942, b: 0.19852942, a: 1}
       DraggableItemAlreadyAddedColor: {r: 0, g: 1, b: 0.46206903, a: 1}
       DropdownTextStyle:
-        m_Name: 
+        m_Name:
         m_Normal:
           m_Background: {fileID: 0}
           m_TextColor: {r: 0.7352941, g: 0.7352941, b: 0.7352941, a: 1}
@@ -120,7 +120,7 @@ MonoBehaviour:
         m_StretchWidth: 1
         m_StretchHeight: 0
       HeaderTextStyle:
-        m_Name: 
+        m_Name:
         m_Normal:
           m_Background: {fileID: 0}
           m_TextColor: {r: 0.74264705, g: 0.74264705, b: 0.74264705, a: 1}
@@ -184,7 +184,7 @@ MonoBehaviour:
       LoadingOverlapPopupColor: {r: 0.17647058, g: 0.17647058, b: 0.17647058, a: 1}
       DraggableItemAlreadyAddedColor: {r: 0, g: 1, b: 0.46206903, a: 1}
       DropdownTextStyle:
-        m_Name: 
+        m_Name:
         m_Normal:
           m_Background: {fileID: 0}
           m_TextColor: {r: 0.7352941, g: 0.7352941, b: 0.7352941, a: 1}
@@ -243,7 +243,7 @@ MonoBehaviour:
         m_StretchWidth: 1
         m_StretchHeight: 0
       HeaderTextStyle:
-        m_Name: 
+        m_Name:
         m_Normal:
           m_Background: {fileID: 0}
           m_TextColor: {r: 0.74264705, g: 0.74264705, b: 0.74264705, a: 1}

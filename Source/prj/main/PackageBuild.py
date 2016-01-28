@@ -76,47 +76,46 @@ class Runner:
             self._sys.deleteDirectoryIfExists('[TempDir]')
 
     def _createSamplesZip(self, versionStr):
-        self._log.heading('Clearing all generated files in Demo/UnityProjects folder')
-        self._packageMgr.clearAllProjectGeneratedFiles(False)
+        with self._log.heading('Clearing all generated files in Demo/UnityProjects folder'):
+            self._packageMgr.clearAllProjectGeneratedFiles()
 
-        self._sys.deleteDirectoryIfExists('[TempDir]')
+            self._sys.deleteDirectoryIfExists('[TempDir]')
 
-        self._sys.copyDirectory('[ProjenyDir]/Demo', '[TempDir]')
+            self._sys.copyDirectory('[ProjenyDir]/Demo', '[TempDir]')
 
-        self._sys.removeFileIfExists('[TempDir]/.gitignore')
-        self._sys.removeFileIfExists('[TempDir]/PrjLog.txt')
+            self._sys.removeFileIfExists('[TempDir]/.gitignore')
+            self._sys.removeFileIfExists('[TempDir]/PrjLog.txt')
 
-        self._log.heading('Zipping up demo project')
-        self._zipHelper.createZipFile('[TempDir]', '[DistDir]/ProjenySamples-v{0}.zip'.format(versionStr))
+        with self._log.heading('Zipping up demo project'):
+            self._zipHelper.createZipFile('[TempDir]', '[DistDir]/ProjenySamples-v{0}.zip'.format(versionStr))
 
     def _createInstaller(self, installerOutputPath):
-        self._log.heading('Creating installer exe')
-        assertThat(self._sys.directoryExists(NsisPath))
+        with self._log.heading('Creating installer exe'):
+            assertThat(self._sys.directoryExists(NsisPath))
+            self._sys.createDirectory('[DistDir]')
+            self._sys.executeAndWait('"{0}" "[InstallerDir]/CreateInstaller.nsi"'.format(NsisPath))
 
-        self._sys.createDirectory('[DistDir]')
-        self._sys.executeAndWait('"{0}" "[InstallerDir]/CreateInstaller.nsi"'.format(NsisPath))
-
-        self._sys.renameFile('[DistDir]/ProjenyInstaller.exe', installerOutputPath)
+            self._sys.renameFile('[DistDir]/ProjenyInstaller.exe', installerOutputPath)
 
     def _updateBuildDirectory(self):
 
         self._sys.deleteAndReCreateDirectory('[TempDir]')
 
-        self._log.heading('Building exes')
-        self._sys.executeAndWait('[PythonDir]/BuildAllExes.bat')
+        with self._log.heading('Building exes'):
+            self._sys.executeAndWait('[PythonDir]/BuildAllExes.bat')
 
-        self._log.heading('Building unity plugin dlls')
-        self._vsSolutionHelper.buildVisualStudioProject('[ProjenyDir]/UnityPlugin/Projeny.sln', 'Release')
+        with self._log.heading('Building unity plugin dlls'):
+            self._vsSolutionHelper.buildVisualStudioProject('[ProjenyDir]/UnityPlugin/Projeny.sln', 'Release')
 
-        self._copyDir('UnityPlugin/Projeny/Assets')
-        self._copyDir('Templates')
-        self._copyFile(ConfigFileName)
-        self._copyDir('Bin')
+            self._copyDir('UnityPlugin/Projeny/Assets')
+            self._copyDir('Templates')
+            self._copyFile(ConfigFileName)
+            self._copyDir('Bin')
 
-        self._sys.removeFile('[TempDir]/Bin/.gitignore')
+            self._sys.removeFile('[TempDir]/Bin/.gitignore')
 
-        self._sys.removeByRegex('[TempDir]/Bin/UnityPlugin/Release/*.pdb')
-        self._sys.deleteDirectoryIfExists('[TempDir]/Bin/UnityPlugin/Debug')
+            self._sys.removeByRegex('[TempDir]/Bin/UnityPlugin/Release/*.pdb')
+            self._sys.deleteDirectoryIfExists('[TempDir]/Bin/UnityPlugin/Debug')
 
 def installBindings():
 

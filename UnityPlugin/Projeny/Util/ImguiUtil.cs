@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace Projeny.Internal
+namespace ModestTree.Util
 {
     public class ContextMenuItem
     {
@@ -33,7 +33,13 @@ namespace Projeny.Internal
 
         public static string WrapWithColor(string text, Color color)
         {
-            return "<color=#{0}>{1}</color>".Fmt(MiscUtil.ColorToHex(color), text);
+            return "<color=#{0}>{1}</color>".Fmt(ColorToHex(color), text);
+        }
+
+        static string ColorToHex(Color32 color)
+        {
+            string hex = color.r.ToString("X2") + color.g.ToString("X2") + color.b.ToString("X2");
+            return hex;
         }
 
         public static Rect CreateContentRectWithPadding(Rect rect, float padding)

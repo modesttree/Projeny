@@ -8,7 +8,7 @@ def triggerAssert(message, *params):
 
     if len(params) > 0:
         message = message.format(*params)
-    raise Assertion(message)
+    raise Assertion('Assert hit: ' + message)
 
 def _triggerAssertWithMessage(extraMessage, message, *params):
     fullMessage = ''

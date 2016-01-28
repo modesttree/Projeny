@@ -4,7 +4,7 @@ import re
 import os
 
 from mtm.util.Assert import *
-from mtm.util.PlatformUtil import Platforms
+from mtm.util.Platforms import Platforms
 import mtm.util.Util as Util
 import mtm.ioc.Container as Container
 from mtm.ioc.Inject import Inject
@@ -14,12 +14,10 @@ from mtm.config.Config import Config
 from mtm.config.YamlConfigLoader import loadYamlFilesThatExist
 
 from prj.main.CsProjParserHelper import NsPrefix
+from prj.main.ProjenyConstants import ProjectConfigFileName, PackageConfigFileName, ProjectUserConfigFileName
 
 from collections import OrderedDict
 import xml.etree.ElementTree as ET
-
-ProjectConfigFileName = 'ProjenyProject.yaml'
-ProjectUserConfigFileName = 'ProjenyProjectCustom.yaml'
 
 class ProjectSchemaLoader:
     _varMgr = Inject('VarManager')
@@ -27,6 +25,12 @@ class ProjectSchemaLoader:
     _sys = Inject('SystemHelper')
 
     def loadSchema(self, name, platform):
+        try:
+            return self._loadSchemaInternal(name, platform)
+        except Exception as e:
+            raise Exception("Failed while processing config yaml for project '{0}' (platform '{1}'). Details: {2}".format(name, platform, str(e))) from e
+
+    def _loadSchemaInternal(self, name, platform):
         schemaPath = self._varMgr.expandPath('[UnityProjectsDir]/{0}/{1}'.format(name, ProjectConfigFileName))
         schemaPathUser = self._varMgr.expandPath('[UnityProjectsDir]/{0}/{1}'.format(name, ProjectUserConfigFileName))
         schemaPathGlobal = self._varMgr.expandPath('[UnityProjectsDir]/{0}'.format(ProjectConfigFileName))
@@ -39,6 +43,7 @@ class ProjectSchemaLoader:
         assetFolderItems = config.tryGetList([], 'AssetsFolder')
         solutionProjectPatterns = config.tryGetList([], 'SolutionProjects')
         customFolders = config.tryGetOrderedDictionary(OrderedDict(), 'SolutionFolders')
+        projectSettingsPath = config.getString('ProjectSettingsPath')
 
         # Remove duplicates
         assetFolderItems = list(set(assetFolderItems))
@@ -68,7 +73,7 @@ class ProjectSchemaLoader:
         for customProj in solutionProjectPatterns:
             assertThat(customProj.startswith('/') or customProj in packageMap, 'Given project "{0}" in schema is not included in either "scripts" or "plugins"'.format(customProj))
 
-        self._log.info('Found {0} packages in total for given schema'.format(len(packageMap)))
+        self._log.debug('Found {0} packages in total for given schema'.format(len(packageMap)))
 
         # In Unity, the plugins folder can not have any dependencies on anything in the scripts folder
         # So if dependencies exist then just automatically move those packages to the scripts folder
@@ -80,7 +85,7 @@ class ProjectSchemaLoader:
             if info.forcePluginsDir and not info.isPluginDir:
                 assertThat(False, "Package '{0}' must be in plugins directory".format(info.name))
 
-        return ProjectSchema(name, packageMap, customFolders)
+        return ProjectSchema(name, packageMap, customFolders, projectSettingsPath)
 
     def _shouldIncludeForPlatform(self, packageName, packageConfig, folderType, platform):
 
@@ -136,7 +141,7 @@ class ProjectSchemaLoader:
         for packageName in allPackageNames:
 
             packageDir = self._varMgr.expandPath('[UnityPackagesDir]/{0}'.format(packageName))
-            configPath = os.path.join(packageDir, 'ProjenyPackage.yaml')
+            configPath = os.path.join(packageDir, PackageConfigFileName)
 
             if os.path.exists(configPath):
                 packageConfig = Config(loadYamlFilesThatExist(configPath))
@@ -257,7 +262,7 @@ class ProjectSchemaLoader:
             for info in packageMap.values():
                 if not info.createCustomVsProject and self._hasVsProjectDependency(info, packageMap):
                     info.createCustomVsProject = True
-                    self._log.warn('Created visual studio project for {0} package even though it wasnt marked as one, because it has csproj dependencies'.format(info.name))
+                    self._log.debug('Created visual studio project for {0} package even though it wasnt marked as one, because it has csproj dependencies'.format(info.name))
                     changedOne = True
 
     def _hasVsProjectDependency(self, info, packageMap):
@@ -282,7 +287,7 @@ class ProjectSchemaLoader:
             for info in packageMap.values():
                 if info.isPluginDir and self._hasAssetsDependency(info, packageMap):
                     info.isPluginDir = False
-                    self._log.warn('Moved {0} package to scripts folder since it has dependencies there and therefore cannot be in plugins'.format(info.name))
+                    self._log.debug('Moved {0} package to scripts folder since it has dependencies there and therefore cannot be in plugins'.format(info.name))
                     movedProject = True
 
     def _hasAssetsDependency(self, info, packageMap):
@@ -356,7 +361,9 @@ class ProjectSchemaLoader:
         allDependencies = set(packageInfo.explicitDependencies)
 
         for explicitDependName in packageInfo.explicitDependencies:
-            assertThat(explicitDependName in packageMap)
+            if explicitDependName not in packageMap:
+                # This can happen if a package depends on another package that is platform specific
+                continue
 
             explicitDependInfo = packageMap[explicitDependName]
 
@@ -370,10 +377,11 @@ class ProjectSchemaLoader:
         inProgress.remove(packageInfo.name)
 
 class ProjectSchema:
-    def __init__(self, name, packages, customFolderMap):
+    def __init__(self, name, packages, customFolderMap, projectSettingsPath):
         self.name = name
         self.packages = packages
         self.customFolderMap = customFolderMap
+        self.projectSettingsPath = projectSettingsPath
 
 class FolderTypes:
     Normal = "normal"

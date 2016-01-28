@@ -4,121 +4,212 @@ from datetime import datetime
 
 from mtm.util.VarManager import VarManager
 
+import re
 import mtm.util.Util as Util
 
 import mtm.ioc.Container as Container
 from mtm.ioc.Inject import Inject
 from mtm.ioc.Inject import InjectMany
 
+from mtm.util.Assert import *
 
 class LogType:
-    Info = 0
-    Heading = 1
-    Good = 2
-    Warn = 3
-    Error = 4
-    Debug = 5
-    HeadingSucceeded = 6
-    HeadingFailed = 7
+    Noise = 0
+    Debug = 1
+    Info = 2
+    Good = 3
+    Warn = 4
+    Error = 5
+    HeadingStart = 6
+    HeadingEnd = 7
+
+class LogMap:
+    def __init__(self, regex, sub):
+        self.regex = regex
+        self.sub = sub
+
+class HeadingBlock:
+    def __init__(self, log, message):
+        self._log = log
+        self._message = message
+
+        self._log._logInternal(self._message + "...", LogType.HeadingStart)
+        self._startTime = datetime.now()
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, type, value, traceback):
+        assertThat(self._log.hasHeading)
+
+        assertIsEqual(self._log._headingBlocks.pop(), self)
+
+        delta = datetime.now() - self._startTime
+        totalDelta = datetime.now() - self._log.totalStartTime
+
+        message = 'Finished {0} (Took {1}, time: {2}, total elapsed: {3})'.format(
+            self._message[0].lower() + self._message[1:],
+            Util.formatTimeDelta(delta.total_seconds()),
+            datetime.now().strftime('%H:%M:%S'),
+            Util.formatTimeDelta(totalDelta.total_seconds()))
+
+        self._log._logInternal(message, LogType.HeadingEnd)
 
 class Logger:
     _streams = InjectMany('LogStream')
+    _config = Inject('Config')
 
     ''' Simple log class to use with build scripts '''
     def __init__(self):
-        self.currentHeading = ''
-        self._startTime = None
-        self._headerStartTime = None
-        self._errorOccurred = False
+        self._totalStartTime = None
+        self._headingBlocks = []
+
+        self.goodPatterns = self._getPatterns('GoodPatterns')
+        self.goodMaps = self._getPatternMaps('GoodPatternMaps')
+
+        self.infoPatterns = self._getPatterns('InfoPatterns')
+        self.infoMaps = self._getPatternMaps('InfoPatternMaps')
+
+        self.errorPatterns = self._getPatterns('ErrorPatterns')
+        self.errorMaps = self._getPatternMaps('ErrorPatternMaps')
+
+        self.warningPatterns = self._getPatterns('WarningPatterns')
+        self.warningMaps = self._getPatternMaps('WarningPatternMaps')
+        self.warningPatternsIgnore = self._getPatterns('WarningPatternsIgnore')
+
+        self.debugPatterns = self._getPatterns('DebugPatterns')
+        self.debugMaps = self._getPatternMaps('DebugPatternMaps')
+
+    @property
+    def totalStartTime(self):
+        return self._totalStartTime
 
     @property
     def hasHeading(self):
-        return self._headerStartTime != None
+        return any(self._headingBlocks)
 
-    def heading(self, msg, *args):
+    def getCurrentNumHeadings(self):
+        return len(self._headingBlocks)
 
-        self.endHeading()
+    def heading(self, message, *args):
 
-        self._errorOccurred = False
-        self._headerStartTime = datetime.now()
-
-        if not self._startTime:
-            self._startTime = datetime.now()
+        if not self._totalStartTime:
+            self._totalStartTime = datetime.now()
 
         # Need to format it now so that heading gets the args
         if len(args) > 0:
-            msg = msg.format(*args)
+            message = message.format(*args)
 
-        self.currentHeading = msg
-        self._logInternal(msg, LogType.Heading)
+        block = HeadingBlock(self, message)
+        self._headingBlocks.append(block)
+        return block
 
-    def debug(self, msg, *args):
-        self._logInternal(msg, LogType.Debug, *args)
+    def noise(self, message, *args):
+        self._logInternal(message, LogType.Noise, *args)
 
-    def info(self, msg, *args):
-        self._logInternal(msg, LogType.Info, *args)
+    def debug(self, message, *args):
+        self._logInternal(message, LogType.Debug, *args)
 
-    def error(self, msg, *args):
+    def info(self, message, *args):
+        self._logInternal(message, LogType.Info, *args)
 
-        if self._headerStartTime:
-            self._errorOccurred = True
+    def error(self, message, *args):
 
-        self._logInternal(msg, LogType.Error, *args)
+        self._logInternal(message, LogType.Error, *args)
 
-    def warn(self, msg, *args):
-        self._logInternal(msg, LogType.Warn, *args)
+    def warn(self, message, *args):
+        self._logInternal(message, LogType.Warn, *args)
 
-    def finished(self, msg, *args):
-        ''' Call this when your script is completely finished '''
+    def good(self, message, *args):
+        self._logInternal(message, LogType.Good, *args)
 
-        self.endHeading()
-        self._logInternal(msg, LogType.Heading, *args)
-
-    def good(self, msg, *args):
-        self._logInternal(msg, LogType.Good, *args)
-
-    def endHeading(self):
-
-        if not self._headerStartTime:
-            return
-
-        delta = datetime.now() - self._headerStartTime
-        totalDelta = datetime.now() - self._startTime
-
-        message = ''
-
-        if self._errorOccurred:
-            message = 'Failed'
-        else:
-            message = 'Done'
-
-        message += ' (Took %s, time: %s, total elapsed: %s)' % (Util.formatTimeDelta(delta.total_seconds()), datetime.now().strftime('%H:%M:%S'), Util.formatTimeDelta(totalDelta.total_seconds()))
-
-        self._headerStartTime = None
-
-        if self._errorOccurred:
-            self._logInternal(message, LogType.HeadingFailed)
-        else:
-            self._logInternal(message, LogType.HeadingSucceeded)
-
-    def _logInternal(self, msg, logType, *args):
+    def _logInternal(self, message, logType, *args):
 
         if len(args) > 0:
-            msg = msg.format(*args)
+            message = message.format(*args)
+
+        newLogType, newMessage = self.classifyMessage(logType, message)
 
         for stream in self._streams:
-            stream.log(logType, msg)
+            stream.log(newLogType, newMessage)
+
+    def _getPatternMaps(self, settingName):
+        maps = self._config.tryGetDictionary({}, 'Log', settingName)
+
+        result = []
+        for key, value in maps.items():
+            regex = re.compile(key)
+            logMap = LogMap(regex, value)
+            result.append(logMap)
+
+        return result
+
+    def _getPatterns(self, settingName):
+        patternStrings = self._config.tryGetList([], 'Log', settingName)
+
+        result = []
+        for pattern in patternStrings:
+            result.append(re.compile('.*' + pattern + '.*'))
+
+        return result
+
+    def tryMatchPattern(self, message, maps, patterns):
+        for logMap in maps:
+            if logMap.regex.match(message):
+                return logMap.regex.sub(logMap.sub, message)
+
+        for pattern in patterns:
+            match = pattern.match(message)
+
+            if match:
+                groups = match.groups()
+
+                if len(groups) > 0:
+                    return groups[0]
+
+                return message
+
+        return None
+
+    def classifyMessage(self, logType, message):
+
+        if logType != LogType.Noise:
+            # If it is explicitly logged as something by calling for eg. log.info, use info type
+            return logType, message
+
+        parsedMessage = self.tryMatchPattern(message, self.errorMaps, self.errorPatterns)
+        if parsedMessage:
+            return LogType.Error, parsedMessage
+
+        if not any(p.match(message) for p in self.warningPatternsIgnore):
+            parsedMessage = self.tryMatchPattern(message, self.warningMaps, self.warningPatterns)
+            if parsedMessage:
+                return LogType.Warn, parsedMessage
+
+        parsedMessage = self.tryMatchPattern(message, self.goodMaps, self.goodPatterns)
+        if parsedMessage:
+            return LogType.Good, parsedMessage
+
+        parsedMessage = self.tryMatchPattern(message, self.infoMaps, self.infoPatterns)
+        if parsedMessage:
+            return LogType.Info, parsedMessage
+
+        parsedMessage = self.tryMatchPattern(message, self.debugMaps, self.debugPatterns)
+        if parsedMessage:
+            return LogType.Debug, parsedMessage
+
+        return LogType.Noise, message
 
 if __name__ == '__main__':
     import mtm.ioc.Container as Container
 
     class Log1:
-        def log(self, logType, msg):
-            print('log 1: ' + msg)
+        def log(self, logType, message):
+            print('log 1: ' + message)
 
     class Log2:
-        def log(self, logType, msg):
-            print('log 2: ' + msg)
+        def log(self, logType, message):
+            print('log 2: ' + message)
 
     Container.bind('LogStream').toSingle(Log1)
     Container.bind('LogStream').toSingle(Log2)

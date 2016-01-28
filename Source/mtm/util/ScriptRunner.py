@@ -18,15 +18,10 @@ class ScriptRunner:
             succeeded = True
 
         except KeyboardInterrupt as e:
-            self._log.endHeading()
             self._log.error('Operation aborted by user by hitting CTRL+C')
 
         except Exception as e:
-            self._log.endHeading()
             self._log.error(str(e))
-
-            if self._log.currentHeading:
-                self._log.error("Failed while executing '" + self._log.currentHeading + "'")
 
             # Only print stack trace if it's a build-script error
             if not isinstance(e, ProcessErrorCodeException) and not isinstance(e, ProcessTimeoutException):
@@ -36,8 +31,8 @@ class ScriptRunner:
         totalSecondsStr = Util.formatTimeDelta(totalSeconds)
 
         if succeeded:
-            self._log.finished('Operation completed successfully.  Took ' + totalSecondsStr + '.\n')
+            self._log.good('Operation completed successfully.  Took ' + totalSecondsStr + '.\n')
         else:
-            self._log.finished('Operation completed with errors.  Took ' + totalSecondsStr + '.\n')
+            self._log.info('Operation completed with errors.  Took ' + totalSecondsStr + '.\n')
 
         return succeeded

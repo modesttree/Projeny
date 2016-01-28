@@ -11,6 +11,7 @@ from mtm.ioc.Inject import Inject
 from mtm.ioc.Inject import InjectMany
 import mtm.ioc.IocAssertions as Assertions
 from mtm.util.Assert import *
+from prj.main.ProjenyConstants import ProjectConfigFileName, PackageConfigFileName, ProjectUserConfigFileName
 
 from prj.main.CsProjParserHelper import NsPrefix
 
@@ -19,6 +20,7 @@ SolutionFolderTypeGuid = '2150E333-8FDC-42A3-9474-1A3956D46DE8'
 EditorProjectNameSuffix = "-editor"
 
 ProjenyDirectoryIgnorePattern = re.compile(r'.*Assets\\Plugins\\Projeny\\.*')
+ProjenyGeneratedDirectoryIgnorePattern = re.compile(r'.*Assets\\Plugins\\ProjenyGenerated\\.*')
 
 PluginsProjectName = 'PluginsFolder'
 AssetsProjectName = 'AssetsFolder'
@@ -38,15 +40,14 @@ class VisualStudioSolutionGenerator:
     _sys = Inject('SystemHelper')
 
     def updateVisualStudioSolution(self, projectName, platform):
-        self._log.heading('Updating Visual Studio solution for project "{0}"'.format(projectName))
+        with self._log.heading('Updating Visual Studio solution for project "{0}"'.format(projectName)):
+            self._packageManager.setPathsForProject(projectName, platform)
+            self._packageManager.checkProjectInitialized(projectName, platform)
 
-        self._packageManager.setPathsForProject(projectName, platform)
-        self._packageManager.checkProjectInitialized(projectName, platform)
+            schema = self._schemaLoader.loadSchema(projectName, platform)
 
-        schema = self._schemaLoader.loadSchema(projectName, platform)
-
-        self._updateVisualStudioSolutionInternal(
-            schema.packages.values(), schema.customFolderMap)
+            self._updateVisualStudioSolutionInternal(
+                schema.packages.values(), schema.customFolderMap)
 
     def _prettify(self, doc):
         return minidom.parseString(ET.tostring(doc)).toprettyxml(indent="    ")
@@ -172,12 +173,9 @@ class VisualStudioSolutionGenerator:
         excludeDirs = []
 
         for projInfo in projectMap.values():
-            if projInfo.projectType != ProjectType.Custom and projInfo.projectType != ProjectType.CustomEditor:
-                continue
-
-            outputDir = os.path.dirname(projInfo.absPath)
-            packageDir = os.path.join(outputDir, projInfo.packageInfo.name)
-            excludeDirs.append(packageDir)
+            if projInfo.packageInfo != None:
+                packageDir = self._varMgr.expandPath(os.path.join(projInfo.packageInfo.outputDirVar, projInfo.packageInfo.name))
+                excludeDirs.append(packageDir)
 
         self._initFilesForStandardCsProjForDirectory(
             projectMap[PluginsEditorProjectName], excludeDirs, unifyProjInfo, True)
@@ -305,7 +303,7 @@ class VisualStudioSolutionGenerator:
         files = []
         self._addCsFilesInDirectory(packageDir, [], files, isEditor)
 
-        isIgnored = (len(files) == 0)
+        isIgnored = (len(files) == 0 or (len(files) == 1 and os.path.basename(files[0]) == PackageConfigFileName))
 
         return CsProjInfo(
             projId, outputPath, csProjectName, files, isIgnored, None, ProjectType.CustomEditor if isEditor else ProjectType.Custom, packageInfo)
@@ -362,16 +360,15 @@ class VisualStudioSolutionGenerator:
 
         projectList = ''
         postSolution = ''
-        projectFolderStr = ''
         projectFolderMapsStr = ''
 
         folderIds = {}
 
+        usedFolders = set()
+
         for folderName in customFolderMap:
             folderId = self._createProjectGuid()
             folderIds[folderName] = folderId
-            projectFolderStr += 'Project("{{{0}}}") = "{1}", "{2}", "{{{3}}}"\nEndProject\n' \
-                .format(SolutionFolderTypeGuid, folderName, folderName, folderId)
 
         for proj in projects:
             assertThat(proj.name)
@@ -408,6 +405,8 @@ class VisualStudioSolutionGenerator:
             folderName = self._getFolderName(proj.name, customFolderMap)
 
             if folderName:
+                usedFolders.add(folderName)
+
                 folderId = folderIds[folderName]
 
                 if len(projectFolderMapsStr) != 0:
@@ -416,6 +415,12 @@ class VisualStudioSolutionGenerator:
                 projectFolderMapsStr += \
                     '\t\t{{{0}}} = {{{1}}}' \
                     .format(proj.id, folderId)
+
+        projectFolderStr = ''
+        for folderName, folderId in folderIds.items():
+            if folderName in usedFolders:
+                projectFolderStr += 'Project("{{{0}}}") = "{1}", "{2}", "{{{3}}}"\nEndProject\n' \
+                    .format(SolutionFolderTypeGuid, folderName, folderName, folderId)
 
         solutionStr = solutionStr.replace('[ProjectList]', projectList)
 
@@ -583,6 +588,11 @@ class VisualStudioSolutionGenerator:
         return minidom.parseString(ET.tostring(doc)).toprettyxml(indent="    ")
 
     def _shouldIgnoreCsProjFile(self, fullPath):
+
+        if ProjenyGeneratedDirectoryIgnorePattern.match(fullPath):
+            # Never include the generated stuff
+            return True
+
         if self._config.getBool('LinkToProjenyEditorDir'):
             return False
 
@@ -614,8 +624,8 @@ class VisualStudioSolutionGenerator:
             if os.path.isdir(fullPath):
                 self._addCsFilesInDirectory(fullPath, excludeDirs, files, isForEditor)
             else:
-                if re.match('.*\.(cs|txt)$', itemName):
-                    if not isForEditor or isInsideEditorFolder:
+                if re.match('.*\.(yaml|cs|txt)$', itemName):
+                    if not isForEditor or isInsideEditorFolder or itemName == PackageConfigFileName:
                         files.append(fullPath)
 
 class RefInfo:

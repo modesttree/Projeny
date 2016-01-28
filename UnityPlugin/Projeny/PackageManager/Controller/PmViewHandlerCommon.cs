@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using ModestTree;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEditor;
@@ -20,6 +21,27 @@ namespace Projeny.Internal
             Application.OpenURL(fullUrl);
         }
 
+        static string ConvertByteSizeToDisplayValue(long bytesLong)
+        {
+            Decimal kilobytes = Convert.ToDecimal(bytesLong) / 1024.0m;
+
+            if (kilobytes < 1024.0m)
+            {
+                return string.Format("{0:0} kB", kilobytes);
+            }
+
+            Decimal megabytes = Convert.ToDecimal(kilobytes) / 1024.0m;
+
+            if (megabytes < 1024.0m)
+            {
+                return string.Format("{0:0} MB", megabytes);
+            }
+
+            Decimal gigabytes = Convert.ToDecimal(megabytes) / 1024.0m;
+
+            return string.Format("{0:0} GB", gigabytes);
+        }
+
         public static void AddReleaseInfoMoreInfoRows(ReleaseInfo info, PmSettings.ReleaseInfoMoreInfoDialogProperties skin)
         {
             DrawMoreInfoRow(skin, "Name", info.Name);
@@ -30,7 +52,7 @@ namespace Projeny.Internal
             GUILayout.Space(skin.RowSpacing);
             DrawMoreInfoRow(skin, "Modification Date", !string.IsNullOrEmpty(info.FileModificationDate) ? info.FileModificationDate : NotAvailableLabel);
             GUILayout.Space(skin.RowSpacing);
-            DrawMoreInfoRow(skin, "Compressed Size", info.HasCompressedSize ? MiscUtil.ConvertByteSizeToDisplayValue(info.CompressedSize) : NotAvailableLabel);
+            DrawMoreInfoRow(skin, "Compressed Size", info.HasCompressedSize ? ConvertByteSizeToDisplayValue(info.CompressedSize) : NotAvailableLabel);
             GUILayout.Space(skin.RowSpacing);
             DrawMoreInfoRow(skin, "Publisher", !string.IsNullOrEmpty(info.AssetStoreInfo.PublisherLabel) ? info.AssetStoreInfo.PublisherLabel : NotAvailableLabel);
             GUILayout.Space(skin.RowSpacing);
@@ -67,5 +89,4 @@ namespace Projeny.Internal
         }
     }
 }
-
 

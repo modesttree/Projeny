@@ -58,7 +58,7 @@ class ProcessRunner:
             try:
                 try:
                     line = queue.get_nowait()
-                    self._log.debug(line.decode('utf-8').rstrip())
+                    self._log.noise(line.decode('utf-8').rstrip())
                 except Empty:
                     if not thread.isAlive():
                         break
@@ -106,7 +106,7 @@ class ProcessRunner:
 
         if output:
             for line in output.split('\n'):
-                self._log.debug(line)
+                self._log.noise(line)
 
         if errors:
             self._log.error('Error occurred during command "{0}":'.format(commandStr))

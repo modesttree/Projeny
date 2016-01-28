@@ -29,11 +29,6 @@ class AnsiiCodes:
     DARKWHITE = "\033[0;37m"
     END = "\033[0;0m"
 
-class LogMap:
-    def __init__(self, regex, sub):
-        self.regex = regex
-        self.sub = sub
-
 class LogStreamConsole:
     _log = Inject('Logger')
     _sys = Inject('SystemHelper')
@@ -41,32 +36,13 @@ class LogStreamConsole:
     _config = Inject('Config')
 
     def __init__(self, verbose, veryVerbose):
-        self._verbose = verbose
+        self._verbose = verbose or veryVerbose
         self._veryVerbose = veryVerbose
 
-        self.headingPatterns = self._getPatterns('HeadingPatterns')
-        self.headingMaps = self._getPatternMaps('HeadingPatternMaps')
-
-        self.goodPatterns = self._getPatterns('GoodPatterns')
-        self.goodMaps = self._getPatternMaps('GoodPatternMaps')
-
-        self.infoPatterns = self._getPatterns('InfoPatterns')
-        self.infoMaps = self._getPatternMaps('InfoPatternMaps')
-
-        self.errorPatterns = self._getPatterns('ErrorPatterns')
-        self.errorMaps = self._getPatternMaps('ErrorPatternMaps')
-
-        self.warningPatterns = self._getPatterns('WarningPatterns')
-        self.warningMaps = self._getPatternMaps('WarningPatternMaps')
-        self.warningPatternsIgnore = self._getPatterns('WarningPatternsIgnore')
-
-        self.debugPatterns = self._getPatterns('DebugPatterns')
-        self.debugMaps = self._getPatternMaps('DebugPatternMaps')
-
-        self._useColors = self._config.tryGetBool(False, 'Console', 'UseColors')
+        self._useColors = self._config.tryGetBool(False, 'LogStreamConsole', 'UseColors')
 
         self._fileStream = None
-        if self._config.tryGetBool(False, 'Console', 'OutputToFilteredLog'):
+        if self._config.tryGetBool(False, 'LogStreamConsole', 'OutputToFilteredLog'):
             self._fileStream = self._getFileStream()
 
         if self._useColors:
@@ -79,17 +55,21 @@ class LogStreamConsole:
 
     def log(self, logType, message):
 
-        logType, message = self.classifyMessage(logType, message)
+        assertIsNotNone(logType)
 
-        if logType is not None:
+        if logType == LogType.Noise and not self._veryVerbose:
+            return
 
-            if logType == LogType.HeadingFailed or logType == LogType.Error:
-                self._output(logType, message, sys.stderr, self._useColors)
-            else:
-                self._output(logType, message, sys.stdout, self._useColors)
+        if logType == LogType.Debug and not self._verbose:
+            return
 
-            if self._fileStream:
-                self._output(logType, message, self._fileStream, False)
+        if logType == LogType.Error:
+            self._output(logType, message, sys.stderr, self._useColors)
+        else:
+            self._output(logType, message, sys.stdout, self._useColors)
+
+        if self._fileStream:
+            self._output(logType, message, self._fileStream, False)
 
     def _getFileStream(self):
 
@@ -108,12 +88,14 @@ class LogStreamConsole:
 
         return open(primaryPath, 'w', encoding='utf-8', errors='ignore')
 
+    def _getHeadingIndent(self):
+        return self._log.getCurrentNumHeadings() * "   "
+
     def _output(self, logType, message, stream, useColors):
 
         stream.write('\n')
 
-        if self._log.hasHeading and logType != LogType.Heading and logType != LogType.HeadingSucceeded and logType != LogType.HeadingFailed:
-            stream.write('  ')
+        stream.write(self._getHeadingIndent())
 
         if not useColors or logType == LogType.Info:
             stream.write(message)
@@ -125,8 +107,11 @@ class LogStreamConsole:
             ColorConsole.set_text_attr(self._defaultColors)
 
     def _getColorAttrs(self, logType):
-        if logType == LogType.Heading or logType == LogType.HeadingSucceeded:
+        if logType == LogType.HeadingStart:
             return ColorConsole.FOREGROUND_CYAN | self._defaultBg | ColorConsole.FOREGROUND_INTENSITY
+
+        if logType == LogType.HeadingEnd:
+            return ColorConsole.FOREGROUND_BLACK | self._defaultBg | ColorConsole.FOREGROUND_INTENSITY
 
         if logType == LogType.Good:
             return ColorConsole.FOREGROUND_GREEN | self._defaultBg | ColorConsole.FOREGROUND_INTENSITY
@@ -134,85 +119,12 @@ class LogStreamConsole:
         if logType == LogType.Warn:
             return ColorConsole.FOREGROUND_YELLOW | self._defaultBg | ColorConsole.FOREGROUND_INTENSITY
 
-        if logType == LogType.Error or logType == LogType.HeadingFailed:
+        if logType == LogType.Error:
             return ColorConsole.FOREGROUND_RED | self._defaultBg | ColorConsole.FOREGROUND_INTENSITY
 
-        if logType == LogType.Debug:
-            return ColorConsole.FOREGROUND_BLACK | self._defaultBg | ColorConsole.FOREGROUND_INTENSITY
+        assertThat(logType == LogType.Noise or logType == LogType.Debug)
+        return ColorConsole.FOREGROUND_BLACK | self._defaultBg | ColorConsole.FOREGROUND_INTENSITY
 
-        assertThat(False, 'Unrecognized log type "{0}"'.format(logType))
 
-    def _getPatternMaps(self, settingName):
-        maps = self._config.tryGetDictionary({}, 'Console', settingName)
 
-        result = []
-        for key, value in maps.items():
-            regex = re.compile(key)
-            logMap = LogMap(regex, value)
-            result.append(logMap)
-
-        return result
-
-    def _getPatterns(self, settingName):
-        patternStrings = self._config.tryGetList([], 'Console', settingName)
-
-        result = []
-        for pattern in patternStrings:
-            result.append(re.compile('.*' + pattern + '.*'))
-
-        return result
-
-    def tryMatchPattern(self, message, maps, patterns):
-        for logMap in maps:
-            if logMap.regex.match(message):
-                return logMap.regex.sub(logMap.sub, message)
-
-        for pattern in patterns:
-            match = pattern.match(message)
-
-            if match:
-                groups = match.groups()
-
-                if len(groups) > 0:
-                    return groups[0]
-
-                return message
-
-        return None
-
-    def classifyMessage(self, logType, message):
-
-        if logType == LogType.Info or logType == LogType.Heading or logType == LogType.HeadingFailed or logType == LogType.HeadingSucceeded or logType == LogType.Good or logType == LogType.Warn or logType == LogType.Error:
-            return logType, message
-
-        parsedMessage = self.tryMatchPattern(message, self.errorMaps, self.errorPatterns)
-        if parsedMessage:
-            return LogType.Error, parsedMessage
-
-        if not any(p.match(message) for p in self.warningPatternsIgnore):
-            parsedMessage = self.tryMatchPattern(message, self.warningMaps, self.warningPatterns)
-            if parsedMessage:
-                return LogType.Warn, parsedMessage
-
-        parsedMessage = self.tryMatchPattern(message, self.headingMaps, self.headingPatterns)
-        if parsedMessage:
-            return LogType.Heading, parsedMessage
-
-        parsedMessage = self.tryMatchPattern(message, self.goodMaps, self.goodPatterns)
-        if parsedMessage:
-            return LogType.Good, parsedMessage
-
-        parsedMessage = self.tryMatchPattern(message, self.infoMaps, self.infoPatterns)
-        if parsedMessage:
-            return LogType.Info, parsedMessage
-
-        if self._verbose:
-            parsedMessage = self.tryMatchPattern(message, self.debugMaps, self.debugPatterns)
-            if parsedMessage:
-                return LogType.Debug, parsedMessage
-
-        if self._veryVerbose:
-            return LogType.Debug, message
-
-        return None, message
 

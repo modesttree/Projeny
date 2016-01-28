@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using ModestTree;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEditor;
@@ -7,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Projeny.Internal;
 using System.Linq;
+using ModestTree.Util;
 
 namespace Projeny.Internal
 {
@@ -31,7 +33,7 @@ namespace Projeny.Internal
 
         public void ShowCreateNewProjectPopup()
         {
-            _asyncProcessor.Process(ShowCreateNewProjectPopupAsync(), "Creating Project");
+            _asyncProcessor.Process(ShowCreateNewProjectPopupAsync(), true, "Creating Project");
         }
 
         IEnumerator ShowCreateNewProjectPopupAsync()
@@ -66,6 +68,5 @@ namespace Projeny.Internal
         }
     }
 }
-
 
 

@@ -36,7 +36,7 @@ from prj.main.PrjRunner import PrjRunner
 
 from mtm.util.Assert import *
 
-from mtm.util.PlatformUtil import Platforms
+from mtm.util.Platforms import Platforms
 from prj.main.PackageManager import PackageManager
 
 import mtm.ioc.Container as Container

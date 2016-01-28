@@ -13,7 +13,7 @@ class LogStreamFile:
 
     def log(self, logType, message):
 
-        if logType == LogType.Heading:
+        if logType == LogType.HeadingStart:
             self._printSeperator()
             self._writeLine(message)
             self._printSeperator()

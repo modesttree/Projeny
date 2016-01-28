@@ -2,9 +2,9 @@ using System;
 using UnityEditor;
 using UnityEngine;
 
-namespace Projeny.Internal
+namespace ModestTree.Util
 {
-    public static class UnityExtensions
+    public static class MiscUnityEditorExtensions
     {
         public static void AddOptionalItem(this GenericMenu menu, bool isEnabled, GUIContent content, bool isOn, GenericMenu.MenuFunction handler)
         {

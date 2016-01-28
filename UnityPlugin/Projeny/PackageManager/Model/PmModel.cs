@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using ModestTree;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEditor;
@@ -48,8 +49,23 @@ namespace Projeny.Internal
         [SerializeField]
         Dictionary<string, string> _solutionFolders = new Dictionary<string, string>();
 
+        [SerializeField]
+        string _projectSettingsPath;
+
         public PmModel()
         {
+        }
+
+        public string ProjectSettingsPath
+        {
+            get
+            {
+                return _projectSettingsPath;
+            }
+            set
+            {
+                _projectSettingsPath = value;
+            }
         }
 
         public IEnumerable<ReleaseInfo> Releases
@@ -227,4 +243,3 @@ namespace Projeny.Internal
         }
     }
 }
-

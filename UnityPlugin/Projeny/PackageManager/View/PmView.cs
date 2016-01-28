@@ -7,6 +7,8 @@ using System.Collections;
 using System.Collections.Generic;
 using Projeny.Internal;
 using System.Linq;
+using ModestTree.Util;
+using ModestTree;
 
 namespace Projeny.Internal
 {
@@ -53,6 +55,9 @@ namespace Projeny.Internal
 
             for (int i = 0; i < (int)DragListTypes.Count; i++)
             {
+                Assert.That(i <= _model.ListModels.Count - 1,
+                    "Could not find drag list type '{0}' in model", (DragListTypes)i);
+
                 var list = new DragList(
                     this, (DragListTypes)i, _model.ListModels[i], settings);
 

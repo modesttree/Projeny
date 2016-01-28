@@ -41,6 +41,10 @@ def _serializeObj(obj):
     objType = type(obj)
 
     if objType is list:
+
+        if not any(obj):
+            return None
+
         obj = [_serializeObj(x) for x in obj]
 
     elif objType in (int, float, bool, str, datetime):
@@ -57,8 +61,11 @@ def _serializeObj(obj):
             key = pair[0]
             value = pair[1]
 
-            # Our convention with YAML is PascalCase
-            obj[key[0].upper() + key[1:]] = _serializeObj(value)
+            result = _serializeObj(value)
+
+            if result != None:
+                # Our convention with YAML is PascalCase
+                obj[key[0].upper() + key[1:]] = result
 
     return obj
 

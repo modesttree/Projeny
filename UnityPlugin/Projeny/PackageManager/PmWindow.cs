@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using ModestTree;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEditor;
@@ -23,6 +24,25 @@ namespace Projeny.Internal
         [NonSerialized]
         PmCompositionRoot _root;
 
+        GUIStyle _errorTextStyle;
+
+        GUIStyle ErrorTextStyle
+        {
+            get
+            {
+                if (_errorTextStyle == null)
+                {
+                    _errorTextStyle = new GUIStyle(GUI.skin.label);
+                    _errorTextStyle.fontSize = 18;
+                    _errorTextStyle.normal.textColor = Color.red;
+                    _errorTextStyle.wordWrap = true;
+                    _errorTextStyle.alignment = TextAnchor.MiddleCenter;
+                }
+
+                return _errorTextStyle;
+            }
+        }
+
         public void ShowCreateNewProjectPopup()
         {
             _root.ShowCreateNewProjectPopup();
@@ -34,11 +54,7 @@ namespace Projeny.Internal
 
             if (!_hasInitialized)
             {
-                _hasInitialized = true;
                 isFirstLoad = true;
-
-                Assert.IsNull(_model);
-                Assert.IsNull(_viewModel);
 
                 _model = new PmModel();
                 _viewModel = new PmView.Model();
@@ -51,18 +67,35 @@ namespace Projeny.Internal
 
             _root = new PmCompositionRoot(_model, _viewModel, isFirstLoad);
             _root.Initialize();
+
+            // Put the _hasInitialized here so that if it fails to initialize it will try again next assembly reload
+            // Otherwise it might serialize half-initialized data
+            _hasInitialized = true;
         }
 
         void OnDisable()
         {
-            Assert.IsNotNull(_root);
-            _root.Dispose();
-            _root = null;
+            if (_root != null)
+            {
+                _root.Dispose();
+                _root = null;
+            }
         }
 
         void Update()
         {
-            _root.Update();
+            if (_root != null)
+            {
+                try
+                {
+                    _root.Update();
+                }
+                catch (Exception e)
+                {
+                    Log.ErrorException(e);
+                    _root = null;
+                }
+            }
 
             // Doesn't seem worth trying to detect changes, just redraw every frame
             Repaint();
@@ -70,8 +103,27 @@ namespace Projeny.Internal
 
         public void OnGUI()
         {
-            var fullRect = new Rect(0, 0, this.position.width, this.position.height);
-            _root.OnGUI(fullRect);
+            if (_root == null)
+            {
+                var width = 600;
+                var height = 200;
+
+                GUI.Label(new Rect(Screen.width / 2 - width / 2, Screen.height / 3 - height / 2, width, height), "Projeny error occurred!  \nSee log for details.", ErrorTextStyle);
+            }
+            else
+            {
+                var fullRect = new Rect(0, 0, this.position.width, this.position.height);
+
+                try
+                {
+                    _root.OnGUI(fullRect);
+                }
+                catch (Exception e)
+                {
+                    Log.ErrorException(e);
+                    _root = null;
+                }
+            }
         }
     }
 }

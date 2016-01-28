@@ -5,9 +5,10 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Xml.Serialization;
+using ModestTree.Util;
 using System.IO;
 
-namespace Projeny.Internal
+namespace ModestTree.Util
 {
     public class AsyncOperationException : Exception
     {
@@ -27,8 +28,16 @@ namespace Projeny.Internal
     {
         public event Action<Exception> OnException = delegate {};
 
+        public event Action BlockingLoadStarted = delegate {};
+        public event Action BlockingLoadComplete = delegate {};
+
         readonly List<CoroutineInfo> _newWorkers = new List<CoroutineInfo>();
         readonly LinkedList<CoroutineInfo> _workers = new LinkedList<CoroutineInfo>();
+
+        [Preserve]
+        public AsyncProcessor()
+        {
+        }
 
         public bool IsBlocking
         {
@@ -72,6 +81,15 @@ namespace Projeny.Internal
                 {
                     worker.IsFinished = true;
 
+                    if (worker.ExceptionHandler == null)
+                    {
+                        _workers.Remove(currentNode);
+                        throw new AsyncOperationException(
+                            "Error occurred during async operation", e);
+                    }
+
+                    worker.ExceptionHandler(e);
+
                     OnException(e);
                 }
 
@@ -95,25 +113,36 @@ namespace Projeny.Internal
 
             AdvanceFrameAll();
             AddNewWorkers(); //Added any workers that might have been added when the last worker was removed
+
+            if (_workers.Where(x => x.IsBlocking).IsEmpty())
+            {
+                BlockingLoadComplete();
+            }
         }
 
-        public IEnumerator Process(IEnumerator process, string statusTitle = null, bool isBlocking = true, Action<Exception> exceptionHandler = null)
+        public IEnumerator Process(IEnumerator process, bool isBlocking = true, string statusTitle = null, Action<Exception> exceptionHandler = null)
         {
-            return ProcessInternal(process, statusTitle, isBlocking, exceptionHandler);
+            return ProcessInternal(process, isBlocking, statusTitle, exceptionHandler);
         }
 
-        public IEnumerator Process<T>(IEnumerator process, string statusTitle = null, bool isBlocking = true, Action<Exception> exceptionHandler = null)
+        public IEnumerator Process<T>(IEnumerator process, bool isBlocking = true, string statusTitle = null, Action<Exception> exceptionHandler = null)
         {
-            return ProcessInternal(process, statusTitle, isBlocking, exceptionHandler);
+            return ProcessInternal(process, isBlocking, statusTitle, exceptionHandler);
         }
 
         IEnumerator ProcessInternal(
-            IEnumerator process, string statusTitle, bool isBlocking, Action<Exception> exceptionHandler)
+            IEnumerator process, bool isBlocking = true, string statusTitle = null, Action<Exception> exceptionHandler = null)
         {
+            if (!IsBlocking && isBlocking)
+            {
+                BlockingLoadStarted();
+            }
+
             var data = new CoroutineInfo()
             {
                 CoRoutine = new CoRoutine(process),
                 IsBlocking = isBlocking,
+                ExceptionHandler = exceptionHandler,
                 StatusTitle = statusTitle,
             };
 
@@ -142,6 +171,7 @@ namespace Projeny.Internal
         class CoroutineInfo
         {
             public CoRoutine CoRoutine;
+            public Action<Exception> ExceptionHandler;
             public string StatusTitle;
             public bool IsBlocking;
             public bool IsFinished;

@@ -7,7 +7,7 @@ from mtm.util.Assert import *
 import mtm.util.MiscUtil as MiscUtil
 import mtm.util.PlatformUtil as PlatformUtil
 
-from mtm.util.PlatformUtil import Platforms
+from mtm.util.Platforms import Platforms
 from mtm.util.CommonSettings import ConfigFileName
 
 import mtm.ioc.Container as Container
@@ -16,7 +16,7 @@ from mtm.ioc.Inject import InjectMany
 from mtm.ioc.Inject import InjectOptional
 import mtm.ioc.IocAssertions as Assertions
 
-from prj.main.ProjectSchemaLoader import ProjectConfigFileName
+from prj.main.ProjenyConstants import ProjectConfigFileName
 
 class PrjRunner:
     _scriptRunner = Inject('ScriptRunner')
@@ -29,21 +29,68 @@ class PrjRunner:
     _mainConfig = InjectOptional('MainConfigPath', None)
     _sys = Inject('SystemHelper')
     _vsSolutionHelper = Inject('VisualStudioHelper')
+    _projVsHelper = Inject('ProjenyVisualStudioHelper')
     _releaseSourceManager = Inject('ReleaseSourceManager')
 
     def run(self, args):
-        self._args = args
+        self._args = self._processArgs(args)
         success = self._scriptRunner.runWrapper(self._runInternal)
+        self._onBuildComplete(success)
 
+    def _onBuildComplete(self, success):
         if not success:
             sys.exit(1)
 
+    def _processArgs(self, args):
+        if args.buildFullProject or args.buildFull:
+            args.updateLinks = True
+            args.updateUnitySolution = True
+            args.updateCustomSolution = True
+            args.buildCustomSolution = True
+
+        if args.buildFull:
+            args.buildPrebuild = True
+
+        if not args.project:
+            args.project = self._config.tryGetString(None, 'DefaultProject')
+
+        if args.project and not self._packageMgr.projectExists(args.project) and not args.createProject:
+            args.project = self._packageMgr.getProjectFromAlias(args.project)
+
+        if not args.project and self._varMgr.hasKey('UnityProjectsDir'):
+            allProjects = self._packageMgr.getAllProjectNames()
+
+            # If there's only one project, then just always assume they are operating on that
+            if len(allProjects) == 1:
+                args.project = allProjects[0]
+
+        return args
+
     def _runPreBuild(self):
+
+        if self._args.createConfig:
+            self._createConfig()
+
+        if self._args.deleteProject:
+            if not self._args.suppressPrompts:
+                if not MiscUtil.confirmChoice("Are you sure you want to delete project '{0}'? (y/n)  \nNote that this will only delete your unity project settings and the {1} for this project.  \nThe rest of the content for your project will remain in the UnityPackages folder  ".format(self._args.project, ProjectConfigFileName)):
+                    assertThat(False, "User aborted operation")
+            self._packageMgr.deleteProject(self._args.project)
+
+        if self._args.createProject:
+            self._packageMgr._createProject(self._args.project)
+
+        if self._args.createPackage:
+            self._packageMgr.createPackage(self._args.createPackage)
+
+        if self._args.projectAddPackage:
+            self._projectConfigChanger.addPackage(self._args.project, self._args.projectAddPackage)
+
         if self._args.openDocumentation:
             self._openDocumentation()
 
         if self._args.clearProjectGeneratedFiles:
-            self._packageMgr.clearProjectGeneratedFiles(self._project)
+            self._packageMgr.clearProjectGeneratedFiles(self._args.project)
 
         if self._args.clearAllProjectGeneratedFiles:
             self._packageMgr.clearAllProjectGeneratedFiles()
@@ -58,11 +105,8 @@ class PrjRunner:
 
             self._packageMgr.deletePackage(self._args.deletePackage)
 
-        if self._args.deleteProject:
-            if not self._args.suppressPrompts:
-                if not MiscUtil.confirmChoice("Are you sure you want to delete project '{0}'? (y/n)  \nNote that this will only delete your unity project settings and the {1} for this project.  \nThe rest of the content for your project will remain in the UnityPackages folder  ".format(self._args.deleteProject, ProjectConfigFileName)):
-                    assertThat(False, "User aborted operation")
-            self._packageMgr.deleteProject(self._args.deleteProject)
+        if self._args.buildPrebuild:
+            self.buildPrebuildProjects()
 
         if self._args.installRelease:
             releaseName, releaseVersion = self._args.installRelease
@@ -72,31 +116,33 @@ class PrjRunner:
             self._packageMgr.updateLinksForAllProjects()
 
         if self._args.initLinks:
-            self._packageMgr.checkProjectInitialized(self._project, self._platform)
+            self._packageMgr.checkProjectInitialized(self._args.project, self._platform)
 
         if self._args.updateLinks:
-            self._packageMgr.updateProjectJunctions(self._project, self._platform)
-
-        if self._args.buildPrebuild:
-            solutionPath = self._config.tryGetString(None, 'Prebuild', 'SolutionPath')
-
-            if solutionPath != None:
-                self._log.heading('Building {0}'.format(os.path.basename(self._varMgr.expandPath(solutionPath))))
-                config = self._config.tryGetString('Debug', 'Prebuild', 'SolutionConfig')
-                self._vsSolutionHelper.buildVisualStudioProject(solutionPath, config)
+            self._packageMgr.updateProjectJunctions(self._args.project, self._platform)
 
         if self._args.updateUnitySolution:
-            self._vsSolutionHelper.updateUnitySolution(self._project, self._platform)
+            self._projVsHelper.updateUnitySolution(self._args.project, self._platform)
 
         if self._args.updateCustomSolution:
-            self._vsSolutionHelper.updateCustomSolution(self._project, self._platform)
+            self._projVsHelper.updateCustomSolution(self._args.project, self._platform)
+
+    def buildPrebuildProjects(self, config = None):
+        solutionPath = self._config.tryGetString(None, 'Prebuild', 'SolutionPath')
+
+        if solutionPath != None:
+            with self._log.heading('Building {0}'.format(os.path.basename(self._varMgr.expandPath(solutionPath)))):
+                if config == None:
+                    config = self._config.tryGetString('Debug', 'Prebuild', 'SolutionConfig')
+
+                self._vsSolutionHelper.buildVisualStudioProject(solutionPath, config)
 
     def _openDocumentation(self):
         webbrowser.open('https://github.com/modesttree/ModestUnityPackageManager')
 
     def _runBuild(self):
         if self._args.buildCustomSolution:
-            self._vsSolutionHelper.buildCustomSolution(self._project, self._platform)
+            self._projVsHelper.buildCustomSolution(self._args.project, self._platform)
 
     def _runPostBuild(self):
 
@@ -109,59 +155,52 @@ class PrjRunner:
         if self._args.listPackages:
             self._packageMgr.listAllPackages()
 
+        if self._args.listUnusedPackages:
+            self._packageMgr.listUnusedPackages()
+
         if self._args.openUnity:
-            self._packageMgr.checkProjectInitialized(self._project, self._platform)
-            self._unityHelper.openUnity(self._project, self._platform)
+            self._packageMgr.checkProjectInitialized(self._args.project, self._platform)
+            self._unityHelper.openUnity(self._args.project, self._platform)
 
         if self._args.openCustomSolution:
-            self._vsSolutionHelper.openCustomSolution(self._project, self._platform)
+            self._projVsHelper.openCustomSolution(self._args.project, self._platform)
 
         if self._args.editProjectYaml:
             self._editProjectYaml()
 
     def _editProjectYaml(self):
-        assertThat(self._project)
-        schemaPath = self._varMgr.expandPath('[UnityProjectsDir]/{0}/{1}'.format(self._project, ProjectConfigFileName))
+        assertThat(self._args.project)
+        schemaPath = self._varMgr.expandPath('[UnityProjectsDir]/{0}/{1}'.format(self._args.project, ProjectConfigFileName))
         os.startfile(schemaPath)
+
+    def _initialize(self):
+        self._platform = PlatformUtil.fromPlatformArgName(self._args.platform)
 
     def _runInternal(self):
         self._log.debug("Started Prj with arguments: {0}".format(" ".join(sys.argv[1:])))
 
-        self.processArgs()
-        self._validateArgs()
-
-        if self._args.createConfig:
-            self._createConfig()
-
-        if self._args.createProject:
-            self._packageMgr._createProject(self._project)
-
-        if self._args.createPackage:
-            self._packageMgr.createPackage(self._args.createPackage)
-
-        if self._args.projectAddPackage:
-            self._projectConfigChanger.addPackage(self._project, self._args.projectAddPackage)
+        self._initialize()
+        self._validateRequest()
 
         self._runPreBuild()
         self._runBuild()
         self._runPostBuild()
 
     def _createConfig(self):
-        self._log.heading('Initializing new projeny config')
+        with self._log.heading('Initializing new projeny config'):
+            assertThat(not self._mainConfig,
+               "Cannot initialize new projeny project, found existing config at '{0}'".format(self._mainConfig))
 
-        assertThat(not self._mainConfig,
-           "Cannot initialize new projeny project, found existing config at '{0}'".format(self._mainConfig))
+            curDir = os.getcwd()
+            configPath = os.path.join(curDir, ConfigFileName)
 
-        curDir = os.getcwd()
-        configPath = os.path.join(curDir, ConfigFileName)
+            assertThat(not os.path.isfile(configPath), "Found existing projeny config at '{0}'.  Has the configuration already been created?", configPath)
 
-        assertThat(not os.path.isfile(configPath), "Found existing projeny config at '{0}'.  Has the configuration already been created?", configPath)
+            self._sys.createDirectory(os.path.join(curDir, 'UnityPackages'))
+            self._sys.createDirectory(os.path.join(curDir, 'UnityProjects'))
 
-        self._sys.createDirectory(os.path.join(curDir, 'UnityPackages'))
-        self._sys.createDirectory(os.path.join(curDir, 'UnityProjects'))
-
-        with self._sys.openOutputFile(configPath) as outFile:
-            outFile.write(
+            with self._sys.openOutputFile(configPath) as outFile:
+                outFile.write(
 """
 PathVars:
     UnityPackagesDir: '[ConfigDir]/UnityPackages'
@@ -169,33 +208,14 @@ PathVars:
     LogPath: '[ConfigDir]/PrjLog.txt'
 """)
 
-    def processArgs(self):
-
-        self._project = self._args.project
-
-        if not self._project:
-            self._project = self._config.tryGetString(None, 'DefaultProject')
-
-        if self._project and not self._packageMgr.projectExists(self._project) and not self._args.createProject:
-            self._project = self._packageMgr.getProjectFromAlias(self._project)
-
-        if not self._project and self._varMgr.hasKey('UnityProjectsDir'):
-            allProjects = self._packageMgr.getAllProjectNames()
-
-            # If there's only one project, then just always assume they are operating on that
-            if len(allProjects) == 1:
-                self._project = allProjects[0]
-
-        self._platform = PlatformUtil.fromPlatformArgName(self._args.platform)
-
-    def _validateArgs(self):
+    def _validateRequest(self):
         requiresProject = self._args.updateLinks or self._args.updateUnitySolution \
            or self._args.updateCustomSolution or self._args.buildCustomSolution \
            or self._args.clearProjectGeneratedFiles or self._args.buildFull \
            or self._args.openUnity or self._args.openCustomSolution \
            or self._args.editProjectYaml or self._args.createProject \
-            or self._args.projectAddPackage
+           or self._args.projectAddPackage or self._args.deleteProject
 
-        if requiresProject and not self._project:
+        if requiresProject and not self._args.project:
             assertThat(False, "Cannot execute the given arguments without a project specified, or a default project defined in the {0} file", ConfigFileName)
 
