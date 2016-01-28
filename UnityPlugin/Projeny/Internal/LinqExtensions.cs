@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Collections;
 
-namespace ModestTree
+namespace Projeny.Internal
 {
     public static class LinqExtensions
     {

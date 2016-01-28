@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace ModestTree
+
+namespace Projeny.Internal
 {
     public static class Assert
     {

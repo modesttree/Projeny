@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
-namespace ModestTree
+namespace Projeny.Internal
 {
     // Simple wrapper around unity's logging system
     public static class Log

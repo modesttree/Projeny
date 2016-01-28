@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using ModestTree;
 using Projeny.Internal;
-using ModestTree.Util;
 
 namespace Projeny
 {

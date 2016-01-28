@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace ModestTree.Util
+namespace Projeny.Internal
 {
     public class ContextMenuItem
     {

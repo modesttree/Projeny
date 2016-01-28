@@ -1,14 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using ModestTree.Util;
 using System.Xml.Serialization;
 
 #if UNITY3D
 using UnityEngine;
 #endif
 
-namespace ModestTree.Util
+namespace Projeny.Internal
 {
     public class ProfileBlock : IDisposable
     {

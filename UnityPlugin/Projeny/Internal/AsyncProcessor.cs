@@ -5,10 +5,9 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Xml.Serialization;
-using ModestTree.Util;
 using System.IO;
 
-namespace ModestTree.Util
+namespace Projeny.Internal
 {
     public class AsyncOperationException : Exception
     {

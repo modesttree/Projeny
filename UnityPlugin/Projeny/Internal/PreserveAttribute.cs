@@ -1,6 +1,6 @@
 using System;
 
-namespace ModestTree.Util
+namespace Projeny.Internal
 {
     // This is used to indicate to the IL2CPP to preserve classes/methods/etc.
     [AttributeUsage(AttributeTargets.All, AllowMultiple = false)]

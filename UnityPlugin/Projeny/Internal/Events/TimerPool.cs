@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace ModestTree.Util
+namespace Projeny.Internal
 {
     // Responsibilities:
     // - Starts an async timer of a set duration, and adds it to a collection.  Once the timer completes,

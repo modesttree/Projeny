@@ -1,7 +1,5 @@
 using System;
 using System.IO;
-using ModestTree;
-using ModestTree.Util;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEditor;

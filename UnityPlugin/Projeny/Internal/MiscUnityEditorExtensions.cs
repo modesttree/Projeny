@@ -2,7 +2,7 @@ using System;
 using UnityEditor;
 using UnityEngine;
 
-namespace ModestTree.Util
+namespace Projeny.Internal
 {
     public static class MiscUnityEditorExtensions
     {

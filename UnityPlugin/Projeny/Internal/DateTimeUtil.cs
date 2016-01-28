@@ -1,6 +1,6 @@
 using System;
 
-namespace ModestTree
+namespace Projeny.Internal
 {
     public static class DateTimeUtil
     {

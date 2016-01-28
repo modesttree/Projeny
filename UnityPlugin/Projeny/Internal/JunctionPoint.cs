@@ -6,7 +6,7 @@ using Microsoft.Win32.SafeHandles;
 
 // This code was taken from here:
 // http://www.codeproject.com/Articles/15633/Manipulating-NTFS-Junction-Points-in-NET
-namespace ModestTree.Util
+namespace Projeny.Internal
 {
     /// <summary>
     /// Provides access to NTFS junction points in .Net.

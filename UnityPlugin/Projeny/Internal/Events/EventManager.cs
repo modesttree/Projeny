@@ -5,13 +5,12 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using ModestTree.Util;
 
 #if UNITY3D
 using UnityEngine;
 #endif
 
-namespace ModestTree.Util
+namespace Projeny.Internal
 {
     [Flags]
     public enum EventQueueMode

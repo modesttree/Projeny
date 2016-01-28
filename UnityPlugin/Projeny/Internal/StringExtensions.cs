@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ModestTree
+namespace Projeny.Internal
 {
     public static class StringExtensions
     {

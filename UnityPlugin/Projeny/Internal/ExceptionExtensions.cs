@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ModestTree.Util
+namespace Projeny.Internal
 {
     public static class ExceptionExtensions
     {

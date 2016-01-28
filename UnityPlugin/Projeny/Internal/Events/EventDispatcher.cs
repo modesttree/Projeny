@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ModestTree.Util
+namespace Projeny.Internal
 {
     public interface IEventInvoker<TEventType>
     {

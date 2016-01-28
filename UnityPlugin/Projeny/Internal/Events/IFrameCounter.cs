@@ -4,7 +4,7 @@ using System;
 using UnityEngine;
 #endif
 
-namespace ModestTree.Util
+namespace Projeny.Internal
 {
     public interface IFrameCounter
     {
