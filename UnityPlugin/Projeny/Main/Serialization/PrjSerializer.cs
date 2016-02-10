@@ -198,13 +198,13 @@ namespace Projeny.Internal
                 set;
             }
 
-            public int? CompressedSize
+            public long? CompressedSize
             {
                 get;
                 set;
             }
 
-            public int? VersionCode
+            public long? VersionCode
             {
                 get;
                 set;
