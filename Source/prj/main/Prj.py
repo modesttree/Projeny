@@ -215,6 +215,9 @@ def _createConfig():
     with open(mainConfigPath, 'w', encoding='utf-8') as outFile:
         outFile.write(
 """
+# You can edit this file directly
+# See documentation for the full list of configuration settings
+
 PathVars:
     UnityProjectsDir: '[ConfigDir]/UnityProjects'
     SharedUnityPackagesDir: '[ConfigDir]/UnityPackages'
@@ -228,8 +231,17 @@ PathVars:
     with open(projectGlobalConfigPath, 'w', encoding='utf-8') as outFile:
         outFile.write(
 """
+# This file can be used to add configuration settings to all projects
+# You can edit this file directly
+# See documentation for the full list of configuration settings
+
 PackageFolders:
+    # Put packages that are used in multiple projects here
     - '[SharedUnityPackagesDir]'
+    # [ProjectRoot] refers to the folder at UnityProjects/YourProjectName
+    # Each project can optionally have packages placed in a folder named packages
+    # Note that you can directly add to this folder using the package manager gui from within Unity
+    - '[ProjectRoot]/Packages'
 """)
 
 def _main():

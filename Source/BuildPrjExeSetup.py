@@ -17,7 +17,7 @@ os.makedirs(outputPath)
 setup(
     console=['prj/main/Prj.py'],
     options = {
-        'py2exe': {
-            'dist_dir': outputPath,
-        },
+        "py2exe": {
+            "dist_dir": outputPath
+        }
     })

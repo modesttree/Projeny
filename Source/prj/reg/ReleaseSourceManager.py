@@ -115,8 +115,6 @@ class ReleaseSourceManager:
 
         self._log.info("Attempting to install release with ID '{0}' into package root '{1}' and version code '{2}'", releaseId, packageRoot, releaseVersionCode)
 
-        assertThat(self._sys.directoryExists(packageRoot))
-
         try:
             releaseVersionCode = int(releaseVersionCode)
         except ValueError:
@@ -138,7 +136,8 @@ class ReleaseSourceManager:
 
     def _installReleaseInternal(self, projectName, packageRoot, releaseInfo, releaseSource, suppressPrompts = False):
 
-        assertThat(self._sys.directoryExists(packageRoot))
+        if not self._sys.directoryExists(packageRoot):
+            self._sys.createDirectory(packageRoot)
 
         with self._log.heading("Installing release '{0}' (version {1})", releaseInfo.name, releaseInfo.version):
             installDirName = None
