@@ -552,12 +552,12 @@ In most cases you can edit the `ProjenyProject.yaml` file using the Package Mana
 
 Note that like all configuration files in Projeny, `ProjenyProject.yaml` is defined using the <a href="https://en.wikipedia.org/wiki/YAML">YAML standard</a>.
 
-Note that you can define multiple `ProjenyProject.yaml` files, with the result that they will all be applied to the project.  There are 4 places that Projeny looks for this file.  For example, given a project named `Foo`:
+Note that you can define multiple `ProjenyProject.yaml` files, with the result that they will all be applied to the project.  There are 4 places that Projeny looks for this file.  For example, given a project named `Foo`, these locations are as follows:
 
-1. UnityProjects/Foo/ProjenyProject.yaml
-2. UnityProjects/Foo/ProjenyProjectCustom.yaml
-3. UnityProjects/ProjenyProject.yaml
-4. UnityProjects/ProjenyProjectCustom.yaml
+1. `UnityProjects/Foo/ProjenyProject.yaml`
+2. `UnityProjects/Foo/ProjenyProjectCustom.yaml`
+3. `UnityProjects/ProjenyProject.yaml`
+4. `UnityProjects/ProjenyProjectCustom.yaml`
 
 These all follow the same format. (3) and (4) are automatically used by all projects, so it's a good place to put in packages that you want to include everywhere.
 
