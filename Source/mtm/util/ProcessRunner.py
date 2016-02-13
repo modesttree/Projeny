@@ -83,7 +83,7 @@ class ProcessRunner:
     # Note that in this case we pass the command as a string
     # This is recommended by the python docs here when using shell = True
     # https://docs.python.org/2/library/subprocess.html#subprocess.Popen
-    def execShellCommand(self, commandStr, startDir = None):
+    def execShellCommand(self, commandStr, startDir = None, wait = True):
 
         params = {}
         params['stdout'] = subprocess.PIPE
@@ -98,6 +98,9 @@ class ProcessRunner:
         # This method should only be used for a few command-prompt specific
         # commands anyway so not a big loss
         proc = Popen(commandStr, **params)
+
+        if not wait:
+            return ResultType.Success
 
         (stdoutData, stderrData) = proc.communicate()
 

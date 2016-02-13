@@ -77,7 +77,7 @@ class SystemHelper:
         self._processRunner.execNoWait(vals, startDir)
 
     # This is only used to execute shell-specific commands like copy, mklink, etc.
-    def executeShellCommand(self, commandStr, startDir = None):
+    def executeShellCommand(self, commandStr, startDir = None, wait = True):
         expandedStr = self._varManager.expand(commandStr)
 
         self._log.debug("Executing '%s'" % expandedStr)
@@ -85,7 +85,7 @@ class SystemHelper:
         if startDir != None:
             startDir = self._varManager.expand(startDir)
 
-        result = self._processRunner.execShellCommand(expandedStr, startDir)
+        result = self._processRunner.execShellCommand(expandedStr, startDir, wait)
 
         if result == ResultType.Error:
             raise ProcessErrorCodeException('Command returned with error code while executing: %s' % expandedStr)
@@ -370,4 +370,3 @@ class SystemHelper:
             os.makedirs(os.path.dirname(dirPath))
         except:
             pass
-

@@ -42,13 +42,17 @@ class VisualStudioHelper:
             raise Exception("COM Error.  This is often triggered when given a bad line number. Details: {0}".format(win32api.FormatMessage(error.excepinfo[5])))
 
     def openVisualStudioSolution(self, solutionPath, filePath = None):
-        if not self._varMgr.hasKey('VisualStudioIdePath'):
-            assertThat(False, "Path to visual studio has not been defined.  Please set <VisualStudioIdePath> within one of your {0} files.  See documentation for details.", ConfigFileName)
+        solutionPath = self._sys.canonicalizePath(solutionPath)
 
-        if self._sys.fileExists('[VisualStudioIdePath]'):
-            self._sys.executeNoWait('"[VisualStudioIdePath]" {0} {1}'.format(self._sys.canonicalizePath(solutionPath), self._sys.canonicalizePath(filePath) if filePath else ""))
+        if self._varMgr.hasKey('VisualStudioIdePath'):
+            assertThat(self._sys.fileExists('[VisualStudioIdePath]'),
+               "Cannot find path to visual studio.  Expected to find it at '{0}'".format(self._varMgr.expand('[VisualStudioIdePath]')))
+
+            self._sys.executeNoWait('"[VisualStudioIdePath]" {0} {1}'.format(solutionPath, self._sys.canonicalizePath(filePath) if filePath else ""))
         else:
-            assertThat(False, "Cannot find path to visual studio.  Expected to find it at '{0}'".format(self._varMgr.expand('[VisualStudioIdePath]')))
+            assertThat(filePath == None,
+               "Path to visual studio has not been defined.  Please set <VisualStudioIdePath> within one of your {0} files.  See documentation for details.", ConfigFileName)
+            self._sys.executeShellCommand(solutionPath, None, False)
 
     def buildVisualStudioProject(self, solutionPath, buildConfig):
         solutionPath = self._varMgr.expand(solutionPath)
