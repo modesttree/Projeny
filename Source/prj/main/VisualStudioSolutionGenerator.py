@@ -301,7 +301,7 @@ class VisualStudioSolutionGenerator:
         packageDir = os.path.join(outputDir, packageInfo.name)
 
         files = []
-        self._addCsFilesInDirectory(packageDir, [], files, isEditor)
+        self._addCsFilesInDirectory(packageDir, [], files, isEditor, True)
 
         isIgnored = (len(files) == 0 or (len(files) == 1 and os.path.basename(files[0]) == PackageConfigFileName))
 
@@ -461,9 +461,10 @@ class VisualStudioSolutionGenerator:
         outputDir = os.path.dirname(projInfo.absPath)
 
         projInfo.files = []
-        self._addCsFilesInDirectory(outputDir, excludeDirs, projInfo.files, isEditor)
+        self._addCsFilesInDirectory(outputDir, excludeDirs, projInfo.files, isEditor, False)
 
-        if len(projInfo.files) == 0:
+        # If it only contains the project config file then ignore it
+        if len([x for x in projInfo.files if not x.endswith('.yaml')]) == 0:
             projInfo.isIgnored = True
 
     def _writeStandardCsProjForDirectory(
@@ -595,7 +596,7 @@ class VisualStudioSolutionGenerator:
 
         return ProjenyDirectoryIgnorePattern.match(fullPath)
 
-    def _addCsFilesInDirectory(self, dirPath, excludeDirs, files, isForEditor):
+    def _addCsFilesInDirectory(self, dirPath, excludeDirs, files, isForEditor, includeYaml):
         isInsideEditorFolder = re.match(r'.*\\Editor($|\\).*', dirPath)
 
         if not isForEditor and isInsideEditorFolder:
@@ -619,9 +620,9 @@ class VisualStudioSolutionGenerator:
                 continue
 
             if os.path.isdir(fullPath):
-                self._addCsFilesInDirectory(fullPath, excludeDirs, files, isForEditor)
+                self._addCsFilesInDirectory(fullPath, excludeDirs, files, isForEditor, includeYaml)
             else:
-                if re.match('.*\.(yaml|cs|txt)$', itemName):
+                if itemName.endswith('.cs') or itemName.endswith('.txt') or (includeYaml and itemName.endswith('.yaml')):
                     if not isForEditor or isInsideEditorFolder or itemName == PackageConfigFileName:
                         files.append(fullPath)
 
