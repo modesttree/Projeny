@@ -286,7 +286,7 @@ Now, if you hit Update Solution, and go back to Visual Studio you should see the
 
 <img src="Docs/Screen7.png?raw=true" alt="Package Manager" />
 
-As you can no doubt guess by now, every package that you drag to the list on the right in the Package Manager will have a C# project created for it.  You'll also notice that the AssetsFolder has disappeared.  This is because Projeny did not find any files left over to place in it, so it didn't bother to create the project.  But, since we did not drag over the `CommonShapeMover` project, the PluginsFolder project has remained.
+As you can see, every package that you drag to the list on the right in the Package Manager will have a C# project created for it.  You'll also notice that the AssetsFolder has disappeared.  This is because Projeny did not find any files left over to place in it, so it didn't bother to create the project.  But, since we did not drag over the `CommonShapeMover` project, the PluginsFolder project has remained.
 
 This can be helpful for code organization but more importantly, this allows you to design dependencies on a module level.  In normal Unity projects, every code file could potentially make use of any other code file in your entire project.  For small projects this is not an issue, however, as your project scales in size it is helpful to be able to design code at a module level and avoid having your project devolve into a [Big ball of mud](https://en.wikipedia.org/wiki/Big_ball_of_mud).
 

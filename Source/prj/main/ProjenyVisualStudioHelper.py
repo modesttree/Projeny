@@ -24,10 +24,10 @@ class ProjenyVisualStudioHelper:
         self._vsSolutionGenerator.updateVisualStudioSolution(project, platform)
 
     def openCustomSolution(self, project, platform, filePath = None):
-        self._vsHelper.openVisualStudioSolution(self._getCustomSolutionPath(project, platform), filePath)
+        self._vsHelper.openVisualStudioSolution(self.getCustomSolutionPath(project, platform), filePath)
 
     def buildCustomSolution(self, project, platform):
-        solutionPath = self._getCustomSolutionPath(project, platform)
+        solutionPath = self.getCustomSolutionPath(project, platform)
 
         if not self._sys.fileExists(solutionPath):
             self._log.warn('Could not find generated custom solution.  Generating now.')
@@ -36,7 +36,7 @@ class ProjenyVisualStudioHelper:
         with self._log.heading('Building {0}-{1}.sln'.format(project, platform)):
             self._vsHelper.buildVisualStudioProject(solutionPath, 'Debug')
 
-    def _getCustomSolutionPath(self, project, platform):
+    def getCustomSolutionPath(self, project, platform):
         return '[UnityProjectsDir]/{0}/{0}-{1}.sln'.format(project, platform)
 
     def updateUnitySolution(self, projectName, platform):
@@ -50,4 +50,5 @@ class ProjenyVisualStudioHelper:
             # This will generate the unity csproj files which we need to generate Modest3d.sln correctly
             # It's also necessary to run this first on clean checkouts to initialize unity properly
             self._unityHelper.runEditorFunction(projectName, platform, 'Projeny.ProjenyEditorUtil.ForceGenerateUnitySolution')
+
 

@@ -25,7 +25,7 @@ class ScriptRunner:
 
             # Only print stack trace if it's a build-script error
             if not isinstance(e, ProcessErrorCodeException) and not isinstance(e, ProcessTimeoutException):
-                self._log.debug('\n' + traceback.format_exc())
+                self._log.noise('\n' + traceback.format_exc())
 
         totalSeconds = (datetime.now()-startTime).total_seconds()
         totalSecondsStr = Util.formatTimeDelta(totalSeconds)

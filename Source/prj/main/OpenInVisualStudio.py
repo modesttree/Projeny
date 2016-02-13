@@ -20,6 +20,7 @@ class Runner:
     _sys = Inject('SystemHelper')
     _varMgr = Inject('VarManager')
     _vsSolutionHelper = Inject('VisualStudioHelper')
+    _prjVsSolutionHelper = Inject('ProjenyVisualStudioHelper')
 
     def run(self, args):
         self._args = args
@@ -39,8 +40,10 @@ class Runner:
         if self._args.lineNo:
             lineNo = int(self._args.lineNo)
 
+        solutionPath = self._prjVsSolutionHelper.getCustomSolutionPath(project, platform)
+
         self._vsSolutionHelper.openFile(
-            self._args.filePath, lineNo, project, platform)
+            self._args.filePath, lineNo, solutionPath)
 
     def _getProjectAndPlatformFromFilePath(self, filePath):
         unityProjectsDir = self._sys.canonicalizePath(self._varMgr.expand('[UnityProjectsDir]'))
@@ -86,11 +89,7 @@ def installBindings(args):
 
     Prj.installBindings(findConfigPath(args.filePath))
 
-if __name__ == '__main__':
-    if (sys.version_info < (3, 0)):
-        print('Wrong version of python!  Install python 3 and try again')
-        sys.exit(2)
-
+def _main():
     parser = argparse.ArgumentParser(description='Projeny Visual Studio Opener')
     addArguments(parser)
 
@@ -107,4 +106,28 @@ if __name__ == '__main__':
 
     Runner().run(args)
 
+if __name__ == '__main__':
+    if (sys.version_info < (3, 0)):
+        print('Wrong version of python!  Install python 3 and try again')
+        sys.exit(2)
+
+    succeeded = True
+
+    try:
+        _main()
+
+    except KeyboardInterrupt as e:
+        print('Operation aborted by user by hitting CTRL+C')
+        succeeded = False
+
+    except Exception as e:
+        sys.stderr.write(str(e) + '\n')
+
+        if not MiscUtil.isRunningAsExe():
+            sys.stderr.write('\n' + traceback.format_exc())
+
+        succeeded = False
+
+    if not succeeded:
+        sys.exit(1)
 

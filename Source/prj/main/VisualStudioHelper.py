@@ -18,7 +18,7 @@ class VisualStudioHelper:
     _varMgr = Inject('VarManager')
     _sys = Inject('SystemHelper')
 
-    def openFile(self, filePath, lineNo, project, platform):
+    def openFile(self, filePath, lineNo, solutionPath):
         if not lineNo or lineNo <= 0:
             lineNo = 1
 
@@ -29,7 +29,7 @@ class VisualStudioHelper:
             #self._sys.executeNoWait('[VisualStudioCommandLinePath] /edit "{0}"'.format(filePath))
         else:
             # Unfortunately, in this case we can't pass in the line number
-            self.openCustomSolution(project, platform, filePath)
+            self.openVisualStudioSolution(solutionPath, filePath)
 
     def openFileInExistingVisualStudioInstance(self, filePath, lineNo):
         try:
@@ -65,3 +65,4 @@ class VisualStudioHelper:
             buildCommand += ' /p:Configuration="{0}" "{1}"'.format(buildConfig, solutionPath)
 
         self._sys.executeAndWait(buildCommand)
+
