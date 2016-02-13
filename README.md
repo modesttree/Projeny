@@ -36,6 +36,8 @@ NOTE: Projeny requires Unity3D 5.3.1 or higher, since it makes use of the `-buil
     7. <a href="#visual-studio-generation">More intelligent Visual Studio Solution generation</a>
 * Usage Details
     * <a href="#managing-assetstore-assets">Managing Asset Store Assets / Releases</a>
+    * <a href="#multiplepackagefolders">Using Multiple Package Folders</a>
+    * <a href="#shareprojectsettings">Sharing Project Settings</a>
     * <a href="#gotchas">Gotchas / Miscellaneous Tips and Tricks</a>
     * <a href="#faq">Frequently Asked Questions</a>
         * <a href="#workflow-create-package">How do I create a new package?</a>
@@ -339,6 +341,52 @@ Note also that after you add the release as a package, you will also have to add
 Also note that since this list is generated from your asset store cache, in order to have new asset store items listed here you will have to purchase them through the asset store and then download them.  After download completes you can then immediately cancel the import popup.   After that, you can hit the refresh button underneath the Releases list to have your newly purchases asset ready for use.
 
 For information on defining your own "release source", for use in addition to the asset store cache (for example by using a local folder on your hard drive or a remote file server) see <a href="#custom-release-registries">this section</a>
+
+## <a id="multiplepackagefolders"></a>Using Multiple Package Folders
+
+Up until now we've assumed that there is one definitive folder for all the packages that are available for inclusion in your unity projects.  However, this is configurable, so if you want, you can define multiple locations to pull packages from.  This can be especially useful if you want to define a project-specific package and you do not want to add clutter to the shared `UnityPackages` directory.
+
+To see this in action, download the sample project and then open up the `All-Movers` project (by either opening up the `UnityProjects\AllMovers\AllMovers-Windows` directory within unity or running `prj --project AllMovers --openUnity` / `prj -p am -ou` from the command line)
+
+Then open up the Package Manager through the menu item `Projeny` -> `Package Manager`.  In the Packages panel, you should see a dropdown that allows you to select where to get the package list from as shown in this screenshot:
+
+<img src="Docs/Screen11.png?raw=true" alt="Package Manager" />
+
+Select the dropdown and choose the option for `[ProjectRoot]\Packages`.  By default this will display an empty list of packages.  Right click in the list and choose `New Package`, then enter the name `Test`.  You should then see the following:
+
+<img src="Docs/Screen12.png?raw=true" alt="Package Manager" />
+
+Now, right click again in the list and choose `Show Root Folder In Explorer`.  This will open up the directory at `UnityProjects/AllMovers/Packages`.
+
+The list of package folders locations that appears in this drop down is configured on a per-project basis and can be found in the `ProjenyProject.yaml` files.  The sample project is set up with two locations.  One for the common `UnityPackages` folder and one directly underneath the root folder for each project.
+
+To see where this is set, open up the file `ProjenyProject.yaml` at `UnityProjects/ProjenyProject.yaml`.  The settings in this file will automatically be applied to all projects, in addition to the settings that are inside `UnityProjects/AllMovers/ProjenyProject.yaml`.  This file should appear as follows:
+
+    PackageFolders:
+        - '[SharedUnityPackagesDir]'
+        - '[ProjectRoot]/Packages'
+
+This list should contain the same values as what you see in the dropdown within the Package Manager GUI.
+
+## <a id="shareprojectsettings"></a>Sharing Project Settings
+
+In addition to sharing packages between unity projects, you can also share project settings.  Project settings include all the values that you see when you open up any menu item inside `Edit -> Project Settings` within Unity.  This can be useful if you want to create a duplicate of a project with a slightly different set of packages.
+
+To see this in action, download the sample project and then open up the `All-Movers` project (by either opening up the `UnityProjects\AllMovers\AllMovers-Windows` directory within unity or running `prj --project AllMovers --openUnity` / `prj -p am -ou` from the command line)
+
+Then, select the menu item `Projeny -> Change Project -> New`.  This should display the following popup:
+
+<img src="Docs/Screen13.png?raw=true" alt="Package Manager" />
+
+Make sure to check the "Share Project Settings" checkbox which is unchecked by default.  Give it the name `Test`.
+
+After clicking Submit, your new project should be initialized and then opened in Unity.  Now, if you change a project settings from the `Edit -> Project Settings` menu it will apply to both the `AllMovers` and your newly created `Test` project.
+
+Like all project settings, this is configured within the `ProjenyProject.yaml` file.  If you open this up by either clicking the `Edit` button within the Package Manager or simply opening up `UnityProjects/Test/ProjenyProject.yaml` you should see the following:
+
+    ProjectSettingsPath: '[ProjectRoot]/../AllMovers/ProjectSettings'
+
+Note that since we haven't added any packages yet to our new project, there isn't a line for `AssetsFolder` and `PluginsFolder` yet.
 
 ## <a id="gotchas"></a>Gotchas / Miscellaneous Tips and Tricks
 

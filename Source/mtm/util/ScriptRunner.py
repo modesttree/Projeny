@@ -4,6 +4,7 @@ import traceback
 from mtm.ioc.Inject import Inject
 import mtm.util.Util as Util
 from mtm.util.SystemHelper import ProcessErrorCodeException, ProcessTimeoutException
+import mtm.util.MiscUtil as MiscUtil
 
 class ScriptRunner:
     _log = Inject('Logger')
@@ -25,7 +26,10 @@ class ScriptRunner:
 
             # Only print stack trace if it's a build-script error
             if not isinstance(e, ProcessErrorCodeException) and not isinstance(e, ProcessTimeoutException):
-                self._log.noise('\n' + traceback.format_exc())
+                if MiscUtil.isRunningAsExe():
+                    self._log.noise('\n' + traceback.format_exc())
+                else:
+                    self._log.debug('\n' + traceback.format_exc())
 
         totalSeconds = (datetime.now()-startTime).total_seconds()
         totalSecondsStr = Util.formatTimeDelta(totalSeconds)

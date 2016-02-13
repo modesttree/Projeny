@@ -1,6 +1,7 @@
 
 import prj.main.Prj as Prj
 
+import mtm.util.MiscUtil as MiscUtil
 import os
 import mtm.ioc.Container as Container
 from mtm.ioc.Inject import Inject
@@ -40,7 +41,10 @@ class Runner:
         if self._args.lineNo:
             lineNo = int(self._args.lineNo)
 
-        solutionPath = self._prjVsSolutionHelper.getCustomSolutionPath(project, platform)
+        if platform == None:
+            solutionPath = None
+        else:
+            solutionPath = self._prjVsSolutionHelper.getCustomSolutionPath(project, platform)
 
         self._vsSolutionHelper.openFile(
             self._args.filePath, lineNo, solutionPath)
@@ -57,10 +61,13 @@ class Runner:
 
         projectName = dirs[0]
 
-        platformProjectDirName = dirs[1]
-        platformDirName = platformProjectDirName[platformProjectDirName.rfind('-')+1:]
+        try:
+            platformProjectDirName = dirs[1]
+            platformDirName = platformProjectDirName[platformProjectDirName.rfind('-')+1:]
 
-        platform = PlatformUtil.fromPlatformFolderName(platformDirName)
+            platform = PlatformUtil.fromPlatformFolderName(platformDirName)
+        except:
+            platform = None
 
         return projectName, platform
 
