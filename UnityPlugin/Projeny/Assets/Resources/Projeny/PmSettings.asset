@@ -312,6 +312,9 @@ MonoBehaviour:
     ButtonPadding: 13.37
     ButtonTopPadding: 6.4
     PopupSize: {x: 475.83, y: 91.3}
+  CreateNewPopup:
+    PopupSize: {x: 454.52, y: 167.39}
+    CheckboxHeight: 16.5
   ReleaseMoreInfoDialog:
     PanelPadding: 22.73
     LabelColumnWidth: 179.9

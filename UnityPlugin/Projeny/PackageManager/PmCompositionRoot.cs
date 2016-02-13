@@ -80,10 +80,7 @@ namespace Projeny.Internal
             _releasesViewHandler.Initialize();
             _dragDropHandler.Initialize();
 
-            if (_isFirstLoad)
-            {
-                _windowInitializer.Initialize();
-            }
+            _windowInitializer.Initialize(_isFirstLoad);
         }
 
         void SetupDependencies()
@@ -110,7 +107,7 @@ namespace Projeny.Internal
             _packageViewHandler = new PmPackageViewHandler(_view, _asyncProcessor, _packageHandler, _prjCommandHandler, _settings, _model);
 
             _windowInitializer = new PmWindowInitializer(_projectHandler, _packageHandler, _releasesHandler, _asyncProcessor);
-            _createNewProjectHandler = new PmCreateNewProjectPopupHandler(_view, _asyncProcessor, _prjCommandHandler, _windowInitializer);
+            _createNewProjectHandler = new PmCreateNewProjectPopupHandler(_view, _asyncProcessor, _prjCommandHandler, _windowInitializer, _settings);
 
             _projectViewHandler = new PmProjectViewHandler(
                 _model, _view, _projectHandler, _asyncProcessor,

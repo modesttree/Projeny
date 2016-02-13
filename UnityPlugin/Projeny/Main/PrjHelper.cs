@@ -222,10 +222,14 @@ namespace Projeny
             return PrjHelperResponse.Error(response.ErrorMessage);
         }
 
-        public static IEnumerator CreateProjectAsync(string projectName)
+        public static IEnumerator CreateProjectAsync(string projectName, bool duplicateSettings)
         {
-            var runner = PrjInterface.RunPrjAsync(
-                PrjInterface.CreatePrjRequestForProject("createProject", projectName));
+            var request = PrjInterface.CreatePrjRequest("createProject");
+
+            request.Param1 = projectName;
+            request.Param2 = duplicateSettings.ToString();
+
+            var runner = PrjInterface.RunPrjAsync(request);
 
             while (runner.MoveNext() && !(runner.Current is PrjResponse))
             {

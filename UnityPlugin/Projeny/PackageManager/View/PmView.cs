@@ -1006,7 +1006,7 @@ namespace Projeny.Internal
             }
         }
 
-        enum InputDialogStates
+        public enum InputDialogStates
         {
             None,
             Cancelled,

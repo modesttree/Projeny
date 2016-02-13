@@ -101,8 +101,10 @@ class Runner:
             self._releaseSourceManager.installReleaseById(releaseName, self._project, packageRoot, versionCode, True)
 
         elif self._requestId == 'createProject':
-            self._log.info("Creating new project '{0}'", self._project)
-            self._packageMgr._createProject(self._project)
+            newProjName = self._param1
+            duplicateSettings = (self._param2 == 'True')
+            self._log.info("Creating new project '{0}'", newProjName)
+            self._packageMgr.createProject(newProjName, self._project if duplicateSettings else None)
 
         else:
             assertThat(False, "Invalid request id '{0}'", self._requestId)

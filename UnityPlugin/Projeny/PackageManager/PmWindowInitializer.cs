@@ -38,18 +38,23 @@ namespace Projeny.Internal
             }
         }
 
-        public void Initialize()
+        public void Initialize(bool isFirstLoad)
         {
-            _asyncProcessor.Process(InitializeAsync(), true, "Initializing Projeny");
+            _asyncProcessor.Process(InitializeAsync(isFirstLoad), true, "Initializing Projeny");
         }
 
-        IEnumerator InitializeAsync()
+        IEnumerator InitializeAsync(bool isFirstLoad)
         {
             Assert.That(!_isInitialized);
-            _projectHandler.RefreshProject();
 
-            yield return _packageHandler.RefreshPackagesAsync();
-            yield return _releasesHandler.RefreshReleasesAsync();
+            if (isFirstLoad)
+            {
+                _projectHandler.RefreshProject();
+
+                yield return _packageHandler.RefreshPackagesAsync();
+                yield return _releasesHandler.RefreshReleasesAsync();
+            }
+
             _isInitialized = true;
         }
     }

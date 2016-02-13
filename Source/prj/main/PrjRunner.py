@@ -75,7 +75,7 @@ class PrjRunner:
             self._packageMgr.deleteProject(self._args.project)
 
         if self._args.createProject:
-            self._packageMgr._createProject(self._args.project)
+            self._packageMgr.createProject(self._args.project)
 
         if self._args.projectAddPackageAssets:
             self._projectConfigChanger.addPackage(self._args.project, self._args.projectAddPackageAssets, True)

@@ -86,27 +86,31 @@ class PackageManager:
 
         return None
 
-    def _createProject(self, projName):
+    def createProject(self, projName, settingsProject = None):
         with self._log.heading('Initializing new project "{0}"', projName):
             projDirPath = self._varMgr.expand('[UnityProjectsDir]/{0}'.format(projName))
             assertThat(not self._sys.directoryExists(projDirPath), "Cannot initialize new project '{0}', found existing project at '{1}'", projName, projDirPath)
 
             self._sys.createDirectory(projDirPath)
 
-            newProjSettingsDir = os.path.join(projDirPath, 'ProjectSettings')
+            if settingsProject == None:
+                settingsPath = '[ProjectRoot]/ProjectSettings'
+                newProjSettingsDir = os.path.join(projDirPath, 'ProjectSettings')
 
-            if self._varMgr.hasKey('DefaultProjectSettingsDir') and self._sys.directoryExists('[DefaultProjectSettingsDir]'):
-                self._sys.copyDirectory('[DefaultProjectSettingsDir]', newProjSettingsDir)
+                if self._varMgr.hasKey('DefaultProjectSettingsDir') and self._sys.directoryExists('[DefaultProjectSettingsDir]'):
+                    self._sys.copyDirectory('[DefaultProjectSettingsDir]', newProjSettingsDir)
+                else:
+                    self._sys.createDirectory(newProjSettingsDir)
             else:
-                self._sys.createDirectory(newProjSettingsDir)
+                settingsPath = '[ProjectRoot]/../{0}/ProjectSettings'.format(settingsProject)
 
             with self._sys.openOutputFile(os.path.join(projDirPath, ProjectConfigFileName)) as outFile:
                 outFile.write(
 """
-ProjectSettingsPath: '[ProjectRoot]/ProjectSettings'
+ProjectSettingsPath: '{0}'
 #AssetsFolder:
     # Uncomment and Add package names here
-""")
+""".format(settingsPath))
 
             self.updateProjectJunctions(projName, Platforms.Windows)
 
