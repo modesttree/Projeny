@@ -71,7 +71,6 @@ def addArguments(parser):
 
     # Packages
     parser.add_argument('-lpa', '--listPackages', action='store_true', help='Lists all the directories found in the UnityPackages directory')
-    parser.add_argument('-lupa', '--listUnusedPackages', action='store_true', help='Lists all the packages that are not used in any projects')
 
     parser.add_argument('-il', '--initLinks', action='store_true', help="This is the same as -ul except it will only update the directories if they haven't been updated at all yet")
 

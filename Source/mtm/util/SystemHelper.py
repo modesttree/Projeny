@@ -270,9 +270,17 @@ class SystemHelper:
 
         shutil.copytree(fromPath, toPath)
 
+    def readFileLines(self, path):
+        with self.openInputFile(path) as f:
+            return f.readlines()
+
     def readFileAsText(self, path):
         with self.openInputFile(path) as f:
             return f.read()
+
+    def writeFileLines(self, path, lines):
+        with self.openOutputFile(path) as f:
+            f.writelines(lines)
 
     def writeFileAsText(self, path, text):
         with self.openOutputFile(path) as f:

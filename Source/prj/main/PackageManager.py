@@ -70,24 +70,6 @@ class PackageManager:
 
             self._log.info("  " + output)
 
-    def listUnusedPackages(self):
-
-        usedPackages = set()
-        for projName in self.getAllProjectNames():
-            with self._log.heading("Looking up packages that are used by '{0}'", projName):
-                for platform in Platforms.All:
-                    schema = self._schemaLoader.loadSchema(projName, platform)
-
-                    for info in schema.packages.values():
-                        usedPackages.add(info.name)
-
-        unusedPackages = [x for x in self.getAllPackageNames() if x not in usedPackages]
-
-        self._log.info("Found {0} unused packages:", len(unusedPackages))
-
-        for packageName in unusedPackages:
-            self._log.info("   " + packageName)
-
     def listAllPackages(self, projectName):
         packagesNames = self.getAllPackageNames(projectName)
         self._log.info("Found {0} Packages:".format(len(packagesNames)))

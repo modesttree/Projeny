@@ -144,9 +144,6 @@ class PrjRunner:
         if self._args.listPackages:
             self._packageMgr.listAllPackages(self._args.project)
 
-        if self._args.listUnusedPackages:
-            self._packageMgr.listUnusedPackages()
-
         if self._args.openUnity:
             self._packageMgr.checkProjectInitialized(self._args.project, self._platform)
             self._unityHelper.openUnity(self._args.project, self._platform)
