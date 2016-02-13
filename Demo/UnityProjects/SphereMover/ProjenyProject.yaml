@@ -1,3 +1,4 @@
+ProjectSettingsPath: '[ProjectRoot]/ProjectSettings'
 AssetsFolder:
 - SphereMover
 PluginsFolder:
