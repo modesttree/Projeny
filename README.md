@@ -66,10 +66,12 @@ You can either run Projeny directly from source (requires python) or simply down
 - From Source
 
     - Clone this repo to a place on your hard drive
-    - Make sure python 3.x is installed
+    - Make sure python 3.x is installed and that you have also installed the following:
+        - pyyaml (to install run `pip install pyyaml`)
+        - python for windows extensions (download [here](https://sourceforge.net/projects/pywin32/) for your version of python)
     - Open UnityPlugin/Projeny.sln in Visual Studio
     - Build in Release Mode
-    - Add the Projeny/Source/bin folder to your windows path.  NOTE:  This is Projeny/Source/bin NOT Projeny/bin (the latter is used for exe builds)
+    - Add the Projeny/Source/bin folder to your windows path
 
 ## <a id="overview"></a>Overview
 
@@ -825,7 +827,14 @@ What follows is the full list of command line parameters that you can pass to th
 
 ## <a id="release-notes"></a>Release Notes
 
-0.2 (December, 2015)
+0.3 (February, 2016)
+- Better error handling and error output
+- Added ability to share project settings folders across multiple projects
+- Added support for multiple packages directories. This is particularly useful to define project-specific packages.
+- Added support for special handling of prebuilt projects that produce assemblies (however this is undocumented currently)
+- Bug fixes
+
+0.2 (January, 2015)
 - Added GUI for package management within Unity, also added a lot more documentation
 
 0.1 (December, 2015)

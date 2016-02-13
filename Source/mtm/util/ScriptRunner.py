@@ -40,3 +40,4 @@ class ScriptRunner:
             self._log.info('Operation completed with errors.  Took ' + totalSecondsStr + '.\n')
 
         return succeeded
+

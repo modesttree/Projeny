@@ -69,3 +69,5 @@ class VisualStudioHelper:
 
         self._sys.executeAndWait(buildCommand)
 
+
+
