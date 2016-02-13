@@ -1,27 +1,24 @@
 
-import prj.ioc.Container as Container
-from prj.ioc.Inject import Inject
-from prj.ioc.Inject import InjectMany
-import prj.ioc.IocAssertions as Assertions
-import prj.util.MiscUtil as MiscUtil
+import mtm.ioc.Container as Container
+from mtm.ioc.Inject import Inject
+from mtm.ioc.Inject import InjectMany
+import mtm.ioc.IocAssertions as Assertions
+import mtm.util.MiscUtil as MiscUtil
 
-from prj.util.CommonSettings import ConfigFileName
+from mtm.util.CommonSettings import ConfigFileName
 
 import win32api
 import win32com.client
 
-from prj.util.Assert import *
+from mtm.util.Assert import *
 
 class VisualStudioHelper:
     _log = Inject('Logger')
     _config = Inject('Config')
-    _packageManager = Inject('PackageManager')
-    _unityHelper = Inject('UnityHelper')
     _varMgr = Inject('VarManager')
     _sys = Inject('SystemHelper')
-    _vsSolutionGenerator = Inject('VisualStudioSolutionGenerator')
 
-    def openFile(self, filePath, lineNo, project, platform):
+    def openFile(self, filePath, lineNo, solutionPath):
         if not lineNo or lineNo <= 0:
             lineNo = 1
 
@@ -32,7 +29,7 @@ class VisualStudioHelper:
             #self._sys.executeNoWait('[VisualStudioCommandLinePath] /edit "{0}"'.format(filePath))
         else:
             # Unfortunately, in this case we can't pass in the line number
-            self.openCustomSolution(project, platform, filePath)
+            self.openVisualStudioSolution(solutionPath, filePath)
 
     def openFileInExistingVisualStudioInstance(self, filePath, lineNo):
         try:
@@ -45,31 +42,23 @@ class VisualStudioHelper:
             raise Exception("COM Error.  This is often triggered when given a bad line number. Details: {0}".format(win32api.FormatMessage(error.excepinfo[5])))
 
     def openVisualStudioSolution(self, solutionPath, filePath = None):
-        if not self._varMgr.hasKey('VisualStudioIdePath'):
-            assertThat(False, "Path to visual studio has not been defined.  Please set <VisualStudioIdePath> within one of your {0} files.  See documentation for details.", ConfigFileName)
 
-        if self._sys.fileExists('[VisualStudioIdePath]'):
-            self._sys.executeNoWait('"[VisualStudioIdePath]" {0} {1}'.format(self._sys.canonicalizePath(solutionPath), self._sys.canonicalizePath(filePath) if filePath else ""))
+        if self._varMgr.hasKey('VisualStudioIdePath'):
+            assertThat(self._sys.fileExists('[VisualStudioIdePath]'),
+               "Cannot find path to visual studio.  Expected to find it at '{0}'".format(self._varMgr.expand('[VisualStudioIdePath]')))
+
+            if solutionPath == None:
+                self._sys.executeNoWait('"[VisualStudioIdePath]" {0}'.format(self._sys.canonicalizePath(filePath) if filePath else ""))
+            else:
+                solutionPath = self._sys.canonicalizePath(solutionPath)
+                self._sys.executeNoWait('"[VisualStudioIdePath]" {0} {1}'.format(solutionPath, self._sys.canonicalizePath(filePath) if filePath else ""))
         else:
-            assertThat(False, "Cannot find path to visual studio.  Expected to find it at '{0}'".format(self._varMgr.expand('[VisualStudioIdePath]')))
-
-    def updateCustomSolution(self, project, platform):
-        self._vsSolutionGenerator.updateVisualStudioSolution(project, platform)
-
-    def openCustomSolution(self, project, platform, filePath = None):
-        self.openVisualStudioSolution(self._getCustomSolutionPath(project, platform), filePath)
-
-    def buildCustomSolution(self, project, platform):
-        solutionPath = self._getCustomSolutionPath(project, platform)
-
-        if not self._sys.fileExists(solutionPath):
-            self._log.warn('Could not find generated custom solution.  Generating now.')
-            self._vsSolutionGenerator.updateVisualStudioSolution(project, platform)
-
-        self._log.heading('Building {0}-{1}.sln'.format(project, platform))
-        self.buildVisualStudioProject(solutionPath, 'Debug')
+            assertThat(filePath == None,
+               "Path to visual studio has not been defined.  Please set <VisualStudioIdePath> within one of your {0} files.  See documentation for details.", ConfigFileName)
+            self._sys.executeShellCommand(solutionPath, None, False)
 
     def buildVisualStudioProject(self, solutionPath, buildConfig):
+        solutionPath = self._varMgr.expand(solutionPath)
         if self._config.getBool('Compilation', 'UseDevenv'):
             buildCommand = '"[VisualStudioCommandLinePath]" {0} /build "{1}"'.format(solutionPath, buildConfig)
         else:
@@ -80,18 +69,3 @@ class VisualStudioHelper:
 
         self._sys.executeAndWait(buildCommand)
 
-    def _getCustomSolutionPath(self, project, platform):
-        return '[UnityProjectsDir]/{0}/{0}-{1}.sln'.format(project, platform)
-
-    def updateUnitySolution(self, projectName, platform):
-        """
-        Simply runs unity and then generates the monodevelop solution file using an editor script
-        This is used when generating the Visual Studio Solution to get DLL references and defines etc.
-        """
-        self._log.heading('Updating unity generated solution for project {0} ({1})'.format(projectName, platform))
-
-        self._packageManager.checkProjectInitialized(projectName, platform)
-
-        # This will generate the unity csproj files which we need to generate Modest3d.sln correctly
-        # It's also necessary to run this first on clean checkouts to initialize unity properly
-        self._unityHelper.runEditorFunction(projectName, platform, 'Projeny.ProjenyEditorUtil.ForceGenerateUnitySolution')

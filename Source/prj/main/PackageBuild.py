@@ -1,19 +1,19 @@
 import sys
 import argparse
 
-from prj.log.LogStreamFile import LogStreamFile
+from mtm.log.LogStreamFile import LogStreamFile
 import os
-import prj.ioc.Container as Container
-from prj.ioc.Inject import Inject
-from prj.ioc.Inject import InjectOptional
-import prj.ioc.IocAssertions as Assertions
+import mtm.ioc.Container as Container
+from mtm.ioc.Inject import Inject
+from mtm.ioc.Inject import InjectOptional
+import mtm.ioc.IocAssertions as Assertions
 
-from prj.config.Config import Config
-from prj.log.LogStreamConsole import LogStreamConsole
-from prj.util.CommonSettings import ConfigFileName
-import prj.util.MiscUtil as MiscUtil
+from mtm.config.Config import Config
+from mtm.log.LogStreamConsole import LogStreamConsole
+from mtm.util.CommonSettings import ConfigFileName
+import mtm.util.MiscUtil as MiscUtil
 
-from prj.util.Assert import *
+from mtm.util.Assert import *
 import prj.main.Prj as Prj
 
 ScriptDir = os.path.dirname(os.path.realpath(__file__))
@@ -76,47 +76,47 @@ class Runner:
             self._sys.deleteDirectoryIfExists('[TempDir]')
 
     def _createSamplesZip(self, versionStr):
-        self._log.heading('Clearing all generated files in Demo/UnityProjects folder')
-        self._packageMgr.clearAllProjectGeneratedFiles(False)
+        with self._log.heading('Clearing all generated files in Demo/UnityProjects folder'):
+            self._packageMgr.clearAllProjectGeneratedFiles()
 
-        self._sys.deleteDirectoryIfExists('[TempDir]')
+            self._sys.deleteDirectoryIfExists('[TempDir]')
 
-        self._sys.copyDirectory('[ProjenyDir]/Demo', '[TempDir]')
+            self._sys.copyDirectory('[ProjenyDir]/Demo', '[TempDir]')
 
-        self._sys.removeFileIfExists('[TempDir]/.gitignore')
-        self._sys.removeFileIfExists('[TempDir]/PrjLog.txt')
+            self._sys.removeFileIfExists('[TempDir]/.gitignore')
+            self._sys.removeFileIfExists('[TempDir]/PrjLog.txt')
 
-        self._log.heading('Zipping up demo project')
-        self._zipHelper.createZipFile('[TempDir]', '[DistDir]/ProjenySamples-v{0}.zip'.format(versionStr))
+        with self._log.heading('Zipping up demo project'):
+            self._zipHelper.createZipFile('[TempDir]', '[DistDir]/ProjenySamples-v{0}.zip'.format(versionStr))
 
     def _createInstaller(self, installerOutputPath):
-        self._log.heading('Creating installer exe')
-        assertThat(self._sys.directoryExists(NsisPath))
+        with self._log.heading('Creating installer exe'):
+            assertThat(self._sys.directoryExists(NsisPath))
+            self._sys.createDirectory('[DistDir]')
+            self._sys.executeAndWait('"{0}" "[InstallerDir]/CreateInstaller.nsi"'.format(NsisPath))
 
-        self._sys.createDirectory('[DistDir]')
-        self._sys.executeAndWait('"{0}" "[InstallerDir]/CreateInstaller.nsi"'.format(NsisPath))
-
-        self._sys.renameFile('[DistDir]/ProjenyInstaller.exe', installerOutputPath)
+            self._sys.renameFile('[DistDir]/ProjenyInstaller.exe', installerOutputPath)
 
     def _updateBuildDirectory(self):
 
         self._sys.deleteAndReCreateDirectory('[TempDir]')
 
-        self._log.heading('Building exes')
-        self._sys.executeAndWait('[PythonDir]/BuildAllExes.bat')
+        with self._log.heading('Building exes'):
+            self._sys.executeAndWait('[PythonDir]/BuildAllExes.bat')
 
-        self._log.heading('Building unity plugin dlls')
-        self._vsSolutionHelper.buildVisualStudioProject('[ProjenyDir]/UnityPlugin/Projeny.sln', 'Release')
+        with self._log.heading('Building unity plugin dlls'):
+            self._vsSolutionHelper.buildVisualStudioProject('[ProjenyDir]/UnityPlugin/Projeny.sln', 'Release')
 
-        self._copyDir('UnityPlugin/Projeny/Assets')
-        self._copyDir('Templates')
-        self._copyFile(ConfigFileName)
-        self._copyDir('Bin')
+            self._copyDir('UnityPlugin/Projeny/Assets')
+            self._copyDir('Templates')
+            self._copyFile(ConfigFileName)
+            self._copyDir('Bin')
 
-        self._sys.removeFile('[TempDir]/Bin/.gitignore')
+            for fileName in self._sys.getAllFilesInDirectory('[InstallerDir]/BinFiles'):
+                self._sys.copyFile('[InstallerDir]/BinFiles/' + fileName, '[TempDir]/Bin/' + fileName)
 
-        self._sys.removeByRegex('[TempDir]/Bin/UnityPlugin/Release/*.pdb')
-        self._sys.deleteDirectoryIfExists('[TempDir]/Bin/UnityPlugin/Debug')
+            self._sys.removeByRegex('[TempDir]/Bin/UnityPlugin/Release/*.pdb')
+            self._sys.deleteDirectoryIfExists('[TempDir]/Bin/UnityPlugin/Debug')
 
 def installBindings():
 

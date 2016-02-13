@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.SceneManagement;
@@ -47,10 +48,85 @@ namespace Projeny
         public string ConfigPath;
         public string Param1;
         public string Param2;
+        public string Param3;
     }
 
     public static class PrjInterface
     {
+        static string _configPath;
+        static string _prjApiPath;
+
+        public static string ConfigPath
+        {
+            get
+            {
+                if (_configPath == null)
+                {
+                    _configPath = SearchForConfigPath();
+                    Assert.IsNotNull(_configPath);
+                }
+
+                return _configPath;
+            }
+        }
+
+        static string PrjEditorApiPath
+        {
+            get
+            {
+                if (_prjApiPath == null)
+                {
+                    _prjApiPath = FindPrjExePath();
+                    Assert.IsNotNull(_prjApiPath);
+                }
+
+                return _prjApiPath;
+            }
+        }
+
+        static string FindPrjExePath()
+        {
+            var settingPrefix = "EditorApiRelativePath:";
+
+            // First check for for a path in the config file
+            foreach (var line in File.ReadAllLines(ConfigPath))
+            {
+                if (line.StartsWith(settingPrefix))
+                {
+                    var relativePath = line.Substring(settingPrefix.Length + 1).Trim();
+                    var fullPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(ConfigPath), relativePath));
+                    Assert.That(File.Exists(fullPath));
+                    return fullPath;
+                }
+            }
+
+            try
+            {
+                return PathUtil.FindExePathFromEnvPath("PrjEditorApi.bat");
+            }
+            catch (FileNotFoundException)
+            {
+                throw new PrjException(
+                    "Could not locate path to PRJ.bat.  Have you added 'projeny/Bin/Prj' to your environment PATH?  See documentation for details.");
+            }
+        }
+
+        static string SearchForConfigPath()
+        {
+            foreach (var dirInfo in PathUtil.GetAllParentDirectories(Application.dataPath))
+            {
+                var configPath = Path.Combine(dirInfo.FullName, ProjenyEditorUtil.ConfigFileName);
+
+                if (File.Exists(configPath))
+                {
+                    return configPath;
+                }
+            }
+
+            throw new PrjException(
+                "Could not locate {0} when searching from {1} upwards".Fmt(ProjenyEditorUtil.ConfigFileName, Application.dataPath));
+        }
+
         public static PrjRequest CreatePrjRequest(string requestId)
         {
             return CreatePrjRequestForProjectAndPlatform(
@@ -85,7 +161,7 @@ namespace Projeny
                 RequestId = requestId,
                 ProjectName = projectName,
                 Platform = platform,
-                ConfigPath = FindPrjConfigPath()
+                ConfigPath = ConfigPath
             };
         }
 
@@ -93,7 +169,7 @@ namespace Projeny
         {
             var startInfo = new ProcessStartInfo();
 
-            startInfo.FileName = FindPrjExePath();
+            startInfo.FileName = PrjEditorApiPath;
 
             var argStr = "\"{0}\" \"{1}\" {2} {3}"
                 .Fmt(
@@ -108,6 +184,11 @@ namespace Projeny
             if (request.Param2 != null)
             {
                 argStr += " \"{0}\"".Fmt(request.Param2);
+            }
+
+            if (request.Param3 != null)
+            {
+                argStr += " \"{0}\"".Fmt(request.Param3);
             }
 
             startInfo.Arguments = argStr;
@@ -201,35 +282,6 @@ namespace Projeny
             }
 
             return PrjResponse.Success(errorOutput);
-        }
-
-        static string FindPrjExePath()
-        {
-            try
-            {
-                return PathUtil.FindExePath("PrjEditorApi.bat");
-            }
-            catch (FileNotFoundException)
-            {
-                throw new PrjException(
-                    "Could not locate path to PRJ.bat.  Have you added 'projeny/Bin/Prj' to your environment PATH?  See documentation for details.");
-            }
-        }
-
-        public static string FindPrjConfigPath()
-        {
-            foreach (var dirInfo in PathUtil.GetAllParentDirectories(Application.dataPath))
-            {
-                var configPath = Path.Combine(dirInfo.FullName, ProjenyEditorUtil.ConfigFileName);
-
-                if (File.Exists(configPath))
-                {
-                    return configPath;
-                }
-            }
-
-            throw new PrjException(
-                "Could not locate {0} when searching from {1} upwards".Fmt(ProjenyEditorUtil.ConfigFileName, Application.dataPath));
         }
 
         static string ToPlatformDirStr(BuildTarget platform)

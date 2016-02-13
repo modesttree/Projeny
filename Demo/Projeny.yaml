@@ -5,6 +5,6 @@ ProjectAliases:
     sm: SphereMover
 
 PathVars:
-    UnityPackagesDir: '[ConfigDir]/UnityPackages'
     UnityProjectsDir: '[ConfigDir]/UnityProjects'
+    SharedUnityPackagesDir: '[ConfigDir]/UnityPackages'
     LogPath: '[ConfigDir]/PrjLog.txt'

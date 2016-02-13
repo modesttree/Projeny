@@ -1,10 +1,14 @@
 
-from prj.util.Assert import *
+from mtm.util.Assert import *
+
+class PackageFolderInfo:
+    def __init__(self):
+        self.path = None
+        self.packages = []
 
 class PackageInfo:
     def __init__(self):
         self.name = None
-        self.path = None
         # Might be null
         self.installInfo = None
 

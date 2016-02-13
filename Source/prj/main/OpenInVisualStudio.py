@@ -1,18 +1,19 @@
 
 import prj.main.Prj as Prj
 
+import mtm.util.MiscUtil as MiscUtil
 import os
-import prj.ioc.Container as Container
-from prj.ioc.Inject import Inject
-import prj.ioc.IocAssertions as Assertions
+import mtm.ioc.Container as Container
+from mtm.ioc.Inject import Inject
+import mtm.ioc.IocAssertions as Assertions
 import sys
 import argparse
 
-from prj.log.LogStreamConsole import LogStreamConsole
+from mtm.log.LogStreamConsole import LogStreamConsole
 
-from prj.util.PlatformUtil import Platforms
-import prj.util.PlatformUtil as PlatformUtil
-from prj.util.Assert import *
+from mtm.util.Platforms import Platforms
+import mtm.util.PlatformUtil as PlatformUtil
+from mtm.util.Assert import *
 
 class Runner:
     _scriptRunner = Inject('ScriptRunner')
@@ -20,6 +21,7 @@ class Runner:
     _sys = Inject('SystemHelper')
     _varMgr = Inject('VarManager')
     _vsSolutionHelper = Inject('VisualStudioHelper')
+    _prjVsSolutionHelper = Inject('ProjenyVisualStudioHelper')
 
     def run(self, args):
         self._args = args
@@ -39,8 +41,13 @@ class Runner:
         if self._args.lineNo:
             lineNo = int(self._args.lineNo)
 
+        if platform == None:
+            solutionPath = None
+        else:
+            solutionPath = self._prjVsSolutionHelper.getCustomSolutionPath(project, platform)
+
         self._vsSolutionHelper.openFile(
-            self._args.filePath, lineNo, project, platform)
+            self._args.filePath, lineNo, solutionPath)
 
     def _getProjectAndPlatformFromFilePath(self, filePath):
         unityProjectsDir = self._sys.canonicalizePath(self._varMgr.expand('[UnityProjectsDir]'))
@@ -54,10 +61,13 @@ class Runner:
 
         projectName = dirs[0]
 
-        platformProjectDirName = dirs[1]
-        platformDirName = platformProjectDirName[platformProjectDirName.rfind('-')+1:]
+        try:
+            platformProjectDirName = dirs[1]
+            platformDirName = platformProjectDirName[platformProjectDirName.rfind('-')+1:]
 
-        platform = PlatformUtil.fromPlatformFolderName(platformDirName)
+            platform = PlatformUtil.fromPlatformFolderName(platformDirName)
+        except:
+            platform = None
 
         return projectName, platform
 
@@ -86,11 +96,7 @@ def installBindings(args):
 
     Prj.installBindings(findConfigPath(args.filePath))
 
-if __name__ == '__main__':
-    if (sys.version_info < (3, 0)):
-        print('Wrong version of python!  Install python 3 and try again')
-        sys.exit(2)
-
+def _main():
     parser = argparse.ArgumentParser(description='Projeny Visual Studio Opener')
     addArguments(parser)
 
@@ -107,4 +113,28 @@ if __name__ == '__main__':
 
     Runner().run(args)
 
+if __name__ == '__main__':
+    if (sys.version_info < (3, 0)):
+        print('Wrong version of python!  Install python 3 and try again')
+        sys.exit(2)
+
+    succeeded = True
+
+    try:
+        _main()
+
+    except KeyboardInterrupt as e:
+        print('Operation aborted by user by hitting CTRL+C')
+        succeeded = False
+
+    except Exception as e:
+        sys.stderr.write(str(e) + '\n')
+
+        if not MiscUtil.isRunningAsExe():
+            sys.stderr.write('\n' + traceback.format_exc())
+
+        succeeded = False
+
+    if not succeeded:
+        sys.exit(1)
 

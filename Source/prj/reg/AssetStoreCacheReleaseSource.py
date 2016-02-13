@@ -1,10 +1,10 @@
 
 import os
-from prj.ioc.Inject import Inject
-from prj.ioc.Inject import InjectMany
-import prj.ioc.IocAssertions as Assertions
+from mtm.ioc.Inject import Inject
+from mtm.ioc.Inject import InjectMany
+import mtm.ioc.IocAssertions as Assertions
 from prj.reg.LocalFolderReleaseSource import LocalFolderReleaseSource
-from prj.util.Assert import *
+from mtm.util.Assert import *
 
 class AssetStoreCacheReleaseSource:
     def __init__(self):
@@ -29,9 +29,9 @@ class AssetStoreCacheReleaseSource:
     def getName(self):
         return "Asset Store Cache"
 
-    def installRelease(self, releaseInfo, forcedName):
+    def installRelease(self, packageRoot, releaseInfo, forcedName):
         for subReg in self._folderSources:
             if releaseInfo in subReg.releases:
-                return subReg.installRelease(releaseInfo, forcedName)
+                return subReg.installRelease(packageRoot, releaseInfo, forcedName)
 
         assertThat(False)

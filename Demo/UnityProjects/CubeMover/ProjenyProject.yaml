@@ -1,4 +1,4 @@
+ProjectSettingsPath: '[ProjectRoot]/ProjectSettings'
 AssetsFolder:
 - CommonShapeMover
 - CubeMover
-PluginsFolder: []

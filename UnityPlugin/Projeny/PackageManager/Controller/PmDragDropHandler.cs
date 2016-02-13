@@ -18,7 +18,7 @@ namespace Projeny.Internal
         readonly PmView _view;
         readonly PmModel _model;
 
-        readonly EventManager _eventManager = new EventManager();
+        readonly EventManager _eventManager = new EventManager(null);
 
         public PmDragDropHandler(
             PmModel model,
@@ -80,7 +80,7 @@ namespace Projeny.Internal
                         {
                             _asyncProcessor.Process(
                                 InstallReleasesAsync(
-                                    entries.Select(x => (ReleaseInfo)x.Model).ToList()), "Installing Releases");
+                                    entries.Select(x => (ReleaseInfo)x.Model).ToList()), true, "Installing Releases");
                             break;
                         }
                         default:
@@ -226,7 +226,7 @@ namespace Projeny.Internal
 
         PackageInfo TryFindPackageInfoForRelease(ReleaseInfo releaseInfo)
         {
-            foreach (var packageInfo in _model.Packages)
+            foreach (var packageInfo in _model.AllPackages)
             {
                 if (packageInfo.InstallInfo != null && packageInfo.InstallInfo.ReleaseInfo != null && packageInfo.InstallInfo.ReleaseInfo.Id == releaseInfo.Id)
                 {
@@ -316,6 +316,10 @@ namespace Projeny.Internal
 
             Assert.That(releaseInfos.Select(x => x.Id).GetDuplicates().IsEmpty(), "Found duplicate releases selected - are you installing multiple versions of the same release?");
 
+            var packageRoot = _model.TryGetCurrentPackageFolderPath();
+
+            Assert.IsNotNull(packageRoot, "Please select a package folder before attempting to install a release");
+
             foreach (var releaseInfo in releaseInfos)
             {
                 var userChoice = CheckShouldInstall(releaseInfo);
@@ -331,7 +335,7 @@ namespace Projeny.Internal
                     case InstallReleaseUserChoices.Install:
                     {
                         yield return _prjCommandHandler.ProcessPrjCommand(
-                            "Installing release '{0}'".Fmt(releaseInfo.Name), PrjHelper.InstallReleaseAsync(releaseInfo));
+                            "Installing release '{0}'".Fmt(releaseInfo.Name), PrjHelper.InstallReleaseAsync(packageRoot, releaseInfo));
                         break;
                     }
                     case InstallReleaseUserChoices.Skip:

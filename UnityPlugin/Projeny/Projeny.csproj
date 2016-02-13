@@ -1,0 +1,140 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{A8FDE485-31E0-4B40-8E7B-476E82374944}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>
+    </RootNamespace>
+    <AssemblyName>$(MSBuildProjectName)</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Unity Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\Bin\UnityPlugin\Debug\</OutputPath>
+    <IntermediateOutputPath>..\..\Temp\obj\Debug\</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>..\..\Temp\obj\Debug\</BaseIntermediateOutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <GenerateSerializationAssemblies>On</GenerateSerializationAssemblies>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Unity Release' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\Bin\UnityPlugin\Release\</OutputPath>
+    <IntermediateOutputPath>..\..\Temp\obj\Release\</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>..\..\Temp\obj\Release\</BaseIntermediateOutputPath>
+    <DefineConstants>
+    </DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <GenerateSerializationAssemblies>On</GenerateSerializationAssemblies>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="UnityEditor">
+      <HintPath>..\Libraries\Unity\UnityEditor.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>..\Libraries\Unity\UnityEngine.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Internal\Assert.cs" />
+    <Compile Include="Internal\AsyncProcessor.cs" />
+    <Compile Include="Internal\Coroutine.cs" />
+    <Compile Include="Internal\DateTimeUtil.cs" />
+    <Compile Include="Internal\DictionaryExtensions.cs" />
+    <Compile Include="Internal\Events\EventDispatcher.cs" />
+    <Compile Include="Internal\Events\EventHandlerKey.cs" />
+    <Compile Include="Internal\Events\EventManager.cs" />
+    <Compile Include="Internal\Events\IFrameCounter.cs" />
+    <Compile Include="Internal\Events\TimerPool.cs" />
+    <Compile Include="Internal\ExceptionExtensions.cs" />
+    <Compile Include="Internal\ImguiUtil.cs" />
+    <Compile Include="Internal\JunctionPoint.cs" />
+    <Compile Include="Internal\LinqExtensions.cs" />
+    <Compile Include="Internal\Log.cs" />
+    <Compile Include="Internal\MiscExtensions.cs" />
+    <Compile Include="Internal\MiscUnityEditorExtensions.cs" />
+    <Compile Include="Internal\PathUtil.cs" />
+    <Compile Include="Internal\PreserveAttribute.cs" />
+    <Compile Include="Internal\ProfileBlock.cs" />
+    <Compile Include="Internal\StringExtensions.cs" />
+    <Compile Include="Internal\Tuple.cs" />
+    <Compile Include="Internal\TypeExtensions.cs" />
+    <Compile Include="Main\Models\PackageInfo.cs" />
+    <Compile Include="Main\Models\ProjectConfig.cs" />
+    <Compile Include="Main\Models\ReleaseInfo.cs" />
+    <Compile Include="Main\PrjHelper.cs" />
+    <Compile Include="Main\PrjInterface.cs" />
+    <Compile Include="Main\ProjenyConfigValidator.cs" />
+    <Compile Include="Main\ProjenyEditorMenu.cs" />
+    <Compile Include="Main\ProjenyEditorUtil.cs" />
+    <Compile Include="Main\Serialization\PrjSerializer.cs" />
+    <Compile Include="Main\Serialization\YamlSerializer.cs" />
+    <Compile Include="PackageManager\Controller\PmDragDropHandler.cs" />
+    <Compile Include="PackageManager\Controller\PmInputHandler.cs" />
+    <Compile Include="PackageManager\Controller\PmModelViewSyncer.cs" />
+    <Compile Include="PackageManager\Controller\PmPackageHandler.cs" />
+    <Compile Include="PackageManager\Controller\PmPackageViewHandler.cs" />
+    <Compile Include="PackageManager\Controller\PmProjectViewHandler.cs" />
+    <Compile Include="PackageManager\Controller\PmReleasesViewHandler.cs" />
+    <Compile Include="PackageManager\Controller\PmViewAsyncHandler.cs" />
+    <Compile Include="PackageManager\Controller\PmViewErrorHandler.cs" />
+    <Compile Include="PackageManager\Controller\PmViewHandlerCommon.cs" />
+    <Compile Include="PackageManager\Controller\PmVsSolutionViewHandler.cs" />
+    <Compile Include="PackageManager\Model\PmModel.cs" />
+    <Compile Include="PackageManager\Model\PmProjectHandler.cs" />
+    <Compile Include="PackageManager\Model\PmReleasesHandler.cs" />
+    <Compile Include="PackageManager\Model\UpmCommandHandler.cs" />
+    <Compile Include="PackageManager\PmCompositionRoot.cs" />
+    <Compile Include="PackageManager\PmCreateNewProjectPopupHandler.cs" />
+    <Compile Include="PackageManager\PmSettings.cs" />
+    <Compile Include="PackageManager\PmWindow.cs" />
+    <Compile Include="PackageManager\PmWindowInitializer.cs" />
+    <Compile Include="PackageManager\View\DragList.cs" />
+    <Compile Include="PackageManager\View\PmView.cs" />
+    <Compile Include="Main\PrjPathVars.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\YamlDotNet\YamlDotNet.csproj">
+      <Project>{463bdb34-890f-4375-a79f-37950f5457dc}</Project>
+      <Name>YamlDotNet</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Util\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+</Project>

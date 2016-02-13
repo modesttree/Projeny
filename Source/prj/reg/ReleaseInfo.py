@@ -1,5 +1,5 @@
 
-from prj.util.Assert import *
+from mtm.util.Assert import *
 
 class ReleaseInfo:
     def __init__(self):

@@ -36,6 +36,8 @@ NOTE: Projeny requires Unity3D 5.3.1 or higher, since it makes use of the `-buil
     7. <a href="#visual-studio-generation">More intelligent Visual Studio Solution generation</a>
 * Usage Details
     * <a href="#managing-assetstore-assets">Managing Asset Store Assets / Releases</a>
+    * <a href="#multiplepackagefolders">Using Multiple Package Folders</a>
+    * <a href="#shareprojectsettings">Sharing Project Settings</a>
     * <a href="#gotchas">Gotchas / Miscellaneous Tips and Tricks</a>
     * <a href="#faq">Frequently Asked Questions</a>
         * <a href="#workflow-create-package">How do I create a new package?</a>
@@ -82,11 +84,15 @@ This is best shown with an example.  After installing Projeny, [download the sam
     * CubeMover
     * SphereMover
 * UnityProjects
+    * ProjenyProject.yaml
     * AllMovers
+        * ProjenyProject.yaml
         * ProjectSettings
     * CubeMover
+        * ProjenyProject.yaml
         * ProjectSettings
     * SphereMover
+        * ProjenyProject.yaml
         * ProjectSettings
 
 Each folder in the `UnityProjects` directory represents an actual Unity3D project.  Note that they each have the familiar `ProjectSettings` directory but they do not yet have an `Assets` directory.  This is because these projects have not been initialized yet by Projeny.  You'll also notice a file named `Projeny.yaml` at the root of the folder structure.  This is a simple text file that is used to specify configuration settings for Projeny.
@@ -118,17 +124,7 @@ We do this because the contents of the `CubeMover-Windows` folder does not itsel
 
 The directories containing the actual content can be found in the `UnityPackages` directory.  This is where you will find the `CubeMover` and `CommonShapeMover` folders that we see linked to underneath the assets directory.
 
-But how does Projeny know which packages to use for the `CubeMover` project?  For this it reads from a configuration text file, which can be found at `CubeMover/ProjenyProject.yaml`.  If you open this file it should read as follows:
-
-```
-AssetsFolder:
-    - CubeMover
-    - CommonShapeMover
-```
-
-Here we see the list of packages to include for this project underneath the setting "AssetsFolder".
-
-Most of the time however, you will not need to edit this file directly.  Instead, you can use Projeny's built-in Unity plugin to manipulate this file.  You can try this by opening the `CubeMover` project in Unity, then clicking the menu item `Projeny -> Package Manager...`.  This window will be be explained in more detail in the following sections.
+But how does Projeny know which packages to use for the `CubeMover` project?  For this it reads from a configuration text file, which can be found at `CubeMover/ProjenyProject.yaml`.  Details on this file are covered in another section below.  This file can be changed by hand, but most of the time however you can use Projeny's built-in Unity plugin to manipulate this file instead.  You can try this by opening the `CubeMover` project in Unity, then clicking the menu item `Projeny -> Package Manager...`.  This window will be be explained in more detail in the following sections.
 
 ## <a id="advantages"></a>Advantages of Using Projeny
 
@@ -146,7 +142,7 @@ Want to re-use some common utility code/prefabs in several different games?   Ju
 
 Want to just test one part of your game without needing to fire up the entire project?  Just create another Unity project and reference only the parts of the game you want to test.
 
-To see this in action, do the following: (Note: this assumes you have already run `prj -init` as described above)
+To see this in action, do the following: (Note: this assumes you have already run `prj --init` as described above)
 * Open Unity then open the project at `UnityProjects/SphereMover/SphereMover-Windows`
 * Open another copy of Unity then open the project at `UnityProjects/CubeMover/CubeMover-Windows`
 * Open the scene named `SphereMain` in the first Unity and the scene `CubeMain` in the second Unity
@@ -161,7 +157,7 @@ To see this in action, do the following: (Note: this assumes you have already ru
 
 Projeny allows you to much more easily manage many different Unity packages that you've created yourself, but also those packages that you've installed through the asset store. 
 
-You can build up a big collection of packages that you've purchased through the asset store and added to your `UnityPackages` directory, and then easily include or exclude those in your purchased assets by simply selecting or not selecting them for each project.  Projeny can also be used to easily upgrade/downgrade installed asset store packages all through a simple interface within Unity.  See <a href="#managing-assetstore-assets">this section</a> for more details on managing asset store packages through Projeny.
+You can build up a big collection of packages that you've purchased through the asset store and added to your `UnityPackages` directory, and then easily include or exclude those by simply selecting or not selecting them for each project.  Projeny can also be used to easily upgrade/downgrade installed asset store packages all through a simple interface within Unity.  See <a href="#managing-assetstore-assets">this section</a> for more details on managing asset store packages through Projeny.
 
 ### <a id="platform-switching"></a>3 - Near instant platform switching
 
@@ -200,7 +196,7 @@ To do this, open up the package manager by clicking on the menu item `Projeny ->
 
 <img src="Docs/Screen1.png?raw=true" alt="Package Manager" />
 
-If you click on the Edit button you should see the `ProjenyProject.yaml` file that we saw previously.  This screen is simply an easier way to edit this through a graphical interface.
+If you click on the Edit button you should see the `ProjenyProject.yaml` file associated with this project.  This file contains all projeny configuration settings for your project.  You can edit this file by hand, or use the GUI provided by the Package Manager window as shown above.
 
 Now, drag the `CommonShapeMover`, `CubeMover`, and `SphereMover` projects to the `Plugins` folder, so that it looks like this:
 
@@ -221,7 +217,7 @@ Now we can continue coding within the `AllMovers` project and benefit from faste
 
 Unity 5 adds some helpful features, including the ability to enable/disable a DLL based on platform.  If you add a DLL to your project then click on it you get a bunch of checkboxes in the inspector that allow you to choose which platform this DLL is for.   Projeny allows you to do something similar except for all assets and directories.
 
-This is possible because when Projeny generates your Unity project, it can choose a different set of package folders to include based on the current platform, since each platform has its own Unity project generated for it.
+This is possible because when Projeny generates your Unity project, it can choose a different set of package folders to include based on the current platform, since each platform has its own Unity project directory generated for it.
 
 One example use for this is if you had a large Resources folder that contained a lot of data for a specific platform.  Since Unity always includes the contents of the Resources folders for builds, this would cause your platform specific files inside Resources to be included on other platforms for no reason.  Using Projeny, you can simply move the Resources folder to a platform specific package to address this problem
 
@@ -252,7 +248,7 @@ So the question is, why were the `SphereMover`, `CommonShapeMover`, and `CubeMov
 
 The reason for this is that the `AllMovers` package has its own list dependencies separate from the project.
 
-To see this, click the arrow on the far left side in the Package Manager window.  This will show change the view to show the full list of packages that are available for use in your project, in addition to the previous screen that showed the current `ProjenyProject.yaml` configuration settings.
+To see this, click the arrow on the far left side in the Package Manager window.  This will change the view to show the full list of packages that are available for use in your project, in addition to the previous screen that showed the current `ProjenyProject.yaml` configuration settings.
 
 Now, right click on the `AllMovers` package in the Packages list and select `Edit ProjenyPackage.yaml`, as shown here:
 
@@ -274,7 +270,7 @@ To see this in action, open up the `AllMovers-Windows` project, and then click t
 
 <img src="Docs/Screen5.png?raw=true" alt="Package Manager" />
 
-Click the Open Solution button.  You will most likely get an error about the path to Visual Studio not being defined.  To fix this, open up the `Projeny.yaml` file at the root of the folder structure and change it to include a value for `VisualStudioIdePath`.  For example:
+Click the Open Solution button.  By default this will open the solution using the default program, but you can also set this explicitly in the `Projeny.yaml` by setting a value for `VisualStudioIdePath` like below:
 
     PathVars:
         UnityPackagesDir: '[ConfigDir]/UnityPackages'
@@ -282,7 +278,7 @@ Click the Open Solution button.  You will most likely get an error about the pat
         LogPath: '[ConfigDir]/PrjLog.txt'
         VisualStudioIdePath: 'C:/Program Files (x86)/Microsoft Visual Studio 12.0/Common7/IDE/devenv.exe'
 
-Now if we click Open Solution again, we should see two C# projects.  One named "AssetsFolder" that contains all C# files under the `Assets/` folder and one named "PluginsFolder" that contains all C# files underneath the `Plugins/` folder.  So far, this is the same as the solution that Unity produces when it generates its visual studio solution.
+After opening the solution, you should see two C# projects.  One named "AssetsFolder" that contains all C# files under the `Assets/` folder and one named "PluginsFolder" that contains all C# files underneath the `Plugins/` folder.  So far, this is the same as the solution that Unity produces when it generates its visual studio solution.
 
 Go back to the Package manager and drag the following projects over:
 
@@ -292,7 +288,7 @@ Now, if you hit Update Solution, and go back to Visual Studio you should see the
 
 <img src="Docs/Screen7.png?raw=true" alt="Package Manager" />
 
-As you can no doubt guess by now, every package that you drag to the list on the right in the Package Manager will have a C# project created for it.  You'll also notice that the AssetsFolder has disappeared.  This is because Projeny did not find any files left over to place in it, so it didn't bother to create the project.  But, since we did not drag over the `CommonShapeMover` project, the PluginsFolder project has remained.
+As you can see, every package that you drag to the list on the right in the Package Manager will have a C# project created for it.  You'll also notice that the AssetsFolder has disappeared.  This is because Projeny did not find any files left over to place in it, so it didn't bother to create the project.  But, since we did not drag over the `CommonShapeMover` project, the PluginsFolder project has remained.
 
 This can be helpful for code organization but more importantly, this allows you to design dependencies on a module level.  In normal Unity projects, every code file could potentially make use of any other code file in your entire project.  For small projects this is not an issue, however, as your project scales in size it is helpful to be able to design code at a module level and avoid having your project devolve into a [Big ball of mud](https://en.wikipedia.org/wiki/Big_ball_of_mud).
 
@@ -305,12 +301,12 @@ If you want to use the Projeny-generated visual studio solution as your primary 
 * Navigate to the install directory of Projeny (by default this is at `C:\Program Files (x86)\Projeny`) and select `Bin/PrjOpenInVisualStudio.bat` (note that you may have to select `AllFiles` in the bottom right dropdown)
 * Next to `External Script Editor Args` type `"$(File)" "$(Line)"`
 
-Now, when you double click a C# script or an error message in the Unity console it should open the file in the Projeny generated solution
+Now, when you double click a C# script or an error message in the Unity console it should open the file in the Projeny generated solution.  Note that in this case you will have to set a value for `VisualStudioIdePath` as described above.
 
 Note the following:
 - The contents of the `Visual Studio Solution` list in the Package Manager are saved to `ProjenyProject.yaml`.  If you click the edit button from Package Manager after following the steps above you can see this.
 - The C# project dependencies are generated based on the dependencies that are declared for the package in a `ProjenyPackage.yaml` file, as described in the <a href="#dependency-management">previous section</a>. (you can see this by clicking `References -> Add Reference` then looking at `Solution -> Projects` from within Visual Studio)
-- The solution file is generated and saved at `UnityProjects/AllMovers-Windows.sln`.  Not to be confused with `UnityProjects/AllMovers-Windows/AllMovers-Windows.sln` which is usually the path to the solution generated by Unity
+- The solution file is generated and saved at `UnityProjects/AllMovers-Windows.sln`.  Not to be confused with `UnityProjects/AllMovers-Windows/AllMovers-Windows.sln` which is (usually) the path to the solution generated by Unity
 - The solution file and all csproj files are fully generated, and therefore you should not change any settings on them, such as preprocessor defines, output paths, etc. Any change that you make here will be over-written next time you update the solution. Also, note that if you're using source control, the csproj files and solution file will be ignored since the entire Unity `Assets` directory is ignored.  You can however, use Visual Studio to create/remove files without an issue, since these files will be added again next time Projeny updates it.
 - The DLL's generated by this custom solution are not used at all, just like the DLL's generated by the normal Unity-generated solution are not used at all . Unity still has to recompile all the code itself, even if we've already compiled it using the custom solution.
 - The generated solution file is platform specific, since each platform contains different preprocessor defines.  This is good to be aware of because it means you will have to exit visual studio and re-open the solution when changing platforms.
@@ -346,6 +342,52 @@ Also note that since this list is generated from your asset store cache, in orde
 
 For information on defining your own "release source", for use in addition to the asset store cache (for example by using a local folder on your hard drive or a remote file server) see <a href="#custom-release-registries">this section</a>
 
+## <a id="multiplepackagefolders"></a>Using Multiple Package Folders
+
+Up until now we've assumed that there is one definitive folder for all the packages that are available for inclusion in your unity projects.  However, this is configurable, so if you want, you can define multiple locations to pull packages from.  This can be especially useful if you want to define a project-specific package and you do not want to add clutter up the shared `UnityPackages` directory.
+
+To see this in action, download the sample project and then open up the `All-Movers` project (by either opening up the `UnityProjects\AllMovers\AllMovers-Windows` directory within unity or running `prj --project AllMovers --openUnity` / `prj -p am -ou` from the command line)
+
+Then open up the Package Manager through the menu item `Projeny -> Package Manager`.  In the Packages panel, you should see a dropdown that allows you to select where to get the package list from as shown in this screenshot:
+
+<img src="Docs/Screen11.png?raw=true" alt="Package Manager" />
+
+Select the dropdown and choose the option for `[ProjectRoot]\Packages`.  By default this will display an empty list of packages.  Right click in the list and choose `New Package`, then enter the name `Test`.  You should then see the following:
+
+<img src="Docs/Screen12.png?raw=true" alt="Package Manager" />
+
+Now, right click again in the list and choose `Show Root Folder In Explorer`.  This will open up the directory at `UnityProjects/AllMovers/Packages`.
+
+The list of package folders locations that appears in this drop down is configured on a per-project basis and can be found in the `ProjenyProject.yaml` files.  The sample project is set up with two locations.  One for the common `UnityPackages` folder and one directly underneath the root folder for each project.
+
+To see where this is set, open up the file `ProjenyProject.yaml` at `UnityProjects/ProjenyProject.yaml`.  The settings in this file will automatically be applied to all projects, in addition to the settings that are inside `UnityProjects/AllMovers/ProjenyProject.yaml`.  This file should appear as follows:
+
+    PackageFolders:
+        - '[SharedUnityPackagesDir]'
+        - '[ProjectRoot]/Packages'
+
+This list should contain the same values as what you see in the dropdown within the Package Manager GUI.
+
+## <a id="shareprojectsettings"></a>Sharing Project Settings
+
+In addition to sharing packages between unity projects, you can also share project settings.  Project settings include all the values that you see when you open up any menu item inside `Edit -> Project Settings` within Unity.  This can be useful if you want to create a duplicate of a project with a slightly different set of packages.
+
+To see this in action, download the sample project and then open up the `All-Movers` project (by either opening up the `UnityProjects\AllMovers\AllMovers-Windows` directory within unity or running `prj --project AllMovers --openUnity` / `prj -p am -ou` from the command line)
+
+Then, select the menu item `Projeny -> Change Project -> New`.  This should display the following popup:
+
+<img src="Docs/Screen13.png?raw=true" alt="Package Manager" />
+
+Make sure to check the "Share Project Settings" checkbox which is unchecked by default.  Give it the name `Test`.
+
+After clicking Submit, your new project should be initialized and then opened in Unity.  Now, if you change a project settings from the `Edit -> Project Settings` menu it will apply to both the `AllMovers` and your newly created `Test` project.
+
+Like all project settings, this is configured within the `ProjenyProject.yaml` file.  If you open this up by either clicking the `Edit` button within the Package Manager or simply opening up `UnityProjects/Test/ProjenyProject.yaml` you should see the following:
+
+    ProjectSettingsPath: '[ProjectRoot]/../AllMovers/ProjectSettings'
+
+Note that since we haven't added any packages yet to our new project, there isn't a line for `AssetsFolder` and `PluginsFolder` yet.
+
 ## <a id="gotchas"></a>Gotchas / Miscellaneous Tips and Tricks
 
 * After opening your project for the first time (or when adding new packages) Unity will show the following warning:
@@ -363,7 +405,7 @@ However, we are not doing any of the things that Unity warns about here so this 
     * Method 1 - Using the Package Manager
         * Click the menu item `Projeny -> Package Manager`
         * Go to the Packages section by pressing the arrow button the left
-        * Click the "New" button
+        * Click the "New" button or right click and select `New Package`
         * Enter name for your package
         * Add your package to your project by dragging it to either `Assets` or `Plugins` on the right
         * (optional) Add a `ProjenyPackage.yaml` file to your new package folder.   See <a href="#package-yaml">here</a> for details.
@@ -378,7 +420,7 @@ However, we are not doing any of the things that Unity warns about here so this 
 
     * Method 1 - Within Unity
         * Click the menu item `Projeny -> Change Project -> New...`
-        * Enter the name for your new project
+        * Enter the name for your new project, and choose whether you want to duplicate the project settings or not with the checkbox
         * After the new project loads, open the Package Manager again to add packages, etc.
         * Done
         * (optional) Add a `ProjenyProject.yaml` file to your new project folder. See <a href="#project-yaml">here</a> for details.
@@ -391,13 +433,26 @@ However, we are not doing any of the things that Unity warns about here so this 
 
 * #### <a id="workflow-create-new-config"></a>How do I start an entirely new set of Projeny-based packages/projects from scratch?
 
-    You need to use the command line for this.
+    * Method 1 - Command line
+        * Open command prompt / powershell at the directory where you want to create your new projects/packages.
+        * Run `prj --createConfig` (or the shorthand `prj -cc`)
+        * It will also create a new file named `Projeny.yaml` with some basic defaults (see <a href="#projeny-yaml">here</a> for details on this file)
+        * This will set up your new config as follows:
+            * Projects will reside in a folder named `UnityProjects`
+            * Packages will reside in a folder named `UnityPackages`.  Each project will also have the option for local packages at `UnityProjects/PROJECT_NAME/Packages`
+        * After this, you will probably want to <a href="#workflow-create-project-command-line">create a project</a>
 
-    * Open command prompt / powershell at the directory where you want to create your new projects/packages.
-    * Run `prj --createConfig` (or the shorthand `prj -cc`)
-    * Note that this will create two new folders, one called `UnityPackages` and another called `UnityProjects` in the current directory
-    * It will also create a new file named `Projeny.yaml` with some basic defaults (see <a href="#projeny-yaml">here</a> for details on this file)
-    * After this, you will probably want to <a href="#workflow-create-project-command-line">create a project</a>
+    * Method 1 - Manually
+        * Create a new directory that will be the root for your project
+        * Create a file named `Projeny.yaml` at this directory with the following contents:
+
+            PathVars:
+                UnityProjectsDir: '[ConfigDir]/UnityProjects'
+                LogPath: '[ConfigDir]/PrjLog.txt'
+
+        * Create a new directory named `UnityProjects`
+        * Done
+        * After this, you will probably want to <a href="#workflow-create-project-command-line">create a project</a>
 
 ## <a id="projeny-yaml"></a>Projeny.yaml reference
 
@@ -415,7 +470,6 @@ Typically, you would have configuration files in both of these locations.  The c
 If you follow <a href="#workflow-create-new-config">the instructions to create a new Projeny-based set of projects</a>, you will find that a default `Projeny.yaml` file is created with the following contents:
 
     PathVars:
-        UnityPackagesDir: '[ConfigDir]/UnityPackages'
         UnityProjectsDir: '[ConfigDir]/UnityProjects'
         LogPath: '[ConfigDir]/PrjLog.txt'
 
@@ -459,7 +513,7 @@ Here is the full list of configuration settings.  Note that you don't need to in
 
         # This value will determine where the `prj` command outputs 
         # detailed logging information
-        LogPath: 'C:/Temp/ProjenyLog.txt'
+        LogPath: '[ConfigDir]/PrjLog.txt'
 
     Console:
         # If you're using a console that supports multiple colors, set 
@@ -498,6 +552,17 @@ In most cases you can edit the `ProjenyProject.yaml` file using the Package Mana
 
 Note that like all configuration files in Projeny, `ProjenyProject.yaml` is defined using the <a href="https://en.wikipedia.org/wiki/YAML">YAML standard</a>.
 
+Note that you can define multiple `ProjenyProject.yaml` files, with the result that they will all be applied to the project.  There are 4 places that Projeny looks for this file.  For example, given a project named `Foo`, these locations are as follows:
+
+1. `UnityProjects/Foo/ProjenyProject.yaml`
+2. `UnityProjects/Foo/ProjenyProjectCustom.yaml`
+3. `UnityProjects/ProjenyProject.yaml`
+4. `UnityProjects/ProjenyProjectCustom.yaml`
+
+These all follow the same format. (3) and (4) are automatically used by all projects, so it's a good place to put in packages that you want to include everywhere.
+
+(2) and (4) should be ignored by source control and are a convenient place to add user-specific packages. For example, different developers on the same project might have different preferences for certain unity plugins, such as a custom unity console, a popup window to help switch between scenes, etc.  So the `ProjenyProjectCustom.yaml` files can be used for this purpose, to add packages on an individual basis.
+
 The format of `ProjenyProject.yaml` is as follows:
 
     AssetsFolder:
@@ -519,21 +584,25 @@ The format of `ProjenyProject.yaml` is as follows:
         {FolderName}: /{PackageNamePattern}
         {FolderName}: /{PackageNamePattern}
 
+    PackageFolders:
+        - {DirectoryPath}
+        - {DirectoryPath}
+
 Where:
-* `{PackageName}` represents the name of a directory that is below your `UnityPackages` directory.
+* `{PackageName}` represents the name of a directory that is in one of the `PackageFolders` directories
 * `{PackageNamePattern}` represents a python regular expression that is used to match one more packages in the `UnityPackages` directory
 
 Note the following:
 * Packages that are listed underneath the `AssetsFolder` category will be placed directly underneath the `Assets/` directory of your project
 * Packages that are listed underneath the `PluginsFolder` category will be placed directly underneath the `Assets/Plugins` directory of your project
 * All packages underneath the `SolutionProjects` category will have their own .csproj file generated, when running `Project -> Update C# Project` or when hitting the `Update Solution` button within the package manager
-    * Note that you can also use a regular expression instead of explitly listing the full package name. For example, if you want to create a C# project for every package in your project add the line `/.*` which will match everything
+    * Note that you can also use a regular expression instead of explicitly listing the full package name. For example, if you want to create a C# project for every package in your project add the line `/.*` which will match everything
 * You can also optionally add folders to the generated solution, to organize related projects together.  Each folder has one regex pattern that is used to filter the full list of projects, and must also be prefixed with a forward slash
 * All the regexes used in the package files follows the regex rules defined for python (more details <a href="https://docs.python.org/2/library/re.html">here</a>)
 
 ## <a id="package-yaml"></a>ProjenyPackage.yaml reference
 
-Note that like all configuration files in Projeny, `ProjenyPackage.yaml` is defined using the <a href="https://en.wikipedia.org/wiki/YAML">YAML standard</a>.
+Note that like all configuration files in Projeny, `ProjenyPackage.yaml` is defined using the <a href="https://en.wikipedia.org/wiki/YAML">YAML standard</a>.  Unlike project settings, there is no GUI for package settings so you have to hand-edit the `ProjenyPackage.yaml` files.
 
 In most cases your `ProjenyPackage.yaml` will simply list the other packages that this package depends on.  It will look like this:
 
@@ -570,7 +639,7 @@ Notes:
 * `{PackageName}` represents the name of a directory that is below your `UnityPackages` directory.
 * Any packages that are listed under `Dependencies` or `Extras` will always be added to every project that includes this package
     * The only difference between Dependencies and Extras is that Projeny will create a csproj dependency for packages under Dependencies whereas it will not for those packages under Extras.  Most of the time you will want to only add to Dependencies, however in some rare cases it can be useful to use Extras.  For example, if you have split out a bunch of unit tests for your package into its own separate package, and you want to always include those with your package, you would add them to the Extras list.  You would not want to add them under Dependencies because this would create a circular dependency and Projeny will display an error.
-* By default, Projeny will assume that your package is applicable to all platforms.  However, if the `Platforms` list is set, Projeny will skip this package for all platforms except those listed, and this directory will only show up in the Unity Projects for those platforms.  `{PlatformName}` can be one of the following:
+* By default, Projeny will assume that your package is applicable to all platforms.  However, if the `Platforms` list is set, Projeny will skip this package for all platforms except those listed, so your package directory will only be linked to in the Unity Projects for those platforms.  `{PlatformName}` can be one of the following:
     * Windows
     * WebPlayer
     * Android
@@ -725,7 +794,7 @@ What follows is the full list of command line parameters that you can pass to th
 * #### <a id="commandline-createProject"></a>`--createProject` / `-cpr`
     * Creates a new directory in the `UnityProjects` directory, adds a default `ProjenyProject.yaml` file, and sets up directory links
 
-* #### <a id="commandline-configPath"></a>`--suppressPrompts` / `-sp`
+* #### <a id="commandline-configPath"></a>`--configPath` / `-cfg`
     * The path to the main `ProjenyProject.yaml` config file.  If unspecified, it will be assumed to exist at `[CurrentDirectory]/ProjenyProject.yaml`
 
 * #### <a id="commandline-listPackages"></a>`--listPackages` / `-lpa`

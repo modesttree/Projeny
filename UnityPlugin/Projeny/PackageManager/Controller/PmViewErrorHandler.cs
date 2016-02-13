@@ -24,28 +24,21 @@ namespace Projeny.Internal
             _asyncProcessor = asyncProcessor;
         }
 
-        public void Initialize()
+        // We assume here that the error has already been logged elsewhere
+        public void DisplayError(Exception exception)
         {
-            _asyncProcessor.OnException += OnAsyncException;
-        }
-
-        public void Dispose()
-        {
-            _asyncProcessor.OnException -= OnAsyncException;
-        }
-
-        void OnAsyncException(Exception exception)
-        {
-            Log.ErrorException(exception);
+            if (exception is AsyncOperationException)
+            {
+                exception = exception.InnerException;
+            }
 
             if (exception is CoRoutineException)
             {
                 // Don't bother showing the coroutine trace - it is in the log if you want it
-                var coroutineException = (CoRoutineException)exception;
-                exception = coroutineException.InnerException;
+                exception = exception.InnerException;
             }
 
-            DisplayErrorInternal(exception.GetFullMessage());
+            DisplayErrorInternal(exception.GetFullMessage(false));
         }
 
         public void DisplayError(string message)

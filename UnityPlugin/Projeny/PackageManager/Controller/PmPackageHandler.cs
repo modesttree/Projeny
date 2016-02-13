@@ -36,22 +36,26 @@ namespace Projeny.Internal
 
             if (choice.Current == 0)
             {
-                yield return _prjCommandHandler.ProcessPrjCommand(
-                    "Deleting packages", PrjHelper.DeletePackagesAsync(packages));
+                foreach (var package in packages)
+                {
+                    var expandedPath = PrjPathVars.Expand(package.FullPath);
+                    Log.Debug("Deleting package directory at '{0}'", expandedPath);
+                    Directory.Delete(expandedPath, true);
+                }
+
                 yield return RefreshPackagesAsync();
             }
         }
 
         public IEnumerator RefreshPackagesAsync()
         {
-            var allPackages = _prjCommandHandler.ProcessPrjCommandForResult<List<PackageInfo>>(
+            var allPackages = _prjCommandHandler.ProcessPrjCommandForResult<List<PackageFolderInfo>>(
                 "Looking up package list", PrjHelper.LookupPackagesListAsync());
             yield return allPackages;
 
-            _model.SetPackages(allPackages.Current);
+            _model.SetPackageFolders(allPackages.Current);
         }
     }
 }
-
 
 

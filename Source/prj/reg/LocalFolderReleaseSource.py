@@ -1,13 +1,13 @@
 
-from prj.ioc.Inject import Inject
-from prj.ioc.Inject import InjectMany
-import prj.ioc.IocAssertions as Assertions
+from mtm.ioc.Inject import Inject
+from mtm.ioc.Inject import InjectMany
+import mtm.ioc.IocAssertions as Assertions
 
 from prj.reg.ReleaseInfo import ReleaseInfo
 import prj.reg.UnityPackageAnalyzer as UnityPackageAnalyzer
 
 
-from prj.util.Assert import *
+from mtm.util.Assert import *
 
 class FileInfo:
     def __init__(self, path, release):
@@ -29,25 +29,24 @@ class LocalFolderReleaseSource:
         return [x.release for x in self._files]
 
     def init(self):
-        self._log.heading('Initializing release source for local folder')
-        self._log.debug('Initializing release source for local folder "{0}"', self._folderPath)
+        with self._log.heading('Initializing release source for local folder'):
+            self._log.debug('Initializing release source for local folder "{0}"', self._folderPath)
+            for path in self._sys.findFilesByPattern(self._folderPath, '*.unitypackage'):
+                release = self._packageAnalyzer.getReleaseInfoFromUnityPackage(path)
 
-        for path in self._sys.findFilesByPattern(self._folderPath, '*.unitypackage'):
-            release = self._packageAnalyzer.getReleaseInfoFromUnityPackage(path)
+                self._files.append(FileInfo(path, release))
 
-            self._files.append(FileInfo(path, release))
-
-        self._log.info("Found {0} released in folder '{1}'", len(self._files), self._folderPath)
+            self._log.info("Found {0} released in folder '{1}'", len(self._files), self._folderPath)
 
     def getName(self):
         return "Local Folder ({0})".format(self._folderPath)
 
     # Should return the chosen name for the package
     # If forcedName is non-null then this should always be the value of forcedName
-    def installRelease(self, releaseInfo, forcedName):
+    def installRelease(self, packageRootDir, releaseInfo, forcedName):
         fileInfo = next(x for x in self._files if x.release == releaseInfo)
         assertIsNotNone(fileInfo)
 
-        return self._extractor.extractUnityPackage(fileInfo.path, releaseInfo.name, forcedName)
+        return self._extractor.extractUnityPackage(packageRootDir, fileInfo.path, releaseInfo.name, forcedName)
 
 

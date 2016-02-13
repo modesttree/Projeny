@@ -1,0 +1,8 @@
+
+let b:OmniSharpBuildConfig = 'Debug'
+
+let b:OmniSharp_solutionPath = Ave#File#ChangePathToBackSlashes(projeny#GetCurrentRoot() . "/UnityPlugin/Projeny.sln")
+let b:OmniSharp_port = 2212
+
+let b:projectColor = "#D3C87F"
+"exec "hi! FoldColumn gui=NONE term=NONE guibg=" . b:projectColor

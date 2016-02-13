@@ -19,6 +19,7 @@ namespace Projeny.Internal
         public PackagesPaneProperties PackagesPane;
         public InputDialogProperties InputDialog;
         public SavePromptDialogProperties SavePromptDialog;
+        public PmCreateNewProjectPopupHandler.Settings CreateNewPopup;
         public ReleaseInfoMoreInfoDialogProperties ReleaseMoreInfoDialog;
         public GenericPromptDialogProperties GenericPromptDialog;
         public ReleasesPaneProperties ReleasesPane;

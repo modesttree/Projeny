@@ -11,17 +11,22 @@ ReleaseSources:
     - AssetStoreCache:
 
 PathVars:
-    TemplatesDir: '[ProjenyDir]/Templates'
+    ProjTemplatesDir: '[ProjenyDir]/Templates'
 
-    CsProjectTemplate: '[TemplatesDir]/CsProjectTemplate.csproj'
-    CsSolutionTemplate: '[TemplatesDir]/CsSolutionTemplate.sln'
+    CsProjectTemplate: '[ProjTemplatesDir]/CsProjectTemplate.csproj'
+    CsSolutionTemplate: '[ProjTemplatesDir]/CsSolutionTemplate.sln'
 
-    ProjectRootGitIgnoreTemplate: '[TemplatesDir]/customProjectRootGitIgnore'
-    ProjectRootSvnIgnoreTemplate: '[TemplatesDir]/customProjectRootSvnIgnore'
+    PlaceholderFile1: '[ProjTemplatesDir]/Placeholder1/Placeholder.cs'
+    PlaceholderFile2: '[ProjTemplatesDir]/Placeholder2/Placeholder.cs'
+
+    ProjenyChangeProjectMenuMeta: '[ProjTemplatesDir]/ProjenyChangeProjectMenu.cs.meta'
+
+    ProjectRootGitIgnoreTemplate: '[ProjTemplatesDir]/customProjectRootGitIgnore'
+    ProjectRootSvnIgnoreTemplate: '[ProjTemplatesDir]/customProjectRootSvnIgnore'
 
     YamlDotNetDllPath: '[ProjenyDir]/Bin/UnityPlugin/Release/YamlDotNet.dll'
     ProjenyUnityEditorDllPath: '[ProjenyDir]/Bin/UnityPlugin/Release/Projeny.dll'
-    ProjenyUnityEditorDllMetaFilePath: '[TemplatesDir]/Projeny.dll.meta'
+    ProjenyUnityEditorDllMetaFilePath: '[ProjTemplatesDir]/Projeny.dll.meta'
     ProjenyUnityEditorAssetsDirPath: '[ProjenyDir]/UnityPlugin/Projeny/Assets'
 
     # Note that these are defaults, and can be overridden in any other Projeny.yaml file

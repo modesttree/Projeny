@@ -18,7 +18,7 @@ namespace Projeny.Internal
         readonly PmModel _model;
         readonly PmView _view;
 
-        readonly EventManager _eventManager = new EventManager();
+        readonly EventManager _eventManager = new EventManager(null);
 
         readonly PmProjectHandler _projectHandler;
 
@@ -53,7 +53,7 @@ namespace Projeny.Internal
 
             _model.PluginItemsChanged += _eventManager.Add(OnProjectConfigDirty, EventQueueMode.LatestOnly);
             _model.AssetItemsChanged += _eventManager.Add(OnProjectConfigDirty, EventQueueMode.LatestOnly);
-            _model.PackagesChanged += _eventManager.Add(OnProjectConfigDirty, EventQueueMode.LatestOnly);
+            _model.PackageFoldersChanged += _eventManager.Add(OnProjectConfigDirty, EventQueueMode.LatestOnly);
             _model.ReleasesChanged += _eventManager.Add(OnProjectConfigDirty, EventQueueMode.LatestOnly);
             _model.VsProjectsChanged += _eventManager.Add(OnProjectConfigDirty, EventQueueMode.LatestOnly);
 
@@ -72,7 +72,7 @@ namespace Projeny.Internal
 
             _model.PluginItemsChanged -= _eventManager.Remove(OnProjectConfigDirty);
             _model.AssetItemsChanged -= _eventManager.Remove(OnProjectConfigDirty);
-            _model.PackagesChanged -= _eventManager.Remove(OnProjectConfigDirty);
+            _model.PackageFoldersChanged -= _eventManager.Remove(OnProjectConfigDirty);
             _model.ReleasesChanged -= _eventManager.Remove(OnProjectConfigDirty);
             _model.VsProjectsChanged -= _eventManager.Remove(OnProjectConfigDirty);
 
@@ -254,7 +254,7 @@ namespace Projeny.Internal
 
         public void OnClickedProjectApplyButton()
         {
-            _asyncProcessor.Process(ApplyProjectChangeAsync(), "Updating Links");
+            _asyncProcessor.Process(ApplyProjectChangeAsync(), true, "Updating Links");
         }
 
         IEnumerator ApplyProjectChangeAsync()
@@ -269,4 +269,3 @@ namespace Projeny.Internal
         }
     }
 }
-

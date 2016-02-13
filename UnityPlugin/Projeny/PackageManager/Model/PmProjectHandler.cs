@@ -38,10 +38,13 @@ namespace Projeny.Internal
         {
             var config = new ProjectConfig();
 
-            config.AssetsFolder = _model.AssetItems.ToList();
-            config.PluginsFolder = _model.PluginItems.ToList();
-            config.SolutionProjects = _model.VsProjects.ToList();
-            config.SolutionFolders = _model.VsSolutionFolders.ToDictionary(x => x.Key, x => x.Value);
+            config.ProjectSettingsPath = _model.ProjectSettingsPath;
+
+            config.AssetsFolder.AddRange(_model.AssetItems);
+            config.PluginsFolder.AddRange(_model.PluginItems);
+            config.SolutionProjects.AddRange(_model.VsProjects);
+            config.Prebuilt.AddRange(_model.PrebuiltProjects);
+            config.SolutionFolders.AddRange(_model.VsSolutionFolders);
 
             return config;
         }
@@ -60,6 +63,7 @@ namespace Projeny.Internal
 
         public void ResetProject()
         {
+            _model.ProjectSettingsPath = null;
             _model.ClearAssetItems();
             _model.ClearPluginItems();
         }
@@ -149,6 +153,8 @@ namespace Projeny.Internal
 
         void PopulateModelFromConfig(ProjectConfig config)
         {
+            _model.ProjectSettingsPath = config.ProjectSettingsPath;
+
             _model.ClearPluginItems();
             foreach (var name in config.PluginsFolder)
             {
@@ -165,6 +171,12 @@ namespace Projeny.Internal
             foreach (var name in config.SolutionProjects)
             {
                 _model.AddVsProject(name);
+            }
+
+            _model.ClearPrebuiltProjects();
+            foreach (var name in config.Prebuilt)
+            {
+                _model.AddPrebuilt(name);
             }
 
             _model.ClearSolutionFolders();

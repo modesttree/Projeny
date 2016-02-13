@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using UnityEngine;
 
 namespace Projeny.Internal
 {
@@ -22,19 +22,21 @@ namespace Projeny.Internal
             return ConvertToPublic(YamlSerializer.Deserialize<ReleaseInfoInternal>(yamlStr));
         }
 
-        public static PackageInfo DeserializePackageInfo(string yamlStr)
+        public static PackageFolderInfo DeserializePackageFolderInfo(string yamlStr)
         {
-            return ConvertToPublic(YamlSerializer.Deserialize<PackageInfoInternal>(yamlStr));
+            return ConvertToPublic(YamlSerializer.Deserialize<PackageFolderInfoInternal>(yamlStr));
         }
 
         static ProjectConfigInternal ConvertToInternal(ProjectConfig info)
         {
             return new ProjectConfigInternal()
             {
-                AssetsFolder = info.AssetsFolder.ToList(),
-                PluginsFolder = info.PluginsFolder.ToList(),
-                SolutionProjects = info.SolutionProjects.ToList(),
-                SolutionFolders = info.SolutionFolders.ToDictionary(x => x.Key, x => x.Value),
+                ProjectSettingsPath = info.ProjectSettingsPath,
+                AssetsFolder = info.AssetsFolder.IsEmpty() ? null : info.AssetsFolder.ToList(),
+                PluginsFolder = info.PluginsFolder.IsEmpty() ? null : info.PluginsFolder.ToList(),
+                SolutionProjects = info.SolutionProjects.IsEmpty() ? null : info.SolutionProjects.ToList(),
+                Prebuilt = info.Prebuilt.IsEmpty() ? null : info.Prebuilt.ToList(),
+                SolutionFolders = info.SolutionFolders.IsEmpty() ? null : info.SolutionFolders.Select(x => new Dictionary<string, string>() { { x.Key, x.Value } } ).ToList(),
             };
         }
 
@@ -47,41 +49,60 @@ namespace Projeny.Internal
 
             var newInfo = new ProjectConfig();
 
+            newInfo.ProjectSettingsPath = info.ProjectSettingsPath;
+
             if (info.AssetsFolder != null)
             {
-                newInfo.AssetsFolder = info.AssetsFolder.ToList();
+                newInfo.AssetsFolder.AddRange(info.AssetsFolder.ToList());
             }
 
             if (info.PluginsFolder != null)
             {
-                newInfo.PluginsFolder = info.PluginsFolder.ToList();
+                newInfo.PluginsFolder.AddRange(info.PluginsFolder.ToList());
             }
 
             if (info.SolutionProjects != null)
             {
-                newInfo.SolutionProjects = info.SolutionProjects.ToList();
+                newInfo.SolutionProjects.AddRange(info.SolutionProjects.ToList());
+            }
+
+            if (info.Prebuilt != null)
+            {
+                newInfo.Prebuilt.AddRange(info.Prebuilt.ToList());
             }
 
             if (info.SolutionFolders != null)
             {
-                newInfo.SolutionFolders = info.SolutionFolders.ToDictionary(x => x.Key, x => x.Value);
+                newInfo.SolutionFolders.AddRange(info.SolutionFolders.Select(x => x.Single()).ToList());
             }
 
             return newInfo;
         }
 
-        static PackageInfo ConvertToPublic(PackageInfoInternal info)
+        static PackageFolderInfo ConvertToPublic(PackageFolderInfoInternal info)
         {
             if (info == null)
             {
                 return null;
             }
 
-            var newInfo = new PackageInfo();
+            var newInfo = new PackageFolderInfo();
 
-            newInfo.Name = info.Name;
             newInfo.Path = info.Path;
-            newInfo.InstallInfo = ConvertToPublic(info.InstallInfo);
+
+            if (info.Packages != null)
+            {
+                foreach (var packageInfo in info.Packages)
+                {
+                    var newPackageInfo = new PackageInfo();
+
+                    newPackageInfo.Name = packageInfo.Name;
+                    newPackageInfo.InstallInfo = ConvertToPublic(packageInfo.InstallInfo);
+                    newPackageInfo.FullPath = Path.Combine(info.Path, packageInfo.Name);
+
+                    newInfo.Packages.Add(newPackageInfo);
+                }
+            }
 
             return newInfo;
         }
@@ -243,6 +264,12 @@ namespace Projeny.Internal
 
         class ProjectConfigInternal
         {
+            public string ProjectSettingsPath
+            {
+                get;
+                set;
+            }
+
             public List<string> AssetsFolder
             {
                 get;
@@ -261,7 +288,13 @@ namespace Projeny.Internal
                 set;
             }
 
-            public Dictionary<string, string> SolutionFolders
+            public List<string> Prebuilt
+            {
+                get;
+                set;
+            }
+
+            public List<Dictionary<string, string>> SolutionFolders
             {
                 get;
                 set;
@@ -283,15 +316,24 @@ namespace Projeny.Internal
             }
         }
 
-        class PackageInfoInternal
+        class PackageFolderInfoInternal
         {
-            public string Name
+            public string Path
             {
                 get;
                 set;
             }
 
-            public string Path
+            public List<PackageInfoInternal> Packages
+            {
+                get;
+                set;
+            }
+        }
+
+        class PackageInfoInternal
+        {
+            public string Name
             {
                 get;
                 set;

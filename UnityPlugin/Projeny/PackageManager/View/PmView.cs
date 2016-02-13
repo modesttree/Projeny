@@ -13,6 +13,8 @@ namespace Projeny.Internal
     public class PmView
     {
         public event Action ViewStateChanged = delegate {};
+        public event Action ProjectConfigTypeChanged = delegate {};
+
         public event Action<ProjectConfigTypes> ClickedProjectType = delegate {};
         public event Action ClickedRefreshReleaseList = delegate {};
         public event Action ClickedRefreshPackages = delegate {};
@@ -22,9 +24,9 @@ namespace Projeny.Internal
         public event Action ClickedProjectSaveButton = delegate {};
         public event Action ClickedProjectEditButton = delegate {};
         public event Action ClickedUpdateSolution = delegate {};
+        public event Action<int> ClickedPackageFolder = delegate {};
         public event Action ClickedOpenSolution = delegate {};
         public event Action<DragListTypes, DragListTypes, List<DragListEntry>> DraggedDroppedListEntries = delegate {};
-        public event Action ProjectConfigTypeChanged = delegate {};
 
         readonly Dictionary<DragListTypes, Func<IEnumerable<ContextMenuItem>>> _contextMenuHandlers = new Dictionary<DragListTypes, Func<IEnumerable<ContextMenuItem>>>();
 
@@ -53,6 +55,9 @@ namespace Projeny.Internal
 
             for (int i = 0; i < (int)DragListTypes.Count; i++)
             {
+                Assert.That(i <= _model.ListModels.Count - 1,
+                    "Could not find drag list type '{0}' in model", (DragListTypes)i);
+
                 var list = new DragList(
                     this, (DragListTypes)i, _model.ListModels[i], settings);
 
@@ -76,6 +81,30 @@ namespace Projeny.Internal
         {
             get;
             set;
+        }
+
+        public int CurrentPackageFolderIndex
+        {
+            get
+            {
+                return _model.PackageFolderIndex;
+            }
+            set
+            {
+                _model.PackageFolderIndex = value;
+            }
+        }
+
+        public List<string> PackageFolderPaths
+        {
+            get
+            {
+                return _model.PackageFolderPaths;
+            }
+            set
+            {
+                _model.PackageFolderPaths = value;
+            }
         }
 
         public PmViewStates ViewState
@@ -167,57 +196,6 @@ namespace Projeny.Internal
             {
                 list.ClearSelected();
             }
-        }
-
-        public List<DragListEntry> SortList(DragList list, List<DragListEntry> entries)
-        {
-            return entries.OrderBy(x => x.Name).ToList();
-            //switch (list.ListType)
-            //{
-                //case DragListTypes.Release:
-                //{
-                //}
-                //default:
-                //{
-                    //return entries.OrderBy(x => x.Name).ToList();
-                //}
-            //}
-        }
-
-        public void DrawItemLabel(Rect rect, DragListEntry entry)
-        {
-            Assert.Throw("TODO");
-            //DrawListItem(rect, entry.Name);
-
-            //switch (entry.ListOwner.ListType)
-            //{
-                //case DragListTypes.Release:
-                //{
-                    //var info = (ReleaseInfo)(entry.Tag);
-
-                    //var labelStr = info.Name;
-
-                    //if (_model.IsReleaseInstalled(info))
-                    //{
-                        //labelStr = ImguiUtil.WrapWithColor(labelStr, _settings.Theme.DraggableItemAlreadyAddedColor);
-                    //}
-
-                    //DrawItemLabelWithVersion(rect, labelStr, info.Version);
-                    //break;
-                //}
-                //case DragListTypes.Package:
-                //{
-                //}
-                //case DragListTypes.AssetItem:
-                //case DragListTypes.PluginItem:
-                //{
-                //}
-                //default:
-                //{
-                    //Assert.Throw();
-                    //break;
-                //}
-            //}
         }
 
         public bool ShowBlockedPopup
@@ -852,7 +830,7 @@ namespace Projeny.Internal
 
             GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Visual Studio Solution", _settings.HeaderTextStyle);
 
-            startY = endY;
+            startY = endY + _settings.PackageDropdownBottomPadding;
             endY = rect.yMax - _settings.ApplyButtonHeight - _settings.ApplyButtonTopPadding;
 
             GetList(DragListTypes.VsSolution).Draw(Rect.MinMaxRect(startX, startY, endX, endY));
@@ -916,7 +894,7 @@ namespace Projeny.Internal
 
             GUI.Label(Rect.MinMaxRect(contentRect.xMin, startY, contentRect.xMax, endY), "Assets Folder", _settings.HeaderTextStyle);
 
-            startY = endY;
+            startY = endY + _settings.PackageDropdownBottomPadding;
             endY = contentRect.yMax - _settings.ApplyButtonHeight - _settings.ApplyButtonTopPadding;
 
             DrawProjectPane3(Rect.MinMaxRect(contentRect.xMin, startY, contentRect.xMax, endY));
@@ -960,6 +938,12 @@ namespace Projeny.Internal
             GUI.Label(Rect.MinMaxRect(startX, startY, endX, endY), "Packages", _settings.HeaderTextStyle);
 
             startY = endY;
+            endY = startY + _settings.FileDropdownHeight;
+
+            DrawPackageFolderDropdown(
+                Rect.MinMaxRect(startX, startY, endX, endY));
+
+            startY = endY + _settings.PackageDropdownBottomPadding;
             endY = rect.yMax - _settings.ApplyButtonHeight - _settings.ApplyButtonTopPadding;
 
             GetList(DragListTypes.Package).Draw(Rect.MinMaxRect(startX, startY, endX, endY));
@@ -985,6 +969,31 @@ namespace Projeny.Internal
             }
         }
 
+        void DrawPackageFolderDropdown(Rect dropDownRect)
+        {
+            var displayValues = _model.PackageFolderPaths.ToArray();
+
+            int selectedIndex = EditorGUI.Popup(dropDownRect, _model.PackageFolderIndex, displayValues, _settings.DropdownTextStyle);
+
+            if (displayValues.Length == 0)
+            {
+                GUI.Button(dropDownRect, "(empty)", _settings.DropdownTextButtonStyle);
+            }
+            else
+            {
+                GUI.Button(dropDownRect, displayValues[selectedIndex], _settings.DropdownTextButtonStyle);
+
+                if (selectedIndex != _model.PackageFolderIndex)
+                {
+                    ClickedPackageFolder(selectedIndex);
+                }
+
+                GUI.DrawTexture(
+                    new Rect(dropDownRect.xMax - _settings.ArrowSize.x + _settings.ArrowOffset.x, dropDownRect.yMin + _settings.ArrowOffset.y, _settings.ArrowSize.x, _settings.ArrowSize.y),
+                    _settings.FileDropdownArrow);
+            }
+        }
+
         void DrawProjectButtons(Rect rect)
         {
             var halfWidth = rect.width * 0.5f;
@@ -997,7 +1006,7 @@ namespace Projeny.Internal
             }
         }
 
-        enum InputDialogStates
+        public enum InputDialogStates
         {
             None,
             Cancelled,
@@ -1020,6 +1029,9 @@ namespace Projeny.Internal
         [Serializable]
         public class Model
         {
+            public int PackageFolderIndex = 0;
+            public List<string> PackageFolderPaths = new List<string>();
+
             public PmViewStates ViewState = PmViewStates.Project;
             public ProjectConfigTypes ProjectConfigType = ProjectConfigTypes.LocalProject;
             public List<DragList.Model> ListModels = new List<DragList.Model>();
@@ -1047,6 +1059,8 @@ namespace Projeny.Internal
             public float ApplyButtonHeight;
             public float ApplyButtonTopPadding;
             public float ProjectButtonsPadding;
+
+            public float PackageDropdownBottomPadding;
 
             public float FileDropdownHeight;
             public float FileDropDownBottomPadding;

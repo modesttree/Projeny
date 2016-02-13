@@ -13,24 +13,21 @@ namespace Projeny.Internal
     public class PmVsSolutionViewHandler
     {
         readonly PmProjectHandler _projectHandler;
-        readonly PmViewErrorHandler _errorHandler;
         readonly PrjCommandHandler _prjCommandHandler;
         readonly AsyncProcessor _asyncProcessor;
         readonly PmModel _model;
         readonly PmView _view;
 
-        readonly EventManager _eventManager = new EventManager();
+        readonly EventManager _eventManager = new EventManager(null);
 
         public PmVsSolutionViewHandler(
             PmModel model,
             PmView view,
             AsyncProcessor asyncProcessor,
             PrjCommandHandler prjCommandHandler,
-            PmViewErrorHandler errorHandler,
             PmProjectHandler projectHandler)
         {
             _projectHandler = projectHandler;
-            _errorHandler = errorHandler;
             _prjCommandHandler = prjCommandHandler;
             _asyncProcessor = asyncProcessor;
             _model = model;
@@ -115,7 +112,7 @@ namespace Projeny.Internal
         public void OnClickedOpenSolution()
         {
             _asyncProcessor.Process(
-                OpenCustomSolutionAsync(), "Opening Visual Studio Solution");
+                OpenCustomSolutionAsync(), true, "Opening Visual Studio Solution");
         }
 
         IEnumerator OpenCustomSolutionAsync()
@@ -129,7 +126,7 @@ namespace Projeny.Internal
         public void OnClickedUpdateSolution()
         {
             _asyncProcessor.Process(
-                UpdateCustomSolutionAsync(), "Updating Visual Studio Solution");
+                UpdateCustomSolutionAsync(), true, "Updating Visual Studio Solution");
         }
 
         IEnumerator UpdateCustomSolutionAsync()

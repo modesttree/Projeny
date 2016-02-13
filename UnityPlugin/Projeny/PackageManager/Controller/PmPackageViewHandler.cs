@@ -12,20 +12,23 @@ namespace Projeny.Internal
 {
     public class PmPackageViewHandler
     {
+        readonly PmModel _model;
         readonly PmSettings _pmSettings;
         readonly PrjCommandHandler _prjCommandHandler;
         readonly PmPackageHandler _packageHandler;
         readonly AsyncProcessor _asyncProcessor;
         readonly PmView _view;
-        readonly EventManager _eventManager = new EventManager();
+        readonly EventManager _eventManager = new EventManager(null);
 
         public PmPackageViewHandler(
             PmView view,
             AsyncProcessor asyncProcessor,
             PmPackageHandler packageHandler,
             PrjCommandHandler prjCommandHandler,
-            PmSettings pmSettings)
+            PmSettings pmSettings,
+            PmModel model)
         {
+            _model = model;
             _pmSettings = pmSettings;
             _prjCommandHandler = prjCommandHandler;
             _packageHandler = packageHandler;
@@ -42,6 +45,8 @@ namespace Projeny.Internal
             // controls are rendered each pass
             _view.ClickedRefreshPackages += _eventManager.Add(OnClickedRefreshPackages, EventQueueMode.LatestOnly);
             _view.ClickedCreateNewPackage += _eventManager.Add(OnClickedCreateNewPackage, EventQueueMode.LatestOnly);
+
+            _view.ClickedPackageFolder += _eventManager.Add<int>(OnClickedPackageFolder, EventQueueMode.LatestOnly);
         }
 
         public void Dispose()
@@ -51,12 +56,19 @@ namespace Projeny.Internal
             _view.ClickedRefreshPackages -= _eventManager.Remove(OnClickedRefreshPackages);
             _view.ClickedCreateNewPackage -= _eventManager.Remove(OnClickedCreateNewPackage);
 
+            _view.ClickedPackageFolder -= _eventManager.Remove<int>(OnClickedPackageFolder);
+
             _eventManager.AssertIsEmpty();
+        }
+
+        public void OnClickedPackageFolder(int index)
+        {
+            _model.PackageFolderIndex = index;
         }
 
         public void OnClickedRefreshPackages()
         {
-            _asyncProcessor.Process(_packageHandler.RefreshPackagesAsync(), "Refreshing Packages");
+            _asyncProcessor.Process(_packageHandler.RefreshPackagesAsync(), true, "Refreshing Packages");
         }
 
         public void OnClickedCreateNewPackage()
@@ -76,8 +88,12 @@ namespace Projeny.Internal
                 yield break;
             }
 
-            yield return _prjCommandHandler.ProcessPrjCommand(
-                "Creating Package '{0}'".Fmt(userInput.Current), PrjHelper.CreatePackageAsync(userInput.Current));
+            var packageName = userInput.Current;
+            var packageDir = PrjPathVars.Expand(Path.Combine(_model.GetCurrentPackageFolderPath(), packageName));
+
+            Log.Debug("Creating new package directory at '{0}'", packageDir);
+            Directory.CreateDirectory(packageDir);
+
             yield return _packageHandler.RefreshPackagesAsync();
         }
 
@@ -118,14 +134,30 @@ namespace Projeny.Internal
                 true, "New Package...", false, OnContextMenuNewPackage);
 
             yield return new ContextMenuItem(
-                true, "Show UnityPackages Folder In Explorer", false, OnContextMenuOpenUnityPackagesFolderInExplorer);
+                true, "Show Root Folder In Explorer", false, OnContextMenuOpenUnityPackagesFolderInExplorer);
         }
 
         void OnContextMenuOpenUnityPackagesFolderInExplorer()
         {
-            _asyncProcessor.Process(
-                _prjCommandHandler.ProcessPrjCommand(
-                    "", PrjHelper.OpenPackagesFolderInExplorer()));
+            var packageRootPath = _model.TryGetCurrentPackageFolderPath();
+
+            if (packageRootPath == null)
+            {
+                Log.Error("Could not find current package folder path to open in explorer");
+            }
+            else
+            {
+                var fullPath = PrjPathVars.Expand(packageRootPath);
+
+                if (Directory.Exists(fullPath))
+                {
+                    System.Diagnostics.Process.Start(fullPath);
+                }
+                else
+                {
+                    Log.Error("Could not find directory at path '{0}'", fullPath);
+                }
+            }
         }
 
         void OpenSelectedInAssetStore()
@@ -179,7 +211,7 @@ namespace Projeny.Internal
 
                         PmViewHandlerCommon.DrawMoreInfoRow(skin, "Name", info.Name);
                         GUILayout.Space(skin.RowSpacing);
-                        PmViewHandlerCommon.DrawMoreInfoRow(skin, "Path", info.Path);
+                        PmViewHandlerCommon.DrawMoreInfoRow(skin, "Path", info.FullPath);
                         GUILayout.Space(skin.RowSpacing);
                         PmViewHandlerCommon.DrawMoreInfoRow(skin, "Creation Date", !string.IsNullOrEmpty(info.InstallInfo.InstallDate) ? info.InstallInfo.InstallDate : PmViewHandlerCommon.NotAvailableLabel);
 
@@ -233,7 +265,7 @@ namespace Projeny.Internal
         void OnContextMenuRefresh()
         {
             _asyncProcessor.Process(
-                _packageHandler.RefreshPackagesAsync(), "Refreshing Packages");
+                _packageHandler.RefreshPackagesAsync(), true, "Refreshing Packages");
         }
 
         void OnContextMenuEditPackageYamlSelected()
@@ -243,7 +275,8 @@ namespace Projeny.Internal
 
             var info = selected.Single();
 
-            var configPath = Path.Combine(info.Path, ProjenyEditorUtil.PackageConfigFileName);
+            var fullPath = PrjPathVars.Expand(info.FullPath);
+            var configPath = Path.Combine(fullPath, ProjenyEditorUtil.PackageConfigFileName);
 
             Assert.That(File.Exists(configPath));
 
@@ -257,9 +290,10 @@ namespace Projeny.Internal
 
             var info = selected.Single();
 
-            Assert.That(Directory.Exists(info.Path));
+            var expandedPath = PrjPathVars.Expand(info.FullPath);
+            Assert.That(Directory.Exists(expandedPath), "Expected to find directory at '{0}'", expandedPath);
 
-            System.Diagnostics.Process.Start(info.Path);
+            System.Diagnostics.Process.Start(expandedPath);
         }
 
         void OnContextMenuRenameSelected()
@@ -289,7 +323,11 @@ namespace Projeny.Internal
                 yield break;
             }
 
-            var dirInfo = new DirectoryInfo(info.Path);
+            var fullPath = PrjPathVars.Expand(info.FullPath);
+
+            Assert.That(Directory.Exists(fullPath), "Expected path to exist: {0}", fullPath);
+
+            var dirInfo = new DirectoryInfo(fullPath);
             Assert.That(dirInfo.Name == info.Name);
 
             var newPath = Path.Combine(dirInfo.Parent.FullName, newPackageName.Current);
@@ -308,12 +346,13 @@ namespace Projeny.Internal
         void OnContextMenuDeleteSelected()
         {
             var selected = GetSelectedItems();
-            _asyncProcessor.Process(_packageHandler.DeletePackages(selected), "Deleting Packages");
+            _asyncProcessor.Process(_packageHandler.DeletePackages(selected), true, "Deleting Packages");
         }
 
         bool HasPackageYaml(PackageInfo info)
         {
-            var configPath = Path.Combine(info.Path, ProjenyEditorUtil.PackageConfigFileName);
+            var fullPath = PrjPathVars.Expand(info.FullPath);
+            var configPath = Path.Combine(fullPath, ProjenyEditorUtil.PackageConfigFileName);
             return File.Exists(configPath);
         }
 
@@ -323,5 +362,4 @@ namespace Projeny.Internal
         }
     }
 }
-
 

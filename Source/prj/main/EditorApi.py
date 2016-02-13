@@ -1,31 +1,31 @@
 
 import os
 import traceback
-from prj.log.LogStreamFile import LogStreamFile
+from mtm.log.LogStreamFile import LogStreamFile
 import prj.main.Prj as Prj
 
-import prj.util.YamlSerializer as YamlSerializer
-from prj.log.LogStreamConsoleHeadingsOnly import LogStreamConsoleHeadingsOnly
-import prj.ioc.Container as Container
-from prj.ioc.Inject import Inject
-import prj.ioc.IocAssertions as Assertions
+import mtm.util.YamlSerializer as YamlSerializer
+from mtm.log.LogStreamConsoleHeadingsOnly import LogStreamConsoleHeadingsOnly
+import mtm.ioc.Container as Container
+from mtm.ioc.Inject import Inject
+import mtm.ioc.IocAssertions as Assertions
 import sys
-import prj.util.MiscUtil as MiscUtil
+import mtm.util.MiscUtil as MiscUtil
 
-from prj.util.PlatformUtil import Platforms
-import prj.util.PlatformUtil as PlatformUtil
-from prj.util.Assert import *
+from mtm.util.Platforms import Platforms
+import mtm.util.PlatformUtil as PlatformUtil
+from mtm.util.Assert import *
 
 class Runner:
     _log = Inject('Logger')
     _packageMgr = Inject('PackageManager')
     _unityHelper = Inject('UnityHelper')
-    _vsSolutionHelper = Inject('VisualStudioHelper')
+    _projVsHelper = Inject('ProjenyVisualStudioHelper')
     _releaseSourceManager = Inject('ReleaseSourceManager')
     _sys = Inject('SystemHelper')
     _varMgr = Inject('VarManager')
 
-    def run(self, project, platform, requestId, param1, param2):
+    def run(self, project, platform, requestId, param1, param2, param3):
         self._log.debug("Started EditorApi with arguments: {0}".format(" ".join(sys.argv[1:])))
 
         self._project = project
@@ -33,6 +33,7 @@ class Runner:
         self._requestId = requestId
         self._param1 = param1
         self._param2 = param2
+        self._param3 = param3
 
         succeeded = True
 
@@ -52,7 +53,13 @@ class Runner:
         if not succeeded:
             sys.exit(1)
 
+    def _outputAllPathVars(self):
+        sys.stderr.write(YamlSerializer.serialize(self._varMgr.getAllParameters()))
+
     def _runInternal(self):
+
+        self._packageMgr.setPathsForProjectPlatform(self._project, self._platform)
+
         if self._requestId == 'updateLinks':
             self._packageMgr.updateProjectJunctions(self._project, self._platform)
 
@@ -60,20 +67,20 @@ class Runner:
             self._packageMgr.checkProjectInitialized(self._project, self._platform)
             self._unityHelper.openUnity(self._project, self._platform)
 
-        elif self._requestId == 'openPackagesFolder':
-            os.startfile(self._varMgr.expandPath("[UnityPackagesDir]"))
+        elif self._requestId == 'getPathVars':
+            self._outputAllPathVars()
 
         elif self._requestId == 'updateCustomSolution':
-            self._vsSolutionHelper.updateCustomSolution(self._project, self._platform)
+            self._projVsHelper.updateCustomSolution(self._project, self._platform)
 
         elif self._requestId == 'openCustomSolution':
-            self._vsSolutionHelper.openCustomSolution(self._project, self._platform)
+            self._projVsHelper.openCustomSolution(self._project, self._platform)
 
         elif self._requestId == 'listPackages':
-            infos = self._packageMgr.getAllPackageInfos()
-            for packageInfo in infos:
+            infos = self._packageMgr.getAllPackageFolderInfos(self._project)
+            for folderInfo in infos:
                 sys.stderr.write('---\n')
-                sys.stderr.write(YamlSerializer.serialize(packageInfo) + '\n')
+                sys.stderr.write(YamlSerializer.serialize(folderInfo) + '\n')
 
         elif self._requestId == 'listProjects':
             projectNames = self._packageMgr.getAllProjectNames()
@@ -85,21 +92,19 @@ class Runner:
                 sys.stderr.write('---\n')
                 sys.stderr.write(YamlSerializer.serialize(release) + '\n')
 
-        elif self._requestId == 'deletePackage':
-            self._log.info("Deleting package '{0}'", self._param1)
-            self._packageMgr.deletePackage(self._param1)
-
-        elif self._requestId == 'createPackage':
-            self._log.info("Creating package '{0}'", self._param1)
-            self._packageMgr.createPackage(self._param1)
-
         elif self._requestId == 'installRelease':
-            self._log.info("Installing release '{0}' version code '{1}'", self._param1, self._param2)
-            self._releaseSourceManager.installReleaseById(self._param1, self._param2, True)
+            releaseName = self._param1
+            packageRoot = self._param2
+            versionCode = self._param3
+
+            self._log.info("Installing release '{0}' into package dir '{1}' with version code '{2}'", releaseName, packageRoot, versionCode)
+            self._releaseSourceManager.installReleaseById(releaseName, self._project, packageRoot, versionCode, True)
 
         elif self._requestId == 'createProject':
-            self._log.info("Creating new project '{0}'", self._project)
-            self._packageMgr._createProject(self._project)
+            newProjName = self._param1
+            duplicateSettings = (self._param2 == 'True')
+            self._log.info("Creating new project '{0}'", newProjName)
+            self._packageMgr.createProject(newProjName, self._project if duplicateSettings else None)
 
         else:
             assertThat(False, "Invalid request id '{0}'", self._requestId)
@@ -116,15 +121,17 @@ def main():
     parser.add_argument("configPath", help="")
     parser.add_argument("project", help="")
     parser.add_argument('platform', type=str, choices=[x.lower() for x in Platforms.All], help='')
-    parser.add_argument('requestId', type=str, choices=['createProject', 'createPackage', 'deletePackage', 'installRelease', 'listReleases', 'listProjects', 'listPackages', 'updateLinks', 'updateCustomSolution', 'openCustomSolution', 'openUnity', 'openPackagesFolder'], help='')
+    parser.add_argument('requestId', type=str, choices=['createProject', 'installRelease', 'listReleases', 'listProjects', 'listPackages', 'updateLinks', 'updateCustomSolution', 'openCustomSolution', 'openUnity', 'getPathVars'], help='')
     parser.add_argument("param1", nargs='?', help="")
     parser.add_argument("param2", nargs='?', help="")
+    parser.add_argument("param3", nargs='?', help="")
 
     args = parser.parse_args(sys.argv[1:])
 
     installBindings(args.configPath)
+    Prj.installPlugins()
 
-    Runner().run(args.project, PlatformUtil.fromPlatformFolderName(args.platform), args.requestId, args.param1, args.param2)
+    Runner().run(args.project, PlatformUtil.fromPlatformFolderName(args.platform), args.requestId, args.param1, args.param2, args.param3)
 
 if __name__ == '__main__':
     if (sys.version_info < (3, 0)):
