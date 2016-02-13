@@ -95,7 +95,7 @@ class PackageManager:
 
             newProjSettingsDir = os.path.join(projDirPath, 'ProjectSettings')
 
-            if self._sys.directoryExists('[DefaultProjectSettingsDir]'):
+            if self._varMgr.hasKey('DefaultProjectSettingsDir') and self._sys.directoryExists('[DefaultProjectSettingsDir]'):
                 self._sys.copyDirectory('[DefaultProjectSettingsDir]', newProjSettingsDir)
             else:
                 self._sys.createDirectory(newProjSettingsDir)
@@ -309,8 +309,8 @@ namespace Projeny
         self._sys.deleteDirectoryIfExists('[PluginsDir]/Projeny')
 
         # Define DoNotIncludeProjenyInUnityProject only if you want to include Projeny as just another prebuilt package
-        # This is nice because then you can call methods on projeny without another package
-        if self._config.getBool('DoNotIncludeProjenyInUnityProject'):
+        # This is nice because then you can call methods on projeny from another package
+        if self._config.tryGetBool(False, 'DoNotIncludeProjenyInUnityProject'):
             self._createSwitchProjectMenuScript(schema.name, '[PluginsDir]/ProjenyGenerated/Editor/ProjenyChangeProjectMenu.cs')
 
             self._createPlaceholderCsFile('[PluginsDir]/ProjenyGenerated/Placeholder.cs')

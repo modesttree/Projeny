@@ -26,6 +26,8 @@ from mtm.util.CommonSettings import CommonSettings
 from prj.reg.UnityPackageExtractor import UnityPackageExtractor
 from prj.reg.UnityPackageAnalyzer import UnityPackageAnalyzer
 
+import traceback
+
 from prj.main.ProjectConfigChanger import ProjectConfigChanger
 
 from prj.main.ProjenyConstants import ProjectConfigFileName
@@ -198,6 +200,38 @@ def findMainConfigPath():
     assertThat(False, "Could not find config file '{0}'", ConfigFileName)
     return None
 
+def _createConfig():
+    print('Initializing new projeny config')
+
+    curDir = os.getcwd()
+    mainConfigPath = os.path.join(curDir, ConfigFileName)
+
+    assertThat(not os.path.isfile(mainConfigPath),
+       "Found existing projeny config at '{0}'.  Has the configuration already been created?", mainConfigPath)
+
+    unityProjectsDir = os.path.join(curDir, 'UnityProjects')
+    os.makedirs(unityProjectsDir)
+
+    with open(mainConfigPath, 'w', encoding='utf-8') as outFile:
+        outFile.write(
+"""
+PathVars:
+    UnityProjectsDir: '[ConfigDir]/UnityProjects'
+    SharedUnityPackagesDir: '[ConfigDir]/UnityPackages'
+    LogPath: '[ConfigDir]/PrjLog.txt'
+""")
+
+    os.makedirs(os.path.join(curDir, 'UnityPackages'))
+
+    projectGlobalConfigPath = os.path.join(unityProjectsDir, ProjectConfigFileName)
+
+    with open(projectGlobalConfigPath, 'w', encoding='utf-8') as outFile:
+        outFile.write(
+"""
+PackageFolders:
+    - '[SharedUnityPackagesDir]'
+""")
+
 def _main():
     # Here we split out some functionality into various methods
     # so that other python code can make use of them
@@ -217,16 +251,19 @@ def _main():
     Container.bind('LogStream').toSingle(LogStreamFile)
     Container.bind('LogStream').toSingle(LogStreamConsole, args.verbose, args.veryVerbose)
 
-    if args.configPath:
-        assertThat(os.path.isfile(args.configPath), "Could not find config file at '{0}'", args.configPath)
-        mainConfigPath = args.configPath
+    if args.createConfig:
+        _createConfig()
     else:
-        mainConfigPath = findMainConfigPath()
+        if args.configPath:
+            assertThat(os.path.isfile(args.configPath), "Could not find config file at '{0}'", args.configPath)
+            mainConfigPath = args.configPath
+        else:
+            mainConfigPath = findMainConfigPath()
 
-    installBindings(mainConfigPath)
-    installPlugins()
+        installBindings(mainConfigPath)
+        installPlugins()
 
-    Container.resolve('PrjRunner').run(args)
+        Container.resolve('PrjRunner').run(args)
 
 if __name__ == '__main__':
 
@@ -244,9 +281,9 @@ if __name__ == '__main__':
         succeeded = False
 
     except Exception as e:
-        sys.stderr.write(str(e))
+        sys.stderr.write(str(e) + '\n')
 
-        if not MiscUtil.isRunningAsExe():
+        if "-vv" in sys.argv and not MiscUtil.isRunningAsExe():
             sys.stderr.write('\n' + traceback.format_exc())
 
         succeeded = False

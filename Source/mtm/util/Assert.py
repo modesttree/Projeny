@@ -4,11 +4,11 @@ class Assertion(Exception):
 
 def triggerAssert(message, *params):
     if not message:
-        raise Assertion('Assert hit!')
+        raise Assertion('Error!')
 
     if len(params) > 0:
         message = message.format(*params)
-    raise Assertion('Assert hit: ' + message)
+    raise Assertion('Error: ' + message)
 
 def _triggerAssertWithMessage(extraMessage, message, *params):
     fullMessage = ''

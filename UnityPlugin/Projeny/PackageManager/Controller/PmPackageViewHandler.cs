@@ -322,7 +322,11 @@ namespace Projeny.Internal
                 yield break;
             }
 
-            var dirInfo = new DirectoryInfo(info.FullPath);
+            var fullPath = PrjPathVars.Expand(info.FullPath);
+
+            Assert.That(Directory.Exists(fullPath), "Expected path to exist: {0}", fullPath);
+
+            var dirInfo = new DirectoryInfo(fullPath);
             Assert.That(dirInfo.Name == info.Name);
 
             var newPath = Path.Combine(dirInfo.Parent.FullName, newPackageName.Current);

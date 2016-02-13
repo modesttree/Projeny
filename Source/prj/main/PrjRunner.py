@@ -68,9 +68,6 @@ class PrjRunner:
 
     def _runPreBuild(self):
 
-        if self._args.createConfig:
-            self._createConfig()
-
         if self._args.deleteProject:
             if not self._args.suppressPrompts:
                 if not MiscUtil.confirmChoice("Are you sure you want to delete project '{0}'? (y/n)  \nNote that this will only delete your unity project settings and the {1} for this project.  \nThe rest of the content for your project will remain in the UnityPackages folder  ".format(self._args.project, ProjectConfigFileName)):
@@ -171,27 +168,6 @@ class PrjRunner:
         self._runPreBuild()
         self._runBuild()
         self._runPostBuild()
-
-    def _createConfig(self):
-        with self._log.heading('Initializing new projeny config'):
-            assertThat(not self._mainConfig,
-               "Cannot initialize new projeny project, found existing config at '{0}'".format(self._mainConfig))
-
-            curDir = os.getcwd()
-            configPath = os.path.join(curDir, ConfigFileName)
-
-            assertThat(not os.path.isfile(configPath), "Found existing projeny config at '{0}'.  Has the configuration already been created?", configPath)
-
-            self._sys.createDirectory(os.path.join(curDir, 'UnityPackages'))
-            self._sys.createDirectory(os.path.join(curDir, 'UnityProjects'))
-
-            with self._sys.openOutputFile(configPath) as outFile:
-                outFile.write(
-"""
-PathVars:
-    UnityProjectsDir: '[ConfigDir]/UnityProjects'
-    LogPath: '[ConfigDir]/PrjLog.txt'
-""")
 
     def _validateRequest(self):
         requiresProject = self._args.updateLinks or self._args.updateUnitySolution \
