@@ -344,11 +344,11 @@ For information on defining your own "release source", for use in addition to th
 
 ## <a id="multiplepackagefolders"></a>Using Multiple Package Folders
 
-Up until now we've assumed that there is one definitive folder for all the packages that are available for inclusion in your unity projects.  However, this is configurable, so if you want, you can define multiple locations to pull packages from.  This can be especially useful if you want to define a project-specific package and you do not want to add clutter to the shared `UnityPackages` directory.
+Up until now we've assumed that there is one definitive folder for all the packages that are available for inclusion in your unity projects.  However, this is configurable, so if you want, you can define multiple locations to pull packages from.  This can be especially useful if you want to define a project-specific package and you do not want to add clutter up the shared `UnityPackages` directory.
 
 To see this in action, download the sample project and then open up the `All-Movers` project (by either opening up the `UnityProjects\AllMovers\AllMovers-Windows` directory within unity or running `prj --project AllMovers --openUnity` / `prj -p am -ou` from the command line)
 
-Then open up the Package Manager through the menu item `Projeny` -> `Package Manager`.  In the Packages panel, you should see a dropdown that allows you to select where to get the package list from as shown in this screenshot:
+Then open up the Package Manager through the menu item `Projeny -> Package Manager`.  In the Packages panel, you should see a dropdown that allows you to select where to get the package list from as shown in this screenshot:
 
 <img src="Docs/Screen11.png?raw=true" alt="Package Manager" />
 
@@ -405,7 +405,7 @@ However, we are not doing any of the things that Unity warns about here so this 
     * Method 1 - Using the Package Manager
         * Click the menu item `Projeny -> Package Manager`
         * Go to the Packages section by pressing the arrow button the left
-        * Click the "New" button
+        * Click the "New" button or right click and select `New Package`
         * Enter name for your package
         * Add your package to your project by dragging it to either `Assets` or `Plugins` on the right
         * (optional) Add a `ProjenyPackage.yaml` file to your new package folder.   See <a href="#package-yaml">here</a> for details.
@@ -420,7 +420,7 @@ However, we are not doing any of the things that Unity warns about here so this 
 
     * Method 1 - Within Unity
         * Click the menu item `Projeny -> Change Project -> New...`
-        * Enter the name for your new project
+        * Enter the name for your new project, and choose whether you want to duplicate the project settings or not with the checkbox
         * After the new project loads, open the Package Manager again to add packages, etc.
         * Done
         * (optional) Add a `ProjenyProject.yaml` file to your new project folder. See <a href="#project-yaml">here</a> for details.
@@ -433,13 +433,26 @@ However, we are not doing any of the things that Unity warns about here so this 
 
 * #### <a id="workflow-create-new-config"></a>How do I start an entirely new set of Projeny-based packages/projects from scratch?
 
-    You need to use the command line for this.
+    * Method 1 - Command line
+        * Open command prompt / powershell at the directory where you want to create your new projects/packages.
+        * Run `prj --createConfig` (or the shorthand `prj -cc`)
+        * It will also create a new file named `Projeny.yaml` with some basic defaults (see <a href="#projeny-yaml">here</a> for details on this file)
+        * This will set up your new config as follows:
+            * Projects will reside in a folder named `UnityProjects`
+            * Packages will reside in a folder named `UnityPackages`.  Each project will also have the option for local packages at `UnityProjects/PROJECT_NAME/Packages`
+        * After this, you will probably want to <a href="#workflow-create-project-command-line">create a project</a>
 
-    * Open command prompt / powershell at the directory where you want to create your new projects/packages.
-    * Run `prj --createConfig` (or the shorthand `prj -cc`)
-    * Note that this will create two new folders, one called `UnityPackages` and another called `UnityProjects` in the current directory
-    * It will also create a new file named `Projeny.yaml` with some basic defaults (see <a href="#projeny-yaml">here</a> for details on this file)
-    * After this, you will probably want to <a href="#workflow-create-project-command-line">create a project</a>
+    * Method 1 - Manually
+        * Create a new directory that will be the root for your project
+        * Create a file named `Projeny.yaml` at this directory with the following contents:
+
+            PathVars:
+                UnityProjectsDir: '[ConfigDir]/UnityProjects'
+                LogPath: '[ConfigDir]/PrjLog.txt'
+
+        * Create a new directory named `UnityProjects`
+        * Done
+        * After this, you will probably want to <a href="#workflow-create-project-command-line">create a project</a>
 
 ## <a id="projeny-yaml"></a>Projeny.yaml reference
 
@@ -457,7 +470,6 @@ Typically, you would have configuration files in both of these locations.  The c
 If you follow <a href="#workflow-create-new-config">the instructions to create a new Projeny-based set of projects</a>, you will find that a default `Projeny.yaml` file is created with the following contents:
 
     PathVars:
-        UnityPackagesDir: '[ConfigDir]/UnityPackages'
         UnityProjectsDir: '[ConfigDir]/UnityProjects'
         LogPath: '[ConfigDir]/PrjLog.txt'
 
@@ -501,7 +513,7 @@ Here is the full list of configuration settings.  Note that you don't need to in
 
         # This value will determine where the `prj` command outputs 
         # detailed logging information
-        LogPath: 'C:/Temp/ProjenyLog.txt'
+        LogPath: '[ConfigDir]/PrjLog.txt'
 
     Console:
         # If you're using a console that supports multiple colors, set 
@@ -561,21 +573,25 @@ The format of `ProjenyProject.yaml` is as follows:
         {FolderName}: /{PackageNamePattern}
         {FolderName}: /{PackageNamePattern}
 
+    PackageFolders:
+        - {DirectoryPath}
+        - {DirectoryPath}
+
 Where:
-* `{PackageName}` represents the name of a directory that is below your `UnityPackages` directory.
+* `{PackageName}` represents the name of a directory that is in one of the `PackageFolders` directories
 * `{PackageNamePattern}` represents a python regular expression that is used to match one more packages in the `UnityPackages` directory
 
 Note the following:
 * Packages that are listed underneath the `AssetsFolder` category will be placed directly underneath the `Assets/` directory of your project
 * Packages that are listed underneath the `PluginsFolder` category will be placed directly underneath the `Assets/Plugins` directory of your project
 * All packages underneath the `SolutionProjects` category will have their own .csproj file generated, when running `Project -> Update C# Project` or when hitting the `Update Solution` button within the package manager
-    * Note that you can also use a regular expression instead of explitly listing the full package name. For example, if you want to create a C# project for every package in your project add the line `/.*` which will match everything
+    * Note that you can also use a regular expression instead of explicitly listing the full package name. For example, if you want to create a C# project for every package in your project add the line `/.*` which will match everything
 * You can also optionally add folders to the generated solution, to organize related projects together.  Each folder has one regex pattern that is used to filter the full list of projects, and must also be prefixed with a forward slash
 * All the regexes used in the package files follows the regex rules defined for python (more details <a href="https://docs.python.org/2/library/re.html">here</a>)
 
 ## <a id="package-yaml"></a>ProjenyPackage.yaml reference
 
-Note that like all configuration files in Projeny, `ProjenyPackage.yaml` is defined using the <a href="https://en.wikipedia.org/wiki/YAML">YAML standard</a>.
+Note that like all configuration files in Projeny, `ProjenyPackage.yaml` is defined using the <a href="https://en.wikipedia.org/wiki/YAML">YAML standard</a>.  Unlike project settings, there is no GUI for package settings so you have to hand-edit the `ProjenyPackage.yaml` files.
 
 In most cases your `ProjenyPackage.yaml` will simply list the other packages that this package depends on.  It will look like this:
 
@@ -612,7 +628,7 @@ Notes:
 * `{PackageName}` represents the name of a directory that is below your `UnityPackages` directory.
 * Any packages that are listed under `Dependencies` or `Extras` will always be added to every project that includes this package
     * The only difference between Dependencies and Extras is that Projeny will create a csproj dependency for packages under Dependencies whereas it will not for those packages under Extras.  Most of the time you will want to only add to Dependencies, however in some rare cases it can be useful to use Extras.  For example, if you have split out a bunch of unit tests for your package into its own separate package, and you want to always include those with your package, you would add them to the Extras list.  You would not want to add them under Dependencies because this would create a circular dependency and Projeny will display an error.
-* By default, Projeny will assume that your package is applicable to all platforms.  However, if the `Platforms` list is set, Projeny will skip this package for all platforms except those listed, and this directory will only show up in the Unity Projects for those platforms.  `{PlatformName}` can be one of the following:
+* By default, Projeny will assume that your package is applicable to all platforms.  However, if the `Platforms` list is set, Projeny will skip this package for all platforms except those listed, so your package directory will only be linked to in the Unity Projects for those platforms.  `{PlatformName}` can be one of the following:
     * Windows
     * WebPlayer
     * Android
