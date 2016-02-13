@@ -112,7 +112,8 @@ class Runner:
             self._copyFile(ConfigFileName)
             self._copyDir('Bin')
 
-            self._sys.removeFile('[TempDir]/Bin/.gitignore')
+            for fileName in self._sys.getAllFilesInDirectory('[InstallerDir]/BinFiles'):
+                self._sys.copyFile('[InstallerDir]/BinFiles/' + fileName, '[TempDir]/Bin/' + fileName)
 
             self._sys.removeByRegex('[TempDir]/Bin/UnityPlugin/Release/*.pdb')
             self._sys.deleteDirectoryIfExists('[TempDir]/Bin/UnityPlugin/Debug')
