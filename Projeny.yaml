@@ -16,6 +16,11 @@ PathVars:
     CsProjectTemplate: '[ProjTemplatesDir]/CsProjectTemplate.csproj'
     CsSolutionTemplate: '[ProjTemplatesDir]/CsSolutionTemplate.sln'
 
+    PlaceholderFile1: '[ProjTemplatesDir]/Placeholder1/Placeholder.cs'
+    PlaceholderFile2: '[ProjTemplatesDir]/Placeholder2/Placeholder.cs'
+
+    ProjenyChangeProjectMenuMeta: '[ProjTemplatesDir]/ProjenyChangeProjectMenu.cs.meta'
+
     ProjectRootGitIgnoreTemplate: '[ProjTemplatesDir]/customProjectRootGitIgnore'
     ProjectRootSvnIgnoreTemplate: '[ProjTemplatesDir]/customProjectRootSvnIgnore'
 

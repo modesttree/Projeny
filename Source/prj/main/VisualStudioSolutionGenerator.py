@@ -593,9 +593,6 @@ class VisualStudioSolutionGenerator:
             # Never include the generated stuff
             return True
 
-        if self._config.getBool('LinkToProjenyEditorDir'):
-            return False
-
         return ProjenyDirectoryIgnorePattern.match(fullPath)
 
     def _addCsFilesInDirectory(self, dirPath, excludeDirs, files, isForEditor):

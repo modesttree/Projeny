@@ -247,13 +247,6 @@ ProjectSettingsPath: '[ProjectRoot]/ProjectSettings'
                 except Exception as e:
                     self._log.warn('Failed to initialize project "{0}": {1}'.format(projectName, e))
 
-    def _createPlaceholderCsFile(self, path):
-        with self._sys.openOutputFile(path) as outFile:
-            outFile.write(
-"""
-    // This file exists purely as a way to force unity to generate the MonoDevelop csproj files so that Projeny can read the settings from it
-""")
-
     def _createSwitchProjectMenuScript(self, currentProjName, outputPath):
 
         foundCurrent = False
@@ -303,6 +296,21 @@ namespace Projeny
         #assertThat(foundCurrent, "Could not find project " + currentProjName)
         self._sys.writeFileAsText(outputPath, menuFile)
 
+    def _addGeneratedProjenyFiles(self, outDir, schema):
+        menuFileOutPath = outDir + '/Editor/ProjenyChangeProjectMenu.cs'
+        placeholderOutPath1 = outDir + '/Placeholder.cs'
+        placeholderOutPath2 = outDir + '/Editor/Placeholder.cs'
+
+        # Need to always use the same meta files to avoid having unity do a refresh
+        self._createSwitchProjectMenuScript(schema.name, menuFileOutPath)
+        self._sys.copyFile('[ProjenyChangeProjectMenuMeta]', menuFileOutPath + ".meta")
+
+        self._sys.copyFile('[PlaceholderFile1]', placeholderOutPath1)
+        self._sys.copyFile('[PlaceholderFile1].meta', placeholderOutPath1 + ".meta")
+
+        self._sys.copyFile('[PlaceholderFile2]', placeholderOutPath2)
+        self._sys.copyFile('[PlaceholderFile2].meta', placeholderOutPath2 + ".meta")
+
     def _updateDirLinksForSchema(self, schema):
         self._removeProjectPlatformJunctions()
 
@@ -311,31 +319,18 @@ namespace Projeny
         # Define DoNotIncludeProjenyInUnityProject only if you want to include Projeny as just another prebuilt package
         # This is nice because then you can call methods on projeny from another package
         if self._config.tryGetBool(False, 'DoNotIncludeProjenyInUnityProject'):
-            self._createSwitchProjectMenuScript(schema.name, '[PluginsDir]/ProjenyGenerated/Editor/ProjenyChangeProjectMenu.cs')
-
-            self._createPlaceholderCsFile('[PluginsDir]/ProjenyGenerated/Placeholder.cs')
-            self._createPlaceholderCsFile('[PluginsDir]/ProjenyGenerated/Editor/Placeholder.cs')
+            self._addGeneratedProjenyFiles('[PluginsDir]/ProjenyGenerated', schema)
         else:
-            if self._config.getBool('LinkToProjenyEditorDir') and not MiscUtil.isRunningAsExe():
-                self._junctionHelper.makeJunction('[ProjenyDir]/UnityPlugin/Projeny', '[PluginsDir]/Projeny/Editor/Source')
-            else:
-                dllOutPath = '[PluginsDir]/Projeny/Editor/Projeny.dll'
-                self._sys.copyFile('[ProjenyUnityEditorDllPath]', dllOutPath)
-                self._sys.copyFile('[ProjenyUnityEditorDllMetaFilePath]', dllOutPath + '.meta')
+            dllOutPath = '[PluginsDir]/Projeny/Editor/Projeny.dll'
 
-                self._sys.copyFile('[YamlDotNetDllPath]', '[PluginsDir]/Projeny/Editor/YamlDotNet.dll')
+            self._sys.copyFile('[ProjenyUnityEditorDllPath]', dllOutPath)
+            self._sys.copyFile('[ProjenyUnityEditorDllMetaFilePath]', dllOutPath + '.meta')
 
-                assetsOutPath = '[PluginsDir]/Projeny/Editor/Assets'
-                self._sys.copyDirectory('[ProjenyUnityEditorAssetsDirPath]', assetsOutPath)
-                settingsFileOutPath = os.path.join(assetsOutPath, 'Resources/Projeny/PmSettings.asset')
-                self._sys.writeFileAsText(settingsFileOutPath, self._sys.readFileAsText(settingsFileOutPath).replace(
-                    'm_Script: {fileID: 11500000, guid: 01fe9b81f68762b438dd4eecbcfe2900, type: 3}',
-                    'm_Script: {fileID: 1582608718, guid: b7b2ba04b543d234aa4225d91c60af2b, type: 3}'))
+            self._sys.copyFile('[YamlDotNetDllPath]', '[PluginsDir]/Projeny/Editor/YamlDotNet.dll')
 
-            self._createSwitchProjectMenuScript(schema.name, '[PluginsDir]/Projeny/Editor/ProjenyChangeProjectMenu.cs')
+            self._sys.copyDirectory('[ProjenyUnityEditorAssetsDirPath]', '[PluginsDir]/Projeny/Editor/Assets')
 
-            self._createPlaceholderCsFile('[PluginsDir]/Projeny/Placeholder.cs')
-            self._createPlaceholderCsFile('[PluginsDir]/Projeny/Editor/Placeholder.cs')
+            self._addGeneratedProjenyFiles('[PluginsDir]/Projeny', schema)
 
         self._junctionHelper.makeJunction(schema.projectSettingsPath, '[ProjectPlatformRoot]/ProjectSettings')
 
