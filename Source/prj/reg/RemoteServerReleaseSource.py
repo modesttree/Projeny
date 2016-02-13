@@ -42,7 +42,7 @@ class RemoteServerReleaseSource:
     def getName(self):
         return "File Server"
 
-    def installRelease(self, releaseInfo, forcedName):
+    def installRelease(self, packageRootDir, releaseInfo, forcedName):
         assertThat(releaseInfo.url)
 
         try:
@@ -53,7 +53,7 @@ class RemoteServerReleaseSource:
                 self._log.debug("Downloading url to temporary file '{0}'".format(tempFilePath))
                 urllib.request.urlretrieve(releaseInfo.url, tempFilePath)
 
-                return self._packageExtractor.extractUnityPackage(tempFilePath, releaseInfo.name, forcedName)
+                return self._packageExtractor.extractUnityPackage(packageRootDir, tempFilePath, releaseInfo.name, forcedName)
         finally:
             if os.path.exists(tempFilePath):
                 os.remove(tempFilePath)

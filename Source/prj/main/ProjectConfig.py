@@ -7,3 +7,5 @@ class ProjectConfig:
         self.assetsFolder = []
         self.solutionProjects = []
         self.solutionFolders = []
+        self.packageFolders = []
+        self.projectSettingsPath = None

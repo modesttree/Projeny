@@ -53,16 +53,37 @@
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="UnityEditor, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="UnityEditor">
       <HintPath>..\Libraries\Unity\UnityEditor.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="UnityEngine">
       <HintPath>..\Libraries\Unity\UnityEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Internal\Assert.cs" />
+    <Compile Include="Internal\AsyncProcessor.cs" />
+    <Compile Include="Internal\Coroutine.cs" />
+    <Compile Include="Internal\DateTimeUtil.cs" />
+    <Compile Include="Internal\DictionaryExtensions.cs" />
+    <Compile Include="Internal\Events\EventDispatcher.cs" />
+    <Compile Include="Internal\Events\EventHandlerKey.cs" />
+    <Compile Include="Internal\Events\EventManager.cs" />
+    <Compile Include="Internal\Events\IFrameCounter.cs" />
+    <Compile Include="Internal\Events\TimerPool.cs" />
+    <Compile Include="Internal\ExceptionExtensions.cs" />
+    <Compile Include="Internal\ImguiUtil.cs" />
+    <Compile Include="Internal\JunctionPoint.cs" />
+    <Compile Include="Internal\LinqExtensions.cs" />
+    <Compile Include="Internal\Log.cs" />
+    <Compile Include="Internal\MiscExtensions.cs" />
+    <Compile Include="Internal\MiscUnityEditorExtensions.cs" />
+    <Compile Include="Internal\PathUtil.cs" />
+    <Compile Include="Internal\PreserveAttribute.cs" />
+    <Compile Include="Internal\ProfileBlock.cs" />
+    <Compile Include="Internal\StringExtensions.cs" />
+    <Compile Include="Internal\Tuple.cs" />
+    <Compile Include="Internal\TypeExtensions.cs" />
     <Compile Include="Main\Models\PackageInfo.cs" />
     <Compile Include="Main\Models\ProjectConfig.cs" />
     <Compile Include="Main\Models\ReleaseInfo.cs" />
@@ -96,29 +117,6 @@
     <Compile Include="PackageManager\View\DragList.cs" />
     <Compile Include="PackageManager\View\PmView.cs" />
     <Compile Include="Main\PrjPathVars.cs" />
-    <Compile Include="Internal\Assert.cs" />
-    <Compile Include="Internal\AsyncProcessor.cs" />
-    <Compile Include="Internal\Coroutine.cs" />
-    <Compile Include="Internal\DateTimeUtil.cs" />
-    <Compile Include="Internal\DictionaryExtensions.cs" />
-    <Compile Include="Internal\Events\EventDispatcher.cs" />
-    <Compile Include="Internal\Events\EventHandlerKey.cs" />
-    <Compile Include="Internal\Events\EventManager.cs" />
-    <Compile Include="Internal\Events\IFrameCounter.cs" />
-    <Compile Include="Internal\Events\TimerPool.cs" />
-    <Compile Include="Internal\ExceptionExtensions.cs" />
-    <Compile Include="Internal\ImguiUtil.cs" />
-    <Compile Include="Internal\JunctionPoint.cs" />
-    <Compile Include="Internal\LinqExtensions.cs" />
-    <Compile Include="Internal\Log.cs" />
-    <Compile Include="Internal\MiscExtensions.cs" />
-    <Compile Include="Internal\MiscUnityEditorExtensions.cs" />
-    <Compile Include="Internal\PathUtil.cs" />
-    <Compile Include="Internal\PreserveAttribute.cs" />
-    <Compile Include="Internal\ProfileBlock.cs" />
-    <Compile Include="Internal\StringExtensions.cs" />
-    <Compile Include="Internal\Tuple.cs" />
-    <Compile Include="Internal\TypeExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\YamlDotNet\YamlDotNet.csproj">
@@ -129,7 +127,9 @@
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Util\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
   </PropertyGroup>

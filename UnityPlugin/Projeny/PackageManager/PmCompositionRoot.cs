@@ -48,6 +48,11 @@ namespace Projeny.Internal
             _isFirstLoad = isFirstLoad;
         }
 
+        public void DisplayError(Exception e)
+        {
+            _viewErrorHandler.DisplayError(e);
+        }
+
         public void ShowCreateNewProjectPopup()
         {
             _createNewProjectHandler.ShowCreateNewProjectPopup();
@@ -64,7 +69,6 @@ namespace Projeny.Internal
             _viewModelSyncer.Dispose();
             _releasesViewHandler.Dispose();
             _dragDropHandler.Dispose();
-            _viewErrorHandler.Dispose();
         }
 
         void Start()
@@ -75,7 +79,6 @@ namespace Projeny.Internal
             _packageViewHandler.Initialize();
             _releasesViewHandler.Initialize();
             _dragDropHandler.Initialize();
-            _viewErrorHandler.Initialize();
 
             if (_isFirstLoad)
             {
@@ -104,7 +107,7 @@ namespace Projeny.Internal
             _viewModelSyncer = new PmModelViewSyncer(_model, _view, _settings);
             _projectHandler = new PmProjectHandler(_model, _view);
             _dragDropHandler = new PmDragDropHandler(_model, _view, _asyncProcessor, _packageHandler, _prjCommandHandler);
-            _packageViewHandler = new PmPackageViewHandler(_view, _asyncProcessor, _packageHandler, _prjCommandHandler, _settings);
+            _packageViewHandler = new PmPackageViewHandler(_view, _asyncProcessor, _packageHandler, _prjCommandHandler, _settings, _model);
 
             _windowInitializer = new PmWindowInitializer(_projectHandler, _packageHandler, _releasesHandler, _asyncProcessor);
             _createNewProjectHandler = new PmCreateNewProjectPopupHandler(_view, _asyncProcessor, _prjCommandHandler, _windowInitializer);
@@ -115,7 +118,7 @@ namespace Projeny.Internal
 
             _solutionViewHandler = new PmVsSolutionViewHandler(
                 _model, _view, _asyncProcessor,
-                _prjCommandHandler, _viewErrorHandler, _projectHandler);
+                _prjCommandHandler, _projectHandler);
 
             _releasesViewHandler = new PmReleasesViewHandler(
                 _model, _view, _asyncProcessor, _releasesHandler, _packageHandler, _prjCommandHandler, _settings);

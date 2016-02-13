@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
-using UnityEngine;
 
 namespace Projeny.Internal
 {
@@ -23,9 +22,9 @@ namespace Projeny.Internal
             return ConvertToPublic(YamlSerializer.Deserialize<ReleaseInfoInternal>(yamlStr));
         }
 
-        public static PackageInfo DeserializePackageInfo(string yamlStr)
+        public static PackageFolderInfo DeserializePackageFolderInfo(string yamlStr)
         {
-            return ConvertToPublic(YamlSerializer.Deserialize<PackageInfoInternal>(yamlStr));
+            return ConvertToPublic(YamlSerializer.Deserialize<PackageFolderInfoInternal>(yamlStr));
         }
 
         static ProjectConfigInternal ConvertToInternal(ProjectConfig info)
@@ -54,44 +53,56 @@ namespace Projeny.Internal
 
             if (info.AssetsFolder != null)
             {
-                newInfo.AssetsFolder = info.AssetsFolder.ToList();
+                newInfo.AssetsFolder.AddRange(info.AssetsFolder.ToList());
             }
 
             if (info.PluginsFolder != null)
             {
-                newInfo.PluginsFolder = info.PluginsFolder.ToList();
+                newInfo.PluginsFolder.AddRange(info.PluginsFolder.ToList());
             }
 
             if (info.SolutionProjects != null)
             {
-                newInfo.SolutionProjects = info.SolutionProjects.ToList();
+                newInfo.SolutionProjects.AddRange(info.SolutionProjects.ToList());
             }
 
             if (info.Prebuilt != null)
             {
-                newInfo.Prebuilt = info.Prebuilt.ToList();
+                newInfo.Prebuilt.AddRange(info.Prebuilt.ToList());
             }
 
             if (info.SolutionFolders != null)
             {
-                newInfo.SolutionFolders = info.SolutionFolders.Select(x => x.Single()).ToList();
+                newInfo.SolutionFolders.AddRange(info.SolutionFolders.Select(x => x.Single()).ToList());
             }
 
             return newInfo;
         }
 
-        static PackageInfo ConvertToPublic(PackageInfoInternal info)
+        static PackageFolderInfo ConvertToPublic(PackageFolderInfoInternal info)
         {
             if (info == null)
             {
                 return null;
             }
 
-            var newInfo = new PackageInfo();
+            var newInfo = new PackageFolderInfo();
 
-            newInfo.Name = info.Name;
             newInfo.Path = info.Path;
-            newInfo.InstallInfo = ConvertToPublic(info.InstallInfo);
+
+            if (info.Packages != null)
+            {
+                foreach (var packageInfo in info.Packages)
+                {
+                    var newPackageInfo = new PackageInfo();
+
+                    newPackageInfo.Name = packageInfo.Name;
+                    newPackageInfo.InstallInfo = ConvertToPublic(packageInfo.InstallInfo);
+                    newPackageInfo.FullPath = Path.Combine(info.Path, packageInfo.Name);
+
+                    newInfo.Packages.Add(newPackageInfo);
+                }
+            }
 
             return newInfo;
         }
@@ -208,13 +219,13 @@ namespace Projeny.Internal
                 set;
             }
 
-            public int? CompressedSize
+            public long? CompressedSize
             {
                 get;
                 set;
             }
 
-            public int? VersionCode
+            public long? VersionCode
             {
                 get;
                 set;
@@ -305,15 +316,24 @@ namespace Projeny.Internal
             }
         }
 
-        class PackageInfoInternal
+        class PackageFolderInfoInternal
         {
-            public string Name
+            public string Path
             {
                 get;
                 set;
             }
 
-            public string Path
+            public List<PackageInfoInternal> Packages
+            {
+                get;
+                set;
+            }
+        }
+
+        class PackageInfoInternal
+        {
+            public string Name
             {
                 get;
                 set;

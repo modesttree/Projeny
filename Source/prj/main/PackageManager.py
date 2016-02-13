@@ -16,9 +16,8 @@ from mtm.util.CommonSettings import ConfigFileName
 import mtm.util.MiscUtil as MiscUtil
 import mtm.util.PlatformUtil as PlatformUtil
 
-from prj.reg.PackageInfo import PackageInstallInfo
 from mtm.util.Assert import *
-from prj.reg.PackageInfo import PackageInfo
+from prj.reg.PackageInfo import PackageInfo, PackageFolderInfo, PackageInstallInfo
 
 from datetime import datetime
 import mtm.util.YamlSerializer as YamlSerializer
@@ -50,9 +49,6 @@ class PackageManager:
     _projectInitHandlers = InjectMany('ProjectInitHandlers')
     _schemaLoader = Inject('ProjectSchemaLoader')
     _commonSettings = Inject('CommonSettings')
-
-    def __init__(self):
-        self._packageInfos = None
 
     def projectExists(self, projectName):
         return self._sys.directoryExists('[UnityProjectsDir]/{0}'.format(projectName))
@@ -92,8 +88,8 @@ class PackageManager:
         for packageName in unusedPackages:
             self._log.info("   " + packageName)
 
-    def listAllPackages(self):
-        packagesNames = self.getAllPackageNames()
+    def listAllPackages(self, projectName):
+        packagesNames = self.getAllPackageNames(projectName)
         self._log.info("Found {0} Packages:".format(len(packagesNames)))
         for packageName in packagesNames:
             self._log.info("  " + packageName)
@@ -115,6 +111,13 @@ class PackageManager:
 
             self._sys.createDirectory(projDirPath)
 
+            newProjSettingsDir = os.path.join(projDirPath, 'ProjectSettings')
+
+            if self._sys.directoryExists('[DefaultProjectSettingsDir]'):
+                self._sys.copyDirectory('[DefaultProjectSettingsDir]', newProjSettingsDir)
+            else:
+                self._sys.createDirectory(newProjSettingsDir)
+
             with self._sys.openOutputFile(os.path.join(projDirPath, ProjectConfigFileName)) as outFile:
                 outFile.write(
 """
@@ -122,8 +125,6 @@ ProjectSettingsPath: '[ProjectRoot]/ProjectSettings'
 #AssetsFolder:
     # Uncomment and Add package names here
 """)
-
-            self._sys.createDirectory('{0}/ProjectSettings'.format(projDirPath))
 
             self.updateProjectJunctions(projName, Platforms.Windows)
 
@@ -160,7 +161,7 @@ ProjectSettingsPath: '[ProjectRoot]/ProjectSettings'
 
         with self._log.heading('Updating package directories for project {0}'.format(projectName)):
             self.checkProjectInitialized(projectName, platform)
-            self.setPathsForProject(projectName, platform)
+            self.setPathsForProjectPlatform(projectName, platform)
             schema = self._schemaLoader.loadSchema(projectName, platform)
             self._updateDirLinksForSchema(schema)
 
@@ -185,26 +186,37 @@ ProjectSettingsPath: '[ProjectRoot]/ProjectSettings'
         #else:
             #self._log.warn('Warning: Could not determine source control in use!  An ignore file will not be added for your project.')
 
-    def getAllPackageInfos(self):
-        if not self._packageInfos:
-            self._packageInfos = []
+    def getAllPackageFolderInfos(self, projectName):
+        folderInfos = []
 
-            for name in self.getAllPackageNames():
-                path = self._varMgr.expandPath('[UnityPackagesDir]/{0}'.format(name))
+        self.setPathsForProject(projectName)
+        projConfig = self._schemaLoader.loadProjectConfig(projectName)
 
-                installInfoFilePath = os.path.join(path, InstallInfoFileName)
+        for packageFolder in projConfig.packageFolders:
+            folderInfo = PackageFolderInfo()
+            folderInfo.path = packageFolder
 
-                info = PackageInfo()
-                info.name = name
-                info.path = path
+            if self._sys.directoryExists(packageFolder):
+                for packageName in self._sys.walkDir(packageFolder):
+                    packageDirPath = os.path.join(packageFolder, packageName)
 
-                if self._sys.fileExists(installInfoFilePath):
-                    installInfo = YamlSerializer.deserialize(self._sys.readFileAsText(installInfoFilePath))
-                    info.installInfo = installInfo
+                    if not self._sys.IsDir(packageDirPath):
+                        continue
 
-                self._packageInfos.append(info)
+                    installInfoFilePath = os.path.join(packageDirPath, InstallInfoFileName)
 
-        return self._packageInfos
+                    packageInfo = PackageInfo()
+                    packageInfo.name = packageName
+
+                    if self._sys.fileExists(installInfoFilePath):
+                        installInfo = YamlSerializer.deserialize(self._sys.readFileAsText(installInfoFilePath))
+                        packageInfo.installInfo = installInfo
+
+                    folderInfo.packages.append(packageInfo)
+
+            folderInfos.append(folderInfo)
+
+        return folderInfos
 
     def deleteProject(self, projName):
         with self._log.heading("Deleting project '{0}'", projName):
@@ -216,40 +228,19 @@ ProjectSettingsPath: '[ProjectRoot]/ProjectSettings'
             self.clearProjectGeneratedFiles(projName)
             self._sys.deleteDirectory(fullPath)
 
-    def createPackage(self, packageName):
-        assertThat(self._varMgr.hasKey('UnityPackagesDir'), "Could not find 'UnityPackagesDir' in PathVars.  Have you set up your {0} file?", ConfigFileName)
-
-        with self._log.heading('Creating new package "{0}"', packageName):
-            newPath = '[UnityPackagesDir]/{0}'.format(packageName)
-            assertThat(not self._sys.directoryExists(newPath), "Found existing package at path '{0}'", newPath)
-            self._sys.createDirectory(newPath)
-
-            # This can be nice when sorting packages by install date, but it adds noise to the directory
-            # Seems nicer to just leave the directory empty for custom packages
-
-            #newInstallInfo = PackageInstallInfo()
-            #newInstallInfo.releaseInfo = None
-            #newInstallInfo.installDate = datetime.utcnow()
-
-            #yamlStr = YamlSerializer.serialize(newInstallInfo)
-            #self._sys.writeFileAsText(os.path.join(newPath, InstallInfoFileName), yamlStr)
-
-    def deletePackage(self, name):
-        with self._log.heading("Deleting package '{0}'", name):
-            assertThat(self._varMgr.hasKey('UnityPackagesDir'), "Could not find 'UnityPackagesDir' in PathVars.  Have you set up your {0} file?", ConfigFileName)
-            fullPath = '[UnityPackagesDir]/{0}'.format(name)
-
-            assertThat(self._sys.directoryExists(fullPath), "Could not find package with name '{0}' - delete failed", name)
-
-            self._sys.deleteDirectory(fullPath)
-
-    def getAllPackageNames(self):
-        assertThat(self._varMgr.hasKey('UnityPackagesDir'), "Could not find 'UnityPackagesDir' in PathVars.  Have you set up your {0} file?", ConfigFileName)
-
+    def getAllPackageNames(self, projectName):
         results = []
-        for name in self._sys.walkDir('[UnityPackagesDir]'):
-            if self._sys.IsDir('[UnityPackagesDir]/' + name):
-                results.append(name)
+        self.setPathsForProject(projectName)
+        projConfig = self._schemaLoader.loadProjectConfig(projectName)
+
+        for packageFolder in projConfig.packageFolders:
+            if not self._sys.directoryExists(packageFolder):
+                continue
+
+            for name in self._sys.walkDir(packageFolder):
+                if self._sys.IsDir(os.path.join(packageFolder, name)):
+                    results.append(name)
+
         return results
 
     def getAllProjectNames(self):
@@ -286,6 +277,7 @@ ProjectSettingsPath: '[ProjectRoot]/ProjectSettings'
         foundCurrent = False
         menuFile = """
 using UnityEditor;
+using Projeny.Internal;
 
 namespace Projeny
 {
@@ -336,7 +328,7 @@ namespace Projeny
 
         # Define DoNotIncludeProjenyInUnityProject only if you want to include Projeny as just another prebuilt package
         # This is nice because then you can call methods on projeny without another package
-        if self._config.tryGetBool(False, 'DoNotIncludeProjenyInUnityProject'):
+        if self._config.getBool('DoNotIncludeProjenyInUnityProject'):
             self._createSwitchProjectMenuScript(schema.name, '[PluginsDir]/ProjenyGenerated/Editor/ProjenyChangeProjectMenu.cs')
 
             self._createPlaceholderCsFile('[PluginsDir]/ProjenyGenerated/Placeholder.cs')
@@ -344,8 +336,6 @@ namespace Projeny
         else:
             if self._config.getBool('LinkToProjenyEditorDir') and not MiscUtil.isRunningAsExe():
                 self._junctionHelper.makeJunction('[ProjenyDir]/UnityPlugin/Projeny', '[PluginsDir]/Projeny/Editor/Source')
-
-                self._sys.copyFile('[YamlDotNetDllPath]', '[PluginsDir]/ProjenyGenerated/Editor/YamlDotNet.dll')
             else:
                 dllOutPath = '[PluginsDir]/Projeny/Editor/Projeny.dll'
                 self._sys.copyFile('[ProjenyUnityEditorDllPath]', dllOutPath)
@@ -357,7 +347,7 @@ namespace Projeny
                 self._sys.copyDirectory('[ProjenyUnityEditorAssetsDirPath]', assetsOutPath)
                 settingsFileOutPath = os.path.join(assetsOutPath, 'Resources/Projeny/PmSettings.asset')
                 self._sys.writeFileAsText(settingsFileOutPath, self._sys.readFileAsText(settingsFileOutPath).replace(
-                    'm_Script: {fileID: 11500000, guid: 6e78a2ff93d634841a8d26620c43dfca, type: 3}',
+                    'm_Script: {fileID: 11500000, guid: 01fe9b81f68762b438dd4eecbcfe2900, type: 3}',
                     'm_Script: {fileID: 1582608718, guid: b7b2ba04b543d234aa4225d91c60af2b, type: 3}'))
 
             self._createSwitchProjectMenuScript(schema.name, '[PluginsDir]/Projeny/Editor/ProjenyChangeProjectMenu.cs')
@@ -365,20 +355,15 @@ namespace Projeny
             self._createPlaceholderCsFile('[PluginsDir]/Projeny/Placeholder.cs')
             self._createPlaceholderCsFile('[PluginsDir]/Projeny/Editor/Placeholder.cs')
 
-
-        assertThat(self._sys.directoryExists(schema.projectSettingsPath),
-           "Expected to find project settings directory at '{0}'", self._varMgr.expand(schema.projectSettingsPath))
         self._junctionHelper.makeJunction(schema.projectSettingsPath, '[ProjectPlatformRoot]/ProjectSettings')
 
         for packageInfo in schema.packages.values():
 
             self._log.debug('Processing package "{0}"'.format(packageInfo.name))
 
-            sourceDir = self._varMgr.expandPath('[UnityPackagesDir]/{0}'.format(packageInfo.name))
+            self._validateDirForFolderType(packageInfo, packageInfo.dirPath)
 
-            self._validateDirForFolderType(packageInfo, sourceDir)
-
-            assertThat(os.path.exists(sourceDir),
+            assertThat(os.path.exists(packageInfo.dirPath),
                "Could not find package with name '{0}' while processing schema '{1}'.  See build log for full object graph to see where it is referenced".format(packageInfo.name, schema.name))
 
             outputPackageDir = self._varMgr.expandPath(packageInfo.outputDirVar)
@@ -387,10 +372,10 @@ namespace Projeny
 
             assertThat(not os.path.exists(linkDir), "Did not expect this path to exist: '{0}'".format(linkDir))
 
-            self._junctionHelper.makeJunction(sourceDir, linkDir)
+            self._junctionHelper.makeJunction(packageInfo.dirPath, linkDir)
 
     def checkProjectInitialized(self, projectName, platform):
-        self.setPathsForProject(projectName, platform)
+        self.setPathsForProjectPlatform(projectName, platform)
 
         if self._sys.directoryExists('[ProjectPlatformRoot]'):
             return
@@ -398,15 +383,19 @@ namespace Projeny
         self._log.warn('Project "{0}" is not initialized for platform "{1}".  Initializing now.'.format(projectName, platform))
         self._initNewProjectForPlatform(projectName, platform)
 
-    def setPathsForProject(self, projectName, platform):
-
+    def setPathsForProject(self, projectName):
         self._varMgr.set('ShortProjectName', self._commonSettings.getShortProjectName(projectName))
+        self._varMgr.set('ProjectName', projectName)
+        self._varMgr.set('ProjectRoot', '[UnityProjectsDir]/[ProjectName]')
+
+    def setPathsForProjectPlatform(self, projectName, platform):
+
+        self.setPathsForProject(projectName)
+
         self._varMgr.set('ShortPlatform', PlatformUtil.toPlatformFolderName(platform))
 
         self._varMgr.set('Platform', platform)
-        self._varMgr.set('ProjectName', projectName)
 
-        self._varMgr.set('ProjectRoot', '[UnityProjectsDir]/[ProjectName]')
         self._varMgr.set('ProjectPlatformRoot', '[ProjectRoot]/[ShortProjectName]-[ShortPlatform]')
         self._varMgr.set('ProjectAssetsDir', '[ProjectPlatformRoot]/Assets')
 
@@ -442,7 +431,7 @@ namespace Projeny
 
             for projectName in projectNames:
                 for platform in Platforms.All:
-                    self.setPathsForProject(projectName, platform)
+                    self.setPathsForProjectPlatform(projectName, platform)
                     self._removeProjectPlatformJunctions()
 
     def _removeProjectPlatformJunctions(self):
@@ -456,7 +445,7 @@ namespace Projeny
         with self._log.heading('Clearing generated files for project {0}'.format(projectName)):
             self._junctionHelper.removeJunctionsInDirectory('[UnityProjectsDir]/{0}'.format(projectName), True)
             for platform in Platforms.All:
-                self.setPathsForProject(projectName, platform)
+                self.setPathsForProjectPlatform(projectName, platform)
 
                 if os.path.exists(self._varMgr.expandPath('[ProjectPlatformRoot]')):
                     platformRootPath = self._varMgr.expand('[ProjectPlatformRoot]')
@@ -485,7 +474,7 @@ namespace Projeny
 
         with self._log.heading('Initializing new project {0} ({1})'.format(projectName, platform)):
             schema = self._schemaLoader.loadSchema(projectName, platform)
-            self.setPathsForProject(projectName, platform)
+            self.setPathsForProjectPlatform(projectName, platform)
 
             assertThat(self._sys.directoryExists(schema.projectSettingsPath),
                "Expected to find project settings directory at '{0}'", self._varMgr.expand(schema.projectSettingsPath))

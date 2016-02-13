@@ -29,9 +29,9 @@ class AssetStoreCacheReleaseSource:
     def getName(self):
         return "Asset Store Cache"
 
-    def installRelease(self, releaseInfo, forcedName):
+    def installRelease(self, packageRoot, releaseInfo, forcedName):
         for subReg in self._folderSources:
             if releaseInfo in subReg.releases:
-                return subReg.installRelease(releaseInfo, forcedName)
+                return subReg.installRelease(packageRoot, releaseInfo, forcedName)
 
         assertThat(False)

@@ -34,7 +34,6 @@ namespace Projeny.Internal
 
         public IEnumerator ProcessPrjCommand(string statusName, IEnumerator prjTask)
         {
-            Assert.IsNull(_view.BlockedStatusMessage);
             _view.BlockedStatusMessage = statusName;
 
             while (prjTask.MoveNext())
@@ -75,7 +74,7 @@ namespace Projeny.Internal
             }
             else
             {
-                throw new PrjCommandException(response.ErrorMessage);
+                throw new PrjCommandException("Error occurred during '{0}': {1}".Fmt(statusName, response.ErrorMessage));
             }
         }
     }

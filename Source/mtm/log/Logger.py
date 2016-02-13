@@ -47,13 +47,16 @@ class HeadingBlock:
         delta = datetime.now() - self._startTime
         totalDelta = datetime.now() - self._log.totalStartTime
 
-        message = 'Finished {0} (Took {1}, time: {2}, total elapsed: {3})'.format(
+        errorOccurred = type != None
+
+        message = '{0} {1} (Took {2}, time: {3}, total elapsed: {4})'.format(
+            'Failed during task: ' if errorOccurred else 'Finished',
             self._message[0].lower() + self._message[1:],
             Util.formatTimeDelta(delta.total_seconds()),
             datetime.now().strftime('%H:%M:%S'),
             Util.formatTimeDelta(totalDelta.total_seconds()))
 
-        self._log._logInternal(message, LogType.HeadingEnd)
+        self._log._logInternal(message, LogType.Error if errorOccurred else LogType.HeadingEnd)
 
 class Logger:
     _streams = InjectMany('LogStream')

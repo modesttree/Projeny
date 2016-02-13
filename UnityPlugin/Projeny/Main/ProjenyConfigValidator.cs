@@ -63,33 +63,23 @@ namespace Projeny.Internal
                             continue;
                         }
 
-                        if (JunctionPoint.Exists(pluginDir.FullName))
+                        if (pluginDir.Name == "Android" || pluginDir.Name == "WebGL")
                         {
-                            if (!Directory.Exists(JunctionPoint.GetTarget(pluginDir.FullName)))
+                            foreach (var platformDir in pluginDir.GetDirectories())
                             {
-                                brokenJunctions.Add(pluginDir.FullName);
+                                CheckJunction(platformDir, badDirectories, brokenJunctions);
                             }
+
+                            continue;
                         }
-                        else
-                        {
-                            badDirectories.Add(pluginDir);
-                        }
+
+                        CheckJunction(pluginDir, badDirectories, brokenJunctions);
                     }
 
                     continue;
                 }
 
-                if (JunctionPoint.Exists(scriptDir.FullName))
-                {
-                    if (!Directory.Exists(JunctionPoint.GetTarget(scriptDir.FullName)))
-                    {
-                        brokenJunctions.Add(scriptDir.FullName);
-                    }
-                }
-                else
-                {
-                    badDirectories.Add(scriptDir);
-                }
+                CheckJunction(scriptDir, badDirectories, brokenJunctions);
             }
 
             if (badDirectories.Any())
@@ -106,6 +96,21 @@ namespace Projeny.Internal
 
                 EditorUtility.DisplayDialog(
                     "Projeny Error", "Projeny validation failed.\n\nThere are broken directory links in your project.  You may have deleted a package without removing the package from the project.  You can fix this by entering package manager and removing the missing packages from your project. See documentation for details.  \n\nThe directories in question are the following: \n\n{0}".Fmt(brokenJunctionsStr), "Ok");
+            }
+        }
+
+        static void CheckJunction(DirectoryInfo dir, List<DirectoryInfo> badDirectories, List<string> brokenJunctions)
+        {
+            if (JunctionPoint.Exists(dir.FullName))
+            {
+                if (!Directory.Exists(JunctionPoint.GetTarget(dir.FullName)))
+                {
+                    brokenJunctions.Add(dir.FullName);
+                }
+            }
+            else
+            {
+                badDirectories.Add(dir);
             }
         }
     }

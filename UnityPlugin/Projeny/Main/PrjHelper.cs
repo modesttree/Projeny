@@ -125,19 +125,6 @@ namespace Projeny
             EditorUtility.DisplayDialog("Error", errorMessage, "Ok");
         }
 
-        public static IEnumerator OpenPackagesFolderInExplorer()
-        {
-            var runner = PrjInterface.RunPrjAsync(
-                PrjInterface.CreatePrjRequest("openPackagesFolder"));
-
-            while (runner.MoveNext() && !(runner.Current is PrjResponse))
-            {
-                yield return runner.Current;
-            }
-
-            yield return CreateStandardResponse((PrjResponse)runner.Current);
-        }
-
         public static IEnumerator OpenUnityForProjectAsync(string projectName)
         {
             var runner = PrjInterface.RunPrjAsync(
@@ -204,14 +191,15 @@ namespace Projeny
             yield return CreateStandardResponse((PrjResponse)runner.Current);
         }
 
-        public static IEnumerator InstallReleaseAsync(ReleaseInfo info)
+        public static IEnumerator InstallReleaseAsync(string packageRoot, ReleaseInfo info)
         {
             var req = PrjInterface.CreatePrjRequest("installRelease");
             req.Param1 = info.Id;
+            req.Param2 = packageRoot;
 
             if (info.HasVersionCode)
             {
-                req.Param2 = info.VersionCode.ToString();
+                req.Param3 = info.VersionCode.ToString();
             }
 
             var runner = PrjInterface.RunPrjAsync(req);
@@ -245,55 +233,6 @@ namespace Projeny
             }
 
             yield return CreateStandardResponse((PrjResponse)runner.Current);
-        }
-
-        public static IEnumerator CreatePackageAsync(string name)
-        {
-            var req = PrjInterface.CreatePrjRequest("createPackage");
-
-            req.Param1 = name;
-
-            var runner = PrjInterface.RunPrjAsync(req);
-
-            while (runner.MoveNext() && !(runner.Current is PrjResponse))
-            {
-                yield return runner.Current;
-            }
-
-            yield return CreateStandardResponse((PrjResponse)runner.Current);
-        }
-
-        public static IEnumerator DeletePackagesAsync(List<PackageInfo> infos)
-        {
-            foreach (var info in infos)
-            {
-                Log.Debug("Deleting package '{0}'".Fmt(info.Name));
-
-                var req = PrjInterface.CreatePrjRequest("deletePackage");
-
-                req.Param1 = info.Name;
-
-                var runner = PrjInterface.RunPrjAsync(req);
-
-                while (runner.MoveNext() && !(runner.Current is PrjResponse))
-                {
-                    yield return runner.Current;
-                }
-
-                var response = (PrjResponse)runner.Current;
-
-                if (response.Succeeded)
-                {
-                    Log.Info("Deleted package '{0}'".Fmt(info.Name));
-                }
-                else
-                {
-                    yield return PrjHelperResponse.Error(response.ErrorMessage);
-                    yield break;
-                }
-            }
-
-            yield return PrjHelperResponse.Success();
         }
 
         // Yields strings indicating status
@@ -345,7 +284,7 @@ namespace Projeny
 
                 yield return PrjHelperResponse.Success(
                     docs
-                        .Select(x => PrjSerializer.DeserializePackageInfo(x))
+                        .Select(x => PrjSerializer.DeserializePackageFolderInfo(x))
                         .Where(x => x != null).ToList());
             }
             else

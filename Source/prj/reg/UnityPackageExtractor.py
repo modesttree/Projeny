@@ -27,7 +27,7 @@ class UnityPackageExtractor:
 
     # Returns the chosen name for the directory
     # If forcedName is given then this value is always forcedName
-    def extractUnityPackage(self, unityPackagePath, fallbackName, forcedName):
+    def extractUnityPackage(self, packageRootDir, unityPackagePath, fallbackName, forcedName):
 
         fileName = os.path.basename(unityPackagePath)
 
@@ -70,7 +70,7 @@ class UnityPackageExtractor:
 
                     assertThat(not self._isSpecialFolderName(newPackageName))
 
-                    outDirPath = '[UnityPackagesDir]/{0}'.format(newPackageName)
+                    outDirPath = os.path.join(packageRootDir, newPackageName)
                     self._sys.copyDirectory(dirToCopy, outDirPath)
 
                     return newPackageName
@@ -120,7 +120,7 @@ if __name__ == '__main__':
         if os.path.exists(outDir):
             shutil.rmtree(outDir)
 
-        runner.extractUnityPackage("C:/Users/Steve/AppData/Roaming/Unity/Asset Store-5.x/Modest Tree Media/Scripting/Zenject Dependency Injection IOC.unitypackage", outDir)
+        runner.extractUnityPackage(packageRootDir, "C:/Users/Steve/AppData/Roaming/Unity/Asset Store-5.x/Modest Tree Media/Scripting/Zenject Dependency Injection IOC.unitypackage", outDir)
 
     ScriptRunner().runWrapper(main)
 

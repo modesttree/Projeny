@@ -53,7 +53,7 @@ namespace Projeny.Internal
 
             _model.PluginItemsChanged += _eventManager.Add(OnProjectConfigDirty, EventQueueMode.LatestOnly);
             _model.AssetItemsChanged += _eventManager.Add(OnProjectConfigDirty, EventQueueMode.LatestOnly);
-            _model.PackagesChanged += _eventManager.Add(OnProjectConfigDirty, EventQueueMode.LatestOnly);
+            _model.PackageFoldersChanged += _eventManager.Add(OnProjectConfigDirty, EventQueueMode.LatestOnly);
             _model.ReleasesChanged += _eventManager.Add(OnProjectConfigDirty, EventQueueMode.LatestOnly);
             _model.VsProjectsChanged += _eventManager.Add(OnProjectConfigDirty, EventQueueMode.LatestOnly);
 
@@ -72,7 +72,7 @@ namespace Projeny.Internal
 
             _model.PluginItemsChanged -= _eventManager.Remove(OnProjectConfigDirty);
             _model.AssetItemsChanged -= _eventManager.Remove(OnProjectConfigDirty);
-            _model.PackagesChanged -= _eventManager.Remove(OnProjectConfigDirty);
+            _model.PackageFoldersChanged -= _eventManager.Remove(OnProjectConfigDirty);
             _model.ReleasesChanged -= _eventManager.Remove(OnProjectConfigDirty);
             _model.VsProjectsChanged -= _eventManager.Remove(OnProjectConfigDirty);
 

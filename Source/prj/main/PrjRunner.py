@@ -80,11 +80,11 @@ class PrjRunner:
         if self._args.createProject:
             self._packageMgr._createProject(self._args.project)
 
-        if self._args.createPackage:
-            self._packageMgr.createPackage(self._args.createPackage)
+        if self._args.projectAddPackageAssets:
+            self._projectConfigChanger.addPackage(self._args.project, self._args.projectAddPackageAssets, True)
 
-        if self._args.projectAddPackage:
-            self._projectConfigChanger.addPackage(self._args.project, self._args.projectAddPackage)
+        if self._args.projectAddPackagePlugins:
+            self._projectConfigChanger.addPackage(self._args.project, self._args.projectAddPackagePlugins, False)
 
         if self._args.openDocumentation:
             self._openDocumentation()
@@ -98,19 +98,8 @@ class PrjRunner:
         if self._args.deleteAllLinks:
             self._packageMgr.deleteAllLinks()
 
-        if self._args.deletePackage:
-            if not self._args.suppressPrompts:
-                if not MiscUtil.confirmChoice("Are you sure you want to delete package '{0}'? (y/n)  \nNote that this change is non-recoverable!  (unless you are using source control)  ".format(self._args.deletePackage)):
-                    assertThat(False, "User aborted operation")
-
-            self._packageMgr.deletePackage(self._args.deletePackage)
-
         if self._args.buildPrebuild:
             self.buildPrebuildProjects()
-
-        if self._args.installRelease:
-            releaseName, releaseVersion = self._args.installRelease
-            self._releaseSourceManager.installReleaseByName(releaseName, releaseVersion)
 
         if self._args.init:
             self._packageMgr.updateLinksForAllProjects()
@@ -153,7 +142,7 @@ class PrjRunner:
             self._packageMgr.listAllProjects()
 
         if self._args.listPackages:
-            self._packageMgr.listAllPackages()
+            self._packageMgr.listAllPackages(self._args.project)
 
         if self._args.listUnusedPackages:
             self._packageMgr.listUnusedPackages()
@@ -203,7 +192,6 @@ class PrjRunner:
                 outFile.write(
 """
 PathVars:
-    UnityPackagesDir: '[ConfigDir]/UnityPackages'
     UnityProjectsDir: '[ConfigDir]/UnityProjects'
     LogPath: '[ConfigDir]/PrjLog.txt'
 """)
@@ -214,7 +202,8 @@ PathVars:
            or self._args.clearProjectGeneratedFiles or self._args.buildFull \
            or self._args.openUnity or self._args.openCustomSolution \
            or self._args.editProjectYaml or self._args.createProject \
-           or self._args.projectAddPackage or self._args.deleteProject
+           or self._args.projectAddPackageAssets or self._args.projectAddPackagePlugins \
+           or self._args.deleteProject or self._args.listPackages
 
         if requiresProject and not self._args.project:
             assertThat(False, "Cannot execute the given arguments without a project specified, or a default project defined in the {0} file", ConfigFileName)

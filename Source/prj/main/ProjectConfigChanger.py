@@ -38,17 +38,20 @@ class ProjectConfigChanger:
         configPath = self._getProjectConfigPath(projectName)
         self._sys.writeFileAsText(configPath, YamlSerializer.serialize(projectConfig))
 
-    def addPackage(self, projectName, packageName):
+    def addPackage(self, projectName, packageName, addToAssetsFolder):
         with self._log.heading('Adding package {0} to project {1}'.format(packageName, projectName)):
             assertThat(packageName in self._packageManager.getAllPackageNames(), "Could not find the given package '{0}' in the UnityPackages folder", packageName)
-            self._packageManager.setPathsForProject(projectName, Platforms.Windows)
+            self._packageManager.setPathsForProjectPlatform(projectName, Platforms.Windows)
 
             projConfig = self._loadProjectConfig(projectName)
 
             assertThat(packageName not in projConfig.assetsFolder and packageName not in projConfig.pluginsFolder,
                "Given package '{0}' has already been added to project config", packageName)
 
-            projConfig.assetsFolder.append(packageName)
+            if addToAssetsFolder:
+                projConfig.assetsFolder.append(packageName)
+            else:
+                projConfig.pluginsFolder.append(packageName)
 
             self._saveProjectConfig(projectName, projConfig)
 

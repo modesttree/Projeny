@@ -14,12 +14,18 @@ using Projeny.Internal;
 namespace Projeny
 {
     [Serializable]
+    public class PackageFolderInfo
+    {
+        public string Path;
+        public List<PackageInfo> Packages = new List<PackageInfo>();
+    }
+
+    [Serializable]
     public class PackageInfo
     {
         public string Name;
-        public string Path;
-
         public PackageInstallInfo InstallInfo;
+        public string FullPath;
     }
 
     [Serializable]

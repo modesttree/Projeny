@@ -13,7 +13,7 @@ import mtm.ioc.IocAssertions as Assertions
 from mtm.util.Assert import *
 from prj.main.ProjenyConstants import ProjectConfigFileName, PackageConfigFileName, ProjectUserConfigFileName
 
-from prj.main.CsProjParserHelper import NsPrefix
+from prj.main.CsProjAnalyzer import NsPrefix
 
 CsProjTypeGuid = 'FAE04EC0-301F-11D3-BF4B-00C04F79EFBC'
 SolutionFolderTypeGuid = '2150E333-8FDC-42A3-9474-1A3956D46DE8'
@@ -41,7 +41,7 @@ class VisualStudioSolutionGenerator:
 
     def updateVisualStudioSolution(self, projectName, platform):
         with self._log.heading('Updating Visual Studio solution for project "{0}"'.format(projectName)):
-            self._packageManager.setPathsForProject(projectName, platform)
+            self._packageManager.setPathsForProjectPlatform(projectName, platform)
             self._packageManager.checkProjectInitialized(projectName, platform)
 
             schema = self._schemaLoader.loadSchema(projectName, platform)

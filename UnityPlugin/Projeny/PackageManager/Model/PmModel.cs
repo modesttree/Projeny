@@ -23,12 +23,13 @@ namespace Projeny.Internal
     {
         public event Action PluginItemsChanged = delegate {};
         public event Action AssetItemsChanged = delegate {};
-        public event Action PackagesChanged = delegate {};
+        public event Action PackageFoldersChanged = delegate {};
         public event Action ReleasesChanged = delegate {};
         public event Action VsProjectsChanged = delegate {};
+        public event Action PackageFolderIndexChanged = delegate {};
 
         [SerializeField]
-        List<PackageInfo> _packages = new List<PackageInfo>();
+        List<PackageFolderInfo> _folderInfos = new List<PackageFolderInfo>();
 
         [SerializeField]
         List<ReleaseInfo> _releases = new List<ReleaseInfo>();
@@ -51,8 +52,27 @@ namespace Projeny.Internal
         [SerializeField]
         string _projectSettingsPath;
 
+        [SerializeField]
+        int _packageFolderIndex;
+
         public PmModel()
         {
+        }
+
+        public int PackageFolderIndex
+        {
+            get
+            {
+                return _packageFolderIndex;
+            }
+            set
+            {
+                if (_packageFolderIndex != value)
+                {
+                    _packageFolderIndex = value;
+                    PackageFolderIndexChanged();
+                }
+            }
         }
 
         public string ProjectSettingsPath
@@ -83,6 +103,14 @@ namespace Projeny.Internal
             }
         }
 
+        public IEnumerable<PackageInfo> AllPackages
+        {
+            get
+            {
+                return _folderInfos.SelectMany(x => x.Packages);
+            }
+        }
+
         public IEnumerable<string> PluginItems
         {
             get
@@ -91,11 +119,11 @@ namespace Projeny.Internal
             }
         }
 
-        public IEnumerable<PackageInfo> Packages
+        public IEnumerable<PackageFolderInfo> PackageFolders
         {
             get
             {
-                return _packages;
+                return _folderInfos;
             }
         }
 
@@ -121,6 +149,33 @@ namespace Projeny.Internal
             {
                 return _solutionFolders;
             }
+        }
+
+        public string GetCurrentPackageFolderPath()
+        {
+            var folderPath = TryGetCurrentPackageFolderPath();
+            Assert.IsNotNull(folderPath, "Could not find current package root folder path");
+            return folderPath;
+        }
+
+        public string TryGetCurrentPackageFolderPath()
+        {
+            if (_packageFolderIndex >= 0 && _packageFolderIndex < _folderInfos.Count)
+            {
+                return _folderInfos[_packageFolderIndex].Path;
+            }
+
+            return null;
+        }
+
+        public IEnumerable<PackageInfo> GetCurrentFolderPackages()
+        {
+            if (_packageFolderIndex >= 0 && _packageFolderIndex < _folderInfos.Count)
+            {
+                return _folderInfos[_packageFolderIndex].Packages;
+            }
+
+            return Enumerable.Empty<PackageInfo>();
         }
 
         public void ClearSolutionFolders()
@@ -212,11 +267,11 @@ namespace Projeny.Internal
             PluginItemsChanged();
         }
 
-        public void SetPackages(List<PackageInfo> packages)
+        public void SetPackageFolders(List<PackageFolderInfo> folderInfos)
         {
-            _packages.Clear();
-            _packages.AddRange(packages);
-            PackagesChanged();
+            _folderInfos.Clear();
+            _folderInfos.AddRange(folderInfos);
+            PackageFoldersChanged();
         }
 
         public void SetReleases(List<ReleaseInfo> releases)
@@ -234,7 +289,7 @@ namespace Projeny.Internal
 
         public bool IsReleaseInstalled(ReleaseInfo info)
         {
-            return _packages
+            return AllPackages
                 .Any(x => x.InstallInfo != null
                         && x.InstallInfo.ReleaseInfo != null
                         && x.InstallInfo.ReleaseInfo.Id == info.Id
@@ -242,3 +297,4 @@ namespace Projeny.Internal
         }
     }
 }
+

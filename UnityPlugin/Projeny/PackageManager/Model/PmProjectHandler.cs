@@ -39,11 +39,12 @@ namespace Projeny.Internal
             var config = new ProjectConfig();
 
             config.ProjectSettingsPath = _model.ProjectSettingsPath;
-            config.AssetsFolder = _model.AssetItems.ToList();
-            config.PluginsFolder = _model.PluginItems.ToList();
-            config.SolutionProjects = _model.VsProjects.ToList();
-            config.Prebuilt = _model.PrebuiltProjects.ToList();
-            config.SolutionFolders = _model.VsSolutionFolders.ToList();
+
+            config.AssetsFolder.AddRange(_model.AssetItems);
+            config.PluginsFolder.AddRange(_model.PluginItems);
+            config.SolutionProjects.AddRange(_model.VsProjects);
+            config.Prebuilt.AddRange(_model.PrebuiltProjects);
+            config.SolutionFolders.AddRange(_model.VsSolutionFolders);
 
             return config;
         }
@@ -62,6 +63,7 @@ namespace Projeny.Internal
 
         public void ResetProject()
         {
+            _model.ProjectSettingsPath = null;
             _model.ClearAssetItems();
             _model.ClearPluginItems();
         }
@@ -185,4 +187,5 @@ namespace Projeny.Internal
         }
     }
 }
+
 

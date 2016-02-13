@@ -70,19 +70,17 @@ def addArguments(parser):
     parser.add_argument('-cpr', '--createProject', action='store_true', help='Creates a new directory in the UnityProjects directory, adds a default {0} file, and sets up directory links'.format(ProjectConfigFileName))
 
     # Packages
-    parser.add_argument('-cpa', '--createPackage', metavar='NEW_PACKAGE_NAME', type=str, help="Creates a new directory underneath the UnityPackages directory with the given name")
     parser.add_argument('-lpa', '--listPackages', action='store_true', help='Lists all the directories found in the UnityPackages directory')
     parser.add_argument('-lupa', '--listUnusedPackages', action='store_true', help='Lists all the packages that are not used in any projects')
-    parser.add_argument('-dpa', '--deletePackage', metavar='PACKAGE_NAME', type=str, help="Deletes the directory at UnityPackages/x where x is the given value")
 
     parser.add_argument('-il', '--initLinks', action='store_true', help="This is the same as -ul except it will only update the directories if they haven't been updated at all yet")
 
     # Releases
-    parser.add_argument('-ins', '--installRelease', type=str, nargs=2, metavar=('RELEASE_NAME', 'RELEASE_VERSION'), help="Searches all release sources for the given release with given version")
     parser.add_argument('-lr', '--listReleases', action='store_true', help='Lists all releases found from all release sources')
 
     # Project manipulation
-    parser.add_argument('-prap', '--projectAddPackage', metavar='PACKAGE_NAME', type=str, help="Adds the given package to the {0} for the given project".format(ProjectConfigFileName))
+    parser.add_argument('-prapp', '--projectAddPackagePlugins', metavar='PACKAGE_NAME', type=str, help="Adds the given package to the AssetsFolder list in {0} for the given project".format(ProjectConfigFileName))
+    parser.add_argument('-prapa', '--projectAddPackageAssets', metavar='PACKAGE_NAME', type=str, help="Adds the given package to the PluginsFolder list in {0} for the given project".format(ProjectConfigFileName))
 
     # Visual Studio solution stuff
     parser.add_argument('-uus', '--updateUnitySolution', action='store_true', help='Equivalent to executing the menu option "Assets/Open C# Project" in unity (without actually opening it)')
@@ -113,25 +111,21 @@ def _getExtraUserConfigPaths():
 
 def installBindings(mainConfigPath):
 
-    assertThat(mainConfigPath == None or os.path.isfile(mainConfigPath))
+    assertIsNotNone(mainConfigPath)
+    assertThat(os.path.isfile(mainConfigPath))
 
     projenyDir = _getProjenyDir()
     projenyConfigPath = os.path.join(projenyDir, ConfigFileName)
 
     # Put the standard config first so it can be over-ridden by user settings
-    configPaths = [projenyConfigPath]
-
-    if mainConfigPath is not None:
-        configPaths.append(mainConfigPath)
-
+    configPaths = [projenyConfigPath, mainConfigPath]
     configPaths += _getExtraUserConfigPaths()
 
     Container.bind('Config').toSingle(Config, loadYamlFilesThatExist(*configPaths))
 
     initialVars = { 'ProjenyDir': projenyDir, }
 
-    if mainConfigPath != None:
-        initialVars['ConfigDir'] = os.path.dirname(mainConfigPath)
+    initialVars['ConfigDir'] = os.path.dirname(mainConfigPath)
 
     if not MiscUtil.isRunningAsExe():
         initialVars['PythonPluginDir'] = _getPluginDirPath()
@@ -195,13 +189,14 @@ def _getParentDirsAndSelf(dirPath):
         lastParentDir = parentDir
         parentDir = os.path.dirname(parentDir)
 
-def tryFindMainConfigPath():
+def findMainConfigPath():
     for dirPath in _getParentDirsAndSelf(os.getcwd()):
         configPath = os.path.join(dirPath, ConfigFileName)
 
         if os.path.isfile(configPath):
             return configPath
 
+    assertThat(False, "Could not find config file '{0}'", ConfigFileName)
     return None
 
 def _main():
@@ -227,10 +222,7 @@ def _main():
         assertThat(os.path.isfile(args.configPath), "Could not find config file at '{0}'", args.configPath)
         mainConfigPath = args.configPath
     else:
-        mainConfigPath = tryFindMainConfigPath()
-
-        if mainConfigPath == None and not args.createConfig:
-            assertThat(False, "Could not find config file '{0}'", ConfigFileName)
+        mainConfigPath = findMainConfigPath()
 
     installBindings(mainConfigPath)
     installPlugins()

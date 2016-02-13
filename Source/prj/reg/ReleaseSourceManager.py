@@ -93,9 +93,11 @@ class ReleaseSourceManager:
                     return (release, source)
         return (None, None)
 
-    def installReleaseByName(self, releaseName, releaseVersion, suppressPrompts = False):
+    def installReleaseByName(self, projectName, packageRoot, releaseName, releaseVersion, suppressPrompts = False):
         assertThat(releaseName)
         assertThat(releaseVersion)
+
+        assertThat(self._sys.directoryExists(packageRoot))
 
         self._lazyInit()
         with self._log.heading("Attempting to install release '{0}' (version '{1}')", releaseName, releaseVersion):
@@ -105,11 +107,15 @@ class ReleaseSourceManager:
             assertThat(releaseInfo, "Failed to install release '{0}' (version {1}) - could not find it in any of the release sources.\nSources checked: \n  {2}\nTry listing all available release with the -lr command"
                .format(releaseName, releaseVersion, "\n  ".join([x.getName() for x in self._releaseSources])))
 
-            self._installReleaseInternal(releaseInfo, releaseSource, suppressPrompts)
+            self._installReleaseInternal(projectName, packageRoot, releaseInfo, releaseSource, suppressPrompts)
 
-    def installReleaseById(self, releaseId, releaseVersionCode, suppressPrompts = False):
+    # We need the projectName because that's where the package folders are defined and we need to know if
+    # we are replacing an existing one
+    def installReleaseById(self, releaseId, projectName, packageRoot, releaseVersionCode, suppressPrompts = False):
 
-        self._log.info("Attempting to install release with ID '{0}' and version code '{1}'", releaseId, releaseVersionCode)
+        self._log.info("Attempting to install release with ID '{0}' into package root '{1}' and version code '{2}'", releaseId, packageRoot, releaseVersionCode)
+
+        assertThat(self._sys.directoryExists(packageRoot))
 
         try:
             releaseVersionCode = int(releaseVersionCode)
@@ -128,38 +134,44 @@ class ReleaseSourceManager:
         assertThat(releaseInfo, "Failed to install release '{0}' - could not find it in any of the release sources.\nSources checked: \n  {1}\nTry listing all available release with the -lr command"
            .format(releaseId, "\n  ".join([x.getName() for x in self._releaseSources])))
 
-        self._installReleaseInternal(releaseInfo, releaseSource, suppressPrompts)
+        self._installReleaseInternal(projectName, packageRoot, releaseInfo, releaseSource, suppressPrompts)
 
-    def _installReleaseInternal(self, releaseInfo, releaseSource, suppressPrompts = False):
+    def _installReleaseInternal(self, projectName, packageRoot, releaseInfo, releaseSource, suppressPrompts = False):
+
+        assertThat(self._sys.directoryExists(packageRoot))
 
         with self._log.heading("Installing release '{0}' (version {1})", releaseInfo.name, releaseInfo.version):
             installDirName = None
-            for packageInfo in self._packageManager.getAllPackageInfos():
-                installInfo = packageInfo.installInfo
+            for folderInfo in self._packageManager.getAllPackageFolderInfos(projectName):
+                for packageInfo in folderInfo.packages:
+                    installInfo = packageInfo.installInfo
 
-                if installInfo and installInfo.releaseInfo and installInfo.releaseInfo.id == releaseInfo.id:
-                    if installInfo.releaseInfo.versionCode == releaseInfo.versionCode:
-                        if not suppressPrompts:
-                            shouldContinue = MiscUtil.confirmChoice(
-                                "Release '{0}' (version {1}) is already installed.  Would you like to re-install anyway?  Note that this will overwrite any local changes you've made to it.".format(releaseInfo.name, releaseInfo.version))
+                    if installInfo and installInfo.releaseInfo and installInfo.releaseInfo.id == releaseInfo.id:
+                        if installInfo.releaseInfo.versionCode == releaseInfo.versionCode:
+                            if not suppressPrompts:
+                                shouldContinue = MiscUtil.confirmChoice(
+                                    "Release '{0}' (version {1}) is already installed.  Would you like to re-install anyway?  Note that this will overwrite any local changes you've made to it.".format(releaseInfo.name, releaseInfo.version))
 
-                            assertThat(shouldContinue, 'User aborted')
-                    else:
-                        print("\nFound release '{0}' already installed with version '{1}'".format(releaseInfo.name, releaseInfo.version), end='')
+                                assertThat(shouldContinue, 'User aborted')
+                        else:
+                            self._log.info("Found release '{0}' already installed with version '{1}'", installInfo.releaseInfo.name, installInfo.releaseInfo.version)
 
-                        installDirection = 'UPGRADE' if releaseInfo.versionCode > installInfo.releaseInfo.versionCode else 'DOWNGRADE'
+                            installDirection = 'UPGRADE' if releaseInfo.versionCode > installInfo.releaseInfo.versionCode else 'DOWNGRADE'
 
-                        if not suppressPrompts:
-                            shouldContinue = MiscUtil.confirmChoice("Are you sure you want to {0} '{1}' from version '{2}' to version '{3}'? (y/n)".format(installDirection, releaseInfo.name, installInfo.releaseInfo.version, releaseInfo.version))
-                            assertThat(shouldContinue, 'User aborted')
+                            if not suppressPrompts:
+                                shouldContinue = MiscUtil.confirmChoice("Are you sure you want to {0} '{1}' from version '{2}' to version '{3}'? (y/n)".format(installDirection, releaseInfo.name, installInfo.releaseInfo.version, releaseInfo.version))
+                                assertThat(shouldContinue, 'User aborted')
 
-                    self._packageManager.deletePackage(packageInfo.name)
-                    # Retain original directory name in case it is referenced by other packages
-                    installDirName = packageInfo.name
+                        existingDir = self._varMgr.expand(os.path.join(folderInfo.path, packageInfo.name))
 
-            installDirName = releaseSource.installRelease(releaseInfo, installDirName)
+                        self._sys.deleteDirectory(existingDir)
 
-            destDir = self._varMgr.expand('[UnityPackagesDir]/{0}'.format(installDirName))
+                        # Retain original directory name in case it is referenced by other packages
+                        installDirName = packageInfo.name
+
+            installDirName = releaseSource.installRelease(packageRoot, releaseInfo, installDirName)
+
+            destDir = self._varMgr.expand(os.path.join(packageRoot, installDirName))
 
             assertThat(self._sys.directoryExists(destDir), 'Expected dir "{0}" to exist', destDir)
 

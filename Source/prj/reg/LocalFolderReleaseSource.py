@@ -43,10 +43,10 @@ class LocalFolderReleaseSource:
 
     # Should return the chosen name for the package
     # If forcedName is non-null then this should always be the value of forcedName
-    def installRelease(self, releaseInfo, forcedName):
+    def installRelease(self, packageRootDir, releaseInfo, forcedName):
         fileInfo = next(x for x in self._files if x.release == releaseInfo)
         assertIsNotNone(fileInfo)
 
-        return self._extractor.extractUnityPackage(fileInfo.path, releaseInfo.name, forcedName)
+        return self._extractor.extractUnityPackage(packageRootDir, fileInfo.path, releaseInfo.name, forcedName)
 
 

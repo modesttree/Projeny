@@ -21,7 +21,7 @@ namespace Projeny
 
         // We'd prefer to use int? here but unity doesn't serialize nullables
         public bool HasVersionCode;
-        public int VersionCode;
+        public long VersionCode;
 
         // Can be empty if package is not versioned
         public string Version;
@@ -33,7 +33,7 @@ namespace Projeny
         public string Url;
 
         public bool HasCompressedSize;
-        public int CompressedSize;
+        public long CompressedSize;
 
         public string FileModificationDate;
         public long FileModificationDateTicks;

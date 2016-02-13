@@ -48,6 +48,7 @@ namespace Projeny
         public string ConfigPath;
         public string Param1;
         public string Param2;
+        public string Param3;
     }
 
     public static class PrjInterface
@@ -183,6 +184,11 @@ namespace Projeny
             if (request.Param2 != null)
             {
                 argStr += " \"{0}\"".Fmt(request.Param2);
+            }
+
+            if (request.Param3 != null)
+            {
+                argStr += " \"{0}\"".Fmt(request.Param3);
             }
 
             startInfo.Arguments = argStr;

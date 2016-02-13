@@ -29,18 +29,19 @@ namespace Projeny.Internal
 
         public void Initialize()
         {
-            _model.PluginItemsChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
-            _model.AssetItemsChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
-            _model.PackagesChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
-            _model.ReleasesChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
-            _model.VsProjectsChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
+            _model.PluginItemsChanged += _eventManager.Add(OnViewValuesDirty, EventQueueMode.LatestOnly);
+            _model.AssetItemsChanged += _eventManager.Add(OnViewValuesDirty, EventQueueMode.LatestOnly);
+            _model.PackageFoldersChanged += _eventManager.Add(OnViewValuesDirty, EventQueueMode.LatestOnly);
+            _model.ReleasesChanged += _eventManager.Add(OnViewValuesDirty, EventQueueMode.LatestOnly);
+            _model.PackageFolderIndexChanged += _eventManager.Add(OnViewValuesDirty, EventQueueMode.LatestOnly);
+            _model.VsProjectsChanged += _eventManager.Add(OnViewValuesDirty, EventQueueMode.LatestOnly);
 
-            _view.ViewStateChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
+            _view.ViewStateChanged += _eventManager.Add(OnViewValuesDirty, EventQueueMode.LatestOnly);
 
             foreach (var list in _view.Lists)
             {
-                list.SortDescendingChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
-                list.SortMethodChanged += _eventManager.Add(OnListDisplayValuesDirty, EventQueueMode.LatestOnly);
+                list.SortDescendingChanged += _eventManager.Add(OnViewValuesDirty, EventQueueMode.LatestOnly);
+                list.SortMethodChanged += _eventManager.Add(OnViewValuesDirty, EventQueueMode.LatestOnly);
             }
 
             // Don't bother showing the search pane for assets / plugins  - Or is that useful?
@@ -66,24 +67,25 @@ namespace Projeny.Internal
                 "Order By Release Date"
             };
 
-            _eventManager.Trigger(OnListDisplayValuesDirty);
+            _eventManager.Trigger(OnViewValuesDirty);
         }
 
         public void Dispose()
         {
-            _model.PluginItemsChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
-            _model.AssetItemsChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
-            _model.PackagesChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
-            _model.ReleasesChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
-            _model.VsProjectsChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
+            _model.PluginItemsChanged -= _eventManager.Remove(OnViewValuesDirty);
+            _model.AssetItemsChanged -= _eventManager.Remove(OnViewValuesDirty);
+            _model.PackageFoldersChanged -= _eventManager.Remove(OnViewValuesDirty);
+            _model.ReleasesChanged -= _eventManager.Remove(OnViewValuesDirty);
+            _model.PackageFolderIndexChanged -= _eventManager.Remove(OnViewValuesDirty);
+            _model.VsProjectsChanged -= _eventManager.Remove(OnViewValuesDirty);
 
             foreach (var list in _view.Lists)
             {
-                list.SortDescendingChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
-                list.SortMethodChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
+                list.SortDescendingChanged -= _eventManager.Remove(OnViewValuesDirty);
+                list.SortMethodChanged -= _eventManager.Remove(OnViewValuesDirty);
             }
 
-            _view.ViewStateChanged -= _eventManager.Remove(OnListDisplayValuesDirty);
+            _view.ViewStateChanged -= _eventManager.Remove(OnViewValuesDirty);
 
             _eventManager.AssertIsEmpty();
         }
@@ -93,8 +95,13 @@ namespace Projeny.Internal
             _eventManager.Flush();
         }
 
-        void OnListDisplayValuesDirty()
+        void OnViewValuesDirty()
         {
+            _view.CurrentPackageFolderIndex = _model.PackageFolderIndex;
+
+            // We need to avoid using forward slashes since this is used to indicate sub menus
+            _view.PackageFolderPaths = _model.PackageFolders.Select(x => x.Path.Replace("/", "\\")).ToList();
+
             _view.SetListItems(
                 DragListTypes.Release,
                 OrderReleases().Select(x => CreateListItem(x)).ToList());
@@ -160,10 +167,10 @@ namespace Projeny.Internal
         {
             if (_view.GetList(DragListTypes.Package).SortDescending)
             {
-                return _model.Packages.OrderByDescending(x => GetPackageSortField(x));
+                return _model.GetCurrentFolderPackages().OrderByDescending(x => GetPackageSortField(x));
             }
 
-            return _model.Packages.OrderBy(x => GetPackageSortField(x));
+            return _model.GetCurrentFolderPackages().OrderBy(x => GetPackageSortField(x));
         }
 
         object GetPackageSortField(PackageInfo info)

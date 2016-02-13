@@ -8,11 +8,21 @@ namespace Projeny.Internal
     {
         public static string GetFullMessage(this Exception exception)
         {
+            return exception.GetFullMessage(true);
+        }
+
+        public static string GetFullMessage(this Exception exception, bool includeExceptionClassNames)
+        {
             var stringBuilder = new StringBuilder();
 
             while (exception != null)
             {
-                stringBuilder.AppendLine(string.Format("{0}: {1}", exception.GetType().Name, exception.Message));
+                if (includeExceptionClassNames)
+                {
+                    stringBuilder.AppendLine("{0}: ".Fmt(exception.GetType().Name));
+                }
+
+                stringBuilder.AppendLine(exception.Message);
                 exception = exception.InnerException;
             }
 

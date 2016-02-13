@@ -10,6 +10,7 @@ from mtm.util.Assert import *
 import mtm.ioc.Container as Container
 from mtm.ioc.Inject import Inject
 from mtm.ioc.Inject import InjectOptional
+import mtm.util.JunctionUtil as JunctionUtil
 
 import time
 import os
@@ -209,6 +210,10 @@ class SystemHelper:
 
         return False
 
+    def getFileExtension(self, path):
+        path = self._varManager.expandPath(path)
+        return os.path.splitext(path)[1]
+
     def getFileNameWithoutExtension(self, path):
         return os.path.basename(os.path.splitext(path)[0])
 
@@ -220,6 +225,10 @@ class SystemHelper:
 
         # Can't process long paths on windows
         if len(dirPath) >= 256:
+            return 0
+
+        if JunctionUtil.islink(dirPath):
+            # Do not recurse down directory junctions
             return 0
 
         files = os.listdir(dirPath)
@@ -289,14 +298,33 @@ class SystemHelper:
 
         return False
 
-    def findFilesByPattern(self, startDir, pattern):
+    def getAllDirectoriesRecursive(self, startDir):
+        startDir = self._varManager.expand(startDir)
+
+        for root, dirs, files in os.walk(startDir):
+            for basename in dirs:
+                yield os.path.join(root, basename)
+
+    def getAllFilesInDirectory(self, dirPath):
+        dirPath = self._varManager.expand(dirPath)
+        return [fileName for fileName in os.listdir(dirPath) if os.path.isfile(os.path.join(dirPath, fileName))]
+
+    def getAllDirectoriesInDirectory(self, dirPath):
+        dirPath = self._varManager.expand(dirPath)
+        return [fileName for fileName in os.listdir(dirPath) if os.path.isdir(os.path.join(dirPath, fileName))]
+
+    def getAllFilesRecursive(self, startDir):
         startDir = self._varManager.expand(startDir)
 
         for root, dirs, files in os.walk(startDir):
             for basename in files:
-                if fnmatch.fnmatch(basename, pattern):
-                    filename = os.path.join(root, basename)
-                    yield filename
+                yield os.path.join(root, basename)
+
+    def findFilesByPattern(self, startDir, pattern):
+        for filePath in self.getAllFilesRecursive(startDir):
+            basename = os.path.basename(filePath)
+            if fnmatch.fnmatch(basename, pattern):
+                yield filePath
 
     def renameFile(self, currentName, newName):
         os.rename(self._varManager.expand(currentName), self._varManager.expand(newName))

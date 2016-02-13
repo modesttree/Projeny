@@ -5,6 +5,8 @@ from mtm.ioc.Inject import Inject
 import mtm.ioc.IocAssertions as Assertions
 import mtm.util.JunctionUtil as JunctionUtil
 
+from mtm.util.Assert import *
+
 class JunctionHelper:
     """
     Misc. helper functions related to windows junctions
@@ -32,6 +34,8 @@ class JunctionHelper:
     def makeJunction(self, actualPath, linkPath):
         actualPath = self._varMgr.expandPath(actualPath)
         linkPath = self._varMgr.expandPath(linkPath)
+
+        assertThat(self._sys.directoryExists(actualPath))
 
         self._sys.makeMissingDirectoriesInPath(linkPath)
 

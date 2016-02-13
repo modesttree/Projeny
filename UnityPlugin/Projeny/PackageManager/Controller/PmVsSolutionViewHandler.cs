@@ -13,7 +13,6 @@ namespace Projeny.Internal
     public class PmVsSolutionViewHandler
     {
         readonly PmProjectHandler _projectHandler;
-        readonly PmViewErrorHandler _errorHandler;
         readonly PrjCommandHandler _prjCommandHandler;
         readonly AsyncProcessor _asyncProcessor;
         readonly PmModel _model;
@@ -26,11 +25,9 @@ namespace Projeny.Internal
             PmView view,
             AsyncProcessor asyncProcessor,
             PrjCommandHandler prjCommandHandler,
-            PmViewErrorHandler errorHandler,
             PmProjectHandler projectHandler)
         {
             _projectHandler = projectHandler;
-            _errorHandler = errorHandler;
             _prjCommandHandler = prjCommandHandler;
             _asyncProcessor = asyncProcessor;
             _model = model;
