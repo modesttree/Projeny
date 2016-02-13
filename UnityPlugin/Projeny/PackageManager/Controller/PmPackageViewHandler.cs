@@ -275,7 +275,8 @@ namespace Projeny.Internal
 
             var info = selected.Single();
 
-            var configPath = Path.Combine(info.FullPath, ProjenyEditorUtil.PackageConfigFileName);
+            var fullPath = PrjPathVars.Expand(info.FullPath);
+            var configPath = Path.Combine(fullPath, ProjenyEditorUtil.PackageConfigFileName);
 
             Assert.That(File.Exists(configPath));
 
@@ -350,7 +351,8 @@ namespace Projeny.Internal
 
         bool HasPackageYaml(PackageInfo info)
         {
-            var configPath = Path.Combine(info.FullPath, ProjenyEditorUtil.PackageConfigFileName);
+            var fullPath = PrjPathVars.Expand(info.FullPath);
+            var configPath = Path.Combine(fullPath, ProjenyEditorUtil.PackageConfigFileName);
             return File.Exists(configPath);
         }
 

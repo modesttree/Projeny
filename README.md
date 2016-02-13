@@ -82,11 +82,15 @@ This is best shown with an example.  After installing Projeny, [download the sam
     * CubeMover
     * SphereMover
 * UnityProjects
+    * ProjenyProject.yaml
     * AllMovers
+        * ProjenyProject.yaml
         * ProjectSettings
     * CubeMover
+        * ProjenyProject.yaml
         * ProjectSettings
     * SphereMover
+        * ProjenyProject.yaml
         * ProjectSettings
 
 Each folder in the `UnityProjects` directory represents an actual Unity3D project.  Note that they each have the familiar `ProjectSettings` directory but they do not yet have an `Assets` directory.  This is because these projects have not been initialized yet by Projeny.  You'll also notice a file named `Projeny.yaml` at the root of the folder structure.  This is a simple text file that is used to specify configuration settings for Projeny.
@@ -118,17 +122,7 @@ We do this because the contents of the `CubeMover-Windows` folder does not itsel
 
 The directories containing the actual content can be found in the `UnityPackages` directory.  This is where you will find the `CubeMover` and `CommonShapeMover` folders that we see linked to underneath the assets directory.
 
-But how does Projeny know which packages to use for the `CubeMover` project?  For this it reads from a configuration text file, which can be found at `CubeMover/ProjenyProject.yaml`.  If you open this file it should read as follows:
-
-```
-AssetsFolder:
-    - CubeMover
-    - CommonShapeMover
-```
-
-Here we see the list of packages to include for this project underneath the setting "AssetsFolder".
-
-Most of the time however, you will not need to edit this file directly.  Instead, you can use Projeny's built-in Unity plugin to manipulate this file.  You can try this by opening the `CubeMover` project in Unity, then clicking the menu item `Projeny -> Package Manager...`.  This window will be be explained in more detail in the following sections.
+But how does Projeny know which packages to use for the `CubeMover` project?  For this it reads from a configuration text file, which can be found at `CubeMover/ProjenyProject.yaml`.  Details on this file are covered in another section below.  This file can be changed by hand, but most of the time however you can use Projeny's built-in Unity plugin to manipulate this file instead.  You can try this by opening the `CubeMover` project in Unity, then clicking the menu item `Projeny -> Package Manager...`.  This window will be be explained in more detail in the following sections.
 
 ## <a id="advantages"></a>Advantages of Using Projeny
 
@@ -146,7 +140,7 @@ Want to re-use some common utility code/prefabs in several different games?   Ju
 
 Want to just test one part of your game without needing to fire up the entire project?  Just create another Unity project and reference only the parts of the game you want to test.
 
-To see this in action, do the following: (Note: this assumes you have already run `prj -init` as described above)
+To see this in action, do the following: (Note: this assumes you have already run `prj --init` as described above)
 * Open Unity then open the project at `UnityProjects/SphereMover/SphereMover-Windows`
 * Open another copy of Unity then open the project at `UnityProjects/CubeMover/CubeMover-Windows`
 * Open the scene named `SphereMain` in the first Unity and the scene `CubeMain` in the second Unity
@@ -161,7 +155,7 @@ To see this in action, do the following: (Note: this assumes you have already ru
 
 Projeny allows you to much more easily manage many different Unity packages that you've created yourself, but also those packages that you've installed through the asset store. 
 
-You can build up a big collection of packages that you've purchased through the asset store and added to your `UnityPackages` directory, and then easily include or exclude those in your purchased assets by simply selecting or not selecting them for each project.  Projeny can also be used to easily upgrade/downgrade installed asset store packages all through a simple interface within Unity.  See <a href="#managing-assetstore-assets">this section</a> for more details on managing asset store packages through Projeny.
+You can build up a big collection of packages that you've purchased through the asset store and added to your `UnityPackages` directory, and then easily include or exclude those by simply selecting or not selecting them for each project.  Projeny can also be used to easily upgrade/downgrade installed asset store packages all through a simple interface within Unity.  See <a href="#managing-assetstore-assets">this section</a> for more details on managing asset store packages through Projeny.
 
 ### <a id="platform-switching"></a>3 - Near instant platform switching
 
@@ -200,7 +194,7 @@ To do this, open up the package manager by clicking on the menu item `Projeny ->
 
 <img src="Docs/Screen1.png?raw=true" alt="Package Manager" />
 
-If you click on the Edit button you should see the `ProjenyProject.yaml` file that we saw previously.  This screen is simply an easier way to edit this through a graphical interface.
+If you click on the Edit button you should see the `ProjenyProject.yaml` file associated with this project.  This file contains all projeny configuration settings for your project.  You can edit this file by hand, or use the GUI provided by the Package Manager window as shown above.
 
 Now, drag the `CommonShapeMover`, `CubeMover`, and `SphereMover` projects to the `Plugins` folder, so that it looks like this:
 
@@ -221,7 +215,7 @@ Now we can continue coding within the `AllMovers` project and benefit from faste
 
 Unity 5 adds some helpful features, including the ability to enable/disable a DLL based on platform.  If you add a DLL to your project then click on it you get a bunch of checkboxes in the inspector that allow you to choose which platform this DLL is for.   Projeny allows you to do something similar except for all assets and directories.
 
-This is possible because when Projeny generates your Unity project, it can choose a different set of package folders to include based on the current platform, since each platform has its own Unity project generated for it.
+This is possible because when Projeny generates your Unity project, it can choose a different set of package folders to include based on the current platform, since each platform has its own Unity project directory generated for it.
 
 One example use for this is if you had a large Resources folder that contained a lot of data for a specific platform.  Since Unity always includes the contents of the Resources folders for builds, this would cause your platform specific files inside Resources to be included on other platforms for no reason.  Using Projeny, you can simply move the Resources folder to a platform specific package to address this problem
 
@@ -252,7 +246,7 @@ So the question is, why were the `SphereMover`, `CommonShapeMover`, and `CubeMov
 
 The reason for this is that the `AllMovers` package has its own list dependencies separate from the project.
 
-To see this, click the arrow on the far left side in the Package Manager window.  This will show change the view to show the full list of packages that are available for use in your project, in addition to the previous screen that showed the current `ProjenyProject.yaml` configuration settings.
+To see this, click the arrow on the far left side in the Package Manager window.  This will change the view to show the full list of packages that are available for use in your project, in addition to the previous screen that showed the current `ProjenyProject.yaml` configuration settings.
 
 Now, right click on the `AllMovers` package in the Packages list and select `Edit ProjenyPackage.yaml`, as shown here:
 
@@ -274,7 +268,7 @@ To see this in action, open up the `AllMovers-Windows` project, and then click t
 
 <img src="Docs/Screen5.png?raw=true" alt="Package Manager" />
 
-Click the Open Solution button.  You will most likely get an error about the path to Visual Studio not being defined.  To fix this, open up the `Projeny.yaml` file at the root of the folder structure and change it to include a value for `VisualStudioIdePath`.  For example:
+Click the Open Solution button.  By default this will open the solution using the default program, but you can also set this explicitly in the `Projeny.yaml` by setting a value for `VisualStudioIdePath` like below:
 
     PathVars:
         UnityPackagesDir: '[ConfigDir]/UnityPackages'
@@ -282,7 +276,7 @@ Click the Open Solution button.  You will most likely get an error about the pat
         LogPath: '[ConfigDir]/PrjLog.txt'
         VisualStudioIdePath: 'C:/Program Files (x86)/Microsoft Visual Studio 12.0/Common7/IDE/devenv.exe'
 
-Now if we click Open Solution again, we should see two C# projects.  One named "AssetsFolder" that contains all C# files under the `Assets/` folder and one named "PluginsFolder" that contains all C# files underneath the `Plugins/` folder.  So far, this is the same as the solution that Unity produces when it generates its visual studio solution.
+After opening the solution, you should see two C# projects.  One named "AssetsFolder" that contains all C# files under the `Assets/` folder and one named "PluginsFolder" that contains all C# files underneath the `Plugins/` folder.  So far, this is the same as the solution that Unity produces when it generates its visual studio solution.
 
 Go back to the Package manager and drag the following projects over:
 
