@@ -159,6 +159,9 @@ class PrjRunner:
     def _initialize(self):
         self._platform = PlatformUtil.fromPlatformArgName(self._args.platform)
 
+        if self._args.project and self._platform:
+            self._packageMgr.setPathsForProjectPlatform(self._args.project, self._platform)
+
     def _runInternal(self):
         self._log.debug("Started Prj with arguments: {0}".format(" ".join(sys.argv[1:])))
 
@@ -169,8 +172,8 @@ class PrjRunner:
         self._runBuild()
         self._runPostBuild()
 
-    def _validateRequest(self):
-        requiresProject = self._args.updateLinks or self._args.updateUnitySolution \
+    def _argsRequiresProject(self):
+        return self._args.updateLinks or self._args.updateUnitySolution \
            or self._args.updateCustomSolution or self._args.buildCustomSolution \
            or self._args.clearProjectGeneratedFiles or self._args.buildFull \
            or self._args.openUnity or self._args.openCustomSolution \
@@ -178,6 +181,8 @@ class PrjRunner:
            or self._args.projectAddPackageAssets or self._args.projectAddPackagePlugins \
            or self._args.deleteProject or self._args.listPackages
 
-        if requiresProject and not self._args.project:
+    def _validateRequest(self):
+
+        if self._argsRequiresProject() and not self._args.project:
             assertThat(False, "Cannot execute the given arguments without a project specified, or a default project defined in the {0} file", ConfigFileName)
 

@@ -75,7 +75,10 @@ class UnityPackageAnalyzer:
         info.categoryId = allInfo['category']['id']
         info.categoryLabel = allInfo['category']['label']
         info.uploadId = allInfo.get('upload_id', None)
-        info.description = allInfo.get('description', '')
+
+        # This often causes issues when deserialized with YamlDotNet for reasons unknown so just leave it blank for now
+        #info.description = allInfo.get('description', '')
+        info.description = ''
 
         pubDate = allInfo['pubdate']
         info.publishDate = datetime.strptime(pubDate, "%d %b %Y")

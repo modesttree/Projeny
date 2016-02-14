@@ -54,7 +54,11 @@ class Runner:
             sys.exit(1)
 
     def _outputAllPathVars(self):
-        sys.stderr.write(YamlSerializer.serialize(self._varMgr.getAllParameters()))
+        self._outputContent(YamlSerializer.serialize(self._varMgr.getAllParameters()))
+
+    def _outputContent(self, value):
+        self._log.noise(value)
+        sys.stderr.write(value)
 
     def _runInternal(self):
 
@@ -79,18 +83,18 @@ class Runner:
         elif self._requestId == 'listPackages':
             infos = self._packageMgr.getAllPackageFolderInfos(self._project)
             for folderInfo in infos:
-                sys.stderr.write('---\n')
-                sys.stderr.write(YamlSerializer.serialize(folderInfo) + '\n')
+                self._outputContent('---\n')
+                self._outputContent(YamlSerializer.serialize(folderInfo) + '\n')
 
         elif self._requestId == 'listProjects':
             projectNames = self._packageMgr.getAllProjectNames()
             for projName in projectNames:
-                sys.stderr.write(projName + '\n')
+                self._outputContent(projName + '\n')
 
         elif self._requestId == 'listReleases':
             for release in self._releaseSourceManager.lookupAllReleases():
-                sys.stderr.write('---\n')
-                sys.stderr.write(YamlSerializer.serialize(release) + '\n')
+                self._outputContent('---\n')
+                self._outputContent(YamlSerializer.serialize(release) + '\n')
 
         elif self._requestId == 'installRelease':
             releaseName = self._param1
