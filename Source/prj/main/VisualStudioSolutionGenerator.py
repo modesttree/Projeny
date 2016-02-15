@@ -536,7 +536,7 @@ class VisualStudioSolutionGenerator:
             compileElem.set('Include', os.path.relpath(filePath, outputDir))
 
         root.findall('./{0}PropertyGroup/{0}RootNamespace'.format(NsPrefix))[0] \
-            .text = projInfo.name
+            .text = self._config.tryGetString('', 'SolutionGeneration', 'RootNamespace')
 
         root.findall('./{0}PropertyGroup/{0}ProjectGuid'.format(NsPrefix))[0] \
             .text = '{' + projInfo.id + '}'
@@ -546,9 +546,6 @@ class VisualStudioSolutionGenerator:
 
         root.findall('./{0}PropertyGroup/{0}AssemblyName'.format(NsPrefix))[0] \
             .text = projInfo.name
-
-        root.findall('./{0}PropertyGroup/{0}RootNamespace'.format(NsPrefix))[0] \
-            .text = "ModestTree"
 
         root.findall('./{0}PropertyGroup/{0}DefineConstants'.format(NsPrefix))[0] \
             .text = defines
