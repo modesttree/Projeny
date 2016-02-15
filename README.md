@@ -548,6 +548,10 @@ Here is the full list of configuration settings.  Note that you don't need to in
         # 'VisualStudioCommandLinePath' as well in the PathVars section above
         UseDevenv: False
 
+    SolutionGeneration:
+        # This will be used in the "DefaultNamespace" field for generated visual studio projects
+        RootNamespace: MyCompanyName
+
 ## <a id="project-yaml"></a>ProjenyProject.yaml reference
 
 In most cases you can edit the `ProjenyProject.yaml` file using the Package Manager from within Unity.  However, the Package Manager GUI does not include everything (for example, solution folders cannot be configured from the package manager)
