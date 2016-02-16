@@ -399,7 +399,7 @@ Note that since we haven't added any packages yet to our new project, there isn'
     * If you copy and paste your entire directory structure to another location on your hard drive, the directory links will become empty folders in the new location.  To address this issue, after copying and pasting your files, run `prj -cla --init` on the new location.  All this does is clears all the generated files (`-cla`) and then initializes all the directory links for all projects (`--init`).
 
 * If you are using git for source control, you should be careful when using `git clean`
-    * Running `git clean -df` should work as expected, but if you run `git clean -xdf` you could lose some data.  This is because if `git clean` follows directory links.  So if it tries to delete the generated files underneath your `UnityProjects` directory, this will also delete some files within the `UnityPackages` directory.  Running `git clean -df` will not have this problem because your `UnityProjects` folders should be ignored by git already and `git clean` will only delete ignored files if you also supply the `-x` option.  If you do need to include the `-x` option, then we recommend you run `prj -cla` first, which will ensure that all generated files have been cleared first.
+    * Running `git clean -df` should work as expected, but if you run `git clean -xdf` you could lose some data.  This is because `git clean` follows directory links.  So if it tries to delete the generated files underneath your `UnityProjects` directory, this will also delete some files within the `UnityPackages` directory.  Running `git clean -df` will not have this problem because your `UnityProjects` folders should be ignored by git already and `git clean` will only delete ignored files if you also supply the `-x` option.  If you do need to include the `-x` option, then we recommend you run `prj -cla` first, which will ensure that all generated files have been cleared first.
 
 * Unlike when using `git clean`, deleting folders with Windows Explorer is safe.
     * If you delete different unity projects underneath your `UnityProjects` directory when using Windows Explorer, this should not delete any files within `UnityPackages` (unlike when using `git clean`).  This is because when Windows Explorer encounters directory links, it just removes the reference rather than recursing into it.
@@ -410,7 +410,7 @@ Note that since we haven't added any packages yet to our new project, there isn'
 [Asset] is a symbolic link. Using symlinks in Unity projects may cause your project to become corrupted if you create multiple references to the same asset, use recursive symlinks or use symlinks to share assets between projects used with different versions of Unity. Make sure you know what you are doing.
 ```
 
-However, we are not doing any of the things that Unity warns about here so this warning can be ignored.
+    However, we are not doing any of the things that Unity warns about here so this warning can be ignored.
 
 ## <a id="faq"></a>Frequently Asked Questions
 
