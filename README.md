@@ -689,7 +689,7 @@ Notes:
 
 ## <a id="custom-release-registries"></a>Custom Release Sources
 
-A mentioned in the <a href="#managing-assetstore-assets">above section</a>, the list of releases _usually_ corresponds to your list of asset store purchases, however it supports other sources as well.  
+A mentioned in the <a href="#managing-assetstore-assets">above section</a>, the list of releases is usually just a list of your asset store purchases, however it supports other sources as well.
 
 Every source is ultimately just a collection of Unity packages.  This is also what Unity stores in the asset store cache, so even in that case, it is just a list of Unity packages.
 
@@ -704,6 +704,8 @@ One convenient place that you might want to put this is in the system wide Proje
 Now, if you copy and paste `.unitypackage` files into this folder, and click the Refresh button in the Package Manager (accessed within Unity through the menu at `Projeny -> Package Manager`) then these `.unitypackage` files will be displayed in the Releases list.
 
 Note that you can add multiple local folder sources using different paths, including those on a network share.
+
+Note also that you can specify the version for your custom unitypackage file by using the following naming convention:  `MyCustomPackage@1.2.unitypackage`.  In this case, it will load it as version "1.2".  This naming convention is only necessary for custom unitypackage files that you create yourself.  Any `unitypackage` files that you download through the asset store will have this version information embedded into it.
 
 Sharing a release source over a network can be very useful when working in an office environment that has its own LAN.   Your organization can build up a big collection of "releases" that anyone in the organization can have access to.
 
