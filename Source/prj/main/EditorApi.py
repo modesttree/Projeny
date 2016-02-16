@@ -101,6 +101,9 @@ class Runner:
             packageRoot = self._param2
             versionCode = self._param3
 
+            if versionCode == None or len(versionCode) == 0:
+                versionCode = 0
+
             self._log.info("Installing release '{0}' into package dir '{1}' with version code '{2}'", releaseName, packageRoot, versionCode)
             self._releaseSourceManager.installReleaseById(releaseName, self._project, packageRoot, versionCode, True)
 

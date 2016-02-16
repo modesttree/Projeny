@@ -65,7 +65,7 @@ class UnityPackageAnalyzer:
 
             return (name, name, versionCode, versionStr)
 
-        return (baseName, baseName, None, None)
+        return (baseName, baseName, 0, '')
 
     def _getAssetStoreInfo(self, allInfo):
         info = AssetStoreInfo()

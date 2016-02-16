@@ -120,7 +120,7 @@ class ReleaseSourceManager:
         except ValueError:
             assertThat(False, "Invalid version code '{0}' - must be convertable to an integer", releaseVersionCode)
 
-        assertThat(releaseVersionCode, 'Invalid release version code supplied')
+        assertThat(releaseVersionCode != None, 'Invalid release version code supplied')
         assertThat(releaseId)
 
         self._lazyInit()
