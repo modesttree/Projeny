@@ -406,9 +406,9 @@ Note that since we haven't added any packages yet to our new project, there isn'
 
 * After opening your project for the first time (or when adding new packages) Unity will show the following warning:
 
-```
-[Asset] is a symbolic link. Using symlinks in Unity projects may cause your project to become corrupted if you create multiple references to the same asset, use recursive symlinks or use symlinks to share assets between projects used with different versions of Unity. Make sure you know what you are doing.
-```
+    ```
+    [Asset] is a symbolic link. Using symlinks in Unity projects may cause your project to become corrupted if you create multiple references to the same asset, use recursive symlinks or use symlinks to share assets between projects used with different versions of Unity. Make sure you know what you are doing.
+    ```
 
     However, we are not doing any of the things that Unity warns about here so this warning can be ignored.
 
