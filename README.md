@@ -38,7 +38,7 @@ NOTE: Projeny requires Unity3D 5.3.1 or higher, since it makes use of the `-buil
     * <a href="#managing-assetstore-assets">Managing Asset Store Assets / Releases</a>
     * <a href="#multiplepackagefolders">Using Multiple Package Folders</a>
     * <a href="#shareprojectsettings">Sharing Project Settings</a>
-    * <a href="#gotchas">Gotchas / Miscellaneous Tips and Tricks</a>
+    * <a href="#directorylinksgotchas">Gotchas With Directory Links</a>
     * <a href="#faq">Frequently Asked Questions</a>
         * <a href="#workflow-create-package">How do I create a new package?</a>
         * <a href="#workflow-create-project">How do I create a new project?</a>
@@ -390,7 +390,19 @@ Like all project settings, this is configured within the `ProjenyProject.yaml` f
 
 Note that since we haven't added any packages yet to our new project, there isn't a line for `AssetsFolder` and `PluginsFolder` yet.
 
-## <a id="gotchas"></a>Gotchas / Miscellaneous Tips and Tricks
+## <a id="directorylinksgotchas"></a>"Gotchas" With Directory Links
+
+* Moving package folders around within Unity directly
+    * You are free to move files and directories around within Unity using Unity's "Project" tab, however, you should be careful not to move any package directories themselves.  Otherwise, you could end up with duplicate files the next time you get projeny to update your directory links.
+
+* Copying and pasting projects doesn't work
+    * If you copy and paste your entire directory structure to another location on your hard drive, the directory links will become empty folders in the new location.  To address this issue, after copying and pasting your files, run `prj -cla --init` on the new location.  All this does is clears all the generated files (`-cla`) and then initializes all the directory links for all projects (`--init`).
+
+* If you are using git for source control, you should be careful when using `git clean`
+    * Running `git clean -df` should work as expected, but if you run `git clean -xdf` you could lose some data.  This is because if `git clean` follows directory links.  So if it tries to delete the generated files underneath your `UnityProjects` directory, this will also delete some files within the `UnityPackages` directory.  Running `git clean -df` will not have this problem because your `UnityProjects` folders should be ignored by git already and `git clean` will only delete ignored files if you also supply the `-x` option.  If you do need to include the `-x` option, then we recommend you run `prj -cla` first, which will ensure that all generated files have been cleared first.
+
+* Unlike when using `git clean`, deleting folders with Windows Explorer is safe.
+    * If you delete different unity projects underneath your `UnityProjects` directory when using Windows Explorer, this should not delete any files within `UnityPackages` (unlike when using `git clean`).  This is because when Windows Explorer encounters directory links, it just removes the reference rather than recursing into it.
 
 * After opening your project for the first time (or when adding new packages) Unity will show the following warning:
 
