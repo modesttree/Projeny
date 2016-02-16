@@ -45,6 +45,7 @@ namespace Projeny.Internal
             config.SolutionProjects.AddRange(_model.VsProjects);
             config.Prebuilt.AddRange(_model.PrebuiltProjects);
             config.SolutionFolders.AddRange(_model.VsSolutionFolders);
+            config.PackageFolders.AddRange(_model.SavedPackageFolders);
 
             return config;
         }
@@ -77,7 +78,7 @@ namespace Projeny.Internal
             catch (Exception e)
             {
                 throw new Exception(
-                    "Error while reading from '{0}': \n\n{1}".Fmt(Path.GetFileName(configPath), e.Message));
+                    "Error while reading from '{0}'".Fmt(Path.GetFileName(configPath)), e);
             }
         }
 
@@ -183,6 +184,12 @@ namespace Projeny.Internal
             foreach (var pair in config.SolutionFolders)
             {
                 _model.AddSolutionFolder(pair.Key, pair.Value);
+            }
+
+            _model.ClearSavedPackageFolders();
+            foreach (var pair in config.PackageFolders)
+            {
+                _model.AddSavedPackageFolder(pair);
             }
         }
     }

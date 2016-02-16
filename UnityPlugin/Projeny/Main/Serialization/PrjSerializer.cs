@@ -35,6 +35,7 @@ namespace Projeny.Internal
                 AssetsFolder = info.AssetsFolder.IsEmpty() ? null : info.AssetsFolder.ToList(),
                 PluginsFolder = info.PluginsFolder.IsEmpty() ? null : info.PluginsFolder.ToList(),
                 SolutionProjects = info.SolutionProjects.IsEmpty() ? null : info.SolutionProjects.ToList(),
+                PackageFolders = info.PackageFolders.IsEmpty() ? null : info.PackageFolders.ToList(),
                 Prebuilt = info.Prebuilt.IsEmpty() ? null : info.Prebuilt.ToList(),
                 SolutionFolders = info.SolutionFolders.IsEmpty() ? null : info.SolutionFolders.Select(x => new Dictionary<string, string>() { { x.Key, x.Value } } ).ToList(),
             };
@@ -64,6 +65,11 @@ namespace Projeny.Internal
             if (info.SolutionProjects != null)
             {
                 newInfo.SolutionProjects.AddRange(info.SolutionProjects.ToList());
+            }
+
+            if (info.PackageFolders != null)
+            {
+                newInfo.PackageFolders.AddRange(info.PackageFolders.ToList());
             }
 
             if (info.Prebuilt != null)
@@ -277,6 +283,12 @@ namespace Projeny.Internal
             }
 
             public List<string> PluginsFolder
+            {
+                get;
+                set;
+            }
+
+            public List<string> PackageFolders
             {
                 get;
                 set;

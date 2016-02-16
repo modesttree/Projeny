@@ -44,6 +44,9 @@ namespace Projeny.Internal
         List<string> _vsProjects = new List<string>();
 
         [SerializeField]
+        List<string> _savedPackageFolders = new List<string>();
+
+        [SerializeField]
         List<string> _prebuilt = new List<string>();
 
         [SerializeField]
@@ -151,6 +154,14 @@ namespace Projeny.Internal
             }
         }
 
+        public IEnumerable<string> SavedPackageFolders
+        {
+            get
+            {
+                return _savedPackageFolders;
+            }
+        }
+
         public string GetCurrentPackageFolderPath()
         {
             var folderPath = TryGetCurrentPackageFolderPath();
@@ -176,6 +187,11 @@ namespace Projeny.Internal
             }
 
             return Enumerable.Empty<PackageInfo>();
+        }
+
+        public void ClearSavedPackageFolders()
+        {
+            _savedPackageFolders.Clear();
         }
 
         public void ClearSolutionFolders()
@@ -242,6 +258,11 @@ namespace Projeny.Internal
         public void AddPrebuilt(string value)
         {
             _prebuilt.Add(value);
+        }
+
+        public void AddSavedPackageFolder(string value)
+        {
+            _savedPackageFolders.Add(value);
         }
 
         public void AddSolutionFolder(string key, string value)
