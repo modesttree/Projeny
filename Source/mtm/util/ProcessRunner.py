@@ -7,6 +7,7 @@ import time
 import shlex
 from mtm.ioc.Inject import Inject
 from queue import Queue, Empty
+import sys
 
 from mtm.log.LogStreamStdout import LogStreamStdout
 
@@ -58,7 +59,7 @@ class ProcessRunner:
             try:
                 try:
                     line = queue.get_nowait()
-                    self._log.noise(line.decode('utf-8').rstrip())
+                    self._log.noise(line.decode(sys.stdout.encoding).rstrip())
                 except Empty:
                     if not thread.isAlive():
                         break
@@ -104,8 +105,8 @@ class ProcessRunner:
 
         (stdoutData, stderrData) = proc.communicate()
 
-        output = stdoutData.decode('utf-8').strip()
-        errors = stderrData.decode('utf-8').strip()
+        output = stdoutData.decode(sys.stdout.encoding).strip()
+        errors = stderrData.decode(sys.stderr.encoding).strip()
 
         if output:
             for line in output.split('\n'):

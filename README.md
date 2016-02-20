@@ -507,6 +507,10 @@ Here is the full list of configuration settings.  Note that you don't need to in
     DefaultProject: AllMovers
 
     PathVars:
+        # This setting is required
+        # This will determine where projeny looks for the unity projects
+        UnityProjectsDir: '[ConfigDir]/UnityProjects'
+
         # This setting is necessary for many different Projeny operations 
         # so that Projeny knows how to run Unity. By default it will 
         # guess the following path
