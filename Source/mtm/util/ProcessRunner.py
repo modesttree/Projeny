@@ -105,8 +105,8 @@ class ProcessRunner:
 
         (stdoutData, stderrData) = proc.communicate()
 
-        output = stdoutData.decode(sys.stdout.encoding).strip()
-        errors = stderrData.decode(sys.stderr.encoding).strip()
+        output = stdoutData.decode(encoding=sys.stdout.encoding, errors='ignore').strip()
+        errors = stderrData.decode(encoding=sys.stderr.encoding, errors='ignore').strip()
 
         if output:
             for line in output.split('\n'):
