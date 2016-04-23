@@ -20,7 +20,7 @@ ScriptDir = os.path.dirname(os.path.realpath(__file__))
 PythonDir = os.path.realpath(os.path.join(ScriptDir, '../..'))
 ProjenyDir = os.path.realpath(os.path.join(PythonDir, '..'))
 
-NsisPath = "C:/Utils/NSIS/Bin/makensis.exe"
+NsisPath = "C:/Utils/NSIS/makensis.exe"
 
 class Runner:
     _sys = Inject('SystemHelper')
