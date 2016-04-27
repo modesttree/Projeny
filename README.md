@@ -43,6 +43,7 @@ NOTE: Projeny requires Unity3D 5.3.1 or higher, since it makes use of the `-buil
         * <a href="#workflow-create-package">How do I create a new package?</a>
         * <a href="#workflow-create-project">How do I create a new project?</a>
         * <a href="#workflow-create-new-config">How do I start an entirely new set of Projeny-based project from scratch?</a>
+        * <a href="#standardassets">How do I import Unity's Standard Assets?</a>
     * Configuration Files
         * <a href="#projeny-yaml">Projeny.yaml reference</a>
         * <a href="#project-yaml">ProjenyProject.yaml reference</a>
@@ -467,6 +468,12 @@ Note that since we haven't added any packages yet to our new project, there isn'
         * Create a new directory named `UnityProjects`
         * Done
         * After this, you will probably want to <a href="#workflow-create-project-command-line">create a project</a>
+
+* #### <a id="standardassets"></a>How do I import Unity's Standard Assets?
+
+Unity's Standard Assets actually makes for a good example of using Projeny, since all the standard asset packages depend on each other in some ways.
+
+For Unity version 5.3.4, we have extracted all the Standard Assets into their own Projeny packages, and also declared the proper dependencies for each using `ProjenyPackage.yaml` files.  This can be downloaded as `StandardAssets-Unity5.3.4.zip` from the [releases page](https://github.com/modesttree/Projeny/releases/tag/v0.3.4).  To use, you can extract `StandardAssets-Unity5.3.4.zip` into your UnityPackages folder and drag whichever Standard Assets package you need into your project via the projeny gui
 
 ## <a id="projeny-yaml"></a>Projeny.yaml reference
 
