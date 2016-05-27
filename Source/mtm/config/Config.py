@@ -1,13 +1,6 @@
-
-import yaml
-
 import mtm.util.Util as Util
 
 from mtm.util.Assert import *
-import mtm.ioc.Container as Container
-from mtm.ioc.Inject import Inject
-from mtm.ioc.Inject import InjectOptional
-import mtm.ioc.IocAssertions as Assertions
 
 from collections import OrderedDict
 

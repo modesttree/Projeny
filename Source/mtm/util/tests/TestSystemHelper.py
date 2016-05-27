@@ -3,8 +3,6 @@ import os
 import unittest
 
 import mtm.ioc.Container as Container
-from mtm.ioc.Inject import Inject
-import mtm.ioc.IocAssertions as Assertions
 
 from mtm.util.VarManager import VarManager
 from mtm.util.SystemHelper import SystemHelper

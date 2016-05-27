@@ -1,15 +1,10 @@
 
-from mtm.log.Logger import Logger
-from mtm.util.VarManager import VarManager
-from mtm.util.ProcessRunner import ProcessRunner
 from mtm.util.ProcessRunner import ResultType
 
 import string
 import fnmatch
 from mtm.util.Assert import *
-import mtm.ioc.Container as Container
 from mtm.ioc.Inject import Inject
-from mtm.ioc.Inject import InjectOptional
 import mtm.util.JunctionUtil as JunctionUtil
 
 import time

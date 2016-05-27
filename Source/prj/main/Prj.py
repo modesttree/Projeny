@@ -189,7 +189,7 @@ def _getParentDirsAndSelf(dirPath):
         parentDir = os.path.dirname(parentDir)
 
 def findMainConfigPath():
-    for dirPath in _getParentDirsAndSelf(os.getcwd()):
+    for dirPath in _getParentDirsAndSelf(sys.argv[1]):
         configPath = os.path.join(dirPath, ConfigFileName)
 
         if os.path.isfile(configPath):
@@ -250,14 +250,14 @@ def _main():
     parser = argparse.ArgumentParser(description='Unity Package Manager')
     addArguments(parser)
 
-    argv = sys.argv[1:]
+    argv = sys.argv[2:]
 
     # If it's 2 then it only has the -cfg param
     if len(argv) == 0:
         parser.print_help()
         sys.exit(2)
 
-    args = parser.parse_args(sys.argv[1:])
+    args = parser.parse_args(sys.argv[2:])
 
     Container.bind('LogStream').toSingle(LogStreamFile)
     Container.bind('LogStream').toSingle(LogStreamConsole, args.verbose, args.veryVerbose)
@@ -270,6 +270,8 @@ def _main():
             mainConfigPath = args.configPath
         else:
             mainConfigPath = findMainConfigPath()
+
+        print(mainConfigPath)
 
         installBindings(mainConfigPath)
         installPlugins()

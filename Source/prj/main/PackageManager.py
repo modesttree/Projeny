@@ -1,12 +1,6 @@
 
 import os
 
-from mtm.util.VarManager import VarManager
-from mtm.log.Logger import Logger
-from mtm.util.SystemHelper import SystemHelper
-import mtm.util.JunctionUtil as JunctionUtil
-import mtm.util.Util as Util
-
 from prj.main.ProjectSchemaLoader import FolderTypes
 from mtm.util.Platforms import Platforms
 
@@ -19,12 +13,9 @@ import mtm.util.PlatformUtil as PlatformUtil
 from mtm.util.Assert import *
 from prj.reg.PackageInfo import PackageInfo, PackageFolderInfo, PackageInstallInfo
 
-from datetime import datetime
 import mtm.util.YamlSerializer as YamlSerializer
-import mtm.ioc.Container as Container
 from mtm.ioc.Inject import Inject
 from mtm.ioc.Inject import InjectMany
-import mtm.ioc.IocAssertions as Assertions
 
 InstallInfoFileName = 'ProjenyInstall.yaml'
 
@@ -150,8 +141,9 @@ ProjectSettingsPath: '{0}'
             self.setPathsForProjectPlatform(projectName, platform)
             schema = self._schemaLoader.loadSchema(projectName, platform)
             self._updateDirLinksForSchema(schema)
-
+            print("five")
             self._checkForVersionControlIgnore()
+            print("six")
 
             self._log.good('Finished updating packages for project "{0}"'.format(schema.name))
 
@@ -206,6 +198,7 @@ ProjectSettingsPath: '{0}'
 
     def deleteProject(self, projName):
         with self._log.heading("Deleting project '{0}'", projName):
+            print("Debug2")
             assertThat(self._varMgr.hasKey('UnityProjectsDir'), "Could not find 'UnityProjectsDir' in PathVars.  Have you set up your {0} file?", ConfigFileName)
             fullPath = '[UnityProjectsDir]/{0}'.format(projName)
 
@@ -246,6 +239,7 @@ ProjectSettingsPath: '{0}'
                     #for platform in Platforms.All:
                     for platform in [Platforms.Windows]:
                         self.updateProjectJunctions(projectName, platform)
+                        print("GOOD") #TODO Remove
 
                     self._log.good('Successfully initialized project "{0}"'.format(projectName))
                 except Exception as e:
@@ -327,6 +321,7 @@ namespace Projeny
         else:
             dllOutPath = '[PluginsDir]/Projeny/Editor/Projeny.dll'
 
+            #This place may still be an issue
             self._sys.copyFile('[ProjenyUnityEditorDllPath]', dllOutPath)
             self._sys.copyFile('[ProjenyUnityEditorDllMetaFilePath]', dllOutPath + '.meta')
 
