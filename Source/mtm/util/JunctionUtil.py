@@ -1,5 +1,6 @@
 from ctypes import *
-from ctypes.wintypes import *
+if os.name == 'nt':
+    from ctypes.wintypes import *
 
 kernel32 = WinDLL('kernel32')
 LPDWORD = POINTER(DWORD)
