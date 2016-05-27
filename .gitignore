@@ -8,6 +8,8 @@ project_root_marker
 
 /.vim_l
 
+/.idea
+
 *.pyc
 
 *.csproj.user
