@@ -1,7 +1,6 @@
 import subprocess
 import csv
 import re
-import msvcrt
 import os
 import sys
 import imp
@@ -16,22 +15,35 @@ def isRunningAsExe():
 def getExecDirectory():
     return os.path.dirname(sys.argv[0])
 
+#def confirmChoice(msg):
+#    print('\n' + msg, end="")
+#
+#    while True:
+#        if msvcrt.kbhit():
+#            choice = msvcrt.getch().decode("utf-8")
+#
+#            if choice == 'y':
+#                return True
+#
+#            if choice == 'n':
+#                return False
+#
+#            if choice == '\x03':
+#                return False
+#
+#            print('Invalid selection "%s".' % choice)
+
 def confirmChoice(msg):
-    print('\n' + msg, end="")
+    valid = {"yes": True, "y": True, "ye": True, "no": False, "n": False}
+
+    print('/n'+msg, end="")
+
+    choice = input().lower()
 
     while True:
-        if msvcrt.kbhit():
-            choice = msvcrt.getch().decode("utf-8")
-
-            if choice == 'y':
-                return True
-
-            if choice == 'n':
-                return False
-
-            if choice == '\x03':
-                return False
-
+        if choice in valid:
+            return valid[choice]
+        else:
             print('Invalid selection "%s".' % choice)
 
 def tryKillAdbExe(sysManager):
