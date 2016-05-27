@@ -7,8 +7,6 @@ import mtm.util.MiscUtil as MiscUtil
 
 from mtm.util.CommonSettings import ConfigFileName
 
-import win32api
-import win32com.client
 
 from mtm.util.Assert import *
 
@@ -32,14 +30,7 @@ class VisualStudioHelper:
             self.openVisualStudioSolution(solutionPath, filePath)
 
     def openFileInExistingVisualStudioInstance(self, filePath, lineNo):
-        try:
-            dte = win32com.client.GetActiveObject("VisualStudio.DTE.12.0")
-
-            dte.MainWindow.Activate
-            dte.ItemOperations.OpenFile(self._sys.canonicalizePath(filePath))
-            dte.ActiveDocument.Selection.MoveToLineAndOffset(lineNo, 1)
-        except Exception as error:
-            raise Exception("COM Error.  This is often triggered when given a bad line number. Details: {0}".format(win32api.FormatMessage(error.excepinfo[5])))
+        exec("open "+filePath)
 
     def openVisualStudioSolution(self, solutionPath, filePath = None):
 

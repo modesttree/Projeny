@@ -8,7 +8,6 @@ from mtm.log.Logger import LogType
 import shutil
 
 from mtm.util.Assert import *
-import mtm.log.ColorConsole as ColorConsole
 
 class AnsiiCodes:
     BLACK = "\033[1;30m"
@@ -49,9 +48,7 @@ class LogStreamConsole:
             self._initColors()
 
     def _initColors(self):
-        self._defaultColors = ColorConsole.get_text_attr()
-        self._defaultBg = self._defaultColors & 0x0070
-        self._defaultFg = self._defaultColors & 0x0007
+        print("Colors are not working at the moment on mac.")
 
     def log(self, logType, message):
 
@@ -96,34 +93,8 @@ class LogStreamConsole:
         stream.write('\n')
 
         stream.write(self._getHeadingIndent())
-
-        if not useColors or logType == LogType.Info:
-            stream.write(message)
-            stream.flush()
-        else:
-            ColorConsole.set_text_attr(self._getColorAttrs(logType))
-            stream.write(message)
-            stream.flush()
-            ColorConsole.set_text_attr(self._defaultColors)
-
-    def _getColorAttrs(self, logType):
-        if logType == LogType.HeadingStart:
-            return ColorConsole.FOREGROUND_CYAN | self._defaultBg | ColorConsole.FOREGROUND_INTENSITY
-
-        if logType == LogType.HeadingEnd:
-            return ColorConsole.FOREGROUND_BLACK | self._defaultBg | ColorConsole.FOREGROUND_INTENSITY
-
-        if logType == LogType.Good:
-            return ColorConsole.FOREGROUND_GREEN | self._defaultBg | ColorConsole.FOREGROUND_INTENSITY
-
-        if logType == LogType.Warn:
-            return ColorConsole.FOREGROUND_YELLOW | self._defaultBg | ColorConsole.FOREGROUND_INTENSITY
-
-        if logType == LogType.Error:
-            return ColorConsole.FOREGROUND_RED | self._defaultBg | ColorConsole.FOREGROUND_INTENSITY
-
-        assertThat(logType == LogType.Debug or logType == LogType.Noise)
-        return ColorConsole.FOREGROUND_BLACK | self._defaultBg | ColorConsole.FOREGROUND_INTENSITY
+        stream.write(message)
+        stream.flush()
 
 
 

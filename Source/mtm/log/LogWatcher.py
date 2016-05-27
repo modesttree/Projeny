@@ -5,7 +5,9 @@ import errno
 import os
 import signal
 import threading
-import msvcrt
+import tty
+import termios #unix only
+
 
 class LogWatcher:
     def __init__(self, logPath, logFunc):
@@ -82,15 +84,19 @@ if __name__ == '__main__':
     log.start()
 
     while 1:
-        if msvcrt.kbhit():
-            key = msvcrt.getch().decode('UTF-8')
-
-            if ord(key) == 27:
-                sys.exit()
-
-            if key == 'c':
-                os.system('cls')
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(sys.stdin.fileno())
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+            if ord(ch) == 27:
+                sys.exit(1)
+            elif ch == 'c':
+                exec('clear')
 
         time.sleep(0.1)
+
 
     log.stop()

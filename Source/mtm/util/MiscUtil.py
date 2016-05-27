@@ -15,24 +15,6 @@ def isRunningAsExe():
 def getExecDirectory():
     return os.path.dirname(sys.argv[0])
 
-#def confirmChoice(msg):
-#    print('\n' + msg, end="")
-#
-#    while True:
-#        if msvcrt.kbhit():
-#            choice = msvcrt.getch().decode("utf-8")
-#
-#            if choice == 'y':
-#                return True
-#
-#            if choice == 'n':
-#                return False
-#
-#            if choice == '\x03':
-#                return False
-#
-#            print('Invalid selection "%s".' % choice)
-
 def confirmChoice(msg):
     valid = {"yes": True, "y": True, "ye": True, "no": False, "n": False}
 

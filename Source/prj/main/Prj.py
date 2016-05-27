@@ -5,7 +5,6 @@ import fnmatch
 import argparse
 
 import mtm.util.MiscUtil as MiscUtil
-import mtm.util.PlatformUtil as PlatformUtil
 
 from mtm.config.YamlConfigLoader import loadYamlFilesThatExist
 from mtm.config.Config import Config
@@ -39,11 +38,9 @@ from prj.main.PrjRunner import PrjRunner
 
 from mtm.util.Assert import *
 
-from mtm.util.PlatformUtil import Platforms
 from prj.main.PackageManager import PackageManager
 
 import mtm.ioc.Container as Container
-from mtm.ioc.Inject import Inject
 
 from mtm.util.UnityHelper import UnityHelper
 
@@ -104,7 +101,8 @@ def _getProjenyDir():
         scriptDir = os.path.dirname(os.path.realpath(__file__))
         return os.path.join(scriptDir, '../../..')
 
-    # This works for both exe builds (Bin/Prj/Data/Prj.exe) and running from source (Source/prj/_main/Prj.py) by coincidence
+    # This works for both exe builds (Bin/Prj/Data/Prj.exe) and running from source (Source/prj/_main/Prj.py) by
+    # coincidence
     return os.path.join(MiscUtil.getExecDirectory(), '../../..')
 
 def _getExtraUserConfigPaths():
@@ -244,10 +242,11 @@ PackageFolders:
     - '[ProjectRoot]/Packages'
 """)
 
+
 def _main():
     # Here we split out some functionality into various methods
     # so that other python code can make use of them
-    # if they want to extend projeny
+    # if they want to extend Projeny
     parser = argparse.ArgumentParser(description='Unity Package Manager')
     addArguments(parser)
 

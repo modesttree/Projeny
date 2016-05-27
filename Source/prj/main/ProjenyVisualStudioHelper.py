@@ -1,16 +1,4 @@
-
-import mtm.ioc.Container as Container
 from mtm.ioc.Inject import Inject
-from mtm.ioc.Inject import InjectMany
-import mtm.ioc.IocAssertions as Assertions
-import mtm.util.MiscUtil as MiscUtil
-
-from mtm.util.CommonSettings import ConfigFileName
-
-import win32api
-import win32com.client
-
-from mtm.util.Assert import *
 
 class ProjenyVisualStudioHelper:
     _vsHelper = Inject('VisualStudioHelper')

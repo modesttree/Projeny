@@ -3,18 +3,15 @@ import time
 
 from mtm.log.LogWatcher import LogWatcher
 
-import mtm.ioc.Container as Container
 from mtm.ioc.Inject import Inject
-import mtm.ioc.IocAssertions as Assertions
 
 from mtm.util.Assert import *
-import mtm.util.MiscUtil as MiscUtil
 import mtm.util.PlatformUtil as PlatformUtil
 from mtm.util.Platforms import Platforms
 
 from mtm.util.SystemHelper import ProcessErrorCodeException
 
-UnityLogFileLocation = os.getenv('localappdata') + '\\Unity\\Editor\\Editor.log'
+UnityLogFileLocation = os.getenv('HOME') + '/Unity/Editor/Editor.log'
 #UnityLogFileLocation = '{Modest3dDir}/Modest3DLog.txt'
 
 class UnityReturnedErrorCodeException(Exception):
