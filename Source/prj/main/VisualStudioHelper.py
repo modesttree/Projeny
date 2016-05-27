@@ -33,7 +33,14 @@ class VisualStudioHelper:
 
     def openFileInExistingVisualStudioInstance(self, filePath, lineNo):
         try:
-            dte = win32com.client.GetActiveObject("VisualStudio.DTE.12.0")
+            vsPath = self._varMgr.expand('[VisualStudioIdePath]')
+
+            if 'Visual Studio 14.0' in vsPath:
+                dte = win32com.client.GetActiveObject("VisualStudio.DTE.14.0")
+            elif 'Visual Studio 12.0' in vsPath:
+                dte = win32com.client.GetActiveObject("VisualStudio.DTE.12.0")
+            else:
+                assertThat(False, "Could not determine visual studio version")
 
             dte.MainWindow.Activate
             dte.ItemOperations.OpenFile(self._sys.canonicalizePath(filePath))
