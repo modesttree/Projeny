@@ -271,8 +271,6 @@ def _main():
         else:
             mainConfigPath = findMainConfigPath()
 
-        print(mainConfigPath)
-
         installBindings(mainConfigPath)
         installPlugins()
 

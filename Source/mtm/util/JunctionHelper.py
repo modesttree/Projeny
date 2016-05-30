@@ -24,7 +24,7 @@ class JunctionHelper:
         if os.path.isdir(linkDir) and JunctionUtil.islink(linkDir):
             try:
                 # Use rmdir not python unlink to ensure we don't delete the link source
-                self._sys.executeShellCommand('rmdir "{0}"'.format(linkDir))
+                self._sys.executeShellCommand('rm -r "{0}"'.format(linkDir))
             except Exception as e:
                 raise Exception('Failed while attempting to delete junction "{0}":\n{1}'.format(linkDir, str(e))) from e
 
@@ -36,16 +36,17 @@ class JunctionHelper:
         actualPath = self._varMgr.expandPath(actualPath)
         linkPath = self._varMgr.expandPath(linkPath)
 
-        if os.path.exists(actualPath):
-            self._sys.executeShellCommand("rm -r {0}".format(actualPath))
+        #if os.path.exists(actualPath):
+        #    self._sys.executeShellCommand("rm -r {0}".format(actualPath))
         if os.path.exists(linkPath):
-            self._sys.executeShellCommand("rm -r {0}".format(linkPath))
+            self._sys.executeShellCommand('rm -r "{0}"'.format(linkPath))
 
-        assertThat(not self._sys.directoryExists(actualPath), "These locations should not exist: {0}, {1}".format(actualPath, linkPath))
+        assertThat(not self._sys.directoryExists(linkPath), "These locations should not exist: {0}".format(linkPath))
 
         self._log.debug('Making symlink with actual path ({0}) and new link path ({1})'.format(linkPath, actualPath))
         # Note: mklink is a shell command and can't be executed otherwise
-        self._sys.executeShellCommand('ln -s {0} {1}'.format(linkPath, actualPath))
+
+        self._sys.executeShellCommand('ln -s "{0}" "{1}"'.format(actualPath, linkPath))
 
     def removeJunctionsInDirectory(self, dirPath, recursive):
         fullDirPath = self._varMgr.expandPath(dirPath)

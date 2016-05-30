@@ -89,11 +89,9 @@ class LogStreamConsole:
         return self._log.getCurrentNumHeadings() * "   "
 
     def _output(self, logType, message, stream, useColors):
-
-        stream.write('\n')
-
         stream.write(self._getHeadingIndent())
         stream.write(message)
+        stream.write('\n')
         stream.flush()
 
 

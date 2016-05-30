@@ -141,9 +141,7 @@ ProjectSettingsPath: '{0}'
             self.setPathsForProjectPlatform(projectName, platform)
             schema = self._schemaLoader.loadSchema(projectName, platform)
             self._updateDirLinksForSchema(schema)
-            print("five")
             self._checkForVersionControlIgnore()
-            print("six")
 
             self._log.good('Finished updating packages for project "{0}"'.format(schema.name))
 
@@ -198,7 +196,6 @@ ProjectSettingsPath: '{0}'
 
     def deleteProject(self, projName):
         with self._log.heading("Deleting project '{0}'", projName):
-            print("Debug2")
             assertThat(self._varMgr.hasKey('UnityProjectsDir'), "Could not find 'UnityProjectsDir' in PathVars.  Have you set up your {0} file?", ConfigFileName)
             fullPath = '[UnityProjectsDir]/{0}'.format(projName)
 
@@ -239,7 +236,6 @@ ProjectSettingsPath: '{0}'
                     #for platform in Platforms.All:
                     for platform in [Platforms.Windows]:
                         self.updateProjectJunctions(projectName, platform)
-                        print("GOOD") #TODO Remove
 
                     self._log.good('Successfully initialized project "{0}"'.format(projectName))
                 except Exception as e:

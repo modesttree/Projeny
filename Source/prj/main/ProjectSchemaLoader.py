@@ -157,6 +157,7 @@ class ProjectSchemaLoader:
             packageName = packageRef.name
             packageDir = None
 
+
             for packageFolder in projectConfig.packageFolders:
                 candidatePackageDir = os.path.join(packageFolder, packageName)
 

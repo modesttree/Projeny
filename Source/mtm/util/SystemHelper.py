@@ -241,6 +241,7 @@ class SystemHelper:
         if len(files) == 0:
             self._log.debug("Removing empty folder '%s'" % dirPath)
             os.rmdir(dirPath)
+            exec('rm -r "{0}"'.format(dirPath))
             numDirsDeleted += 1
 
             metaFilePath = dirPath + '/../' + os.path.basename(dirPath) + '.meta'
@@ -255,7 +256,7 @@ class SystemHelper:
         return os.path.isfile(self._varManager.expand(path))
 
     def directoryExists(self, dirPath):
-        return os.path.exists(self._varManager.expand(dirPath))
+        return os.path.exists(self._varManager.expand(dirPath)) or os.path.islink(self._varManager.expand(dirPath))
 
     def copyDirectory(self, fromPath, toPath):
         fromPath = self._varManager.expand(fromPath)
