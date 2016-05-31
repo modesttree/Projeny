@@ -89,18 +89,11 @@ namespace Projeny
 				if (line.StartsWith (settingPrefix)) {
 					var relativePath = line.Substring (settingPrefix.Length + 1).Trim ();
 					var fullPath = Path.GetFullPath (Path.Combine (Path.GetDirectoryName (ConfigPath), relativePath));
-					Assert.That (File.Exists (fullPath));
+					Assert.That (File.Exists (fullPath), "Could not locate path to prj.  Have you added 'projeny/source/bin/prj' to your environment PATH?  See documentation for details.");
 					return fullPath;
 				}
 			}
-				
-
-			string loc = PrjLocationGetter.GetPrjPath ();
-			if (loc.Length == 0) {
-				throw new PrjException (
-					"Could not locate path to PRJ.bat.  Have you added 'projeny/Bin/Prj' to your environment PATH?  See documentation for details.");
-			}
-			return loc;
+			throw new PrjException ("Could not locate path to prj.  Have you added 'projeny/source/bin/prj' to your environment PATH?  See documentation for details.");
 		}
 
 		static string SearchForConfigPath ()
@@ -146,6 +139,23 @@ namespace Projeny
 		public static PrjRequest CreatePrjRequestForProjectAndPlatform (
 			string requestId, string projectName, BuildTarget platform)
 		{
+//			switch (requestId.ToLower ()) {
+//			case "updatelinks":
+//				requestId = "-ul";
+//				break;
+//			case "updatecustomsolution":
+//				requestId = "-ucs";
+//				break;
+//			case "opencustomsolution":
+//				requestId = "-ocs";
+//				break;
+//			case "listpackages":
+//				requestId = "-lpa";
+//				break;
+//			case ""
+//			}
+
+			requestId = "--" + requestId;
 			return new PrjRequest () {
 				RequestId = requestId,
 				ProjectName = projectName,
@@ -160,7 +170,7 @@ namespace Projeny
 
 			startInfo.FileName = PrjEditorApiPath;
 
-			var argStr = "\"{0}\" \"{1}\" {2} {3}"
+			var argStr = "-cfg \"{0}\" -p \"{1}\" -pl {2} {3}"
                 .Fmt (
 				             request.ConfigPath, request.ProjectName,
 				             ToPlatformDirStr (request.Platform), request.RequestId);
@@ -269,15 +279,15 @@ namespace Projeny
 			switch (platform) {
 			case BuildTarget.StandaloneWindows:
 				{
-					return "windows";
+					return "win";
 				}
 			case BuildTarget.Android:
 				{
-					return "android";
+					return "and";
 				}
 			case BuildTarget.WebPlayer:
 				{
-					return "webplayer";
+					return "webp";
 				}
 			case BuildTarget.WebGL:
 				{
@@ -293,7 +303,7 @@ namespace Projeny
 				}
 			case BuildTarget.StandaloneLinux:
 				{
-					return "linux";
+					return "lin";
 				}
 			}
 
