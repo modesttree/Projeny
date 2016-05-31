@@ -31,7 +31,7 @@ PathVars:
 
     # Note that these are defaults, and can be overridden in any other Projeny.yaml file
     MsBuildExePath: 'C:/Windows/Microsoft.NET/Framework/v4.0.30319/msbuild.exe'
-    UnityExePath: 'C:/Program Files/Unity/Editor/Unity.exe'
+    UnityExePath: '/Applications/Unity/Unity.app'
 
 Console:
     UseColors: False

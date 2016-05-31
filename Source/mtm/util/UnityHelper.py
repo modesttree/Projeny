@@ -48,7 +48,8 @@ class UnityHelper:
     def openUnity(self, projectName, platform):
         with self._log.heading('Opening Unity'):
             projectPath = self._sys.canonicalizePath("[UnityProjectsDir]/{0}/{1}-{2}".format(projectName, self._commonSettings.getShortProjectName(projectName), PlatformUtil.toPlatformFolderName(platform)))
-            self._sys.executeNoWait('"[UnityExePath]" -buildTarget {0} -projectPath "{1}"'.format(self._getBuildTargetArg(platform), projectPath))
+            print('/Applications/Unity/Unity.app/Contents/MacOS/Unity -buildTarget {0} -projectPath "{1}"'.format(self._getBuildTargetArg(platform), projectPath))
+            self._sys.executeShellCommand('/Applications/Unity/Unity.app/Contents/MacOS/Unity -buildTarget {0} -projectPath "{1}"'.format(self._getBuildTargetArg(platform), projectPath))
 
     def _getBuildTargetArg(self, platform):
 

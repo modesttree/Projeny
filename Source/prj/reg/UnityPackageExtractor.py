@@ -107,7 +107,7 @@ class UnityPackageExtractor:
 if __name__ == '__main__':
     Container.bind('Config').toSingle(Config, [])
     Container.bind('Logger').toSingle(Logger)
-    Container.bind('VarManager').toSingle(VarManager, { 'UnityExePath': "C:/Program Files/Unity/Editor/Unity.exe" })
+    Container.bind('VarManager').toSingle(VarManager, { 'UnityExePath': "/Applications/Unity/Unity.app" })
     Container.bind('LogStream').toSingle(LogStreamConsole, True, True)
     Container.bind('SystemHelper').toSingle(SystemHelper)
     Container.bind('ProcessRunner').toSingle(ProcessRunner)
