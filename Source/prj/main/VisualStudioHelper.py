@@ -30,23 +30,25 @@ class VisualStudioHelper:
             self.openVisualStudioSolution(solutionPath, filePath)
 
     def openFileInExistingVisualStudioInstance(self, filePath, lineNo):
-        exec("open "+filePath)
+        self._sys.executeShellCommand("open {0}".format(self._sys.canonicalizePath(filePath)))
 
     def openVisualStudioSolution(self, solutionPath, filePath = None):
 
-        if self._varMgr.hasKey('VisualStudioIdePath'):
-            assertThat(self._sys.fileExists('[VisualStudioIdePath]'),
-               "Cannot find path to visual studio.  Expected to find it at '{0}'".format(self._varMgr.expand('[VisualStudioIdePath]')))
+        # if self._varMgr.hasKey('VisualStudioIdePath'):
+        #     assertThat(self._sys.fileExists('[VisualStudioIdePath]'),
+        #        "Cannot find path to visual studio.  Expected to find it at '{0}'".format(self._varMgr.expand('[VisualStudioIdePath]')))
+        #
+        #     if solutionPath == None:
+        #         self._sys.executeNoWait('"[VisualStudioIdePath]" {0}'.format(self._sys.canonicalizePath(filePath) if filePath else ""))
+        #     else:
+        #         solutionPath = self._sys.canonicalizePath(solutionPath)
+        #         self._sys.executeNoWait('"[VisualStudioIdePath]" {0} {1}'.format(solutionPath, self._sys.canonicalizePath(filePath) if filePath else ""))
+        # else:
+        #     assertThat(filePath == None,
+        #        "Path to visual studio has not been defined.  Please set <VisualStudioIdePath> within one of your {0} files.  See documentation for details.", ConfigFileName)
+        #     self._sys.executeShellCommand(solutionPath, None, False)
 
-            if solutionPath == None:
-                self._sys.executeNoWait('"[VisualStudioIdePath]" {0}'.format(self._sys.canonicalizePath(filePath) if filePath else ""))
-            else:
-                solutionPath = self._sys.canonicalizePath(solutionPath)
-                self._sys.executeNoWait('"[VisualStudioIdePath]" {0} {1}'.format(solutionPath, self._sys.canonicalizePath(filePath) if filePath else ""))
-        else:
-            assertThat(filePath == None,
-               "Path to visual studio has not been defined.  Please set <VisualStudioIdePath> within one of your {0} files.  See documentation for details.", ConfigFileName)
-            self._sys.executeShellCommand(solutionPath, None, False)
+        self._sys.executeShellCommand("open {0}".format(self._sys.canonicalizePath(solutionPath)))
 
     def buildVisualStudioProject(self, solutionPath, buildConfig):
         solutionPath = self._varMgr.expand(solutionPath)
