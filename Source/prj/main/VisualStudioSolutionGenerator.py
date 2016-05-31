@@ -69,7 +69,7 @@ class VisualStudioSolutionGenerator:
                 hintPathElem = children[0]
                 assertThat(hintPathElem.tag == '{0}HintPath'.format(NsPrefix))
 
-                hintPath = hintPathElem.text.replace('/', '\\')
+                hintPath = hintPathElem.text
 
             if hintPath:
                 if not os.path.isabs(hintPath):
