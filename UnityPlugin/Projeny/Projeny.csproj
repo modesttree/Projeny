@@ -2,13 +2,11 @@
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Configuration Condition=" '$(Configuration)' == '' ">Unity Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{A8FDE485-31E0-4B40-8E7B-476E82374944}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>
-    </RootNamespace>
     <AssemblyName>$(MSBuildProjectName)</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -117,15 +115,16 @@
     <Compile Include="PackageManager\View\DragList.cs" />
     <Compile Include="PackageManager\View\PmView.cs" />
     <Compile Include="Main\PrjPathVars.cs" />
+    <Compile Include="Main\PrjLocationGetter.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\YamlDotNet\YamlDotNet.csproj">
-      <Project>{463bdb34-890f-4375-a79f-37950f5457dc}</Project>
+      <Project>{463BDB34-890F-4375-A79F-37950F5457DC}</Project>
       <Name>YamlDotNet</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <WCFMetadata Include="Service References\" />
+    <WCFMetadata Include="Service References" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Util\" />

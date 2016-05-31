@@ -15,318 +15,297 @@ using Projeny.Internal;
 
 namespace Projeny
 {
-    public class PrjResponse
-    {
-        public readonly bool Succeeded;
-        public readonly string ErrorMessage;
-        public readonly string Output;
+	public class PrjResponse
+	{
+		public readonly bool Succeeded;
+		public readonly string ErrorMessage;
+		public readonly string Output;
 
-        PrjResponse(
-            bool succeeded, string errorMessage, string output)
-        {
-            Succeeded = succeeded;
-            ErrorMessage = errorMessage;
-            Output = output;
-        }
+		PrjResponse (
+			bool succeeded, string errorMessage, string output)
+		{
+			Succeeded = succeeded;
+			ErrorMessage = errorMessage;
+			Output = output;
+		}
 
-        public static PrjResponse Error(string errorMessage)
-        {
-            return new PrjResponse(false, errorMessage, null);
-        }
+		public static PrjResponse Error (string errorMessage)
+		{
+			return new PrjResponse (false, errorMessage, null);
+		}
 
-        public static PrjResponse Success(string output = null)
-        {
-            return new PrjResponse(true, null, output);
-        }
-    }
+		public static PrjResponse Success (string output = null)
+		{
+			return new PrjResponse (true, null, output);
+		}
+	}
 
-    public class PrjRequest
-    {
-        public string RequestId;
-        public string ProjectName;
-        public BuildTarget Platform;
-        public string ConfigPath;
-        public string Param1;
-        public string Param2;
-        public string Param3;
-    }
+	public class PrjRequest
+	{
+		public string RequestId;
+		public string ProjectName;
+		public BuildTarget Platform;
+		public string ConfigPath;
+		public string Param1;
+		public string Param2;
+		public string Param3;
+	}
 
-    public static class PrjInterface
-    {
-        static string _configPath;
-        static string _prjApiPath;
+	public static class PrjInterface
+	{
+		static string _configPath;
+		static string _prjApiPath;
 
-        public static string ConfigPath
-        {
-            get
-            {
-                if (_configPath == null)
-                {
-                    _configPath = SearchForConfigPath();
-                    Assert.IsNotNull(_configPath);
-                }
+		public static string ConfigPath {
+			get {
+				if (_configPath == null) {
+					_configPath = SearchForConfigPath ();
+					Assert.IsNotNull (_configPath);
+				}
 
-                return _configPath;
-            }
-        }
+				return _configPath;
+			}
+		}
 
-        static string PrjEditorApiPath
-        {
-            get
-            {
-                if (_prjApiPath == null)
-                {
-                    _prjApiPath = FindPrjExePath();
-                    Assert.IsNotNull(_prjApiPath);
-                }
+		static string PrjEditorApiPath {
+			get {
+				if (_prjApiPath == null) {
+					_prjApiPath = FindPrjExePath ();
+					Assert.IsNotNull (_prjApiPath);
+				}
 
-                return _prjApiPath;
-            }
-        }
+				return _prjApiPath;
+			}
+		}
 
-        static string FindPrjExePath()
-        {
-            var settingPrefix = "EditorApiRelativePath:";
+		static string FindPrjExePath ()
+		{
+			var settingPrefix = "EditorApiRelativePath:";
 
-            // First check for for a path in the config file
-            foreach (var line in File.ReadAllLines(ConfigPath))
-            {
-                if (line.StartsWith(settingPrefix))
-                {
-                    var relativePath = line.Substring(settingPrefix.Length + 1).Trim();
-                    var fullPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(ConfigPath), relativePath));
-                    Assert.That(File.Exists(fullPath));
-                    return fullPath;
-                }
-            }
+			UnityEngine.Debug.Log (ConfigPath);
 
-            try
-            {
-                return PathUtil.FindExePathFromEnvPath("PrjEditorApi.bat");
-            }
-            catch (FileNotFoundException)
-            {
-                throw new PrjException(
-                    "Could not locate path to PRJ.bat.  Have you added 'projeny/Bin/Prj' to your environment PATH?  See documentation for details.");
-            }
-        }
+			// First check for for a path in the config file
+			foreach (var line in File.ReadAllLines(ConfigPath)) {
+				if (line.StartsWith (settingPrefix)) {
+					var relativePath = line.Substring (settingPrefix.Length + 1).Trim ();
+					var fullPath = Path.GetFullPath (Path.Combine (Path.GetDirectoryName (ConfigPath), relativePath));
+					Assert.That (File.Exists (fullPath));
+					return fullPath;
+				}
+			}
+				
 
-        static string SearchForConfigPath()
-        {
-            foreach (var dirInfo in PathUtil.GetAllParentDirectories(Application.dataPath))
-            {
-                var configPath = Path.Combine(dirInfo.FullName, ProjenyEditorUtil.ConfigFileName);
+			string loc = PrjLocationGetter.GetPrjPath ();
+			if (loc.Length == 0) {
+				throw new PrjException (
+					"Could not locate path to PRJ.bat.  Have you added 'projeny/Bin/Prj' to your environment PATH?  See documentation for details.");
+			}
+			return loc;
+		}
 
-                if (File.Exists(configPath))
-                {
-                    return configPath;
-                }
-            }
+		static string SearchForConfigPath ()
+		{
+			foreach (var dirInfo in PathUtil.GetAllParentDirectories(Application.dataPath)) {
+				var configPath = Path.Combine (dirInfo.FullName, ProjenyEditorUtil.ConfigFileName);
 
-            throw new PrjException(
-                "Could not locate {0} when searching from {1} upwards".Fmt(ProjenyEditorUtil.ConfigFileName, Application.dataPath));
-        }
+				if (File.Exists (configPath)) {
+					return configPath;
+				}
+			}
 
-        public static PrjRequest CreatePrjRequest(string requestId)
-        {
-            return CreatePrjRequestForProjectAndPlatform(
-                requestId,
-                ProjenyEditorUtil.GetCurrentProjectName(),
-                ProjenyEditorUtil.GetPlatformFromDirectoryName());
-        }
+			throw new PrjException (
+				"Could not locate {0} when searching from {1} upwards".Fmt (ProjenyEditorUtil.ConfigFileName, Application.dataPath));
+		}
 
-        public static PrjRequest CreatePrjRequestForProject(
-            string requestId, string project)
-        {
-            return CreatePrjRequestForProjectAndPlatform(
-                requestId,
-                project,
-                ProjenyEditorUtil.GetPlatformFromDirectoryName());
-        }
+		public static PrjRequest CreatePrjRequest (string requestId)
+		{
+			return CreatePrjRequestForProjectAndPlatform (
+				requestId,
+				ProjenyEditorUtil.GetCurrentProjectName (),
+				ProjenyEditorUtil.GetPlatformFromDirectoryName ());
+		}
 
-        public static PrjRequest CreatePrjRequestForPlatform(
-            string requestId, BuildTarget platform)
-        {
-            return CreatePrjRequestForProjectAndPlatform(
-                requestId,
-                ProjenyEditorUtil.GetCurrentProjectName(),
-                platform);
-        }
+		public static PrjRequest CreatePrjRequestForProject (
+			string requestId, string project)
+		{
+			return CreatePrjRequestForProjectAndPlatform (
+				requestId,
+				project,
+				ProjenyEditorUtil.GetPlatformFromDirectoryName ());
+		}
 
-        public static PrjRequest CreatePrjRequestForProjectAndPlatform(
-            string requestId, string projectName, BuildTarget platform)
-        {
-            return new PrjRequest()
-            {
-                RequestId = requestId,
-                ProjectName = projectName,
-                Platform = platform,
-                ConfigPath = ConfigPath
-            };
-        }
+		public static PrjRequest CreatePrjRequestForPlatform (
+			string requestId, BuildTarget platform)
+		{
+			return CreatePrjRequestForProjectAndPlatform (
+				requestId,
+				ProjenyEditorUtil.GetCurrentProjectName (),
+				platform);
+		}
 
-        static ProcessStartInfo GetPrjProcessStartInfo(PrjRequest request)
-        {
-            var startInfo = new ProcessStartInfo();
+		public static PrjRequest CreatePrjRequestForProjectAndPlatform (
+			string requestId, string projectName, BuildTarget platform)
+		{
+			return new PrjRequest () {
+				RequestId = requestId,
+				ProjectName = projectName,
+				Platform = platform,
+				ConfigPath = ConfigPath
+			};
+		}
 
-            startInfo.FileName = PrjEditorApiPath;
+		static ProcessStartInfo GetPrjProcessStartInfo (PrjRequest request)
+		{
+			var startInfo = new ProcessStartInfo ();
 
-            var argStr = "\"{0}\" \"{1}\" {2} {3}"
-                .Fmt(
-                    request.ConfigPath, request.ProjectName,
-                    ToPlatformDirStr(request.Platform), request.RequestId);
+			startInfo.FileName = PrjEditorApiPath;
 
-            if (request.Param1 != null)
-            {
-                argStr += " \"{0}\"".Fmt(request.Param1);
-            }
+			var argStr = "\"{0}\" \"{1}\" {2} {3}"
+                .Fmt (
+				             request.ConfigPath, request.ProjectName,
+				             ToPlatformDirStr (request.Platform), request.RequestId);
 
-            if (request.Param2 != null)
-            {
-                argStr += " \"{0}\"".Fmt(request.Param2);
-            }
+			if (request.Param1 != null) {
+				argStr += " \"{0}\"".Fmt (request.Param1);
+			}
 
-            if (request.Param3 != null)
-            {
-                argStr += " \"{0}\"".Fmt(request.Param3);
-            }
+			if (request.Param2 != null) {
+				argStr += " \"{0}\"".Fmt (request.Param2);
+			}
 
-            startInfo.Arguments = argStr;
-            startInfo.CreateNoWindow = true;
-            startInfo.UseShellExecute = false;
-            startInfo.RedirectStandardOutput = true;
-            startInfo.RedirectStandardError = true;
+			if (request.Param3 != null) {
+				argStr += " \"{0}\"".Fmt (request.Param3);
+			}
 
-            Log.Debug("Running command '{0} {1}'".Fmt(startInfo.FileName, startInfo.Arguments));
+			startInfo.Arguments = argStr;
+			startInfo.CreateNoWindow = true;
+			startInfo.UseShellExecute = false;
+			startInfo.RedirectStandardOutput = true;
+			startInfo.RedirectStandardError = true;
 
-            return startInfo;
-        }
+			Log.Debug ("Running command '{0} {1}'".Fmt (startInfo.FileName, startInfo.Arguments));
 
-        public static PrjResponse RunPrj(PrjRequest request)
-        {
-            Process proc = new Process();
-            proc.StartInfo = GetPrjProcessStartInfo(request);
+			return startInfo;
+		}
 
-            proc.Start();
+		public static PrjResponse RunPrj (PrjRequest request)
+		{
+			Process proc = new Process ();
+			proc.StartInfo = GetPrjProcessStartInfo (request);
 
-            var errorLines = new List<string>();
-            proc.ErrorDataReceived += (sender, outputArgs) => errorLines.Add(outputArgs.Data);
+			proc.Start ();
 
-            var outputLines = new List<string>();
-            proc.OutputDataReceived += (sender, outputArgs) => outputLines.Add(outputArgs.Data);
+			var errorLines = new List<string> ();
+			proc.ErrorDataReceived += (sender, outputArgs) => errorLines.Add (outputArgs.Data);
 
-            proc.BeginErrorReadLine();
-            proc.BeginOutputReadLine();
+			var outputLines = new List<string> ();
+			proc.OutputDataReceived += (sender, outputArgs) => outputLines.Add (outputArgs.Data);
 
-            proc.WaitForExit();
+			proc.BeginErrorReadLine ();
+			proc.BeginOutputReadLine ();
 
-            return RunPrjCommonEnd(
-                proc, errorLines.Join(Environment.NewLine));
-        }
+			proc.WaitForExit ();
 
-        // This will yield string values that contain some status message
-        // until finally yielding a value of type PrjResponse with the final data
-        public static IEnumerator RunPrjAsync(PrjRequest request)
-        {
-            Process proc = new Process();
-            proc.StartInfo = GetPrjProcessStartInfo(request);
+			return RunPrjCommonEnd (
+				proc, errorLines.Join (Environment.NewLine));
+		}
 
-            proc.EnableRaisingEvents = true;
+		// This will yield string values that contain some status message
+		// until finally yielding a value of type PrjResponse with the final data
+		public static IEnumerator RunPrjAsync (PrjRequest request)
+		{
+			Process proc = new Process ();
+			proc.StartInfo = GetPrjProcessStartInfo (request);
 
-            bool hasExited = false;
-            proc.Exited += delegate
-            {
-                hasExited = true;
-            };
+			proc.EnableRaisingEvents = true;
 
-            proc.Start();
+			bool hasExited = false;
+			proc.Exited += delegate {
+				hasExited = true;
+			};
 
-            var errorLines = new List<string>();
-            proc.ErrorDataReceived += (sender, outputArgs) => errorLines.Add(outputArgs.Data);
+			proc.Start ();
 
-            var outputLines = new List<string>();
-            proc.OutputDataReceived += (sender, outputArgs) => outputLines.Add(outputArgs.Data);
+			var errorLines = new List<string> ();
+			proc.ErrorDataReceived += (sender, outputArgs) => errorLines.Add (outputArgs.Data);
 
-            proc.BeginErrorReadLine();
-            proc.BeginOutputReadLine();
+			var outputLines = new List<string> ();
+			proc.OutputDataReceived += (sender, outputArgs) => outputLines.Add (outputArgs.Data);
 
-            while (!hasExited)
-            {
-                if (outputLines.IsEmpty())
-                {
-                    yield return null;
-                }
-                else
-                {
-                    var newLines = outputLines.ToList();
-                    outputLines.Clear();
-                    yield return newLines;
-                }
-            }
+			proc.BeginErrorReadLine ();
+			proc.BeginOutputReadLine ();
 
-            yield return RunPrjCommonEnd(
-                proc, errorLines.Join(Environment.NewLine));
-        }
+			while (!hasExited) {
+				if (outputLines.IsEmpty ()) {
+					yield return null;
+				} else {
+					var newLines = outputLines.ToList ();
+					outputLines.Clear ();
+					yield return newLines;
+				}
+			}
 
-        static PrjResponse RunPrjCommonEnd(
-            Process proc, string errorOutput)
-        {
-            // If it returns an error code, then assume that
-            // the contents of STDERR are the error message to display
-            // to the user
-            // Otherwise, assume the contents of STDERR are the final output
-            // data.  This can include things like serialized YAML
-            if (proc.ExitCode != 0)
-            {
-                return PrjResponse.Error(errorOutput);
-            }
+			yield return RunPrjCommonEnd (
+				proc, errorLines.Join (Environment.NewLine));
+		}
 
-            return PrjResponse.Success(errorOutput);
-        }
+		static PrjResponse RunPrjCommonEnd (
+			Process proc, string errorOutput)
+		{
+			// If it returns an error code, then assume that
+			// the contents of STDERR are the error message to display
+			// to the user
+			// Otherwise, assume the contents of STDERR are the final output
+			// data.  This can include things like serialized YAML
+			if (proc.ExitCode != 0) {
+				return PrjResponse.Error (errorOutput);
+			}
 
-        static string ToPlatformDirStr(BuildTarget platform)
-        {
-            switch (platform)
-            {
-                case BuildTarget.StandaloneWindows:
-                {
-                    return "windows";
-                }
-                case BuildTarget.Android:
-                {
-                    return "android";
-                }
-                case BuildTarget.WebPlayer:
-                {
-                    return "webplayer";
-                }
-                case BuildTarget.WebGL:
-                {
-                    return "webgl";
-                }
-                case BuildTarget.StandaloneOSXUniversal:
-                {
-                    return "osx";
-                }
-                case BuildTarget.iOS:
-                {
-                    return "ios";
-                }
-                case BuildTarget.StandaloneLinux:
-                {
-                    return "linux";
-                }
-            }
+			return PrjResponse.Success (errorOutput);
+		}
 
-            throw new NotImplementedException();
-        }
+		static string ToPlatformDirStr (BuildTarget platform)
+		{
+			switch (platform) {
+			case BuildTarget.StandaloneWindows:
+				{
+					return "windows";
+				}
+			case BuildTarget.Android:
+				{
+					return "android";
+				}
+			case BuildTarget.WebPlayer:
+				{
+					return "webplayer";
+				}
+			case BuildTarget.WebGL:
+				{
+					return "webgl";
+				}
+			case BuildTarget.StandaloneOSXUniversal:
+				{
+					return "osx";
+				}
+			case BuildTarget.iOS:
+				{
+					return "ios";
+				}
+			case BuildTarget.StandaloneLinux:
+				{
+					return "linux";
+				}
+			}
 
-        public class PrjException : Exception
-        {
-            public PrjException(string errorMessage)
-                : base(errorMessage)
-            {
-            }
-        }
-    }
+			throw new NotImplementedException ();
+		}
+
+		public class PrjException : Exception
+		{
+			public PrjException (string errorMessage)
+				: base (errorMessage)
+			{
+			}
+		}
+	}
 }
