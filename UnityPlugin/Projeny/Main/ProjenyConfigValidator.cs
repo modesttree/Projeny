@@ -37,8 +37,8 @@ namespace Projeny.Internal
             {
                 if (EditorUserBuildSettings.SwitchActiveBuildTarget(expectedPlatform))
                 {
-                    EditorUtility.DisplayDialog(
-                        "Error", "Projeny has detected an unexpected platform change.\n\nPlatforms should only be changed through Projeny and never through Unity's normal Build Settings dialog.\n\nThis is necessary to allow Projeny to include platform specific packages, quick platform switching, etc.\n\nProjeny has switched the platform back to '" + expectedPlatform.ToString() + "'", "Ok");
+                    UnityEngine.Debug.LogError(
+                        "Projeny has detected an unexpected platform change.\n\nPlatforms should only be changed through Projeny and never through Unity's normal Build Settings dialog.\n\nThis is necessary to allow Projeny to include platform specific packages, quick platform switching, etc.\n\nProjeny has switched the platform back to '" + expectedPlatform.ToString() + "'");
                 }
                 else
                 {
@@ -54,16 +54,26 @@ namespace Projeny.Internal
 
             foreach (var scriptDir in new DirectoryInfo(Application.dataPath).GetDirectories())
             {
-                if (scriptDir.Name == "Plugins")
+                var scriptNameLowered = scriptDir.Name.ToLower();
+
+                if (scriptNameLowered == "editor default resources" || scriptNameLowered == "gizmos" || scriptNameLowered == "streamingassets")
+                {
+                    // TODO: Verify subdirectories here
+                    continue;
+                }
+
+                if (scriptNameLowered == "plugins")
                 {
                     foreach (var pluginDir in scriptDir.GetDirectories())
                     {
-                        if (pluginDir.Name == "Projeny" || pluginDir.Name == "ProjenyGenerated")
+                        var pluginNameLowered = pluginDir.Name.ToLower();
+
+                        if (pluginNameLowered == "projeny" || pluginNameLowered == "projenygenerated")
                         {
                             continue;
                         }
 
-                        if (pluginDir.Name == "Android" || pluginDir.Name == "WebGL")
+                        if (pluginNameLowered == "android" || pluginNameLowered == "webgl")
                         {
                             foreach (var platformDir in pluginDir.GetDirectories())
                             {
@@ -86,16 +96,16 @@ namespace Projeny.Internal
             {
                 var badDirectoriesStr = string.Join("\n", badDirectories.Select(x => "Assets/" + x.FullName.Substring(Application.dataPath.Length + 1)).ToArray());
 
-                EditorUtility.DisplayDialog(
-                    "Projeny Error", "Projeny validation failed.\n\nThere are directories in your project that were not created by Projeny.  This could cause data loss.  All user data in Projeny should reside in the UnityPackages directory.  See documentation for details.  \n\nThe directories in question are the following: \n\n{0}".Fmt(badDirectoriesStr), "Ok");
+                UnityEngine.Debug.LogError(
+                    "Projeny validation failed.\n\nThere are directories in your project that were not created by Projeny.  This could cause data loss.  All user data in Projeny should reside in the UnityPackages directory.  See documentation for details.  \n\nThe directories in question are the following: \n\n{0}".Fmt(badDirectoriesStr));
             }
 
             if (brokenJunctions.Any())
             {
                 var brokenJunctionsStr = string.Join("\n", brokenJunctions.Select(x => "Assets/" + x.Substring(Application.dataPath.Length + 1)).ToArray());
 
-                EditorUtility.DisplayDialog(
-                    "Projeny Error", "Projeny validation failed.\n\nThere are broken directory links in your project.  You may have deleted a package without removing the package from the project.  You can fix this by entering package manager and removing the missing packages from your project. See documentation for details.  \n\nThe directories in question are the following: \n\n{0}".Fmt(brokenJunctionsStr), "Ok");
+                UnityEngine.Debug.LogError(
+                    "Projeny validation failed.\n\nThere are broken directory links in your project.  You may have deleted a package without removing the package from the project.  You can fix this by entering package manager and removing the missing packages from your project. See documentation for details.  \n\nThe directories in question are the following: \n\n{0}".Fmt(brokenJunctionsStr));
             }
         }
 
@@ -115,3 +125,4 @@ namespace Projeny.Internal
         }
     }
 }
+
