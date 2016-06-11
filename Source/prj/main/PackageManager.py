@@ -241,10 +241,11 @@ ProjectSettingsPath: '{0}'
     # This will set up all the directory junctions for all projects for all platforms
     def updateLinksForAllProjects(self):
         for projectName in self.getAllProjectNames():
+            projConfig = self._schemaLoader.loadProjectConfig(projectName)
             with self._log.heading('Initializing project "{0}"'.format(projectName)):
                 try:
                     #for platform in Platforms.All:
-                    for platform in [Platforms.Windows]:
+                    for platform in projConfig.targetPlatforms:
                         self.updateProjectJunctions(projectName, platform)
 
                     self._log.good('Successfully initialized project "{0}"'.format(projectName))

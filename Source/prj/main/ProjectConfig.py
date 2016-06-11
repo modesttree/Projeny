@@ -8,4 +8,5 @@ class ProjectConfig:
         self.solutionProjects = []
         self.solutionFolders = []
         self.packageFolders = []
+        self.targetPlatforms = []
         self.projectSettingsPath = None

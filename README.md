@@ -617,6 +617,15 @@ The format of `ProjenyProject.yaml` is as follows:
         - {DirectoryPath}
         - {DirectoryPath}
 
+    TargetPlatforms:
+        - Windows
+        - WebPlayer
+        - Android
+        - WebGL
+        - OSX
+        - Linux
+        - iOS
+
 Where:
 * `{PackageName}` represents the name of a directory that is in one of the `PackageFolders` directories
 * `{PackageNamePattern}` represents a python regular expression that is used to match one more packages in the `UnityPackages` directory
