@@ -45,6 +45,7 @@ class ProjectSchemaLoader:
         config.pluginsFolder = yamlConfig.tryGetList([], 'PluginsFolder')
         config.assetsFolder = yamlConfig.tryGetList([], 'AssetsFolder')
         config.solutionProjects = yamlConfig.tryGetList([], 'SolutionProjects')
+        config.targetPlatforms = yamlConfig.tryGetList([Platforms.Windows], 'TargetPlatforms')
         config.solutionFolders = yamlConfig.tryGetOrderedDictionary(OrderedDict(), 'SolutionFolders')
         config.packageFolders = yamlConfig.getList('PackageFolders')
         config.projectSettingsPath = yamlConfig.getString('ProjectSettingsPath')
