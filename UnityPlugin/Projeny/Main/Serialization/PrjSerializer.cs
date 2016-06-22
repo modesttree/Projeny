@@ -311,6 +311,12 @@ namespace Projeny.Internal
                 get;
                 set;
             }
+
+            public List<string> TargetPlatforms
+            {
+                get;
+                set;
+            }
         }
 
         class PackageInstallInfoInternal
