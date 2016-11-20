@@ -443,7 +443,7 @@ Note that since we haven't added any packages yet to our new project, there isn'
     * <a id="workflow-create-project-command-line"></a>Method 2 - Command Line
         * Enter command prompt / powershell at the same directory where your `Projeny.yaml` file is
         * Execute `prj --project MyNewProject --createProject` (or the shortened form `prj -p MyNewProject -cpr`)
-        * Done.  You can now open your project in Unity
+        * Done.  You can now open [ProjectName]-Windows directory in Unity.
         * (optional) Add a `ProjenyProject.yaml` file to your new project folder. See <a href="#project-yaml">here</a> for details.
 
 * #### <a id="workflow-create-new-config"></a>How do I start an entirely new set of Projeny-based packages/projects from scratch?
