@@ -81,9 +81,13 @@ class VisualStudioSolutionGenerator:
 
         return items
 
-    def _chooseMostRecentFile(self, path1, path2):
+    def _chooseMostRecentFile(self, path1, path2, path3):
         path1 = self._varMgr.expandPath(path1)
         path2 = self._varMgr.expandPath(path2)
+        path3 = self._varMgr.expandPath(path3)
+
+        if self._sys.fileExists(path3):
+            return path3
 
         # If they both exist choose most recent
         if self._sys.fileExists(path1) and self._sys.fileExists(path2):
@@ -111,10 +115,10 @@ class VisualStudioSolutionGenerator:
         # and otherwise it names it the second one
         # So check modification times for the case where the user changes this setting
         unityProjPath = self._chooseMostRecentFile(
-            '[UnityGeneratedProjectPath]', '[UnityGeneratedProjectPath2]')
+            '[UnityGeneratedProjectPath]', '[UnityGeneratedProjectPath2]', '[UnityGeneratedProjectPath3]')
 
         unityEditorProjPath = self._chooseMostRecentFile(
-            '[UnityGeneratedProjectEditorPath]', '[UnityGeneratedProjectEditorPath2]')
+            '[UnityGeneratedProjectEditorPath]', '[UnityGeneratedProjectEditorPath2]', '[UnityGeneratedProjectEditorPath3]')
 
         assertThat(unityProjPath and self._sys.fileExists(unityProjPath) and unityEditorProjPath and self._sys.fileExists(unityEditorProjPath), \
             'Could not find unity-generated project when generating custom solution.  This is necessary so the custom solution can add things like unity defines and DLL references within the unity project.')

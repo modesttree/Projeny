@@ -381,13 +381,15 @@ namespace Projeny
         self._varMgr.set('ProjectPlatformRoot', '[ProjectRoot]/[ShortProjectName]-[ShortPlatform]')
         self._varMgr.set('ProjectAssetsDir', '[ProjectPlatformRoot]/Assets')
 
-        self._varMgr.set('UnityGeneratedProjectEditorPath', '[ProjectPlatformRoot]/[ShortProjectName]-[ShortPlatform].CSharp.Editor.Plugins.csproj')
-        self._varMgr.set('UnityGeneratedProjectPath', '[ProjectPlatformRoot]/[ShortProjectName]-[ShortPlatform].CSharp.Plugins.csproj')
-
         # For reasons I don't understand, the unity generated project is named with 'Assembly' on some machines and not other
         # Problem due to unity version but for now just allow either or
+        self._varMgr.set('UnityGeneratedProjectEditorPath', '[ProjectPlatformRoot]/[ShortProjectName]-[ShortPlatform].CSharp.Editor.Plugins.csproj')
         self._varMgr.set('UnityGeneratedProjectEditorPath2', '[ProjectPlatformRoot]/Assembly-CSharp-Editor-firstpass.csproj')
+        self._varMgr.set('UnityGeneratedProjectEditorPath3', '[ProjectPlatformRoot]/[ProjectName]-[Platform].Editor.Plugins.csproj')
+
+        self._varMgr.set('UnityGeneratedProjectPath', '[ProjectPlatformRoot]/[ShortProjectName]-[ShortPlatform].CSharp.Plugins.csproj')
         self._varMgr.set('UnityGeneratedProjectPath2', '[ProjectPlatformRoot]/Assembly-CSharp-firstpass.csproj')
+        self._varMgr.set('UnityGeneratedProjectPath3', '[ProjectPlatformRoot]/[ProjectName]-[Platform].Plugins.csproj')
 
         self._varMgr.set('PluginsDir', '[ProjectAssetsDir]/Plugins')
         self._varMgr.set('PluginsAndroidDir', '[PluginsDir]/Android')
