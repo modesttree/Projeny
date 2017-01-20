@@ -513,6 +513,9 @@ Here is the full list of configuration settings.  Note that you don't need to in
     # tool whenever the `-p` option is not included
     DefaultProject: AllMovers
 
+    # This is a collection of paths that are used by projeny
+    # You can also define your own variables here and use them in any of the config files
+    # Note also that you can use environment variables here the same way eg: [SOME_ENVIRONMENT_VARIABLE]
     PathVars:
         # This setting is required
         # This will determine where projeny looks for the unity projects
