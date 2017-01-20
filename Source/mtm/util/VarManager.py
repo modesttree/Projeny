@@ -70,6 +70,8 @@ class VarManager:
         allArgs = self._params.copy()
         allArgs.update(extraVars)
 
+        originalText = text
+
         while True:
             match = self._regex.match(text)
 
@@ -85,7 +87,13 @@ class VarManager:
             if var in allArgs:
                 replacement = allArgs[var]
             else:
-                replacement = self.get(var)
+                replacement = self.tryGet(var)
+
+                if not replacement:
+                    replacement = os.environ.get(var)
+
+                    if not replacement:
+                        raise Exception("Unable to resolve variable '{0}' when expanding '{1}'".format(var, originalText))
 
             text = prefix + replacement + suffix
 
@@ -93,4 +101,5 @@ class VarManager:
             raise Exception("Unable to find all keys in path '{0}'".format(text))
 
         return text
+
 
