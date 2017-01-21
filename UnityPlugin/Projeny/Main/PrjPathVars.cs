@@ -71,6 +71,12 @@ namespace Projeny
             if (!success)
             {
                 success = extraVars.TryGetValue(key, out resultValue);
+
+                if (!success)
+                {
+                    resultValue = Environment.GetEnvironmentVariable(key);
+                    success = (resultValue != null);
+                }
             }
 
             Assert.That(success, "Could not find key '{0}'", key);
