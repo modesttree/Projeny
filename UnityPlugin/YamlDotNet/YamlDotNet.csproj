@@ -28,7 +28,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Unity Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\Bin\UnityPlugin\Debug\</OutputPath>
+    <OutputPath>..\..\Bin\UnityPlugin\Release\</OutputPath>
     <IntermediateOutputPath>..\..\Temp\obj\Debug\</IntermediateOutputPath>
     <BaseIntermediateOutputPath>..\..\Temp\obj\Debug\</BaseIntermediateOutputPath>
     <DefineConstants>TRACE</DefineConstants>
