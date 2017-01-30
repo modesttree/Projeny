@@ -2,6 +2,8 @@
 <img src="Docs/LogoWhiteWithText.png?raw=true" alt="Projeny" width="250px" height="246px"/>
 ## Project and Package Manager for Unity3D
 
+[![Join the chat at https://gitter.im/Projeny/Lobby](https://badges.gitter.im/Projeny/Lobby.svg)](https://gitter.im/Projeny/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 ### <a id="introduction"></a>Introduction ###
 
 The purpose of Projeny is to allow your Unity3D project to easily scale in size without heavily impacting development time.
