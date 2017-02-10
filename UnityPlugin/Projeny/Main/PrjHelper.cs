@@ -46,7 +46,9 @@ namespace Projeny
         {
             var result = PrjInterface.RunPrj(PrjInterface.CreatePrjRequest("updateLinks"));
 
-            AssetDatabase.Refresh();
+            // This sometimes causes out of memory issues for reasons unknown so just let user
+            // manually refresh
+            //AssetDatabase.Refresh();
 
             if (!result.Succeeded)
             {

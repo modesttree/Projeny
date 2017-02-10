@@ -64,7 +64,10 @@ namespace Projeny.Internal
             // Refresh assets regardless of what kind of PrjCommand this was
             // This is good because many commands can affect the project
             // Including installing a package, deleting a package, etc.
-            AssetDatabase.Refresh();
+
+            // This sometimes causes out of memory issues for reasons unknown so just let user
+            // manually refresh for now
+            //AssetDatabase.Refresh();
 
             _view.BlockedStatusMessage = null;
 
