@@ -59,19 +59,20 @@ namespace Projeny
             return true;
         }
 
-        public static void ChangeProject(string projectName)
+        public static void ChangeProject(string projectName, string platformName = "windows")
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
             {
                 // They hit cancel in the save dialog
                 return;
             }
+            var platform = ProjenyEditorUtil.FromPlatformDirStr(platformName);
 
-            var result = PrjInterface.RunPrj(PrjInterface.CreatePrjRequestForProject("updateLinks", projectName));
+            var result = PrjInterface.RunPrj(PrjInterface.CreatePrjRequestForProjectAndPlatform("updateLinks", projectName, platform));
 
             if (result.Succeeded)
             {
-                result = PrjInterface.RunPrj(PrjInterface.CreatePrjRequestForProject("openUnity", projectName));
+                result = PrjInterface.RunPrj(PrjInterface.CreatePrjRequestForProjectAndPlatform("openUnity", projectName, platform));
 
                 if (result.Succeeded)
                 {

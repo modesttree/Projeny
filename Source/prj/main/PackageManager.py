@@ -252,9 +252,10 @@ ProjectSettingsPath: '{0}'
                 except Exception as e:
                     self._log.warn('Failed to initialize project "{0}": {1}'.format(projectName, e))
 
-    def _createSwitchProjectMenuScript(self, currentProjName, outputPath):
+    def _createSwitchProjectMenuScript(self, currentProjName, currentPlatform, outputPath):
 
         foundCurrent = False
+        projConfig = self._schemaLoader.loadProjectConfig(currentProjName)
         menuFile = """
 using UnityEditor;
 using Projeny.Internal;
@@ -265,34 +266,35 @@ namespace Projeny
     {"""
         projIndex = 1
         for projName in self.getAllProjectNames():
-            menuFile += """
-        [MenuItem("Projeny/Change Project/{0}", false, 8)]""".format(projName)
+            for platform in projConfig.targetPlatforms:
+                menuFile += """
+        [MenuItem("Projeny/Change Project/{0}-{1}", false, 8)]""".format(projName, platform)
 
-            menuFile += """
+                menuFile += """
         public static void ChangeProject{0}()""".format(projIndex)
 
-            menuFile += """
+                menuFile += """
         {"""
 
-            menuFile += """
-            PrjHelper.ChangeProject("{0}");""".format(projName)
+                menuFile += """
+            PrjHelper.ChangeProject("{0}", "{1}");""".format(projName, platform)
 
-            menuFile += """
+                menuFile += """
         }
 """
-            if projName == currentProjName:
-                assertThat(not foundCurrent)
-                foundCurrent = True
-                menuFile += """
-        [MenuItem("Projeny/Change Project/{0}", true, 8)]""".format(currentProjName)
-                menuFile += """
+                if projName == currentProjName and platform == currentPlatform:
+                    assertThat(not foundCurrent)
+                    foundCurrent = True
+                    menuFile += """
+        [MenuItem("Projeny/Change Project/{0}-{1}", true, 8)]""".format(currentProjName, currentPlatform)
+                    menuFile += """
         public static bool ChangeProject{0}Validate()""".format(projIndex)
-                menuFile += """
+                    menuFile += """
         {
             return false;
         }"""
 
-            projIndex += 1
+                projIndex += 1
 
         menuFile += """
     }
@@ -307,7 +309,7 @@ namespace Projeny
         placeholderOutPath2 = outDir + '/Editor/Placeholder.cs'
 
         # Need to always use the same meta files to avoid having unity do a refresh
-        self._createSwitchProjectMenuScript(schema.name, menuFileOutPath)
+        self._createSwitchProjectMenuScript(schema.name, schema.platform, menuFileOutPath)
         self._sys.copyFile('[ProjenyChangeProjectMenuMeta]', menuFileOutPath + ".meta")
 
         self._sys.copyFile('[PlaceholderFile1]', placeholderOutPath1)

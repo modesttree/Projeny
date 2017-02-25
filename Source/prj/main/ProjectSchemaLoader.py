@@ -99,7 +99,7 @@ class ProjectSchemaLoader:
 
         self._ensureAllPackagesExist(packageMap)
 
-        return ProjectSchema(name, packageMap, config.solutionFolders, config.projectSettingsPath)
+        return ProjectSchema(name, packageMap, config.solutionFolders, config.projectSettingsPath, platform, config.targetPlatforms)
 
     def _shouldIncludeForPlatform(self, packageName, packageConfig, folderType, platform):
 
@@ -438,11 +438,13 @@ class PackageReference:
         self.sourceDesc = sourceDesc
 
 class ProjectSchema:
-    def __init__(self, name, packages, customFolderMap, projectSettingsPath):
+    def __init__(self, name, packages, customFolderMap, projectSettingsPath, platform, targetPlatforms):
         self.name = name
         self.packages = packages
         self.customFolderMap = customFolderMap
         self.projectSettingsPath = projectSettingsPath
+        self.platform = platform
+        self.targetPlatforms = targetPlatforms
 
 class FolderTypes:
     Normal = "normal"
