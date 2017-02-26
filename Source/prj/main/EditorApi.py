@@ -65,8 +65,11 @@ class Runner:
         self._packageMgr.setPathsForProjectPlatform(self._project, self._platform)
 
         if self._requestId == 'updateLinks':
+            isInit = self._packageMgr.isProjectPlatformInitialized(self._project, self._platform)
             self._packageMgr.updateProjectJunctions(self._project, self._platform)
-
+            if not isInit:
+                self._packageMgr.updateLinksForAllProjects()
+        
         elif self._requestId == 'openUnity':
             self._packageMgr.checkProjectInitialized(self._project, self._platform)
             self._unityHelper.openUnity(self._project, self._platform)

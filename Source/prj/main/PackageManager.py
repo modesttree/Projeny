@@ -25,6 +25,7 @@ import mtm.ioc.Container as Container
 from mtm.ioc.Inject import Inject
 from mtm.ioc.Inject import InjectMany
 import mtm.ioc.IocAssertions as Assertions
+import prj.main.ProjectConfigChanger as ProjectConfigChanger
 
 InstallInfoFileName = 'ProjenyInstall.yaml'
 
@@ -49,6 +50,7 @@ class PackageManager:
     _projectInitHandlers = InjectMany('ProjectInitHandlers')
     _schemaLoader = Inject('ProjectSchemaLoader')
     _commonSettings = Inject('CommonSettings')
+    _projectConfigChanger = Inject('ProjectConfigChanger')
 
     def projectExists(self, projectName):
         return self._sys.directoryExists('[UnityProjectsDir]/{0}'.format(projectName))
@@ -148,6 +150,10 @@ ProjectSettingsPath: '{0}'
         with self._log.heading('Updating package directories for project {0}'.format(projectName)):
             self.checkProjectInitialized(projectName, platform)
             self.setPathsForProjectPlatform(projectName, platform)
+            projConfig = self._projectConfigChanger._loadProjectConfig(projectName)
+            if platform not in projConfig.targetPlatforms:
+                projConfig.targetPlatforms.append(platform)
+                self._projectConfigChanger._saveProjectConfig(projectName, projConfig)
             schema = self._schemaLoader.loadSchema(projectName, platform)
             self._updateDirLinksForSchema(schema)
 
@@ -366,6 +372,10 @@ namespace Projeny
 
         self._log.warn('Project "{0}" is not initialized for platform "{1}".  Initializing now.'.format(projectName, platform))
         self._initNewProjectForPlatform(projectName, platform)
+
+    def isProjectPlatformInitialized(self, projectName, platform):
+        self.setPathsForProjectPlatform(projectName, platform)
+        return self._sys.directoryExists('[ProjectPlatformRoot]')
 
     def setPathsForProject(self, projectName):
         self._varMgr.set('ShortProjectName', self._commonSettings.getShortProjectName(projectName))
