@@ -14,6 +14,7 @@ from mtm.util.Assert import *
 
 class VarManager:
     _config = Inject('Config')
+    _log = Inject('Logger')
 
     '''
     Stores a dictionary of keys to values to replace path variables with
@@ -93,7 +94,8 @@ class VarManager:
                     replacement = os.environ.get(var)
 
                     if not replacement:
-                        raise Exception("Unable to resolve variable '{0}' when expanding '{1}'".format(var, originalText))
+                        self._log.warn("Unable to resolve variable '{0}' when expanding '{1}'".format(var, originalText))
+                        replacement = var
 
             text = prefix + replacement + suffix
 
