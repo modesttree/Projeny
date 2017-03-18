@@ -143,7 +143,6 @@ class PrjRunner:
             self._packageMgr.listAllPackages(self._args.project)
 
         if self._args.openUnity:
-            return
             self._packageMgr.checkProjectInitialized(self._args.project, self._platform)
             self._unityHelper.openUnity(self._args.project, self._platform)
 
