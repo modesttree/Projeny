@@ -212,6 +212,7 @@ def _createConfig():
     unityProjectsDir = os.path.join(curDir, 'UnityProjects')
     os.makedirs(unityProjectsDir)
 
+    #Template for Projeny.yaml
     with open(mainConfigPath, 'w', encoding='utf-8') as outFile:
         outFile.write(
 """
@@ -228,6 +229,7 @@ PathVars:
 
     projectGlobalConfigPath = os.path.join(unityProjectsDir, ProjectConfigFileName)
 
+    # Template for UnityProjects ProjenyProject.yaml
     with open(projectGlobalConfigPath, 'w', encoding='utf-8') as outFile:
         outFile.write(
 """
@@ -236,6 +238,9 @@ PathVars:
 # See documentation for the full list of configuration settings
 
 PackageFolders:
+    # Put packages that are used in multiple projeny's here
+    # specify the ProjenyPackagesDir in PathVars in your root directory Projeny.yaml
+    - '[ProjenyPackagesDir]'
     # Put packages that are used in multiple projects here
     - '[SharedUnityPackagesDir]'
     # [ProjectRoot] refers to the folder at UnityProjects/YourProjectName
