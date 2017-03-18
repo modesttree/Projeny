@@ -20,19 +20,19 @@ def fromPlatformArgName(platformArgStr):
     if platformArgStr == 'win' or platformArgStr == 'w':
         return Platforms.Windows
 
-    if platformArgStr == 'webgl':
+    if platformArgStr == 'webgl' or platformArgStr == 'g':
         return Platforms.WebGl
 
     if platformArgStr == 'and' or platformArgStr == 'a':
         return Platforms.Android
 
-    if platformArgStr == 'osx':
+    if platformArgStr == 'osx' or platformArgStr == 'o':
         return Platforms.OsX
 
-    if platformArgStr == 'ios':
+    if platformArgStr == 'ios' or platformArgStr == 'i':
         return Platforms.Ios
 
-    if platformArgStr == 'lin':
+    if platformArgStr == 'lin' or platformArgStr == 'l':
         return Platforms.Linux
 
     assertThat(False)
