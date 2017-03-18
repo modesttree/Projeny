@@ -7,6 +7,7 @@ from mtm.util.Assert import *
 import mtm.util.MiscUtil as MiscUtil
 import mtm.util.PlatformUtil as PlatformUtil
 
+
 from mtm.util.Platforms import Platforms
 from mtm.util.CommonSettings import ConfigFileName
 
@@ -75,7 +76,7 @@ class PrjRunner:
             self._packageMgr.deleteProject(self._args.project)
 
         if self._args.createProject:
-            self._packageMgr.createProject(self._args.project)
+            self._packageMgr.createProject(self._args.project, self._platform)
 
         if self._args.projectAddPackageAssets:
             self._projectConfigChanger.addPackage(self._args.project, self._args.projectAddPackageAssets, True)
@@ -142,6 +143,7 @@ class PrjRunner:
             self._packageMgr.listAllPackages(self._args.project)
 
         if self._args.openUnity:
+            return
             self._packageMgr.checkProjectInitialized(self._args.project, self._platform)
             self._unityHelper.openUnity(self._args.project, self._platform)
 

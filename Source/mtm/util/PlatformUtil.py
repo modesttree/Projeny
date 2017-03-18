@@ -17,16 +17,13 @@ def fromPlatformFolderName(platformDirName):
 
 def fromPlatformArgName(platformArgStr):
 
-    if platformArgStr == 'win':
+    if platformArgStr == 'win' or platformArgStr == 'w':
         return Platforms.Windows
-
-    if platformArgStr == 'webp':
-        return Platforms.WebPlayer
 
     if platformArgStr == 'webgl':
         return Platforms.WebGl
 
-    if platformArgStr == 'and':
+    if platformArgStr == 'and' or platformArgStr == 'a':
         return Platforms.Android
 
     if platformArgStr == 'osx':

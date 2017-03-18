@@ -88,8 +88,8 @@ class PackageManager:
 
         return None
 
-    def createProject(self, projName, settingsProject = None):
-        with self._log.heading('Initializing new project "{0}"', projName):
+    def createProject(self, projName, platform = Platforms.Windows, settingsProject = None):
+        with self._log.heading('Initializing new project-platform "{0}-{1}"', projName, platform):
             projDirPath = self._varMgr.expand('[UnityProjectsDir]/{0}'.format(projName))
             assertThat(not self._sys.directoryExists(projDirPath), "Cannot initialize new project '{0}', found existing project at '{1}'", projName, projDirPath)
 
@@ -114,7 +114,8 @@ ProjectSettingsPath: '{0}'
     # Uncomment and Add package names here
 """.format(settingsPath))
 
-            self.updateProjectJunctions(projName, Platforms.Windows)
+            self.updateProjectJunctions(projName, platform)
+            self.updateLinksForAllProjects()
 
     def getProjectFromAlias(self, alias):
         result = self.tryGetProjectFromAlias(alias)
@@ -219,6 +220,7 @@ ProjectSettingsPath: '{0}'
 
             self.clearProjectGeneratedFiles(projName)
             self._sys.deleteDirectory(fullPath)
+            self.updateLinksForAllProjects()
 
     def getAllPackageNames(self, projectName):
         results = []
@@ -261,7 +263,6 @@ ProjectSettingsPath: '{0}'
     def _createSwitchProjectMenuScript(self, currentProjName, currentPlatform, outputPath):
 
         foundCurrent = False
-        projConfig = self._schemaLoader.loadProjectConfig(currentProjName)
         menuFile = """
 using UnityEditor;
 using Projeny.Internal;
@@ -272,6 +273,7 @@ namespace Projeny
     {"""
         projIndex = 1
         for projName in self.getAllProjectNames():
+            projConfig = self._schemaLoader.loadProjectConfig(projName)
             for platform in projConfig.targetPlatforms:
                 menuFile += """
         [MenuItem("Projeny/Change Project/{0}-{1}", false, 8)]""".format(projName, platform)
