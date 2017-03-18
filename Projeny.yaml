@@ -1,7 +1,7 @@
 # Default values
 # These can all be overriden by user config files
 
-MaxProjectNameLength: 10
+MaxProjectNameLength: 64 
 
 # Set to true if you don't want to use the Projeny editor DLL and instead want to link directly
 # to UnityPlugin\Projeny
