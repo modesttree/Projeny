@@ -887,7 +887,6 @@ What follows is the full list of command line parameters that you can pass to th
 0.1 (December, 2015)
 - Initial release
 
-
 ## <a id="license"></a>License
 
     The MIT License (MIT)
@@ -911,4 +910,3 @@ What follows is the full list of command line parameters that you can pass to th
     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
-
