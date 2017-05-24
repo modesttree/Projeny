@@ -584,6 +584,11 @@ Here is the full list of configuration settings.  Note that you don't need to in
         # This will be used in the "DefaultNamespace" field for generated visual studio projects
         RootNamespace: MyCompanyName
 
+    Unity:
+        # Include this option to default new projects to use 64 bit windows for their builds rather 
+        # than 32 bit
+        Win64IsDefault: True
+
 ## <a id="project-yaml"></a>ProjenyProject.yaml reference
 
 In most cases you can edit the `ProjenyProject.yaml` file using the Package Manager from within Unity.  However, the Package Manager GUI does not include everything (for example, solution folders cannot be configured from the package manager)
