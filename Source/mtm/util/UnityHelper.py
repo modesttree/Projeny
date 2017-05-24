@@ -28,6 +28,7 @@ class UnityHelper:
     _sys = Inject('SystemHelper')
     _varMgr = Inject('VarManager')
     _commonSettings = Inject('CommonSettings')
+    _config = Inject('Config')
 
     def __init__(self):
         pass
@@ -56,6 +57,8 @@ class UnityHelper:
     def _getBuildTargetArg(self, platform):
 
         if platform == Platforms.Windows:
+            if self._config.tryGetBool(False, 'Unity', 'Win64IsDefault'):
+                return 'win64'
             return 'win32'
 
         if platform == Platforms.WebPlayer:

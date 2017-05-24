@@ -32,8 +32,15 @@ namespace Projeny.Internal
             var info = ProjenyEditorUtil.GetCurrentProjectInfo();
 
             var expectedPlatform = ProjenyEditorUtil.FromPlatformDirStr(info.PlatformDirName);
+            var currentPlatform = EditorUserBuildSettings.activeBuildTarget;
 
-            if (EditorUserBuildSettings.activeBuildTarget != expectedPlatform)
+            if ((expectedPlatform == BuildTarget.StandaloneWindows || expectedPlatform == BuildTarget.StandaloneWindows64)
+                && (currentPlatform == BuildTarget.StandaloneWindows || currentPlatform == BuildTarget.StandaloneWindows64))
+            {
+                return;
+            }
+
+            if (currentPlatform != expectedPlatform)
             {
                 if (EditorUserBuildSettings.SwitchActiveBuildTarget(expectedPlatform))
                 {

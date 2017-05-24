@@ -288,6 +288,7 @@ namespace Projeny
         {
             switch (platform)
             {
+                case BuildTarget.StandaloneWindows64:
                 case BuildTarget.StandaloneWindows:
                 {
                     return "windows";
