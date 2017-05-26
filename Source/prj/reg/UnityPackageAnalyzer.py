@@ -90,33 +90,36 @@ class UnityPackageAnalyzer:
 
     def _tryGetAssetStoreInfoFromHeader(self, unityPackagePath):
 
-        with open(unityPackagePath, 'rb') as f:
-            headerBytes = f.read(16)
-            headerHexValues = binascii.hexlify(headerBytes)
+        try:
+            with open(unityPackagePath, 'rb') as f:
+                headerBytes = f.read(16)
+                headerHexValues = binascii.hexlify(headerBytes)
 
-            headerString = headerHexValues.decode('utf8')
+                headerString = headerHexValues.decode('utf8')
 
-            flag1 = headerString[0:4]
+                flag1 = headerString[0:4]
 
-            unixTimeStamp = (headerBytes[7] << 24) + (headerBytes[6] << 16) + (headerBytes[5] << 8) + headerBytes[4]
-            datetime.utcfromtimestamp(unixTimeStamp)
+                unixTimeStamp = (headerBytes[7] << 24) + (headerBytes[6] << 16) + (headerBytes[5] << 8) + headerBytes[4]
+                datetime.utcfromtimestamp(unixTimeStamp)
 
-            flag2 = headerString[6:8]
-            flag3 = headerString[24:28]
+                flag2 = headerString[6:8]
+                flag3 = headerString[24:28]
 
-            numBytes = int(headerString[22:24] + headerString[20:22], 16)
-            numJsonBytes = int(headerString[30:32] + headerString[28:30], 16)
+                numBytes = int(headerString[22:24] + headerString[20:22], 16)
+                numJsonBytes = int(headerString[30:32] + headerString[28:30], 16)
 
-            assertThat(flag1 == "1f8b", "Invalid .unitypackage file")
+                assertThat(flag1 == "1f8b", "Invalid .unitypackage file")
 
-            # These flags indicate that it is an asset store package
-            if flag2 == "04" and flag3 == "4124":
-                assertThat(numBytes == numJsonBytes + 4)
+                # These flags indicate that it is an asset store package
+                if flag2 == "04" and flag3 == "4124":
+                    assertThat(numBytes == numJsonBytes + 4)
 
-                infoBytes = f.read(numJsonBytes)
-                infoStr = infoBytes.decode('utf8')
+                    infoBytes = f.read(numJsonBytes)
+                    infoStr = infoBytes.decode('utf8')
 
-                return json.loads(infoStr)
+                    return json.loads(infoStr)
+        except Exception as e:
+            self._log.error(str(e))
 
         return None
 
