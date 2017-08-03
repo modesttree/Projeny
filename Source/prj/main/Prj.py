@@ -52,7 +52,7 @@ def addArguments(parser):
     # Core
     parser.add_argument('-in', '--init', action='store_true', help='Initializes the directory links for all projects')
     parser.add_argument('-p', '--project', metavar='PROJECT_NAME', type=str, help="The project to apply changes to.  If unspecified, this will be set to the value for DefaultProject in {0}".format(ConfigFileName))
-    parser.add_argument('-pl', '--platform', type=str, default='win', choices=['win', 'webp', 'webgl', 'and', 'osx', 'ios', 'lin'], help='The platform to use.  If unspecified, windows is assumed.')
+    parser.add_argument('-pl', '--platform', type=str, default='win', choices=['win', 'webp', 'webgl', 'and', 'osx', 'ios', 'lin', 'uwp'], help='The platform to use.  If unspecified, windows is assumed.')
 
     # Script settinsg
     parser.add_argument('-cfg', '--configPath', metavar='CONFIG_PATH', type=str, help="The path to the _main {0} config file.  If unspecified, it will be assumed to exist at [CurrentDirectory]/{0}".format(ConfigFileName))

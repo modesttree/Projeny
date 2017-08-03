@@ -120,5 +120,11 @@ namespace Projeny
         {
             PrjHelper.ChangePlatform(BuildTarget.iOS);
         }
+
+        [MenuItem("Projeny/Change Platform/UWP", false, 7)]
+        public static void ChangePlatformUwp()
+        {
+            PrjHelper.ChangePlatform(BuildTarget.WSAPlayer);
+        }
     }
 }

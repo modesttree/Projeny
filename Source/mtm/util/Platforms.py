@@ -7,5 +7,6 @@ class Platforms:
     OsX = 'OSX'
     Linux = 'Linux'
     Ios = 'iOS'
-    All = [Windows, WebPlayer, Android, WebGl, OsX, Linux, Ios]
+    UWP = 'UWP'
+    All = [Windows, WebPlayer, Android, WebGl, OsX, Linux, Ios, UWP]
 
