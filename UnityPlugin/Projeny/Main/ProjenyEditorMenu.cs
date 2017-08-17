@@ -115,12 +115,6 @@ namespace Projeny
             PrjHelper.ChangePlatform(BuildTarget.StandaloneLinux);
         }
 
-        [MenuItem("Projeny/Change Platform/iOS", false, 7)]
-        public static void ChangePlatformIos()
-        {
-            PrjHelper.ChangePlatform(BuildTarget.iOS);
-        }
-
         [MenuItem("Projeny/Change Platform/UWP", false, 7)]
         public static void ChangePlatformUwp()
         {

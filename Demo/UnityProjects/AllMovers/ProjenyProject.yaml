@@ -1,6 +1,9 @@
-ProjectSettingsPath: '[ProjectRoot]/ProjectSettings'
 AssetsFolder:
 - AllMovers
 - CommonShapeMover
 - CubeMover
 - SphereMover
+ProjectSettingsPath: '[ProjectRoot]/ProjectSettings'
+TargetPlatforms:
+- Windows
+- UWP

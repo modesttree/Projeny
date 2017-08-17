@@ -1,5 +1,7 @@
-ProjectSettingsPath: '[ProjectRoot]/ProjectSettings'
 AssetsFolder:
 - SphereMover
 PluginsFolder:
 - CommonShapeMover
+ProjectSettingsPath: '[ProjectRoot]/ProjectSettings'
+TargetPlatforms:
+- Windows
