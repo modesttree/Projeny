@@ -141,6 +141,10 @@ namespace Projeny
                 {
                     return BuildTarget.StandaloneLinux;
                 }
+                case "uwp":
+                {
+                    return BuildTarget.WSAPlayer;
+                }
             }
 
             throw new NotImplementedException();

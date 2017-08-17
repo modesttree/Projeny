@@ -639,6 +639,7 @@ The format of `ProjenyProject.yaml` is as follows:
         - OSX
         - Linux
         - iOS
+        - UWP
 
 Where:
 * `{PackageName}` represents the name of a directory that is in one of the `PackageFolders` directories
@@ -699,6 +700,7 @@ Notes:
     * OSX
     * Linux
     * iOS
+    * UWP
 * When `ForcePluginsDirectory` is set, this will require that the package always be placed at `Assets/Plugins/PackageName`.
     * This exists because some packages have hard-coded paths that require that the package be at a specific location
 * `ForceAssetsDirectory` behaves similarly, and will ensure the package will always be placed at `Assets/PackageName`.
@@ -781,6 +783,7 @@ What follows is the full list of command line parameters that you can pass to th
         * `osx` - Mac
         * `ios` - iOS for use with iPhone or iPad
         * `lin` - Linux
+        * `uwp` - Universal Windows Platform
     * For example, if you run `prj -p AllMovers -pl ios -ul` this will update all the directory links within the `AllMovers-iOS` directory.
 
 * #### <a id="commandline-updateLinks"></a>`--updateLinks` / `-ul`

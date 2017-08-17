@@ -79,6 +79,9 @@ class UnityHelper:
         if platform == Platforms.Ios:
             return 'ios'
 
+        if platform == Platforms.UWP:
+            return 'wsaplayer'
+
         assertThat(False)
 
     def runEditorFunctionRaw(self, projectName, platform, editorCommand, extraArgs):
