@@ -25,6 +25,7 @@ import mtm.ioc.Container as Container
 from mtm.ioc.Inject import Inject
 from mtm.ioc.Inject import InjectMany
 import mtm.ioc.IocAssertions as Assertions
+import prj.main.ProjectConfigChanger as ProjectConfigChanger
 
 InstallInfoFileName = 'ProjenyInstall.yaml'
 
@@ -49,6 +50,7 @@ class PackageManager:
     _projectInitHandlers = InjectMany('ProjectInitHandlers')
     _schemaLoader = Inject('ProjectSchemaLoader')
     _commonSettings = Inject('CommonSettings')
+    _projectConfigChanger = Inject('ProjectConfigChanger')
 
     def projectExists(self, projectName):
         return self._sys.directoryExists('[UnityProjectsDir]/{0}'.format(projectName))
@@ -86,8 +88,8 @@ class PackageManager:
 
         return None
 
-    def createProject(self, projName, settingsProject = None):
-        with self._log.heading('Initializing new project "{0}"', projName):
+    def createProject(self, projName, platform = Platforms.Windows, settingsProject = None):
+        with self._log.heading('Initializing new project-platform "{0}-{1}"', projName, platform):
             projDirPath = self._varMgr.expand('[UnityProjectsDir]/{0}'.format(projName))
             assertThat(not self._sys.directoryExists(projDirPath), "Cannot initialize new project '{0}', found existing project at '{1}'", projName, projDirPath)
 
@@ -112,7 +114,8 @@ ProjectSettingsPath: '{0}'
     # Uncomment and Add package names here
 """.format(settingsPath))
 
-            self.updateProjectJunctions(projName, Platforms.Windows)
+            self.updateProjectJunctions(projName, platform)
+            self.updateLinksForAllProjects()
 
     def getProjectFromAlias(self, alias):
         result = self.tryGetProjectFromAlias(alias)
@@ -148,6 +151,10 @@ ProjectSettingsPath: '{0}'
         with self._log.heading('Updating package directories for project {0}'.format(projectName)):
             self.checkProjectInitialized(projectName, platform)
             self.setPathsForProjectPlatform(projectName, platform)
+            projConfig = self._projectConfigChanger._loadProjectConfig(projectName)
+            if platform not in projConfig.targetPlatforms:
+                projConfig.targetPlatforms.append(platform)
+                self._projectConfigChanger._saveProjectConfig(projectName, projConfig)
             schema = self._schemaLoader.loadSchema(projectName, platform)
             self._updateDirLinksForSchema(schema)
 
@@ -213,6 +220,7 @@ ProjectSettingsPath: '{0}'
 
             self.clearProjectGeneratedFiles(projName)
             self._sys.deleteDirectory(fullPath)
+            self.updateLinksForAllProjects()
 
     def getAllPackageNames(self, projectName):
         results = []
@@ -252,7 +260,7 @@ ProjectSettingsPath: '{0}'
                 except Exception as e:
                     self._log.warn('Failed to initialize project "{0}": {1}'.format(projectName, e))
 
-    def _createSwitchProjectMenuScript(self, currentProjName, outputPath):
+    def _createSwitchProjectMenuScript(self, currentProjName, currentPlatform, outputPath):
 
         foundCurrent = False
         menuFile = """
@@ -265,34 +273,36 @@ namespace Projeny
     {"""
         projIndex = 1
         for projName in self.getAllProjectNames():
-            menuFile += """
-        [MenuItem("Projeny/Change Project/{0}", false, 8)]""".format(projName)
+            projConfig = self._schemaLoader.loadProjectConfig(projName)
+            for platform in projConfig.targetPlatforms:
+                menuFile += """
+        [MenuItem("Projeny/Change Project/{0}-{1}", false, 8)]""".format(projName, platform)
 
-            menuFile += """
+                menuFile += """
         public static void ChangeProject{0}()""".format(projIndex)
 
-            menuFile += """
+                menuFile += """
         {"""
 
-            menuFile += """
-            PrjHelper.ChangeProject("{0}");""".format(projName)
+                menuFile += """
+            PrjHelper.ChangeProject("{0}", "{1}");""".format(projName, platform)
 
-            menuFile += """
+                menuFile += """
         }
 """
-            if projName == currentProjName:
-                assertThat(not foundCurrent)
-                foundCurrent = True
-                menuFile += """
-        [MenuItem("Projeny/Change Project/{0}", true, 8)]""".format(currentProjName)
-                menuFile += """
+                if projName == currentProjName and platform == currentPlatform:
+                    assertThat(not foundCurrent)
+                    foundCurrent = True
+                    menuFile += """
+        [MenuItem("Projeny/Change Project/{0}-{1}", true, 8)]""".format(currentProjName, currentPlatform)
+                    menuFile += """
         public static bool ChangeProject{0}Validate()""".format(projIndex)
-                menuFile += """
+                    menuFile += """
         {
             return false;
         }"""
 
-            projIndex += 1
+                projIndex += 1
 
         menuFile += """
     }
@@ -307,7 +317,7 @@ namespace Projeny
         placeholderOutPath2 = outDir + '/Editor/Placeholder.cs'
 
         # Need to always use the same meta files to avoid having unity do a refresh
-        self._createSwitchProjectMenuScript(schema.name, menuFileOutPath)
+        self._createSwitchProjectMenuScript(schema.name, schema.platform, menuFileOutPath)
         self._sys.copyFile('[ProjenyChangeProjectMenuMeta]', menuFileOutPath + ".meta")
 
         self._sys.copyFile('[PlaceholderFile1]', placeholderOutPath1)
@@ -364,6 +374,10 @@ namespace Projeny
 
         self._log.warn('Project "{0}" is not initialized for platform "{1}".  Initializing now.'.format(projectName, platform))
         self._initNewProjectForPlatform(projectName, platform)
+
+    def isProjectPlatformInitialized(self, projectName, platform):
+        self.setPathsForProjectPlatform(projectName, platform)
+        return self._sys.directoryExists('[ProjectPlatformRoot]')
 
     def setPathsForProject(self, projectName):
         self._varMgr.set('ShortProjectName', self._commonSettings.getShortProjectName(projectName))

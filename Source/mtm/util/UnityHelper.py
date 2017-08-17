@@ -61,9 +61,6 @@ class UnityHelper:
                 return 'win64'
             return 'win32'
 
-        if platform == Platforms.WebPlayer:
-            return 'web'
-
         if platform == Platforms.Android:
             return 'android'
 

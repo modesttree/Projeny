@@ -85,16 +85,16 @@ namespace Projeny
             PrjHelper.ChangePlatform(BuildTarget.StandaloneWindows);
         }
 
-        [MenuItem("Projeny/Change Platform/Webplayer", false, 7)]
-        public static void ChangePlatformWebplayer()
-        {
-            PrjHelper.ChangePlatform(BuildTarget.WebPlayer);
-        }
-
         [MenuItem("Projeny/Change Platform/Android", false, 7)]
         public static void ChangePlatformAndroid()
         {
             PrjHelper.ChangePlatform(BuildTarget.Android);
+        }
+
+        [MenuItem("Projeny/Change Platform/iOS", false, 7)]
+        public static void ChangePlatformIos()
+        {
+            PrjHelper.ChangePlatform(BuildTarget.iOS);
         }
 
         [MenuItem("Projeny/Change Platform/Web GL", false, 7)]

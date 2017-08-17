@@ -80,7 +80,7 @@ class UnityPackageExtractor:
 
     def _isSpecialFolderName(self, dirName):
         dirNameLower = dirName.lower()
-        return dirNameLower == 'editor' or dirNameLower == 'streamingassets' or dirNameLower == 'webplayertemplates'
+        return dirNameLower == 'editor' or dirNameLower == 'streamingassets'
 
     def _chooseDirToCopy(self, startDir):
         rootNames = [x for x in self._sys.walkDir(startDir) if not x.endswith('.meta')]

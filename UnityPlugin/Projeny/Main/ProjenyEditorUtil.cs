@@ -121,10 +121,6 @@ namespace Projeny
                 {
                     return BuildTarget.Android;
                 }
-                case "webplayer":
-                {
-                    return BuildTarget.WebPlayer;
-                }
                 case "webgl":
                 {
                     return BuildTarget.WebGL;
