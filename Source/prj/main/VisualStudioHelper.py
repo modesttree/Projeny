@@ -34,8 +34,9 @@ class VisualStudioHelper:
     def openFileInExistingVisualStudioInstance(self, filePath, lineNo):
         try:
             vsPath = self._varMgr.expand('[VisualStudioIdePath]')
-
-            if 'Visual Studio 14.0' in vsPath:
+            if '2017' in vsPath: 
+                dte = win32com.client.GetActiveObject("VisualStudio.DTE.15.0") 
+            elif 'Visual Studio 14.0' in vsPath: 
                 dte = win32com.client.GetActiveObject("VisualStudio.DTE.14.0")
             elif 'Visual Studio 12.0' in vsPath:
                 dte = win32com.client.GetActiveObject("VisualStudio.DTE.12.0")
