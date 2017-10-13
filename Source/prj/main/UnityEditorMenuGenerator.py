@@ -29,15 +29,17 @@ namespace Projeny
         public static void ChangeProject$index()
         {
             PrjHelper.ChangeProject("$name", "$platform");
-        }"""
+        }
+        """
     )
     
     _currentProjectMethodTemplate = Template("""
         [MenuItem("Projeny/Change Project/$name-$platform", true, 8)]
-        public static bool ChangeProject$indexValidate()
+        public static bool ChangeProject${index}Validate()
         {
             return false;
-        }"""
+        }
+        """
     )
 
     def Generate(self, currentProjName, currentPlatform, outputPath, allProjectNames):
@@ -45,8 +47,11 @@ namespace Projeny
         methodsText = ""
         projIndex = 1
         for projName in allProjectNames:
-            
-            projConfig = self._schemaLoader.loadProjectConfig(projName)
+            try:
+                projConfig = self._schemaLoader.loadProjectConfig(projName)
+            except Exception as e:
+                self._log.warn(f'Could not load config for project {projName}. It will not show up in editor menu.')
+                continue
 
             for platform in projConfig.targetPlatforms:
                 methodsText += self._changeProjectMethodTemplate.substitute(name = projName, platform = platform, index = projIndex)
@@ -54,9 +59,10 @@ namespace Projeny
                 if projName == currentProjName and platform == currentPlatform:
                     assertThat(not foundCurrent)
                     foundCurrent = True
-                    methodsText += _currentProjectMethodTemplate.substitute(name = projName, platform = platform, index = projIndex)
+                    methodsText += self._currentProjectMethodTemplate.substitute(name = projName, platform = platform, index = projIndex)
 
                 projIndex += 1
+
 
         #assertThat(foundCurrent, "Could not find project " + currentProjName)
         fileText = self._ChangeProjectMenuClassTemplate.substitute(methods = methodsText)
