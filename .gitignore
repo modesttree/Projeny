@@ -12,3 +12,6 @@ project_root_marker
 
 *.csproj.user
 *.suo
+
+**/.vs/
+**/.vscode/
