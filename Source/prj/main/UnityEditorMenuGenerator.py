@@ -23,7 +23,22 @@ namespace Projeny
     }
 }
 """)
+
+    _changeProjectMethodTemplate = Template("""
+        [MenuItem("Projeny/Change Project/$name-$platform", false, 8)]
+        public static void ChangeProject$index()
+        {
+            PrjHelper.ChangeProject("$name", "$platform");
+        }"""
+    )
     
+    _currentProjectMethodTemplate = Template("""
+        [MenuItem("Projeny/Change Project/$name-$platform", true, 8)]
+        public static bool ChangeProject$indexValidate()
+        {
+            return false;
+        }"""
+    )
 
     def Generate(self, currentProjName, currentPlatform, outputPath, allProjectNames):
         foundCurrent = False
@@ -34,25 +49,12 @@ namespace Projeny
             projConfig = self._schemaLoader.loadProjectConfig(projName)
 
             for platform in projConfig.targetPlatforms:
-                methodsText += """
-        [MenuItem("Projeny/Change Project/{0}-{1}", false, 8)]
-        public static void ChangeProject{2}()""".format(projName, platform, projIndex)
-                methodsText += """
-        {
-            PrjHelper.ChangeProject("{0}", "{1}");
-        }
-        """
+                methodsText += self._changeProjectMethodTemplate.substitute(name = projName, platform = platform, index = projIndex)
 
                 if projName == currentProjName and platform == currentPlatform:
                     assertThat(not foundCurrent)
                     foundCurrent = True
-                    methodsText += """
-        [MenuItem("Projeny/Change Project/{0}-{1}", true, 8)]
-        public static bool ChangeProject{2}Validate()""".format(currentProjName, currentPlatform, projIndex)
-                    methodsText += """
-        {
-            return false;
-        }"""
+                    methodsText += _currentProjectMethodTemplate.substitute(name = projName, platform = platform, index = projIndex)
 
                 projIndex += 1
 
