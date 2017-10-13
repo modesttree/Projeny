@@ -25,6 +25,7 @@ from mtm.util.ScriptRunner import ScriptRunner
 from mtm.util.CommonSettings import CommonSettings
 from prj.reg.UnityPackageExtractor import UnityPackageExtractor
 from prj.reg.UnityPackageAnalyzer import UnityPackageAnalyzer
+from prj.main.UnityEditorMenuGenerator import UnityEditorMenuGenerator
 
 import traceback
 
@@ -149,6 +150,7 @@ def installBindings(mainConfigPath):
     Container.bind('UnityPackageAnalyzer').toSingle(UnityPackageAnalyzer)
     Container.bind('ProjectConfigChanger').toSingle(ProjectConfigChanger)
     Container.bind('PrjRunner').toSingle(PrjRunner)
+    Container.bind('UnityEditorMenuGenerator').toSingle(UnityEditorMenuGenerator)
 
     Container.bind('ReleaseSourceManager').toSingle(ReleaseSourceManager)
 

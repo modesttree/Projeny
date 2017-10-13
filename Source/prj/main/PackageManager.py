@@ -51,6 +51,7 @@ class PackageManager:
     _schemaLoader = Inject('ProjectSchemaLoader')
     _commonSettings = Inject('CommonSettings')
     _projectConfigChanger = Inject('ProjectConfigChanger')
+    _unityEditorMenuGenerator = Inject('UnityEditorMenuGenerator')
 
     def projectExists(self, projectName):
         return self._sys.directoryExists('[UnityProjectsDir]/{0}'.format(projectName))
@@ -249,7 +250,13 @@ ProjectSettingsPath: '{0}'
     # This will set up all the directory junctions for all projects for all platforms
     def updateLinksForAllProjects(self):
         for projectName in self.getAllProjectNames():
-            projConfig = self._schemaLoader.loadProjectConfig(projectName)
+
+            try:
+                projConfig = self._schemaLoader.loadProjectConfig(projectName)
+            except Exception as e:
+                self._log.warn('Could not load project config for "{0}"'.format(projectName))
+                continue
+
             with self._log.heading('Initializing project "{0}"'.format(projectName)):
                 try:
                     #for platform in Platforms.All:
@@ -261,55 +268,8 @@ ProjectSettingsPath: '{0}'
                     self._log.warn('Failed to initialize project "{0}": {1}'.format(projectName, e))
 
     def _createSwitchProjectMenuScript(self, currentProjName, currentPlatform, outputPath):
-
-        foundCurrent = False
-        menuFile = """
-using UnityEditor;
-using Projeny.Internal;
-
-namespace Projeny
-{
-    public static class ProjenyChangeProjectMenu
-    {"""
-        projIndex = 1
-        for projName in self.getAllProjectNames():
-            projConfig = self._schemaLoader.loadProjectConfig(projName)
-            for platform in projConfig.targetPlatforms:
-                menuFile += """
-        [MenuItem("Projeny/Change Project/{0}-{1}", false, 8)]""".format(projName, platform)
-
-                menuFile += """
-        public static void ChangeProject{0}()""".format(projIndex)
-
-                menuFile += """
-        {"""
-
-                menuFile += """
-            PrjHelper.ChangeProject("{0}", "{1}");""".format(projName, platform)
-
-                menuFile += """
-        }
-"""
-                if projName == currentProjName and platform == currentPlatform:
-                    assertThat(not foundCurrent)
-                    foundCurrent = True
-                    menuFile += """
-        [MenuItem("Projeny/Change Project/{0}-{1}", true, 8)]""".format(currentProjName, currentPlatform)
-                    menuFile += """
-        public static bool ChangeProject{0}Validate()""".format(projIndex)
-                    menuFile += """
-        {
-            return false;
-        }"""
-
-                projIndex += 1
-
-        menuFile += """
-    }
-}
-"""
-        #assertThat(foundCurrent, "Could not find project " + currentProjName)
-        self._sys.writeFileAsText(outputPath, menuFile)
+        projectNames = self.getAllProjectNames()
+        self._unityEditorMenuGenerator.Generate(currentProjName, currentPlatform, outputPath, projectNames)
 
     def _addGeneratedProjenyFiles(self, outDir, schema):
         menuFileOutPath = outDir + '/Editor/ProjenyChangeProjectMenu.cs'
