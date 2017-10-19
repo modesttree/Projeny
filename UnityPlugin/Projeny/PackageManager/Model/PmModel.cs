@@ -1,11 +1,6 @@
 using System;
-using System.IO;
-using UnityEditorInternal;
 using UnityEngine;
-using UnityEditor;
-using System.Collections;
 using System.Collections.Generic;
-using Projeny.Internal;
 using System.Linq;
 
 namespace Projeny.Internal
