@@ -1,11 +1,5 @@
 using System;
 using System.IO;
-using UnityEditorInternal;
-using UnityEngine;
-using UnityEditor;
-using System.Collections;
-using System.Collections.Generic;
-using Projeny.Internal;
 using System.Linq;
 
 namespace Projeny.Internal
@@ -46,6 +40,7 @@ namespace Projeny.Internal
             config.Prebuilt.AddRange(_model.PrebuiltProjects);
             config.SolutionFolders.AddRange(_model.VsSolutionFolders);
             config.PackageFolders.AddRange(_model.SavedPackageFolders);
+            config.ProjectPlatforms.AddRange(_model.ProjectPlatforms);
 
             return config;
         }
@@ -191,6 +186,8 @@ namespace Projeny.Internal
             {
                 _model.AddSavedPackageFolder(pair);
             }
+
+            _model.ProjectPlatforms = config.ProjectPlatforms;
         }
     }
 }

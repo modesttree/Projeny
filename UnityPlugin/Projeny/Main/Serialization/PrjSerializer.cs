@@ -38,6 +38,7 @@ namespace Projeny.Internal
                 PackageFolders = info.PackageFolders.IsEmpty() ? null : info.PackageFolders.ToList(),
                 Prebuilt = info.Prebuilt.IsEmpty() ? null : info.Prebuilt.ToList(),
                 SolutionFolders = info.SolutionFolders.IsEmpty() ? null : info.SolutionFolders.Select(x => new Dictionary<string, string>() { { x.Key, x.Value } }).ToList(),
+                TargetPlatforms = info.ProjectPlatforms.IsEmpty() ? null : info.ProjectPlatforms,
             };
         }
 
@@ -80,6 +81,11 @@ namespace Projeny.Internal
             if (info.SolutionFolders != null)
             {
                 newInfo.SolutionFolders.AddRange(info.SolutionFolders.Select(x => x.Single()).ToList());
+            }
+
+            if (info.TargetPlatforms != null)
+            {
+                newInfo.ProjectPlatforms = info.TargetPlatforms;
             }
 
             return newInfo;

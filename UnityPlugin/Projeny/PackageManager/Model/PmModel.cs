@@ -16,12 +16,12 @@ namespace Projeny.Internal
     [Serializable]
     public class PmModel
     {
-        public event Action PluginItemsChanged = delegate {};
-        public event Action AssetItemsChanged = delegate {};
-        public event Action PackageFoldersChanged = delegate {};
-        public event Action ReleasesChanged = delegate {};
-        public event Action VsProjectsChanged = delegate {};
-        public event Action PackageFolderIndexChanged = delegate {};
+        public event Action PluginItemsChanged = delegate { };
+        public event Action AssetItemsChanged = delegate { };
+        public event Action PackageFoldersChanged = delegate { };
+        public event Action ReleasesChanged = delegate { };
+        public event Action VsProjectsChanged = delegate { };
+        public event Action PackageFolderIndexChanged = delegate { };
 
         [SerializeField]
         List<PackageFolderInfo> _folderInfos = new List<PackageFolderInfo>();
@@ -52,6 +52,10 @@ namespace Projeny.Internal
 
         [SerializeField]
         int _packageFolderIndex;
+
+        //Is not used in Unity-plugin, but must be propagated so it is kept in config
+        [SerializeField]
+        public List<string> ProjectPlatforms = new List<string>();
 
         public PmModel()
         {
