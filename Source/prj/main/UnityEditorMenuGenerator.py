@@ -50,7 +50,7 @@ namespace Projeny
             try:
                 projConfig = self._schemaLoader.loadProjectConfig(projName)
             except Exception as e:
-                self._log.warn(f'Could not load config for project {projName}. It will not show up in editor menu.')
+                self._log.warn('Could not load config for project {projName}. It will not show up in editor menu.')
                 continue
 
             for platform in projConfig.targetPlatforms:
