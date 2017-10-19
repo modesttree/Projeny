@@ -37,7 +37,8 @@ namespace Projeny.Internal
                 SolutionProjects = info.SolutionProjects.IsEmpty() ? null : info.SolutionProjects.ToList(),
                 PackageFolders = info.PackageFolders.IsEmpty() ? null : info.PackageFolders.ToList(),
                 Prebuilt = info.Prebuilt.IsEmpty() ? null : info.Prebuilt.ToList(),
-                SolutionFolders = info.SolutionFolders.IsEmpty() ? null : info.SolutionFolders.Select(x => new Dictionary<string, string>() { { x.Key, x.Value } } ).ToList(),
+                SolutionFolders = info.SolutionFolders.IsEmpty() ? null : info.SolutionFolders.Select(x => new Dictionary<string, string>() { { x.Key, x.Value } }).ToList(),
+                TargetPlatforms = info.ProjectPlatforms.IsEmpty() ? null : info.ProjectPlatforms,
             };
         }
 
@@ -80,6 +81,11 @@ namespace Projeny.Internal
             if (info.SolutionFolders != null)
             {
                 newInfo.SolutionFolders.AddRange(info.SolutionFolders.Select(x => x.Single()).ToList());
+            }
+
+            if (info.TargetPlatforms != null)
+            {
+                newInfo.ProjectPlatforms = info.TargetPlatforms;
             }
 
             return newInfo;
@@ -270,13 +276,13 @@ namespace Projeny.Internal
 
         class ProjectConfigInternal
         {
-            public string ProjectSettingsPath
+            public List<string> AssetsFolder
             {
                 get;
                 set;
             }
 
-            public List<string> AssetsFolder
+            public string ProjectSettingsPath
             {
                 get;
                 set;
