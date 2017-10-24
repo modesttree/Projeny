@@ -78,7 +78,7 @@ You can either run Projeny directly from source (requires python) or simply down
         - python for windows extensions (download [here](https://sourceforge.net/projects/pywin32/) for your version of python)
     - Open UnityPlugin/Projeny.sln in Visual Studio
     - Build in Release Mode
-    - Add the Projeny/Source/bin folder to your windows path
+    - Add the Projeny/Bin/UnityPlugin/Release folder to your windows path
 
 ## <a id="overview"></a>Overview
 
