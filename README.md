@@ -1,10 +1,11 @@
 
 <img src="Docs/LogoWhiteWithText.png?raw=true" alt="Projeny" width="250px" height="246px"/>
+
 ## Project and Package Manager for Unity3D
 
 [![Join the chat at https://gitter.im/Projeny/Lobby](https://badges.gitter.im/Projeny/Lobby.svg)](https://gitter.im/Projeny/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-If you or your team has benefited from this project, consider <a href="http://svermeulen.github.io/DonateToProjeny.html">buying me a coffee</a>!  Every donation makes me significantly more likely to find time to maintain/extend it.
+If you or your team has benefited from this project, consider <a href="http://svermeulen.github.io/DonateToProjeny.html">buying me a coffee</a>!  Every donation makes me significantly more likely to find time to maintain/extend it.  Also, anyone who donates will get priority support
 
 <a href="http://svermeulen.github.io/DonateToProjeny.html"><img src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif" alt="Buy me a coffee!"/></a>
 
