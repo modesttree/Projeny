@@ -105,8 +105,7 @@ def _getProjenyDir():
         scriptDir = os.path.dirname(os.path.realpath(__file__))
         return os.path.join(scriptDir, '../../..')
 
-    # This works for both exe builds (Bin/Prj/Data/Prj.exe) and running from source (Source/prj/_main/Prj.py) by coincidence
-    return os.path.join(MiscUtil.getExecDirectory(), '../../..')
+    return os.path.join(MiscUtil.getExecDirectory(), '../..')
 
 def _getExtraUserConfigPaths():
     return [os.path.join(os.path.expanduser('~'), ConfigFileName)]

@@ -59,7 +59,7 @@ class Runner:
             self._updateBuildDirectory()
 
             versionStr = self._sys.readFileAsText('[SourceDir]/Version.txt').strip()
-            installerOutputPath = '[DistDir]/ProjenyInstaller-v{0}.exe'.format(versionStr)
+            installerOutputPath = '[DistDir]/ProjenyInstaller-v{0}-x64.exe'.format(versionStr)
 
             self._createInstaller(installerOutputPath)
 
