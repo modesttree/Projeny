@@ -1,2 +1,2 @@
 @echo off
-"%~dp0\Data\EditorApi\EditorApi.exe" %*
+"%~dp0\Data\EditorApi.exe" %*

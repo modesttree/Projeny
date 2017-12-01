@@ -1,2 +1,2 @@
 @echo off
-"%~dp0\Data\Prj\Prj.exe" %*
+"%~dp0\Data\Prj.exe" %*

@@ -1,9 +1,6 @@
 @echo off
-REM Make sure to use 32 bit python for this so it runs on all machines
-%PYTHONHOME%\python ./BuildPrjExeSetup.py py2exe
-%PYTHONHOME%\python ./BuildEditorApiExeSetup.py py2exe
-%PYTHONHOME%\python ./BuildReleaseManifesterUpdaterExeSetup.py py2exe
-%PYTHONHOME%\python ./BuildOpenInVisualStudio.py py2exe
 
+REM NOTE: You need to install python cx_freeze for this to work
 
-
+set PYTHONPATH=%~dp0
+python BuildAllExes.py build

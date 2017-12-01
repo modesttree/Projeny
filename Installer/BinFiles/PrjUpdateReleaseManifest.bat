@@ -1,2 +1,2 @@
 @echo off
-"%~dp0\Data\ReleaseManifestUpdater\ReleaseManifestUpdater.exe" %*
+"%~dp0\Data\ReleaseManifestUpdater.exe" %*
