@@ -20,9 +20,9 @@
 //  SOFTWARE.
 
 using System;
-using YamlDotNet.Core;
+using PrjYamlDotNet.Core;
 
-namespace YamlDotNet.Serialization.ObjectGraphVisitors
+namespace PrjYamlDotNet.Serialization.ObjectGraphVisitors
 {
 	public sealed class EmittingObjectGraphVisitor : IObjectGraphVisitor
 	{

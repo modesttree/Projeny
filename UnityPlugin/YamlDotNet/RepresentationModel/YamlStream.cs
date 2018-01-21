@@ -22,10 +22,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using YamlDotNet.Core;
-using YamlDotNet.Core.Events;
+using PrjYamlDotNet.Core;
+using PrjYamlDotNet.Core.Events;
 
-namespace YamlDotNet.RepresentationModel
+namespace PrjYamlDotNet.RepresentationModel
 {
 	/// <summary>
 	/// Represents an YAML stream.

@@ -21,7 +21,7 @@
 
 using System.Globalization;
 
-namespace YamlDotNet.Core.Events
+namespace PrjYamlDotNet.Core.Events
 {
 	/// <summary>
 	/// Represents a mapping start event.

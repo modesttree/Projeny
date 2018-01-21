@@ -20,9 +20,9 @@
 //  SOFTWARE.
 
 using System;
-using YamlDotNet.Core;
+using PrjYamlDotNet.Core;
 
-namespace YamlDotNet.Serialization
+namespace PrjYamlDotNet.Serialization
 {
 	/// <summary>
 	/// Allows to customize how a type is serialized and deserialized.

@@ -25,7 +25,7 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.Serialization;
 
-namespace YamlDotNet.Serialization.TypeInspectors
+namespace PrjYamlDotNet.Serialization.TypeInspectors
 {
 	public abstract class TypeInspectorSkeleton : ITypeInspector
 	{

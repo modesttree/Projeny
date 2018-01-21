@@ -21,7 +21,7 @@
 
 using System;
 
-namespace YamlDotNet.Serialization
+namespace PrjYamlDotNet.Serialization
 {
 	/// <summary>
 	/// Resolves the type of values.

@@ -21,7 +21,7 @@
 
 using System;
 
-namespace YamlDotNet.Core
+namespace PrjYamlDotNet.Core
 {
 	[Serializable]
 	internal class StringLookAheadBuffer : ILookAheadBuffer

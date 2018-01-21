@@ -22,9 +22,9 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using YamlDotNet.Core;
+using PrjYamlDotNet.Core;
 
-namespace YamlDotNet.RepresentationModel
+namespace PrjYamlDotNet.RepresentationModel
 {
 	/// <summary>
 	/// Manages the state of a <see cref="YamlDocument" /> while it is loading.

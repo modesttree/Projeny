@@ -21,7 +21,7 @@
 
 using System;
 
-namespace YamlDotNet.Core
+namespace PrjYamlDotNet.Core
 {
 	/// <summary>
 	/// Specifies the style of a YAML scalar.

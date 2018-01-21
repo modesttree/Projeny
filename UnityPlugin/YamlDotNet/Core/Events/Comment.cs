@@ -20,7 +20,7 @@
 //  SOFTWARE.
 
 
-namespace YamlDotNet.Core.Events
+namespace PrjYamlDotNet.Core.Events
 {
 	public class Comment : ParsingEvent
 	{

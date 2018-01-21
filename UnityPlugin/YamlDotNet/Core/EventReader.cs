@@ -21,9 +21,9 @@
 
 using System.IO;
 using System.Globalization;
-using YamlDotNet.Core.Events;
+using PrjYamlDotNet.Core.Events;
 
-namespace YamlDotNet.Core
+namespace PrjYamlDotNet.Core
 {
 	/// <summary>
 	/// Reads events from a sequence of <see cref="ParsingEvent" />.

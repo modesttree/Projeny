@@ -23,10 +23,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using YamlDotNet.Core;
-using YamlDotNet.Core.Events;
+using PrjYamlDotNet.Core;
+using PrjYamlDotNet.Core.Events;
 
-namespace YamlDotNet.RepresentationModel
+namespace PrjYamlDotNet.RepresentationModel
 {
 	/// <summary>
 	/// Represents a scalar node in the YAML document.

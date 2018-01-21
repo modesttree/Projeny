@@ -21,7 +21,7 @@
 
 using System;
 
-namespace YamlDotNet.Serialization.EventEmitters
+namespace PrjYamlDotNet.Serialization.EventEmitters
 {
 	/// <summary>
 	/// Provided the base implementation for an IEventEmitter that is a

@@ -21,7 +21,7 @@
 
 using System;
 
-namespace YamlDotNet.RepresentationModel
+namespace PrjYamlDotNet.RepresentationModel
 {
 	/// <summary>
 	/// Defines the method needed to be able to visit Yaml elements.

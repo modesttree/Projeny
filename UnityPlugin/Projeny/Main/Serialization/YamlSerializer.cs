@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using YamlDotNet.Core;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
+using PrjYamlDotNet.Core;
+using PrjYamlDotNet.Serialization;
+using PrjYamlDotNet.Serialization.NamingConventions;
 
 namespace Projeny.Internal
 {

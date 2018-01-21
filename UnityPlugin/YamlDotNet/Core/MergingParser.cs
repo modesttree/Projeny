@@ -22,9 +22,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using YamlDotNet.Core.Events;
+using PrjYamlDotNet.Core.Events;
 
-namespace YamlDotNet.Core
+namespace PrjYamlDotNet.Core
 {
 	/// <summary>
 	/// Simple implementation of <see cref="IParser"/> that implements merging: http://yaml.org/type/merge.html

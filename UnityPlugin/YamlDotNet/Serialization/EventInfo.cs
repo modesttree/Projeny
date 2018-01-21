@@ -19,10 +19,10 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //  SOFTWARE.
 
-using YamlDotNet.Core;
-using YamlDotNet.Core.Events;
+using PrjYamlDotNet.Core;
+using PrjYamlDotNet.Core.Events;
 
-namespace YamlDotNet.Serialization
+namespace PrjYamlDotNet.Serialization
 {
 	public abstract class EventInfo
 	{

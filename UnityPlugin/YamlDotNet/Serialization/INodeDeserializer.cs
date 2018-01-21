@@ -20,9 +20,9 @@
 // THE SOFTWARE.
 
 using System;
-using YamlDotNet.Core;
+using PrjYamlDotNet.Core;
 
-namespace YamlDotNet.Serialization
+namespace PrjYamlDotNet.Serialization
 {
 	public interface INodeDeserializer
 	{

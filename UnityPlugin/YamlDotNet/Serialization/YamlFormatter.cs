@@ -22,7 +22,7 @@
 using System;
 using System.Globalization;
 
-namespace YamlDotNet.Serialization
+namespace PrjYamlDotNet.Serialization
 {
 	internal static class YamlFormatter
 	{

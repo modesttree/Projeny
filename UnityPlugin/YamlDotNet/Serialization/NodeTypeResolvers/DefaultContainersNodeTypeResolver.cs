@@ -21,9 +21,9 @@
 
 using System;
 using System.Collections.Generic;
-using YamlDotNet.Core.Events;
+using PrjYamlDotNet.Core.Events;
 
-namespace YamlDotNet.Serialization.NodeTypeResolvers
+namespace PrjYamlDotNet.Serialization.NodeTypeResolvers
 {
 	public sealed class DefaultContainersNodeTypeResolver : INodeTypeResolver
 	{

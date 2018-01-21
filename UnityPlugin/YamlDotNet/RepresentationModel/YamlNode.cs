@@ -20,11 +20,11 @@
 //  SOFTWARE.
 
 using System;
-using YamlDotNet.Core;
-using YamlDotNet.Core.Events;
+using PrjYamlDotNet.Core;
+using PrjYamlDotNet.Core.Events;
 using System.Collections.Generic;
 
-namespace YamlDotNet.RepresentationModel
+namespace PrjYamlDotNet.RepresentationModel
 {
 	/// <summary>
 	/// Represents a single node in the YAML document.

@@ -20,9 +20,9 @@
 //  SOFTWARE.
 
 using System.Globalization;
-using YamlDotNet.Core.Tokens;
+using PrjYamlDotNet.Core.Tokens;
 
-namespace YamlDotNet.Core.Events
+namespace PrjYamlDotNet.Core.Events
 {
 	/// <summary>
 	/// Represents a document start event.

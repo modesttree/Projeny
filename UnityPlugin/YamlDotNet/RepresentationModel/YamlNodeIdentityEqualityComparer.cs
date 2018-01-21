@@ -21,7 +21,7 @@
 
 using System.Collections.Generic;
 
-namespace YamlDotNet.RepresentationModel
+namespace PrjYamlDotNet.RepresentationModel
 {
 	/// <summary>
 	/// Comparer that is based on identity comparisons.

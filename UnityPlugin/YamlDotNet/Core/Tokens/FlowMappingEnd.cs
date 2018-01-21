@@ -22,7 +22,7 @@
 
 using System;
 
-namespace YamlDotNet.Core.Tokens
+namespace PrjYamlDotNet.Core.Tokens
 {
 	/// <summary>
 	/// Represents a flow mapping end token.

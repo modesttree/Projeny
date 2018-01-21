@@ -6,7 +6,7 @@ from cx_Freeze import setup, Executable
 
 ScriptDir = os.path.dirname(os.path.realpath(__file__))
 BuildDir = os.path.join(ScriptDir, 'build')
-BuildPlatformDir = os.path.join(BuildDir, 'exe.win-amd64-3.5')
+BuildPlatformDir = os.path.join(BuildDir, 'exe.win32-3.6')
 OutDir = os.path.join(ScriptDir, '../Bin/Data')
 
 print("Removing previous build directories...")

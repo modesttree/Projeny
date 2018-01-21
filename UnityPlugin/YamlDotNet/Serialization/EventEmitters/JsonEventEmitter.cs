@@ -21,10 +21,10 @@
 
 using System;
 using System.Globalization;
-using YamlDotNet.Core;
-using YamlDotNet.Core.Events;
+using PrjYamlDotNet.Core;
+using PrjYamlDotNet.Core.Events;
 
-namespace YamlDotNet.Serialization.EventEmitters
+namespace PrjYamlDotNet.Serialization.EventEmitters
 {
 	public sealed class JsonEventEmitter : ChainedEventEmitter
 	{

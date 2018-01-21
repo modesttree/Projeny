@@ -21,7 +21,7 @@
 
 using System;
 
-namespace YamlDotNet.Serialization.ObjectFactories
+namespace PrjYamlDotNet.Serialization.ObjectFactories
 {
 	/// <summary>
 	/// Creates objects using a Func{Type,object}"/>.

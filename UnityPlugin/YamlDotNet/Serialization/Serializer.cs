@@ -22,16 +22,16 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using YamlDotNet.Core;
-using YamlDotNet.Core.Events;
-using YamlDotNet.Serialization.EventEmitters;
-using YamlDotNet.Serialization.NamingConventions;
-using YamlDotNet.Serialization.ObjectGraphTraversalStrategies;
-using YamlDotNet.Serialization.ObjectGraphVisitors;
-using YamlDotNet.Serialization.TypeInspectors;
-using YamlDotNet.Serialization.TypeResolvers;
+using PrjYamlDotNet.Core;
+using PrjYamlDotNet.Core.Events;
+using PrjYamlDotNet.Serialization.EventEmitters;
+using PrjYamlDotNet.Serialization.NamingConventions;
+using PrjYamlDotNet.Serialization.ObjectGraphTraversalStrategies;
+using PrjYamlDotNet.Serialization.ObjectGraphVisitors;
+using PrjYamlDotNet.Serialization.TypeInspectors;
+using PrjYamlDotNet.Serialization.TypeResolvers;
 
-namespace YamlDotNet.Serialization
+namespace PrjYamlDotNet.Serialization
 {
 	/// <summary>
 	/// Writes objects to YAML.

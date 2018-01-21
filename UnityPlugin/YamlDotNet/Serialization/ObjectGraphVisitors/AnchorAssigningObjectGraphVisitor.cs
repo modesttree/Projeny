@@ -21,9 +21,9 @@
 
 using System;
 using System.Collections.Generic;
-using YamlDotNet.Core;
+using PrjYamlDotNet.Core;
 
-namespace YamlDotNet.Serialization.ObjectGraphVisitors
+namespace PrjYamlDotNet.Serialization.ObjectGraphVisitors
 {
 	public sealed class AnchorAssigningObjectGraphVisitor : ChainedObjectGraphVisitor
 	{

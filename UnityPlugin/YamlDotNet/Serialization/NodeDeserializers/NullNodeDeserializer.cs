@@ -20,10 +20,10 @@
 // THE SOFTWARE.
 
 using System;
-using YamlDotNet.Core;
-using YamlDotNet.Core.Events;
+using PrjYamlDotNet.Core;
+using PrjYamlDotNet.Core.Events;
 
-namespace YamlDotNet.Serialization.NodeDeserializers
+namespace PrjYamlDotNet.Serialization.NodeDeserializers
 {
 	public sealed class NullNodeDeserializer : INodeDeserializer
 	{

@@ -21,7 +21,7 @@
 
 using System;
 
-namespace YamlDotNet.Core.Tokens
+namespace PrjYamlDotNet.Core.Tokens
 {
 	/// <summary>
 	/// Represents a version directive token.

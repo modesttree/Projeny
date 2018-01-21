@@ -21,9 +21,9 @@
 
 using System;
 using System.Globalization;
-using YamlDotNet.Core;
+using PrjYamlDotNet.Core;
 
-namespace YamlDotNet.Serialization.EventEmitters
+namespace PrjYamlDotNet.Serialization.EventEmitters
 {
 	public sealed class TypeAssigningEventEmitter : ChainedEventEmitter
 	{

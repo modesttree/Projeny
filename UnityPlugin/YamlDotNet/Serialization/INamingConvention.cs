@@ -20,7 +20,7 @@
 //  SOFTWARE.
 
  
-namespace YamlDotNet.Serialization
+namespace PrjYamlDotNet.Serialization
 {
 	/// <summary>
 	/// Translates property names according to a specific convention.

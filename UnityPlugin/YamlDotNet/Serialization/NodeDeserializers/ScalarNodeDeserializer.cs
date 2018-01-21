@@ -22,11 +22,11 @@
 using System;
 using System.Globalization;
 using System.Text;
-using YamlDotNet.Core;
-using YamlDotNet.Core.Events;
-using YamlDotNet.Serialization.Utilities;
+using PrjYamlDotNet.Core;
+using PrjYamlDotNet.Core.Events;
+using PrjYamlDotNet.Serialization.Utilities;
 
-namespace YamlDotNet.Serialization.NodeDeserializers
+namespace PrjYamlDotNet.Serialization.NodeDeserializers
 {
 	public sealed class ScalarNodeDeserializer : INodeDeserializer
 	{

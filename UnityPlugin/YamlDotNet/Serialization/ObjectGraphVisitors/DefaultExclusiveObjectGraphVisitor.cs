@@ -23,7 +23,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
-namespace YamlDotNet.Serialization.ObjectGraphVisitors
+namespace PrjYamlDotNet.Serialization.ObjectGraphVisitors
 {
 	public sealed class DefaultExclusiveObjectGraphVisitor : ChainedObjectGraphVisitor
 	{

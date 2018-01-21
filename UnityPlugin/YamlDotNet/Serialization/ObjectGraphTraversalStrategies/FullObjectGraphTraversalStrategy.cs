@@ -23,11 +23,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
-using YamlDotNet.Core;
-using YamlDotNet.Serialization.NamingConventions;
-using YamlDotNet.Serialization.Utilities;
+using PrjYamlDotNet.Core;
+using PrjYamlDotNet.Serialization.NamingConventions;
+using PrjYamlDotNet.Serialization.Utilities;
 
-namespace YamlDotNet.Serialization.ObjectGraphTraversalStrategies
+namespace PrjYamlDotNet.Serialization.ObjectGraphTraversalStrategies
 {
 	/// <summary>
 	/// An implementation of <see cref="IObjectGraphTraversalStrategy"/> that traverses

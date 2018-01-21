@@ -22,10 +22,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using YamlDotNet.Core;
-using YamlDotNet.Serialization.Utilities;
+using PrjYamlDotNet.Core;
+using PrjYamlDotNet.Serialization.Utilities;
 
-namespace YamlDotNet.Serialization.NodeDeserializers
+namespace PrjYamlDotNet.Serialization.NodeDeserializers
 {
 	public sealed class EnumerableNodeDeserializer : INodeDeserializer
 	{

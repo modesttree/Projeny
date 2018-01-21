@@ -22,7 +22,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace YamlDotNet.Core
+namespace PrjYamlDotNet.Core
 {
 	/// <summary>
 	/// The exception that is thrown when a duplicate anchor is detected.
