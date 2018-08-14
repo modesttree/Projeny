@@ -141,6 +141,17 @@ namespace Projeny
                 {
                     return BuildTarget.WSAPlayer;
                 }
+                case "lumin":
+                {
+                    try
+                    {
+                        return (BuildTarget)Enum.Parse(typeof(BuildTarget), "Lumin");
+                    }
+                    catch (ArgumentException)
+                    {
+                        throw new NotImplementedException("Platform not availalble");
+                    }
+                }
             }
 
             throw new NotImplementedException();

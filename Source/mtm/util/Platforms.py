@@ -7,5 +7,6 @@ class Platforms:
     Linux = 'Linux'
     Ios = 'iOS'
     UWP = 'UWP'
-    All = [Windows, Android, WebGl, OsX, Linux, Ios, UWP]
+    Lumin = 'Lumin'
+    All = [Windows, Android, WebGl, OsX, Linux, Ios, UWP, Lumin]
 

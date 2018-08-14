@@ -79,6 +79,9 @@ class UnityHelper:
         if platform == Platforms.UWP:
             return 'wsaplayer'
 
+        if platform == Platforms.Lumin:
+            return 'Lumin'
+
         assertThat(False)
 
     def runEditorFunctionRaw(self, projectName, platform, editorCommand, extraArgs):
