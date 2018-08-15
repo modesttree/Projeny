@@ -318,6 +318,8 @@ namespace Projeny
                     return "uwp";
                 }
             }
+            if (platform.ToString() == "Lumin")
+                return "lumin";
 
             throw new NotImplementedException();
         }

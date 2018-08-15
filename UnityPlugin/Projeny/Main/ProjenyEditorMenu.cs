@@ -120,5 +120,17 @@ namespace Projeny
         {
             PrjHelper.ChangePlatform(BuildTarget.WSAPlayer);
         }
+
+        [MenuItem("Projeny/Change Platform/Lumin", true, 7)]
+        public static bool ChangePlatformLumin_IsValid()
+        {
+            return Enum.IsDefined(typeof(BuildTarget), "Lumin");
+        }
+        [MenuItem("Projeny/Change Platform/Lumin", false, 7)]
+        public static void ChangePlatformLumin()
+        {
+            var lumin = (BuildTarget)Enum.Parse(typeof(BuildTarget), "Lumin");
+            PrjHelper.ChangePlatform(lumin);
+        }
     }
 }

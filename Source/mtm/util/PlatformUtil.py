@@ -38,5 +38,8 @@ def fromPlatformArgName(platformArgStr):
     if platformArgStr == 'uwp':
         return Platforms.UWP
 
+    if platformArgStr == 'lumin':
+        return Platforms.Lumin
+
     assertThat(False)
     return ''
