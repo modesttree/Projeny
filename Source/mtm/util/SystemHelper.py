@@ -17,6 +17,7 @@ import os
 import shlex
 import subprocess
 import shutil
+import stat
 import platform
 from glob import glob
 
@@ -158,6 +159,7 @@ class SystemHelper:
 
         self.makeMissingDirectoriesInPath(toPath)
         shutil.copy2(fromPath, toPath)
+        os.chmod(toPath, stat.S_IWRITE)
 
     def IsDir(self, path):
         return os.path.isdir(self._varManager.expand(path))
@@ -269,6 +271,9 @@ class SystemHelper:
         self._log.debug("Copying directory '{0}' to '{1}'".format(fromPath, toPath))
 
         shutil.copytree(fromPath, toPath)
+        for root, dirs, files in os.walk(toPath):
+            for file in files:
+                os.chmod(os.path.join(root, file), stat.S_IWRITE)
 
     def readFileLines(self, path):
         with self.openInputFile(path) as f:
