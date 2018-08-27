@@ -32,6 +32,7 @@ namespace Projeny.Internal
             return new ProjectConfigInternal()
             {
                 ProjectSettingsPath = info.ProjectSettingsPath,
+                UnityPackagesPath = info.UnityPackagesPath,
                 AssetsFolder = info.AssetsFolder.IsEmpty() ? null : info.AssetsFolder.ToList(),
                 PluginsFolder = info.PluginsFolder.IsEmpty() ? null : info.PluginsFolder.ToList(),
                 SolutionProjects = info.SolutionProjects.IsEmpty() ? null : info.SolutionProjects.ToList(),
@@ -52,6 +53,7 @@ namespace Projeny.Internal
             var newInfo = new ProjectConfig();
 
             newInfo.ProjectSettingsPath = info.ProjectSettingsPath;
+            newInfo.UnityPackagesPath = info.UnityPackagesPath;
 
             if (info.AssetsFolder != null)
             {
@@ -283,6 +285,12 @@ namespace Projeny.Internal
             }
 
             public string ProjectSettingsPath
+            {
+                get;
+                set;
+            }
+
+            public string UnityPackagesPath
             {
                 get;
                 set;
