@@ -49,6 +49,7 @@ class ProjectSchemaLoader:
         config.solutionFolders = yamlConfig.tryGetOrderedDictionary(OrderedDict(), 'SolutionFolders')
         config.packageFolders = yamlConfig.getList('PackageFolders')
         config.projectSettingsPath = yamlConfig.getString('ProjectSettingsPath')
+        config.unityPackagesPath = yamlConfig.getString('UnityPackagesPath')
 
         # Remove duplicates
         config.assetsFolder = list(set(config.assetsFolder))
@@ -99,7 +100,7 @@ class ProjectSchemaLoader:
 
         self._ensureAllPackagesExist(packageMap)
 
-        return ProjectSchema(name, packageMap, config.solutionFolders, config.projectSettingsPath, platform, config.targetPlatforms)
+        return ProjectSchema(name, packageMap, config.solutionFolders, config.projectSettingsPath, config.unityPackagesPath, platform, config.targetPlatforms)
 
     def _shouldIncludeForPlatform(self, packageName, packageConfig, folderType, platform):
 
@@ -438,11 +439,12 @@ class PackageReference:
         self.sourceDesc = sourceDesc
 
 class ProjectSchema:
-    def __init__(self, name, packages, customFolderMap, projectSettingsPath, platform, targetPlatforms):
+    def __init__(self, name, packages, customFolderMap, projectSettingsPath, unityPackagesPath, platform, targetPlatforms):
         self.name = name
         self.packages = packages
         self.customFolderMap = customFolderMap
         self.projectSettingsPath = projectSettingsPath
+        self.unityPackagesPath = unityPackagesPath
         self.platform = platform
         self.targetPlatforms = targetPlatforms
 

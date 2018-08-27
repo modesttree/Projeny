@@ -107,13 +107,18 @@ class PackageManager:
             else:
                 settingsPath = '[ProjectRoot]/../{0}/ProjectSettings'.format(settingsProject)
 
+            unityPackagesPath = '[ProjectRoot]/UnityPackages'
+            newUnityPackagesDir = os.path.join(projDirPath, 'UnityPackages')
+            self._sys.createDirectory(newUnityPackagesDir)
+
             with self._sys.openOutputFile(os.path.join(projDirPath, ProjectConfigFileName)) as outFile:
                 outFile.write(
 """
 ProjectSettingsPath: '{0}'
+UnityPackagesPath: '{1}'
 #AssetsFolder:
     # Uncomment and Add package names here
-""".format(settingsPath))
+""".format(settingsPath, unityPackagesPath))
 
             self.updateProjectJunctions(projName, platform)
             self.updateLinksForAllProjects()
@@ -308,6 +313,7 @@ ProjectSettingsPath: '{0}'
             self._addGeneratedProjenyFiles('[PluginsDir]/Projeny', schema)
 
         self._junctionHelper.makeJunction(schema.projectSettingsPath, '[ProjectPlatformRoot]/ProjectSettings')
+        self._junctionHelper.makeJunction(schema.unityPackagesPath, '[ProjectPlatformRoot]/Packages')
 
         for packageInfo in schema.packages.values():
 
@@ -446,6 +452,7 @@ ProjectSettingsPath: '{0}'
                 self._log.debug('Created directory "{0}"'.format(self._varMgr.expandPath('[ProjectPlatformRoot]')))
 
                 self._junctionHelper.makeJunction(schema.projectSettingsPath, '[ProjectPlatformRoot]/ProjectSettings')
+                self._junctionHelper.makeJunction(schema.unityPackagesPath, '[ProjectPlatformRoot]/Packages')
 
                 self._updateDirLinksForSchema(schema)
 
