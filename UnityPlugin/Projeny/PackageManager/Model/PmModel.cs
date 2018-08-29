@@ -51,6 +51,9 @@ namespace Projeny.Internal
         string _projectSettingsPath;
 
         [SerializeField]
+        string _unityPackagesPath;
+
+        [SerializeField]
         int _packageFolderIndex;
 
         //Is not used in Unity-plugin, but must be propagated so it is kept in config
@@ -88,6 +91,20 @@ namespace Projeny.Internal
                 _projectSettingsPath = value;
             }
         }
+
+
+        public string UnityPackagesPath
+        {
+            get
+            {
+                return _unityPackagesPath;
+            }
+            set
+            {
+                _unityPackagesPath = value;
+            }
+        }
+
 
         public IEnumerable<ReleaseInfo> Releases
         {
