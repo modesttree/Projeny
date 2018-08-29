@@ -33,6 +33,7 @@ namespace Projeny.Internal
             var config = new ProjectConfig();
 
             config.ProjectSettingsPath = _model.ProjectSettingsPath;
+            config.UnityPackagesPath = _model.UnityPackagesPath;
 
             config.AssetsFolder.AddRange(_model.AssetItems);
             config.PluginsFolder.AddRange(_model.PluginItems);
@@ -60,6 +61,7 @@ namespace Projeny.Internal
         public void ResetProject()
         {
             _model.ProjectSettingsPath = null;
+            _model.UnityPackagesPath = null;
             _model.ClearAssetItems();
             _model.ClearPluginItems();
         }
@@ -150,6 +152,7 @@ namespace Projeny.Internal
         void PopulateModelFromConfig(ProjectConfig config)
         {
             _model.ProjectSettingsPath = config.ProjectSettingsPath;
+            _model.UnityPackagesPath = config.UnityPackagesPath;
 
             _model.ClearPluginItems();
             foreach (var name in config.PluginsFolder)

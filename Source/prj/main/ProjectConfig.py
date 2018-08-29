@@ -10,3 +10,4 @@ class ProjectConfig:
         self.packageFolders = []
         self.targetPlatforms = []
         self.projectSettingsPath = None
+        self.unityPackagesPath = None
