@@ -5,10 +5,6 @@
 
 [![Join the chat at https://gitter.im/Projeny/Lobby](https://badges.gitter.im/Projeny/Lobby.svg)](https://gitter.im/Projeny/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-If you or your team has benefited from this project, consider <a href="http://svermeulen.github.io/DonateToProjeny.html">buying me a coffee</a>!  Every donation makes me significantly more likely to find time to maintain/extend it
-
-<a href="http://svermeulen.github.io/DonateToProjeny.html"><img src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif" alt="Buy me a coffee!"/></a>
-
 ### <a id="introduction"></a>Introduction ###
 
 The purpose of Projeny is to allow your Unity3D project to easily scale in size without heavily impacting development time.
